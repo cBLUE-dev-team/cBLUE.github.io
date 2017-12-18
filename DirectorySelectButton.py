@@ -11,18 +11,24 @@ Created: 2017-12-07
 @author Timothy Kammerer
 """
 class DirectorySelectButton(object):
-    # %%
+
     """
     Initializes the DirectorySelectButton.
     
     @param   fileType    string
     @param   openTypes   string[]
     """
-    def __init__(self, master, frame, directType, width = 40, callback = None):
+    def __init__(self, master, frame, directType, width, height, callback=None):
         self.master = master
         self.directType = directType
         self.width = width
-        self.button = Button(frame, text = "Choose {} Directory\n\n".format(self.directType), command = self.callback, width = width, height = 5)
+        self.height = height
+        self.button = Button(
+            frame,
+            text="Choose {} Directory".format(self.directType),
+            command=self.callback,
+            width=width,
+            height=self.height)
         self.directoryName = ""
         self.extraCallback = callback
     
@@ -37,8 +43,7 @@ class DirectorySelectButton(object):
     """
     def setState(self, state):
         self.button.config(state = state)
-    
-    # %%
+
     """
     Callback for the button.
     
@@ -46,27 +51,35 @@ class DirectorySelectButton(object):
     Updates the display to reflect directory choice.
     """
     def callback(self):
-        directoryName = tkFileDialog.askdirectory(initialdir = self.master.lastFileLoc, \
-                    title = "Select {} File".format(self.directType))
+        directoryName = tkFileDialog.askdirectory(
+            initialdir=self.master.lastFileLoc,
+            title="Select {} File".format(self.directType))
+
         if directoryName == "":
             return
+
         self.directoryName = directoryName
         self.master.lastFileLoc = self.directoryName
         
         #update the Gui
         directoryRoots = self.directoryName.split("/")
         displayDirectory = str()
-        while(len(directoryRoots) != 0):
+
+        while len(directoryRoots) != 0:
             currentLine = directoryRoots.pop(0)
+
             if len(directoryRoots) != 0:
-                while(len(currentLine) + len(directoryRoots[0]) < self.width):
+                while len(currentLine) + len(directoryRoots[0]) < self.width:
                     currentLine = "{}\\{}".format(currentLine, directoryRoots.pop(0))
+
                     if len(directoryRoots) == 0:
                         break
             
-            displayDirectory = "{}{}\\\n".format(displayDirectory, currentLine)
+            displayDirectory = "{}{}".format(displayDirectory, currentLine)
         
-        self.button.config(text = "Choose {} Directory\n{}".format(self.directType, displayDirectory))
+        self.button.config(
+            text="{}: {}".format(self.directType, displayDirectory),
+            anchor='w')
         
         if self.extraCallback != None:
             self.extraCallback()

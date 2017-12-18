@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+import numpy as np
+
 """
 Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
 To be used in conjunction with the associated Gui.py.
@@ -26,7 +29,7 @@ def main(surface, wind_par, kd_par, depth):
     res = list()
     for d in depth:
         res.append(round(fit[0]*d**2+fit[1]*d+fit[2], 3))
-    return res
+    return np.asarray(res).T
 
 """
 Retrieves the average fit for all given cominations of wind and kd given from look_up_fit.csv.
