@@ -113,13 +113,16 @@ def build_las_data(inFile, start, end, thin_factor):
 
 # match up las and sbet data using timestamps
 def merge(sbet_data, las_t, las_x, las_y, las_z):
+
+    # match sbet and las dfs based on timestamps
+    sbet_t = sbet_data[:, 0]
+    num_chunk_points = las_t.shape
+    idx = np.searchsorted(sbet_t, las_t) - 1
+    mask = ne.evaluate('idx >= 0')
+
     dt=las_t[mask]-sbet_data[:,0][idx][mask]
     max_dt=np.max(dt)
-    # match sbet and las dfs based on timestamps
-#    sbet_t = sbet_data[:, 0]
-#    num_chunk_points = las_t.shape
-#    idx = np.searchsorted(sbet_t, las_t) - 1
-#    mask = ne.evaluate('idx >= 0')
+
     if max_dt>1:
         merged_data=[]
     else:
@@ -456,260 +459,268 @@ def main(sbet_dir, las_dir):
                 max_las_t = np.max(t)
 
                 D = merge(sbets_df.values, t, x, y, z)  # D for data
-                num_points = D[0].shape
-                merge_toc = time.clock()
-                merge_t = merge_toc - merge_tic
 
-                #  estimate a, b, and w (w isn't currently used)
-                est_ab_tic = time.clock()
+                if not D:  # i.e., if D is empty (las and sbet not merged)
+                    print('\nWARNING: {} was not merged with loaded sbet data '
+                          'because max delta time exceeded acceptable '
+                          'threshold of {} sec(s).\n'.format(las, dt_threshold))
 
-                # assign variables because numexpr variables don't handle indexing
-                x_las = D[2]
-                y_las = D[3]
-                z_las = D[4]
-                x_sbet = D[5]
-                y_sbet = D[6]
-                z_sbet = D[7]
+                else:
 
-                x_ = ne.evaluate("x_las - x_sbet")
-                y_ = ne.evaluate("y_las - y_sbet")
-                z_ = ne.evaluate("z_las - z_sbet")
-                rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
+                    num_points = D[0].shape
+                    merge_toc = time.clock()
+                    merge_t = merge_toc - merge_tic
 
-                fR0 = fR[0](D[10], D[9])
-                fR3 = fR[3](D[10], D[9])
-                fR6 = fR[6](D[9])
-                b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
+                    #  estimate a, b, and w (w isn't currently used)
+                    est_ab_tic = time.clock()
 
-                fR1 = fR[1](D[8], D[9], D[10])
-                fR4 = fR[4](D[8], D[9], D[10])
-                fR7 = fR[7](D[8], D[9])
-                a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
+                    # assign variables because numexpr variables don't handle indexing
+                    x_las = D[2]
+                    y_las = D[3]
+                    z_las = D[4]
+                    x_sbet = D[5]
+                    y_sbet = D[6]
+                    z_sbet = D[7]
 
-                w_est = np.zeros(num_points)
-                est_ab_toc = time.clock()
-                est_ab_t = est_ab_toc - est_ab_tic
+                    x_ = ne.evaluate("x_las - x_sbet")
+                    y_ = ne.evaluate("y_las - y_sbet")
+                    z_ = ne.evaluate("z_las - z_sbet")
+                    rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
 
-                #  calc diff between true and est las xyz...
-                # LE = Laser Estimates
-                ert1_tic = time.clock()
+                    fR0 = fR[0](D[10], D[9])
+                    fR3 = fR[3](D[10], D[9])
+                    fR6 = fR[6](D[9])
+                    b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
 
-                x_las = D[2]
-                y_las = D[3]
-                z_las = D[4]
+                    fR1 = fR[1](D[8], D[9], D[10])
+                    fR4 = fR[4](D[8], D[9], D[10])
+                    fR7 = fR[7](D[8], D[9])
+                    a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
 
-                LE_pre_x = fF[0](a_est, b_est, D[10], D[9], D[8], rho_est, w_est, D[5])
-                LE_pre_y = fF[1](a_est, b_est, D[10], D[9], D[8], rho_est, w_est, D[6])
-                LE_pre_z = fF[2](a_est, b_est, D[9], D[8], rho_est, w_est, D[7])
+                    w_est = np.zeros(num_points)
+                    est_ab_toc = time.clock()
+                    est_ab_t = est_ab_toc - est_ab_tic
 
-                Er1x = ne.evaluate("x_las - LE_pre_x")
-                Er1y = ne.evaluate("y_las - LE_pre_y")
-                Er1z = ne.evaluate("z_las - LE_pre_z")
-                ert1_toc = time.clock()
-                ert1_t = ert1_toc - ert1_tic
+                    #  calc diff between true and est las xyz...
+                    # LE = Laser Estimates
+                    ert1_tic = time.clock()
 
-                #  Solve least squares est of poly surf...
-                # estimate error model using polynomial surface fitting
-                lstsq_tic = time.clock()
-                B0 = b_est[::itv]
-                A0 = a_est[::itv]
+                    x_las = D[2]
+                    y_las = D[3]
+                    z_las = D[4]
 
-                A = np.vstack((
-                    ne.evaluate('A0 * 0 + 1'),
-                    ne.evaluate('A0'),
-                    ne.evaluate('B0'),
-                    ne.evaluate('A0 ** 2'),
-                    ne.evaluate('A0 * B0'),
-                    ne.evaluate('B0 ** 2'),
-                    ne.evaluate('A0 ** 2 * B0'),
-                    ne.evaluate('A0 * B0 ** 2'),
-                    ne.evaluate('B0 ** 3'))).T
+                    LE_pre_x = fF[0](a_est, b_est, D[10], D[9], D[8], rho_est, w_est, D[5])
+                    LE_pre_y = fF[1](a_est, b_est, D[10], D[9], D[8], rho_est, w_est, D[6])
+                    LE_pre_z = fF[2](a_est, b_est, D[9], D[8], rho_est, w_est, D[7])
 
-                '''
-                Originally, Jaehoon used the Matlab "fit" function with a "poly23" option,
-                but I didn't find a matching function to use in Python, so I manually coded
-                the same functionally using np.linalg.lstsq with terms for
-                a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
-                '''
-                (coeffs_x, __, __, __) = np.linalg.lstsq(A, Er1x[::itv])
-                (coeffs_y, __, __, __) = np.linalg.lstsq(A, Er1y[::itv])
-                (coeffs_z, __, __, __) = np.linalg.lstsq(A, Er1z[::itv])
+                    Er1x = ne.evaluate("x_las - LE_pre_x")
+                    Er1y = ne.evaluate("y_las - LE_pre_y")
+                    Er1z = ne.evaluate("z_las - LE_pre_z")
+                    ert1_toc = time.clock()
+                    ert1_t = ert1_toc - ert1_tic
 
-                p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs_x
-                p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs_y
-                p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs_z
+                    #  Solve least squares est of poly surf...
+                    # estimate error model using polynomial surface fitting
+                    lstsq_tic = time.clock()
+                    B0 = b_est[::itv]
+                    A0 = a_est[::itv]
 
-                lstsq_toc = time.clock()
-                lstsq_t = lstsq_toc - lstsq_tic
+                    A = np.vstack((
+                        ne.evaluate('A0 * 0 + 1'),
+                        ne.evaluate('A0'),
+                        ne.evaluate('B0'),
+                        ne.evaluate('A0 ** 2'),
+                        ne.evaluate('A0 * B0'),
+                        ne.evaluate('B0 ** 2'),
+                        ne.evaluate('A0 ** 2 * B0'),
+                        ne.evaluate('A0 * B0 ** 2'),
+                        ne.evaluate('B0 ** 3'))).T
 
-                #  calc ert2
-                ert2_tic = time.clock()
-                A = np.vstack((
-                    ne.evaluate('a_est * 0 + 1'),
-                    ne.evaluate('a_est'),
-                    ne.evaluate('b_est'),
-                    ne.evaluate('a_est ** 2'),
-                    ne.evaluate('a_est * b_est'),
-                    ne.evaluate('b_est ** 2'),
-                    ne.evaluate('a_est ** 2 * b_est'),
-                    ne.evaluate('a_est * b_est ** 2'),
-                    ne.evaluate('b_est ** 3'))).T
+                    '''
+                    Originally, Jaehoon used the Matlab "fit" function with a "poly23" option,
+                    but I didn't find a matching function to use in Python, so I manually coded
+                    the same functionally using np.linalg.lstsq with terms for
+                    a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
+                    '''
+                    (coeffs_x, __, __, __) = np.linalg.lstsq(A, Er1x[::itv])
+                    (coeffs_y, __, __, __) = np.linalg.lstsq(A, Er1y[::itv])
+                    (coeffs_z, __, __, __) = np.linalg.lstsq(A, Er1z[::itv])
 
-                err_x = np.sum(A * coeffs_x, axis=1)
-                err_y = np.sum(A * coeffs_y, axis=1)
-                err_z = np.sum(A * coeffs_z, axis=1)
+                    p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs_x
+                    p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs_y
+                    p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs_z
 
-                LE_post = [LE_pre_x + err_x,
-                           LE_pre_y + err_y,
-                           LE_pre_z + err_z]
+                    lstsq_toc = time.clock()
+                    lstsq_t = lstsq_toc - lstsq_tic
 
-                #----- Added by Firat
-                LE_post_arr=np.asarray(LE_post)
-                LE_post1_arr=np.concatenate((LE_post1_arr,LE_post_arr),axis=1)
-                 # ----End of part added by Firat on Dec. 8, 2017
+                    #  calc ert2
+                    ert2_tic = time.clock()
+                    A = np.vstack((
+                        ne.evaluate('a_est * 0 + 1'),
+                        ne.evaluate('a_est'),
+                        ne.evaluate('b_est'),
+                        ne.evaluate('a_est ** 2'),
+                        ne.evaluate('a_est * b_est'),
+                        ne.evaluate('b_est ** 2'),
+                        ne.evaluate('a_est ** 2 * b_est'),
+                        ne.evaluate('a_est * b_est ** 2'),
+                        ne.evaluate('b_est ** 3'))).T
 
-                Er2 = np.asarray([x_las, y_las, z_las]) - np.asarray(LE_post)
-                ert2_toc = time.clock()
-                ert2_t = ert2_toc - ert2_tic
+                    err_x = np.sum(A * coeffs_x, axis=1)
+                    err_y = np.sum(A * coeffs_y, axis=1)
+                    err_z = np.sum(A * coeffs_z, axis=1)
 
-                #  calc partial derivatives
-                partial_tic = time.clock()
+                    LE_post = [LE_pre_x + err_x,
+                               LE_pre_y + err_y,
+                               LE_pre_z + err_z]
 
-                # declared these variable because numexper expression don't allow indexing
-                r0 = D[8]
-                p0 = D[9]
-                h0 = D[10]
-                x0 = D[5]
-                y0 = D[6]
-                z0 = D[7]
+                    #----- Added by Firat
+                    LE_post_arr=np.asarray(LE_post)
+                    LE_post1_arr=np.concatenate((LE_post1_arr,LE_post_arr),axis=1)
+                     # ----End of part added by Firat on Dec. 8, 2017
 
-                '''
-                simplify the numerous trigonometric calculations of the Jacobian by
-                defining the Jacobian functions to be functions of the calculated sines and cosines
-                of the various parameters, instead of the sin and cos functions directly;
-                for example, instead of calculating sin(a_est) every time it shows up
-                in an equation (which is a lot), calculate sin(a_est) once and use the value
-                in the equation;  (it complicates the code a bit, but it saves a noticeable
-                chunk of time computationally)
-                '''
-                sin_a0 = ne.evaluate("sin(a_est)")
-                sin_b0 = ne.evaluate("sin(b_est)")
-                sin_w0 = np.zeros(num_points)  # ne.evaluate("sin(w_est)") ... sin(0) = 0
-                sin_r0 = ne.evaluate("sin(r0)")
-                sin_p0 = ne.evaluate("sin(p0)")
-                sin_h0 = ne.evaluate("sin(h0)")
-                cos_a0 = ne.evaluate("cos(a_est)")
-                cos_b0 = ne.evaluate("cos(b_est)")
-                cos_w0 = np.ones(num_points)  # ne.evaluate("cos(w_est)") ... cos(0) = 1
-                cos_r0 = ne.evaluate("cos(r0)")
-                cos_p0 = ne.evaluate("cos(p0)")
-                cos_h0 = ne.evaluate("cos(h0)")
+                    Er2 = np.asarray([x_las, y_las, z_las]) - np.asarray(LE_post)
+                    ert2_toc = time.clock()
+                    ert2_t = ert2_toc - ert2_tic
 
-                pJ1 = np.vstack(
-                    (fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_h0),
-                     fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
-                            cos_h0),
-                     fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_p0, cos_h0),
-                     np.ones(num_points),
-                     fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
-                            cos_h0)))
+                    #  calc partial derivatives
+                    partial_tic = time.clock()
 
-                pJ2 = np.vstack(
-                    (fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_h0),
-                     fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_p0),
-                     fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_p0, cos_h0),
-                     np.ones(num_points),
-                     fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
-                            cos_h0)))
+                    # declared these variable because numexper expression don't allow indexing
+                    r0 = D[8]
+                    p0 = D[9]
+                    h0 = D[10]
+                    x0 = D[5]
+                    y0 = D[6]
+                    z0 = D[7]
 
-                pJ3 = np.vstack(
-                    (fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                     fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z, sin_b0, sin_w0, sin_r0, sin_p0,
-                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                     fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                     fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                     np.ones(num_points),
-                     fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
+                    '''
+                    simplify the numerous trigonometric calculations of the Jacobian by
+                    defining the Jacobian functions to be functions of the calculated sines and cosines
+                    of the various parameters, instead of the sin and cos functions directly;
+                    for example, instead of calculating sin(a_est) every time it shows up
+                    in an equation (which is a lot), calculate sin(a_est) once and use the value
+                    in the equation;  (it complicates the code a bit, but it saves a noticeable
+                    chunk of time computationally)
+                    '''
+                    sin_a0 = ne.evaluate("sin(a_est)")
+                    sin_b0 = ne.evaluate("sin(b_est)")
+                    sin_w0 = np.zeros(num_points)  # ne.evaluate("sin(w_est)") ... sin(0) = 0
+                    sin_r0 = ne.evaluate("sin(r0)")
+                    sin_p0 = ne.evaluate("sin(p0)")
+                    sin_h0 = ne.evaluate("sin(h0)")
+                    cos_a0 = ne.evaluate("cos(a_est)")
+                    cos_b0 = ne.evaluate("cos(b_est)")
+                    cos_w0 = np.ones(num_points)  # ne.evaluate("cos(w_est)") ... cos(0) = 1
+                    cos_r0 = ne.evaluate("cos(r0)")
+                    cos_p0 = ne.evaluate("cos(p0)")
+                    cos_h0 = ne.evaluate("cos(h0)")
 
-                partial_toc = time.clock()
-                partial_t = partial_toc - partial_tic
+                    pJ1 = np.vstack(
+                        (fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                                sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                         fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x, sin_b0, sin_w0, sin_r0, sin_p0,
+                                sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                         fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
+                                cos_h0),
+                         fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
+                                cos_h0),
+                         fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
+                                cos_p0, cos_h0),
+                         np.ones(num_points),
+                         fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
+                                cos_h0)))
 
-                # prop error
-                prop_tic = time.clock()
-                C = np.asarray(D[11:])
-                C = ne.evaluate("C * C")  # variance = stddev**2
+                    pJ2 = np.vstack(
+                        (fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                                sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                         fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y, sin_b0, sin_w0, sin_r0, sin_p0,
+                                sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                         fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
+                                cos_h0),
+                         fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
+                                cos_p0),
+                         fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
+                                cos_p0, cos_h0),
+                         np.ones(num_points),
+                         fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
+                                cos_h0)))
 
-                # delete the rows corresponding to the Jacobian functions that equal 0
-                Cx = np.delete(C, [6, 7], 0)
-                Cy = np.delete(C, [5, 7], 0)
-                Cz = np.delete(C, [4, 5, 6], 0)
+                    pJ3 = np.vstack(
+                        (fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                                cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                         fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z, sin_b0, sin_w0, sin_r0, sin_p0,
+                                cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                         fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                         fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                         np.ones(num_points),
+                         fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
 
-                sum_pJ1 = ne.evaluate("sum(pJ1 * pJ1 * Cx, axis=0)")
-                sum_pJ2 = ne.evaluate("sum(pJ2 * pJ2 * Cy, axis=0)")
-                sum_pJ3 = ne.evaluate("sum(pJ3 * pJ3 * Cz, axis=0)")
+                    partial_toc = time.clock()
+                    partial_t = partial_toc - partial_tic
 
-                sx = ne.evaluate("sqrt(sum_pJ1)")
-                sy = ne.evaluate("sqrt(sum_pJ2)")
-                sz = ne.evaluate("sqrt(sum_pJ3)")
-                print("sx:-----------")
-                print(sx)
-                print("sy:-----------")
-                print(sy)
-                print("sz:-----------")
-                print(sz)
+                    # prop error
+                    prop_tic = time.clock()
+                    C = np.asarray(D[11:])
+                    C = ne.evaluate("C * C")  # variance = stddev**2
 
-                # Added by Firat
-                sz1=np.concatenate((sz1, sz))
-                sy1 = np.concatenate((sy1, sy))
-                sx1 = np.concatenate((sx1, sx))
-                print(sz1.shape)
-                #------End of part added by Firat
+                    # delete the rows corresponding to the Jacobian functions that equal 0
+                    Cx = np.delete(C, [6, 7], 0)
+                    Cy = np.delete(C, [5, 7], 0)
+                    Cz = np.delete(C, [4, 5, 6], 0)
 
-                prop_toc = time.clock()
-                prop_t = prop_toc - prop_tic
+                    sum_pJ1 = ne.evaluate("sum(pJ1 * pJ1 * Cx, axis=0)")
+                    sum_pJ2 = ne.evaluate("sum(pJ2 * pJ2 * Cy, axis=0)")
+                    sum_pJ3 = ne.evaluate("sum(pJ3 * pJ3 * Cz, axis=0)")
 
-                total_toc = time.clock()
-                tics = np.append(tics, total_toc - total_tic)
+                    sx = ne.evaluate("sqrt(sum_pJ1)")
+                    sy = ne.evaluate("sqrt(sum_pJ2)")
+                    sz = ne.evaluate("sqrt(sum_pJ3)")
+                    print("sx:-----------")
+                    print(sx)
+                    print("sy:-----------")
+                    print(sy)
+                    print("sz:-----------")
+                    print(sz)
 
-            # output progress updates as desired (every n-th data points)
-            if i % 1 == 0:
-                print('{:50s}{:.5f}'.format('getting data from .las file', build_las_t))
-                print('{:50s}{:.5f}'.format('merging sbet and las data', merge_t))
-                print('{:50s}{:.5f}'.format('estimating a, b, and w', est_ab_t))
-                print('{:50s}{:.5f}'.format('calc diff between true and est las xyz', ert1_t))
-                print('{:50s}{:.5f}'.format('Solve least squares est of poly surf', lstsq_t))
-                print('{:50s}{:.5f}'.format('calc diff between true/est laser X, Y, Z', ert2_t))
-                print('{:50s}{:.5f}'.format('calculating partial derivatives', partial_t))
-                print('{:50s}{:.5f}'.format('propagating error', prop_t))
-                print('{:>50}{:.5f}'.format('TOTAL:  ', total_toc - total_tic))
-                sum_tics = np.sum(tics)  # secs
-                avg_tics = np.mean(tics)  # secs
-                est_t_remain = timedelta(seconds=avg_tics * (num_las - i))
-                estimates.append(est_t_remain)
-                est_done_time = datetime.now() + est_t_remain
-                est_total_t = datetime.now() - main_tic + est_t_remain
-                print('{}'.format('-'*60))
-                print('{:50}{}/{}'.format('chunk size/thin factor', chunk_size, thin_factor))
-                print('{:50}{}'.format('# chunks', num_chunks))
-                print('{:50}{:.3f}'.format('tics sum', sum_tics))
-                print('{:50}{:.3f}'.format('tics avg', avg_tics))
-                print('{:50}{}'.format('estimated time remaining', est_t_remain))
-                print('{:50}{}'.format('estimated completion time', est_done_time))
-                print('{:50}{}'.format('total estimated time', est_total_t))
+                    # Added by Firat
+                    sz1=np.concatenate((sz1, sz))
+                    sy1 = np.concatenate((sy1, sy))
+                    sx1 = np.concatenate((sx1, sx))
+                    print(sz1.shape)
+                    #------End of part added by Firat
+
+                    prop_toc = time.clock()
+                    prop_t = prop_toc - prop_tic
+
+                    total_toc = time.clock()
+                    tics = np.append(tics, total_toc - total_tic)
+
+                    # output progress updates as desired (every n-th data points)
+                    if i % 1 == 0:
+                        print('{:50s}{:.5f}'.format('getting data from .las file', build_las_t))
+                        print('{:50s}{:.5f}'.format('merging sbet and las data', merge_t))
+                        print('{:50s}{:.5f}'.format('estimating a, b, and w', est_ab_t))
+                        print('{:50s}{:.5f}'.format('calc diff between true and est las xyz', ert1_t))
+                        print('{:50s}{:.5f}'.format('Solve least squares est of poly surf', lstsq_t))
+                        print('{:50s}{:.5f}'.format('calc diff between true/est laser X, Y, Z', ert2_t))
+                        print('{:50s}{:.5f}'.format('calculating partial derivatives', partial_t))
+                        print('{:50s}{:.5f}'.format('propagating error', prop_t))
+                        print('{:>50}{:.5f}'.format('TOTAL:  ', total_toc - total_tic))
+                        sum_tics = np.sum(tics)  # secs
+                        avg_tics = np.mean(tics)  # secs
+                        est_t_remain = timedelta(seconds=avg_tics * (num_las - i))
+                        estimates.append(est_t_remain)
+                        est_done_time = datetime.now() + est_t_remain
+                        est_total_t = datetime.now() - main_tic + est_t_remain
+                        print('{}'.format('-'*60))
+                        print('{:50}{}/{}'.format('chunk size/thin factor', chunk_size, thin_factor))
+                        print('{:50}{}'.format('# chunks', num_chunks))
+                        print('{:50}{:.3f}'.format('tics sum', sum_tics))
+                        print('{:50}{:.3f}'.format('tics avg', avg_tics))
+                        print('{:50}{}'.format('estimated time remaining', est_t_remain))
+                        print('{:50}{}'.format('estimated completion time', est_done_time))
+                        print('{:50}{}'.format('total estimated time', est_total_t))
         inFile.close()
 
     main_toc = datetime.now()
