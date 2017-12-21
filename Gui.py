@@ -260,15 +260,17 @@ class Gui:
         # clean up vdatum file; when copying table from internet, some dashes
         # are 'regular dashes' and others are \x96; get rid of quotes and \n
 
+        default_msg = '(Choose a region)'
         vdatum_regions = [v.replace('\x96', '-') for v in vdatum_regions]
         vdatum_regions = [v.replace('"', '') for v in vdatum_regions]
         vdatum_regions = [v.replace('\n', '') for v in vdatum_regions]
         regions = [v.split('\t')[0] for v in vdatum_regions]
         mcu_values = [v.split('\t')[1] for v in vdatum_regions]
         self.vdatum_regions = dict({(key, value) for (key, value) in zip(regions, mcu_values)})
+        self.vdatum_regions.update({default_msg: 0})
 
-        self.tkvar = tk.StringVar(self.root)
-        self.tkvar.set('(Choose a region)')  # set the default option
+        self.tkvar = tk.StringVar()
+        self.tkvar.set(default_msg)  # set the default option
         self.vdatum_region_option_menu = tk.OptionMenu(
             datum_transform_subframe,
             self.tkvar,
@@ -278,6 +280,10 @@ class Gui:
         self.vdatum_region_option_menu.grid(
             row=0,
             column=1)
+
+        print(self.vdatum_regions)
+        print(self.tkvar.get())
+        # self.tkvar.trace('w', self.updateVdatumMcuValue)
 
     """
     Builds the process buttons.
@@ -339,15 +345,13 @@ class Gui:
         self.tpuProcess.grid(row=1, column=2)
 
     # Button Callbacks
-    def updateVdatumMcuValue(self):
-        # get VDatum region MCU
-        region = self.tkvar.get()
+    def updateVdatumMcuValue(self, region):
+        print()
         print('REGION: {}'.format(region))
-        mcu = self.vdatum_regions[region]
-        print('The MCU for {} is {} cm.'.format(self.tkvar, mcu))
+        self.mcu = self.vdatum_regions[region]
+        print('The MCU for {} is {} cm.'.format(self.tkvar, self.mcu))
 
-
-    def updateButtonEnable(self, newValue = None):
+    def updateButtonEnable(self, newValue=None):
         if newValue == None:
 
             if self.lasInput.directoryName != "" \
