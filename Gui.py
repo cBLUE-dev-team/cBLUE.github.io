@@ -10,6 +10,7 @@ import pandas as pd
 from DirectorySelectButton import DirectorySelectButton
 from RadioFrame import RadioFrame
 
+
 # Import Processing code
 import load_sbet
 import pre_TPU_tile_processing
@@ -62,7 +63,7 @@ class Gui:
     """
     def buildInput(self):
         self.buildSubaerialInput()
-        self.buildSubaqueousInput()
+        self.buildParametersInput()
     
     """
     Builds the directory selection input and 
@@ -89,7 +90,7 @@ class Gui:
         self.buttonEnableStage = 0
         
         # Create Directory Inputs
-        buttonWidth = 122
+        buttonWidth = 82
         buttonHeight = 1
 
         self.lastoolsInput = DirectorySelectButton(
@@ -131,23 +132,62 @@ class Gui:
     """
     Builds the radio button input for the subaqueous portion.
     """
-    def buildSubaqueousInput(self):
+    def buildParametersInput(self):
         # Create Frame
-        frame = tk.Frame(
+        parameters_frame = tk.Frame(
             self.root,
             borderwidth=2,
             relief=tk.GROOVE)
+        parameters_frame.grid(
+            row=2,
+            sticky=tk.NSEW)
 
-        frame.grid(row=2, sticky=tk.NSEW)
-        
         # Create Frame Label
-        tk.Label(frame,
+        tk.Label(parameters_frame,
                  text="SUB-AQUEOUS Parameters",
                  font='Helvetica 10 bold').grid(
             row=0,
-            columnspan=3,
+            columnspan=2,
             sticky=tk.EW)
-        
+
+        water_surface_subframe = tk.Frame(
+            parameters_frame,
+            borderwidth=2,
+            relief=tk.GROOVE,)
+        water_surface_subframe.grid(
+            row=1,
+            column=0)
+
+        turbidity_subframe = tk.Frame(
+            parameters_frame,
+            borderwidth=2,
+            relief=tk.GROOVE)
+        turbidity_subframe.grid(
+            row=1,
+            column=1,
+            sticky=(tk.N, tk.W, tk.E, tk.S))
+        turbidity_subframe.columnconfigure(0, weight=1)
+        turbidity_subframe.rowconfigure(0, weight=1)
+
+        tk.Label(parameters_frame,
+                 text="Vertical Datum Transformation Parameters",
+                 font='Helvetica 10 bold').grid(
+            row=2,
+            columnspan=2,
+            sticky=tk.EW)
+
+        datum_transform_subframe = tk.Frame(
+            parameters_frame,
+            borderwidth=2,
+            relief=tk.GROOVE)
+        datum_transform_subframe.grid(
+            row=3,
+            column=0,
+            columnspan=2,
+            sticky=tk.EW)
+        datum_transform_subframe.columnconfigure(0, weight=1)
+        datum_transform_subframe.rowconfigure(0, weight=1)
+
         # Create Radio Buttons
         frameWidth = 40
 
@@ -168,40 +208,77 @@ class Gui:
             "Moderate",
             "Moderate-High",
             "High"]
-        
-        self.waterSurfaceRadio=RadioFrame(
-            frame,
+
+        self.waterSurfaceRadio = RadioFrame(
+            water_surface_subframe,
             "Water Surface",
             self.waterSurfaceOptions,
             1,
             callback=self.updateRadioEnable,
             width=frameWidth)
-
         self.waterSurfaceRadio.grid(
-            row=1,
+            row=0,
             column=0,
-            sticky=tk.N)
+            columnspan=2,
+            sticky=tk.W)
 
         self.windRadio = RadioFrame(
-            frame,
-            "Wind",
+            water_surface_subframe,
+            None,
             self.windOptions,
             1,
             width=frameWidth)
-
         self.windRadio.grid(
             row=1,
             column=1,
-            sticky=tk.N)
+            sticky=tk.W)
 
         self.turbidityRadio = RadioFrame(
-            frame,
+            turbidity_subframe,
             "Turbidity",
             self.turbidityOptions,
             0,
             width=frameWidth)
-        self.turbidityRadio.grid(row=1, column=2, sticky=tk.N)
-        
+        self.turbidityRadio.grid(
+            row=0,
+            column=0,
+            sticky=tk.N)
+        # List with options
+
+        tk.Label(
+            datum_transform_subframe,
+            text="VDatum Region").grid(
+            row=0,
+            column=0,
+            sticky=tk.EW)
+
+        vdatum_regions_MCU_file = r'I:\NGS_TPU\NGS_TPU_TOOL\V_Datum_MCU_Values.txt'
+        vdatum_regions_file_obj = open(vdatum_regions_MCU_file, 'r')
+        vdatum_regions = vdatum_regions_file_obj.readlines()
+        vdatum_regions_file_obj.close()
+
+        # clean up vdatum file; when copying table from internet, some dashes
+        # are 'regular dashes' and others are \x96; get rid of quotes and \n
+
+        vdatum_regions = [v.replace('\x96', '-') for v in vdatum_regions]
+        vdatum_regions = [v.replace('"', '') for v in vdatum_regions]
+        vdatum_regions = [v.replace('\n', '') for v in vdatum_regions]
+        regions = [v.split('\t')[0] for v in vdatum_regions]
+        mcu_values = [v.split('\t')[1] for v in vdatum_regions]
+        self.vdatum_regions = dict({(key, value) for (key, value) in zip(regions, mcu_values)})
+
+        self.tkvar = tk.StringVar(self.root)
+        self.tkvar.set('(Choose a region)')  # set the default option
+        self.vdatum_region_option_menu = tk.OptionMenu(
+            datum_transform_subframe,
+            self.tkvar,
+            *sorted(self.vdatum_regions.keys()),
+            command=self.updateVdatumMcuValue)
+        self.vdatum_region_option_menu.config(width=60)
+        self.vdatum_region_option_menu.grid(
+            row=0,
+            column=1)
+
     """
     Builds the process buttons.
     """
@@ -220,9 +297,12 @@ class Gui:
         tk.Label(
             frame,
             text='Process Buttons',
-            font='Helvetica 10 bold').grid(row=0, columnspan=3, sticky=tk.EW)
+            font='Helvetica 10 bold').grid(
+            row=0,
+            columnspan=3,
+            sticky=tk.EW)
 
-        buttonWidth = 30
+        buttonWidth = 26
         buttonHeight = 3
 
         self.las_btn_text = tk.StringVar()
@@ -258,17 +338,15 @@ class Gui:
             command=self.tpuProcessCallback)
         self.tpuProcess.grid(row=1, column=2)
 
-    #%% Button Callbacks
-    
-    """
-    Updates to enable buttons in order:
-        - Select LAS Directory
-        - Generate LAS Tiles
-        - Slect LAS SPLIT TILE directory and Select SBET directory
-        - Process TPU Sub-aerial
-        - Process TPU
-        - Open Output File
-    """
+    # Button Callbacks
+    def updateVdatumMcuValue(self):
+        # get VDatum region MCU
+        region = self.tkvar.get()
+        print('REGION: {}'.format(region))
+        mcu = self.vdatum_regions[region]
+        print('The MCU for {} is {} cm.'.format(self.tkvar, mcu))
+
+
     def updateButtonEnable(self, newValue = None):
         if newValue == None:
 

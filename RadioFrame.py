@@ -20,16 +20,18 @@ class RadioFrame:
             width=40):
         self.frame = Frame(
             root,
-            borderwidth=2,
+            borderwidth=0,
             relief=GROOVE,
             background=background)
-        Label(
-            self.frame, 
-            text=radioName, 
-            width=width, 
-            background=background, 
-            foreground=foreground).grid(row = 0)
-        
+
+        if radioName != None:
+            Label(
+                self.frame,
+                text=radioName,
+                width=width,
+                background=background,
+                foreground=foreground).grid(row=0)
+
         self.selection = IntVar(self.frame)
         
         self.buttons = list()
