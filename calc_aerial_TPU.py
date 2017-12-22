@@ -60,6 +60,7 @@ def merge(sbet_data, las_t, las_x, las_y, las_z):
 
     if max_dt > 1:
         merged_data = []
+
     else:
         merged_data = [
             sbet_data[:, 0][idx][mask],  # t_sbet
@@ -628,12 +629,14 @@ def main(sbets_df, las_files):
                         print('{:50s}{:.5f}'.format('calculating partial derivatives', partial_t))
                         print('{:50s}{:.5f}'.format('propagating error', prop_t))
                         print('{:>50}{:.5f}\n'.format('TOTAL:  ', total_toc - total_tic))
+
                         sum_tics = np.sum(tics)  # secs
                         avg_tics = np.mean(tics)  # secs
                         est_t_remain = timedelta(seconds=avg_tics * (num_las - i))
                         estimates.append(est_t_remain)
                         est_done_time = datetime.now() + est_t_remain
                         est_total_t = datetime.now() - main_tic + est_t_remain
+
                         print('{:50}{}/{}'.format('chunk size/thin factor', chunk_size, thin_factor))
                         print('{:50}{}'.format('# chunks', num_chunks))
                         print('{:50}{:.3f}'.format('tics sum', sum_tics))
@@ -642,6 +645,7 @@ def main(sbets_df, las_files):
                         print('{:50}{}'.format('estimated completion time', est_done_time))
                         print('{:50}{}'.format('total estimated time', est_total_t))
                         print('{}'.format('-' * 60))
+
         inFile.close()
 
     main_toc = datetime.now()
