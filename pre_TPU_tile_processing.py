@@ -72,13 +72,13 @@ def lassort(i, las, total_num_las, las_tools_dir):
     returncode, output = run_console_cmd(lassort_cmd)
 
 
-def lassplit(i, las, total_num_las, las_tools_dir):
+def lassplit(i, las, total_num_las, las_tools_dir, preprocess_dir):
     las_short_name = las.split('\\')[-1]
     print('splitting {} into flight lines ({} of {})...'.format(
         las_short_name, i, total_num_las))
     lassplit_path = r'{}\lassplit'.format(las_tools_dir)
     lassplit_cmd = r'{} -i {} -odir {} -olas'.format(
-        lassplit_path, las, split_dir)
+        lassplit_path, las, preprocess_dir)
     returncode, output = run_console_cmd(lassplit_cmd)
 
 
@@ -92,18 +92,17 @@ def lastile(las, out_dir, las_tools_dir):
     returncode, output = run_console_cmd(lastile_cmd)
 
 
-def main(las_tools_dir, las_dir):
+def main(las_tools_dir, las_dir, preprocess_dir):
     # FIXME:  These variables shouldn't be made global - done by Tim
     global processing_info
     processing_info = object()
-    global classes, class_to_extract, bathy_dir, sorted_dir, split_dir, tile_size, las_tiles
+    global classes, class_to_extract, bathy_dir, sorted_dir, tile_size, las_tiles
     
     tic = datetime.now()
 
-    bathy_dir = '\\'.join([las_dir, 'BATHY'])
-    sorted_dir = '\\'.join([las_dir, 'SORTED'])
-    split_dir = '\\'.join([las_dir, 'SPLIT'])
-    
+    bathy_dir = '\\'.join([las_dir, 'TEMP\BATHY'])
+    sorted_dir = '\\'.join([las_dir, 'TEMP\SORTED'])
+
     tile_size = 250
     class_to_extract = 'bathymetry'
     lassort_max_num_pts = 8e6
@@ -114,22 +113,22 @@ def main(las_tools_dir, las_dir):
         for fName in os.listdir(bathy_dir):
             os.remove(os.path.join(bathy_dir, fName))
     else:
-        print('making bathy dir...')
+        print('making {} dir...'.format(bathy_dir))
         os.makedirs(bathy_dir)
     
     if os.path.exists(sorted_dir):  # dir for time-sorted bathy files
         for fName in os.listdir(sorted_dir):
             os.remove(os.path.join(sorted_dir, fName))
     else:
-        print('making sorted dir...')
+        print('making {} dir...'.format(sorted_dir))
         os.makedirs(sorted_dir)
     
-    if os.path.exists(split_dir):  # dir for individual flight-line time-sorted bathy files
-        for fName in os.listdir(split_dir):
-            os.remove(os.path.join(split_dir, fName))
+    if os.path.exists(preprocess_dir):  # dir for individual flight-line time-sorted bathy files
+        for fName in os.listdir(preprocess_dir):
+            os.remove(os.path.join(preprocess_dir, fName))
     else:
-        print('making split dir...')
-        os.makedirs(split_dir)
+        print('making {} dir...'.format(preprocess_dir))
+        os.makedirs(preprocess_dir)
     
     ###########################################################
     ###########################################################
@@ -210,17 +209,28 @@ def main(las_tools_dir, las_dir):
             # first, get list of new tiles with basename of original las
             print('splitting newly tiled, smaller sorted tiles...')
             smaller_sorted_tiles = ['\\'.join([sorted_dir, t])
-                             for t in os.listdir(sorted_dir)
-                             if las_sorted_base in t
-                             and '\\'.join([sorted_dir, t]) != las_sorted]
+                                    for t in os.listdir(sorted_dir)
+                                    if las_sorted_base in t
+                                    and '\\'.join([sorted_dir, t]) != las_sorted]
+
             total_num_las += len(smaller_sorted_tiles) - 1  # -1 to exclude too-big file
             for t in sorted(smaller_sorted_tiles):
                 curr_ind += 1
-                lassplit(curr_ind, t, total_num_las, las_tools_dir)
+                lassplit(
+                    curr_ind,
+                    t,
+                    total_num_las,
+                    las_tools_dir,
+                    preprocess_dir)
 
         else:
             curr_ind += 1
-            lassplit(curr_ind, las_sorted, total_num_las, las_tools_dir)
+            lassplit(
+                curr_ind,
+                las_sorted,
+                total_num_las,
+                las_tools_dir,
+                preprocess_dir)
 
     sorted_too_big_file = open('{}\\sorted_too_big.txt'.format(sorted_dir), 'w')
     for las_bathy in sorted_too_big:

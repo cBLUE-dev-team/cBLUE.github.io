@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" filepath="$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" />
-      <module fileurl="file://Z:\_GEOG565_SpatioTemporalVaration\labs\lab3\nearest_neighbor\.idea\nearest_neighbor.iml" filepath="Z:\_GEOG565_SpatioTemporalVaration\labs\lab3\nearest_neighbor\.idea\nearest_neighbor.iml" />
     </modules>
   </component>
 </project>

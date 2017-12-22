@@ -102,15 +102,6 @@ class Gui:
             callback=self.updateButtonEnable)
         self.lastoolsInput.grid(row=1, column=0)
 
-        self.lasInput = DirectorySelectButton(
-            self,
-            frame,
-            "ORIGINAL LAS TILES",
-            buttonWidth,
-            buttonHeight,
-            callback=self.updateButtonEnable)
-        self.lasInput.grid(row=2, column=0)
-
         self.sbetInput = DirectorySelectButton(
             self,
             frame,
@@ -118,16 +109,25 @@ class Gui:
             buttonWidth,
             buttonHeight,
             callback=self.updateButtonEnable)
-        self.sbetInput.grid(row=4, column=0)
+        self.sbetInput.grid(row=2, column=0)
+
+        self.lasInput = DirectorySelectButton(
+            self,
+            frame,
+            "ORIGINAL LAS TILES",
+            buttonWidth,
+            buttonHeight,
+            callback=self.updateButtonEnable)
+        self.lasInput.grid(row=3, column=0)
 
         self.lasSplitTileInput = DirectorySelectButton(
             self,
             frame,
-            "FLIGHT LINE BATHY TILES",
+            "OUTPUT LAS FILES",
             buttonWidth,
             buttonHeight,
             callback=self.updateButtonEnable)
-        self.lasSplitTileInput.grid(row=3, column=0)
+        self.lasSplitTileInput.grid(row=4, column=0)
         
     """
     Builds the radio button input for the subaqueous portion.
@@ -170,7 +170,7 @@ class Gui:
         turbidity_subframe.rowconfigure(0, weight=1)
 
         tk.Label(parameters_frame,
-                 text="Vertical Datum Transformation Parameters",
+                 text="Regional VDatum Maximum Cumulative Uncertainty (MCU)",
                  font='Helvetica 10 bold').grid(
             row=2,
             columnspan=2,
@@ -196,11 +196,11 @@ class Gui:
             "Model (ECKV spectrum)"]
 
         self.windOptions = [
-            "Calm-Light air (0-3 knots)",
+            "Calm-light air (0-2 knots)",
             "Light breeze (3-6 knots)",
-            "Gentle Breeze (6-10 knots)",
-            "Moderate Breeze (10-15 knots)",
-            "Fresh Breeze (15-20 knots)"]
+            "Gentle Breeze (7-10 knots)",
+            "Moderate Breeze (11-15 knots)",
+            "Fresh Breeze (16-20 knots)"]
 
         self.turbidityOptions = [
             "Clear",
@@ -260,7 +260,7 @@ class Gui:
         # clean up vdatum file; when copying table from internet, some dashes
         # are 'regular dashes' and others are \x96; get rid of quotes and \n
 
-        default_msg = '(Choose a region)'
+        default_msg = 'No Region Specified'
         vdatum_regions = [v.replace('\x96', '-') for v in vdatum_regions]
         vdatum_regions = [v.replace('"', '') for v in vdatum_regions]
         vdatum_regions = [v.replace('\n', '') for v in vdatum_regions]
@@ -280,10 +280,6 @@ class Gui:
         self.vdatum_region_option_menu.grid(
             row=0,
             column=1)
-
-        print(self.vdatum_regions)
-        print(self.tkvar.get())
-        # self.tkvar.trace('w', self.updateVdatumMcuValue)
 
     """
     Builds the process buttons.
@@ -346,10 +342,9 @@ class Gui:
 
     # Button Callbacks
     def updateVdatumMcuValue(self, region):
-        print()
-        print('REGION: {}'.format(region))
+        print(self.tkvar.get())
         self.mcu = self.vdatum_regions[region]
-        print('The MCU for {} is {} cm.'.format(self.tkvar, self.mcu))
+        print('The MCU for {} is {} cm.'.format(region, self.mcu))
 
     def updateButtonEnable(self, newValue=None):
         if newValue == None:
@@ -375,7 +370,8 @@ class Gui:
     def lasProcessCallback(self):
         pre_TPU_tile_processing.main(
             self.lastoolsInput.directoryName,
-            self.lasInput.directoryName)
+            self.lasInput.directoryName,
+            self.lasSplitTileInput.directoryName)
         self.isPreProcessed = True
         self.las_btn_text.set(u'{} \u2713'.format(self.las_btn_text.get()))
         self.updateButtonEnable()
@@ -428,9 +424,9 @@ class Gui:
             elif windSelect == 2:
                 wind = [4, 5]
             elif windSelect == 3:
-                wind = [6, 7, 8]
+                wind = [6, 7]
             elif windSelect == 4:
-                wind = [9, 10]
+                wind = [8, 9, 10]
 
             # Get the Kd value from the GUI
             if kdSelect == 0:
@@ -450,13 +446,18 @@ class Gui:
                 self.waterSurfaceRadio.selection.get(), wind, kd, depth)
 
             print('combining subaerial and subaqueous TPU components...')
-            sigma = np.sqrt(subaqueous**2 + self.subaerial[:, 5]**2)
+            vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm
+
+            sigma = np.sqrt(
+                subaqueous**2 +
+                self.subaerial[:, 5]**2 +
+                vdatum_mcu**2)
             num_points = sigma.shape[0]
 
             output = np.hstack((
-                np.round_(self.subaerial[:, [0,1,2,5]], decimals=3),
-                np.round_(subaqueous.reshape(num_points, 1), decimals=3),
-                np.round_(sigma.reshape(num_points, 1), decimals=3),
+                np.round_(self.subaerial[:, [0, 1, 2, 5]], decimals=5),
+                np.round_(subaqueous.reshape(num_points, 1), decimals=5),
+                np.round_(sigma.reshape(num_points, 1), decimals=5),
                 self.flight_lines.reshape(num_points, 1)))
 
             output_tpu_file = r'{}_TPU.csv'.format(ot)
@@ -471,17 +472,23 @@ class Gui:
             print('creating TPU meta data file...')
             meta_str = '{} TPU METADATA FILE\n'.format(ot)
             meta_str += '\n{}\n{}\n{}\n'.format(
-                line_sep, 'SUB-AQUEOUS PARAMETERS', line_sep)
+                line_sep, 'PARAMETERS', line_sep)
 
-            meta_str += '{:15s}:  {}\n'.format(
+            meta_str += '{:20s}:  {}\n'.format(
                 'water surface',
                 self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
-            meta_str += '{:15s}:  {}\n'.format(
+            meta_str += '{:20s}:  {}\n'.format(
                 'wind',
                 self.windOptions[windSelect])
-            meta_str += '{:15s}:  {}\n'.format(
+            meta_str += '{:20s}:  {}\n'.format(
                 'kd',
                 self.turbidityOptions[kdSelect])
+            meta_str += '{:20s}:  {}\n'.format(
+                'VDatum region',
+                self.tkvar.get())
+            meta_str += '{:<20}:  {}\n'.format(
+                'VDatum region MCU',
+                vdatum_mcu)
 
             meta_str += '\n{}\n{}\n{}\n'.format(
                 line_sep, 'COMBINED SIGMA Z TPU (METERS) SUMMARY', line_sep)
