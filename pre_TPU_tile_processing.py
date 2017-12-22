@@ -51,7 +51,7 @@ def get_las_files(las_dir, contains):
     return las_files
 
 
-def las2las(i, las):
+def las2las(i, las, las_tools_dir):
     las_short_name = las.split('\\')[-1]
     print('extracting class code {} ({}) from {} ({} of {})...'.format(
         classes[class_to_extract], class_to_extract, las_short_name, i+1, len(las_tiles)))
@@ -62,7 +62,7 @@ def las2las(i, las):
     returncode, output = run_console_cmd(las2las_cmd)
 
 
-def lassort(i, las, total_num_las):
+def lassort(i, las, total_num_las, las_tools_dir):
     las_short_name = las.split('\\')[-1]
     print('sorting {} by gps_time ({} of {})...'.format(
         las_short_name, i, total_num_las))
@@ -72,17 +72,17 @@ def lassort(i, las, total_num_las):
     returncode, output = run_console_cmd(lassort_cmd)
 
 
-def lassplit(i, las, total_num_las):
+def lassplit(i, las, total_num_las, las_tools_dir, preprocess_dir):
     las_short_name = las.split('\\')[-1]
     print('splitting {} into flight lines ({} of {})...'.format(
         las_short_name, i, total_num_las))
     lassplit_path = r'{}\lassplit'.format(las_tools_dir)
     lassplit_cmd = r'{} -i {} -odir {} -olas'.format(
-        lassplit_path, las, split_dir)
+        lassplit_path, las, preprocess_dir)
     returncode, output = run_console_cmd(lassplit_cmd)
 
 
-def lastile(las, out_dir):
+def lastile(las, out_dir, las_tools_dir):
     las_short_name = las.split('\\')[-1]
     print('tiling {} into {}-m tiles...'.format(
         las_short_name, tile_size))
@@ -92,32 +92,17 @@ def lastile(las, out_dir):
     returncode, output = run_console_cmd(lastile_cmd)
 
 
-def main(las_dir):
+def main(las_tools_dir, las_dir, preprocess_dir):
     # FIXME:  These variables shouldn't be made global - done by Tim
     global processing_info
     processing_info = object()
-    global las_tools_dir, classes, class_to_extract, bathy_dir, sorted_dir, split_dir, tile_size, las_tiles
+    global classes, class_to_extract, bathy_dir, sorted_dir, tile_size, las_tiles
     
     tic = datetime.now()
 
-    # The following code was added by Firat Eren on Dec. 6, 2017. It loads the directory name from the MATLAB workspace and then combines the strings in the file
+    bathy_dir = '\\'.join([las_dir, 'TEMP\BATHY'])
+    sorted_dir = '\\'.join([las_dir, 'TEMP\SORTED'])
 
-    #las_dir = r'I:\NGS_TPU\Data_for_TopoBathy_Lidar_TPU' \  # Commented out by firat on Dec. 6, 2017
-    #          r'\las\04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc'
-    #las_dir=r'C:\Users\firat-marine\Google Drive\MATLAB\Firat\TPU project\Firat\TPU modules\z uncertainty\air-water integration\faster\surface from riegl data'
-
-    #mat_contents = sio.loadmat('dirname.mat')
-    #dnew = mat_contents['lasdir']
-    #a = " ".join(str(x) for x in dnew)
-    #las_dir=a
-    #---end of section edited by Firat
-
-    bathy_dir = '\\'.join([las_dir, 'BATHY'])
-    sorted_dir = '\\'.join([las_dir, 'SORTED'])
-    split_dir = '\\'.join([las_dir, 'SPLIT'])
-    
-    #FIXME: las_tools_dir shouldn't require user to set
-    las_tools_dir = r'C:\Python27\LAStools\bin'
     tile_size = 250
     class_to_extract = 'bathymetry'
     lassort_max_num_pts = 8e6
@@ -128,22 +113,22 @@ def main(las_dir):
         for fName in os.listdir(bathy_dir):
             os.remove(os.path.join(bathy_dir, fName))
     else:
-        print('making bathy dir...')
+        print('making {} dir...'.format(bathy_dir))
         os.makedirs(bathy_dir)
     
     if os.path.exists(sorted_dir):  # dir for time-sorted bathy files
         for fName in os.listdir(sorted_dir):
             os.remove(os.path.join(sorted_dir, fName))
     else:
-        print('making sorted dir...')
+        print('making {} dir...'.format(sorted_dir))
         os.makedirs(sorted_dir)
     
-    if os.path.exists(split_dir):  # dir for individual flight-line time-sorted bathy files
-        for fName in os.listdir(split_dir):
-            os.remove(os.path.join(split_dir, fName))
+    if os.path.exists(preprocess_dir):  # dir for individual flight-line time-sorted bathy files
+        for fName in os.listdir(preprocess_dir):
+            os.remove(os.path.join(preprocess_dir, fName))
     else:
-        print('making split dir...')
-        os.makedirs(split_dir)
+        print('making {} dir...'.format(preprocess_dir))
+        os.makedirs(preprocess_dir)
     
     ###########################################################
     ###########################################################
@@ -151,7 +136,7 @@ def main(las_dir):
     tic_las2las = datetime.now()
     las_tiles = get_las_files(las_dir, contains='.las')
     for i, las in enumerate(sorted(las_tiles)):
-        las2las(i, las)
+        las2las(i, las, las_tools_dir)
     toc_las2las = datetime.now()
     las2las_time = toc_las2las - tic_las2las
     print('las2las completion time:  {}'.format(las2las_time))
@@ -173,7 +158,7 @@ def main(las_dir):
 
             print('{} has too many points ({})...'.format(las_bathy_base, num_pts))
             bathy_too_big.append(las_bathy)
-            lastile(las_bathy, bathy_dir)
+            lastile(las_bathy, bathy_dir, las_tools_dir)
 
             # lassort newly tiled, smaller tiles
             # first, get list of new tiles with basename of original las
@@ -186,16 +171,16 @@ def main(las_dir):
             for z, t in enumerate(sorted(smaller_bathy_tiles)):
                 print z
                 curr_ind += 1
-                lassort(curr_ind, t, total_num_las)  # show updated index and total # of las files
+                lassort(curr_ind, t, total_num_las, las_tools_dir)  # show updated index and total # of las files
 
         else:
             curr_ind += 1
-            lassort(curr_ind, las_bathy, total_num_las)
+            lassort(curr_ind, las_bathy, total_num_las, las_tools_dir)
 
     bathy_too_big_file = open('{}\\bathy_too_big.txt'.format(bathy_dir), 'w')
     for las_bathy in bathy_too_big:
         bathy_too_big_file.write('{}\n'.format(las_bathy))
-    bathy_too_big_file.close() #FIXME: Tell Nick to close files.
+    bathy_too_big_file.close()
 
     toc_lassort = datetime.now()
     lassort_time = toc_lassort - tic_lassort
@@ -218,23 +203,34 @@ def main(las_dir):
 
             print('{} has too many points ({})...'.format(las_sorted_base, num_pts))
             sorted_too_big.append(las_sorted)
-            lastile(las_sorted, sorted_dir)
+            lastile(las_sorted, sorted_dir, las_tools_dir)
 
             # lasplit newly tiled, smaller tiles
             # first, get list of new tiles with basename of original las
             print('splitting newly tiled, smaller sorted tiles...')
             smaller_sorted_tiles = ['\\'.join([sorted_dir, t])
-                             for t in os.listdir(sorted_dir)
-                             if las_sorted_base in t
-                             and '\\'.join([sorted_dir, t]) != las_sorted]
+                                    for t in os.listdir(sorted_dir)
+                                    if las_sorted_base in t
+                                    and '\\'.join([sorted_dir, t]) != las_sorted]
+
             total_num_las += len(smaller_sorted_tiles) - 1  # -1 to exclude too-big file
             for t in sorted(smaller_sorted_tiles):
                 curr_ind += 1
-                lassplit(curr_ind, t, total_num_las)
+                lassplit(
+                    curr_ind,
+                    t,
+                    total_num_las,
+                    las_tools_dir,
+                    preprocess_dir)
 
         else:
             curr_ind += 1
-            lassplit(curr_ind, las_sorted, total_num_las)
+            lassplit(
+                curr_ind,
+                las_sorted,
+                total_num_las,
+                las_tools_dir,
+                preprocess_dir)
 
     sorted_too_big_file = open('{}\\sorted_too_big.txt'.format(sorted_dir), 'w')
     for las_bathy in sorted_too_big:
@@ -249,7 +245,7 @@ def main(las_dir):
     ###########################################################
     # output time summary
     print('-' * 50)
-    # print('las2las completion time:  {}'.format(las2las_time))
+    print('las2las completion time:  {}'.format(las2las_time))
     print('lassort completion time:  {}'.format(lassort_time))
     print('lassplit completion time:  {}'.format(lassplit_time))
     print('TOTAL COMPLETION TIME:  {}'.format(datetime.now() - tic))
