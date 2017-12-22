@@ -260,7 +260,7 @@ class Gui:
         # clean up vdatum file; when copying table from internet, some dashes
         # are 'regular dashes' and others are \x96; get rid of quotes and \n
 
-        default_msg = 'No Region Specified'
+        default_msg = '---No Region Specified---'
         vdatum_regions = [v.replace('\x96', '-') for v in vdatum_regions]
         vdatum_regions = [v.replace('"', '') for v in vdatum_regions]
         vdatum_regions = [v.replace('\n', '') for v in vdatum_regions]
@@ -350,7 +350,8 @@ class Gui:
         if newValue == None:
 
             if self.lasInput.directoryName != "" \
-                    and self.lastoolsInput.directoryName != "":
+                    and self.lastoolsInput.directoryName != ""\
+                    and self.lasSplitTileInput.directoryName != "":
                 self.lasProcess.config(state=tk.ACTIVE)
 
             if self.sbetInput.directoryName != "":
@@ -486,12 +487,12 @@ class Gui:
             meta_str += '{:20s}:  {}\n'.format(
                 'VDatum region',
                 self.tkvar.get())
-            meta_str += '{:<20}:  {}\n'.format(
+            meta_str += '{:<20}:  {} (m)\n'.format(
                 'VDatum region MCU',
                 vdatum_mcu)
 
             meta_str += '\n{}\n{}\n{}\n'.format(
-                line_sep, 'COMBINED SIGMA Z TPU (METERS) SUMMARY', line_sep)
+                line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
             meta_str += '{:10}\t{:10}\t{:10}\t{:10}\t{:10}\t{:10}\n'.format(
                 'FILE ID', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
 
@@ -508,7 +509,7 @@ class Gui:
                 std_tpu = np.std(flight_line_tpu)
                 count_tpu = np.count_nonzero(flight_line_tpu)
 
-                meta_str += '{:<10}\t{:<10.3f}\t{:<10.3f}\t{:<10.3f}\t{:<10.3f}\t{}\n'.format(
+                meta_str += '{:<10}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{}\n'.format(
                     int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
 
             meta_str += '\n{}\n{}\n{}\n'.format(

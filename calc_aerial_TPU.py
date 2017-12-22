@@ -344,10 +344,10 @@ def main(sbets_df, las_files):
     estimates = []  # list of estimates of t_remaining
 
     # Added by Firat
-    LE_post1_arr=np.zeros((3, 1))
-    sz1=np.zeros(1)
-    sy1=np.zeros(1)
-    sx1=np.zeros(1)
+    LE_post1_arr = np.zeros((3, 1))
+    sz1 = np.zeros(1)
+    sy1 = np.zeros(1)
+    sx1 = np.zeros(1)
     # End of Added by Firat
     flight_lines = []
 
