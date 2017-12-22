@@ -2,10 +2,10 @@ from math import radians
 from sympy import *  # to symbolically compute Jacobian partial derivatives (which are huge!)
 from datetime import datetime, timedelta
 import numpy as np
-import scipy.io as sio
+# import scipy.io as sio
 import numexpr as ne  # used to speed up numpy calculations
-import pandas as pd  # a lot of the code relies on pandas dataframes
-import os
+# import pandas as pd  # a lot of the code relies on pandas dataframes
+# import os
 import laspy
 import time
 

@@ -3,7 +3,7 @@
 import Tkinter as tk
 import os
 import numpy as np
-import webbrowser
+# import webbrowser
 import pandas as pd
 
 # Import Gui helper classes
@@ -252,7 +252,7 @@ class Gui:
             column=0,
             sticky=tk.EW)
 
-        vdatum_regions_MCU_file = r'I:\NGS_TPU\NGS_TPU_TOOL\V_Datum_MCU_Values.txt'
+        vdatum_regions_MCU_file = r'V_Datum_MCU_Values.txt'
         vdatum_regions_file_obj = open(vdatum_regions_MCU_file, 'r')
         vdatum_regions = vdatum_regions_file_obj.readlines()
         vdatum_regions_file_obj.close()

@@ -1,8 +1,8 @@
 import os
 import laspy
 import subprocess
-import scipy.io as sio
-import numpy as np
+# import scipy.io as sio
+# import numpy as np
 from datetime import datetime
 
 
