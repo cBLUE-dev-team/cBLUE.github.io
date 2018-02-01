@@ -112,21 +112,24 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     lassplit_max_num_pts = 7.5e6
     classes = {'bathymetry': 26, }
 
-    if os.path.exists(bathy_dir):  # dir for extracted bathy las files
+    # dir for extracted bathy las files
+    if os.path.exists(bathy_dir):
         for fName in os.listdir(bathy_dir):
             os.remove(os.path.join(bathy_dir, fName))
     else:
         print('making {} dir...'.format(bathy_dir))
         os.makedirs(bathy_dir)
-    
-    if os.path.exists(sorted_dir):  # dir for time-sorted bathy files
+
+    # dir for time-sorted bathy files
+    if os.path.exists(sorted_dir):
         for fName in os.listdir(sorted_dir):
             os.remove(os.path.join(sorted_dir, fName))
     else:
         print('making {} dir...'.format(sorted_dir))
         os.makedirs(sorted_dir)
-    
-    if os.path.exists(preprocess_dir):  # dir for individual flight-line time-sorted bathy files
+
+    # dir for flight-line time-sorted bathy files
+    if os.path.exists(preprocess_dir):
         for fName in os.listdir(preprocess_dir):
             os.remove(os.path.join(preprocess_dir, fName))
     else:
