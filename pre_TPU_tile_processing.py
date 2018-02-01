@@ -93,9 +93,6 @@ def lastile(las, out_dir, las_tools_dir):
 
 def main(las_tools_dir, las_dir, preprocess_dir):
 
-    # with open(sec_dict_json, 'r') as f:
-    #     sec_dict = json.load(f)
-
     # FIXME:  These variables shouldn't be made global - done by Tim
     # global processing_info
     # processing_info = object()
