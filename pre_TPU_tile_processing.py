@@ -44,9 +44,8 @@ def get_num_points(las):
 
 
 def get_las_files(las_dir, contains):
-    las_files = ['\\'.join([las_dir, f])
-                 for f in os.listdir(las_dir)
-                 if contains in f]
+    las_files = ['\\'.join([las_dir, f]) for f in os.listdir(las_dir)
+                 if contains in f and f.endswith('.las')]
 
     return las_files
 
@@ -93,9 +92,14 @@ def lastile(las, out_dir, las_tools_dir):
 
 
 def main(las_tools_dir, las_dir, preprocess_dir):
+
+
+    # with open(sec_dict_json, 'r') as f:
+    #     sec_dict = json.load(f)
+
     # FIXME:  These variables shouldn't be made global - done by Tim
-    global processing_info
-    processing_info = object()
+    # global processing_info
+    # processing_info = object()
     global classes, class_to_extract, bathy_dir, sorted_dir, tile_size, las_tiles
     
     tic = datetime.now()
@@ -129,10 +133,9 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     else:
         print('making {} dir...'.format(preprocess_dir))
         os.makedirs(preprocess_dir)
-    
-    ###########################################################
-    ###########################################################
-    # run las2las.exe to extract bathy points (class code 26)
+
+    '''------------------------------------------------------
+    run las2las.exe to extract bathy points (class code 26)'''
     tic_las2las = datetime.now()
     las_tiles = get_las_files(las_dir, contains='.las')
     for i, las in enumerate(sorted(las_tiles)):
@@ -141,11 +144,10 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     las2las_time = toc_las2las - tic_las2las
     print('las2las completion time:  {}'.format(las2las_time))
 
-    ###########################################################
-    ###########################################################
-    # run lassort to sort the bathy-only tiles by gps_time
+    '''------------------------------------------------------
+    run lassort to sort the bathy-only tiles by gps_time'''
     tic_lassort = datetime.now()
-    las_tiles = get_las_files(bathy_dir, contains='BATHY')
+    las_tiles = get_las_files(bathy_dir, contains='_BATHY.las')
     bathy_too_big = []
     total_num_las = len(las_tiles)  # can grow if any bathy tiles need to be tiled
     curr_ind = 0
@@ -186,9 +188,8 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     lassort_time = toc_lassort - tic_lassort
     print('lassort completion time:  {}'.format(lassort_time))
 
-    ###########################################################
-    ###########################################################
-    # run lassplit to split sorted tiles into flightlines
+    '''------------------------------------------------------
+    run lassplit to split sorted tiles into flightlines'''
     tic_lassplit = datetime.now()
     las_tiles = get_las_files(sorted_dir, contains='SORTED')
     sorted_too_big = []
@@ -241,11 +242,10 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     lassplit_time = toc_lassplit - tic_lassplit
     print('lassplit completion time:  {}'.format(lassplit_time))
 
-    ###########################################################
-    ###########################################################
-    # output time summary
+    '''------------------------------------------------------
+    output time summary'''
     print('-' * 50)
-    print('las2las completion time:  {}'.format(las2las_time))
+    # print('las2las completion time:  {}'.format(las2las_time))
     print('lassort completion time:  {}'.format(lassort_time))
     print('lassplit completion time:  {}'.format(lassplit_time))
     print('TOTAL COMPLETION TIME:  {}'.format(datetime.now() - tic))
