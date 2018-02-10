@@ -93,6 +93,9 @@ def lastile(las, out_dir, las_tools_dir):
 
 def main(las_tools_dir, las_dir, preprocess_dir):
 
+    # with open(sec_dict_json, 'r') as f:
+    #     sec_dict = json.load(f)
+
     # FIXME:  These variables shouldn't be made global - done by Tim
     # global processing_info
     # processing_info = object()
@@ -137,6 +140,11 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     run las2las.exe to extract bathy points (class code 26)'''
     tic_las2las = datetime.now()
     las_tiles = get_las_files(las_dir, contains='.las')
+
+    # las_tiles = [f for f in las_tiles if int(f.split('\\')[-1].split('_')[0:7]) >
+    #              2863000]  2857500
+    print len(las_tiles)
+
     for i, las in enumerate(sorted(las_tiles)):
         las2las(i, las, las_tools_dir)
     toc_las2las = datetime.now()
