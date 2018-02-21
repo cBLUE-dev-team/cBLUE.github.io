@@ -408,7 +408,7 @@ class Gui:
             las_to_process = []
             for slf in split_las_files:
                 if slf.startswith(ot):
-                    las = r'{}\{}'.format(self.lasSplitTileInput.directoryName, slf)
+                    las = os.path.join(self.lasSplitTileInput.directoryName, slf)
                     print('LAS:  {}'.format(las))
                     las_to_process.append(las)
 
@@ -462,8 +462,7 @@ class Gui:
                 self.flight_lines.reshape(num_points, 1)))
 
             output_tpu_file = r'{}_TPU.csv'.format(ot)
-            output_path ='{}\\{}'.format(
-                self.lasInput.directoryName, output_tpu_file)
+            output_path = os.path.join(self.lasInput.directoryName, output_tpu_file)
             print('writing TPU to {}'.format(output_path))
             output_df = pd.DataFrame(output)
             output_df.to_csv(output_path, index=False)
@@ -518,8 +517,7 @@ class Gui:
                 meta_str += '{} - {}\n'.format(j, l)
 
             output_tpu_meta_file = r'{}_TPU.meta'.format(ot)
-            outputMetaFile = open("{}\\{}".format(
-                self.lasInput.directoryName, output_tpu_meta_file), "w")
+            outputMetaFile = open(os.path.join(self.lasInput.directoryName, output_tpu_meta_file), "w")
             outputMetaFile.write(meta_str)
             outputMetaFile.close()
 
