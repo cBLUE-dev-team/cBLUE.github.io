@@ -6,9 +6,7 @@ from datetime import datetime
 
 # get sbet date from file name
 def get_sbet_date(sbet):
-
-    sbet_parts = sbet.split('\\')
-    sbet_name = sbet_parts[-1]
+    sbet_name = os.path.basename(sbet)
     year = int(sbet_name[0:4])
     month = int(sbet_name[4:6])
     day = int(sbet_name[6:8])
@@ -69,10 +67,8 @@ def build_sbets_data(sbet_files):
 
 
 def main(sbet_dir):
-
-    sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
+    sbet_files = sorted([os.path.join(sbet_dir, f) for f in os.listdir(sbet_dir)
                          if f.endswith('.txt')])
-
     sbet_tic = time.clock()
     sbets_df = build_sbets_data(sbet_files)
     sbet_toc = time.clock()

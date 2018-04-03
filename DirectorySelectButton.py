@@ -58,24 +58,11 @@ class DirectorySelectButton(object):
         if directoryName == "":
             return
 
-        self.directoryName = directoryName
+        self.directoryName = os.path.normpath(directoryName)
         self.master.lastFileLoc = self.directoryName
         
         #update the Gui
-        directoryRoots = self.directoryName.split("/")
-        displayDirectory = str()
-
-        while len(directoryRoots) != 0:
-            currentLine = directoryRoots.pop(0)
-
-            if len(directoryRoots) != 0:
-                while len(currentLine) + len(directoryRoots[0]) < self.width:
-                    currentLine = "{}\\{}".format(currentLine, directoryRoots.pop(0))
-
-                    if len(directoryRoots) == 0:
-                        break
-            
-            displayDirectory = "{}{}".format(displayDirectory, currentLine)
+        displayDirectory = self.directoryName
         
         self.button.config(
             text="{}: {}".format(self.directType, displayDirectory),
