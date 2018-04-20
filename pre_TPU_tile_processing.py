@@ -113,28 +113,19 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     classes = {'bathymetry': 26, }
 
     # dir for extracted bathy las files
-    if os.path.exists(bathy_dir):
-        for fName in os.listdir(bathy_dir):
-            os.remove(os.path.join(bathy_dir, fName))
-    else:
+    if not os.path.exists(bathy_dir):
         print('making {} dir...'.format(bathy_dir))
         os.makedirs(bathy_dir)
 
     # dir for time-sorted bathy files
-    if os.path.exists(sorted_dir):
-        for fName in os.listdir(sorted_dir):
-            os.remove(os.path.join(sorted_dir, fName))
-    else:
+    if not os.path.exists(sorted_dir):
         print('making {} dir...'.format(sorted_dir))
         os.makedirs(sorted_dir)
 
-    # dir for flight-line time-sorted bathy files
-    if os.path.exists(preprocess_dir):
-        for fName in os.listdir(preprocess_dir):
-            os.remove(os.path.join(preprocess_dir, fName))
-    else:
-        print('making {} dir...'.format(preprocess_dir))
-        os.makedirs(preprocess_dir)
+    # # dir for flight-line time-sorted bathy files
+    # if not os.path.exists(preprocess_dir):
+    #     print('making {} dir...'.format(preprocess_dir))
+    #     os.makedirs(preprocess_dir)
 
     '''------------------------------------------------------
     run las2las.exe to extract bathy points (class code 26)'''

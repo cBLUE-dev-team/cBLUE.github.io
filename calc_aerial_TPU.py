@@ -49,6 +49,9 @@ def build_las_data(inFile, start, end, thin_factor):
 # match up las and sbet data using timestamps
 def merge(sbet_data, las_t, las_x, las_y, las_z):
 
+    a_std_dev = 0.02  # degrees
+    b_std_dev = 0.02  # degrees
+
     # match sbet and las dfs based on timestamps
     sbet_t = sbet_data[:, 0]
     num_chunk_points = las_t.shape
@@ -74,8 +77,8 @@ def merge(sbet_data, las_t, las_x, las_y, las_z):
             np.radians(sbet_data[:, 6][idx][mask]),  # r
             np.radians(sbet_data[:, 7][idx][mask]),  # p
             np.radians(sbet_data[:, 8][idx][mask]),  # h
-            np.full(num_chunk_points, radians(0.001)),  # std_ang1
-            np.full(num_chunk_points, radians(0.001)),  # std_ang2
+            np.full(num_chunk_points, radians(a_std_dev)),  # std_ang1
+            np.full(num_chunk_points, radians(b_std_dev)),  # std_ang2
             np.radians(sbet_data[:, 12][idx][mask]),  # std_r
             np.radians(sbet_data[:, 13][idx][mask]),  # std_p
             np.radians(sbet_data[:, 14][idx][mask]),  # std_h
@@ -496,7 +499,7 @@ def main(sbets_df, las_files):
 
                     #----- Added by Firat
                     LE_post_arr=np.asarray(LE_post)
-                    LE_post1_arr=np.concatenate((LE_post1_arr,LE_post_arr), axis=1)
+                    LE_post1_arr=np.concatenate((LE_post1_arr, LE_post_arr), axis=1)
                      # ----End of part added by Firat on Dec. 8, 2017
 
                     Er2 = np.asarray([x_las, y_las, z_las]) - np.asarray(LE_post)
@@ -596,12 +599,12 @@ def main(sbets_df, las_files):
                     sx = ne.evaluate("sqrt(sum_pJ1)")
                     sy = ne.evaluate("sqrt(sum_pJ2)")
                     sz = ne.evaluate("sqrt(sum_pJ3)")
-                    print("sx:-----------")
-                    print(sx)
-                    print("sy:-----------")
-                    print(sy)
-                    print("sz:-----------")
-                    print(sz)
+                    # print("sx:-----------")
+                    # print(sx)
+                    # print("sy:-----------")
+                    # print(sy)
+                    # print("sz:-----------")
+                    # print(sz)
 
                     # Added by Firat
                     sz1=np.concatenate((sz1, sz))
@@ -618,46 +621,46 @@ def main(sbets_df, las_files):
                     total_toc = time.clock()
                     tics = np.append(tics, total_toc - total_tic)
 
-                    # output progress updates as desired (every n-th data points)
-                    if i % 1 == 0:
-                        print('{:50s}{:.5f}'.format('getting data from .las file', build_las_t))
-                        print('{:50s}{:.5f}'.format('merging sbet and las data', merge_t))
-                        print('{:50s}{:.5f}'.format('estimating a, b, and w', est_ab_t))
-                        print('{:50s}{:.5f}'.format('calc diff between true and est las xyz', ert1_t))
-                        print('{:50s}{:.5f}'.format('Solve least squares est of poly surf', lstsq_t))
-                        print('{:50s}{:.5f}'.format('calc diff between true/est laser X, Y, Z', ert2_t))
-                        print('{:50s}{:.5f}'.format('calculating partial derivatives', partial_t))
-                        print('{:50s}{:.5f}'.format('propagating error', prop_t))
-                        print('{:>50}{:.5f}\n'.format('TOTAL:  ', total_toc - total_tic))
-
-                        sum_tics = np.sum(tics)  # secs
-                        avg_tics = np.mean(tics)  # secs
-                        est_t_remain = timedelta(seconds=avg_tics * (num_las - i))
-                        estimates.append(est_t_remain)
-                        est_done_time = datetime.now() + est_t_remain
-                        est_total_t = datetime.now() - main_tic + est_t_remain
-
-                        print('{:50}{}/{}'.format('chunk size/thin factor', chunk_size, thin_factor))
-                        print('{:50}{}'.format('# chunks', num_chunks))
-                        print('{:50}{:.3f}'.format('tics sum', sum_tics))
-                        print('{:50}{:.3f}'.format('tics avg', avg_tics))
-                        print('{:50}{}'.format('estimated time remaining', est_t_remain))
-                        print('{:50}{}'.format('estimated completion time', est_done_time))
-                        print('{:50}{}'.format('total estimated time', est_total_t))
-                        print('{}'.format('-' * 60))
+                    # # output progress updates as desired (every n-th data points)
+                    # if i % 1 == 0:
+                    #     print('{:50s}{:.5f}'.format('getting data from .las file', build_las_t))
+                    #     print('{:50s}{:.5f}'.format('merging sbet and las data', merge_t))
+                    #     print('{:50s}{:.5f}'.format('estimating a, b, and w', est_ab_t))
+                    #     print('{:50s}{:.5f}'.format('calc diff between true and est las xyz', ert1_t))
+                    #     print('{:50s}{:.5f}'.format('Solve least squares est of poly surf', lstsq_t))
+                    #     print('{:50s}{:.5f}'.format('calc diff between true/est laser X, Y, Z', ert2_t))
+                    #     print('{:50s}{:.5f}'.format('calculating partial derivatives', partial_t))
+                    #     print('{:50s}{:.5f}'.format('propagating error', prop_t))
+                    #     print('{:>50}{:.5f}\n'.format('TOTAL:  ', total_toc - total_tic))
+                    #
+                    #     sum_tics = np.sum(tics)  # secs
+                    #     avg_tics = np.mean(tics)  # secs
+                    #     est_t_remain = timedelta(seconds=avg_tics * (num_las - i))
+                    #     estimates.append(est_t_remain)
+                    #     est_done_time = datetime.now() + est_t_remain
+                    #     est_total_t = datetime.now() - main_tic + est_t_remain
+                    #
+                    #     print('{:50}{}/{}'.format('chunk size/thin factor', chunk_size, thin_factor))
+                    #     print('{:50}{}'.format('# chunks', num_chunks))
+                    #     print('{:50}{:.3f}'.format('tics sum', sum_tics))
+                    #     print('{:50}{:.3f}'.format('tics avg', avg_tics))
+                    #     print('{:50}{}'.format('estimated time remaining', est_t_remain))
+                    #     print('{:50}{}'.format('estimated completion time', est_done_time))
+                    #     print('{:50}{}'.format('total estimated time', est_total_t))
+                    #     print('{}'.format('-' * 60))
 
         inFile.close()
 
     main_toc = datetime.now()
-    print('Everything took {}'.format(main_toc - main_tic))
+    print('elapsed time: {}'.format(main_toc - main_tic))
 
     #---------- Modified by Firat on Dec. 8, 2017
     arr_del = np.delete(LE_post1_arr, 0, 1)
     arr_del = np.transpose(arr_del)
 
-    sz_del = np.delete(sz1,0) # Delete the first element wihich is 0
-    sx_del = np.delete(sx1,0) # Delete the first element wihich is 0
-    sy_del = np.delete(sy1,0) # Delete the first element wihich is 0
+    sz_del = np.delete(sz1, 0)  # Delete the first element which is 0
+    sx_del = np.delete(sx1, 0)  # Delete the first element which is 0
+    sy_del = np.delete(sy1, 0)  # Delete the first element which is 0
 
     sx1 = sx_del[np.newaxis, :].T
     sy1 = sy_del[np.newaxis, :].T
@@ -666,6 +669,7 @@ def main(sbets_df, las_files):
 
 #------End of Firat's modifications
     return arr_del, np.asarray(flight_lines).T
+
 
 if __name__ == '__main__':
     main()
