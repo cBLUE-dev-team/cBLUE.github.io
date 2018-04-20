@@ -329,7 +329,6 @@ def main(sbets_df, las_files):
     directory choosing code changed to parameters for compatibility with GUI
     """
 
-    # las_files = ['\\'.join([las_dir, l]) for l in os.listdir(las_dir)]
     num_las = len(las_files)
 
     # calculate M and R matrices
