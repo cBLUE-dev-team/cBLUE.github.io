@@ -3,6 +3,7 @@
 import Tkinter as tk
 import os
 import numpy as np
+import numexpr as ne  # used to speed up numpy calculations
 # import webbrowser
 import pandas as pd
 
@@ -369,13 +370,53 @@ class Gui:
     Callback for the lasProcess button.
     """
     def lasProcessCallback(self):
-        pre_TPU_tile_processing.main(
-            self.lastoolsInput.directoryName,
-            self.lasInput.directoryName,
-            self.lasSplitTileInput.directoryName)
-        self.isPreProcessed = True
-        self.las_btn_text.set(u'{} \u2713'.format(self.las_btn_text.get()))
-        self.updateButtonEnable()
+
+        # check if the output folder already contains files, and ask user want to do
+
+        def mark_pre_process_complete():
+            self.isPreProcessed = True
+            self.las_btn_text.set(u'{} \u2713'.format(self.las_btn_text.get()))
+            self.updateButtonEnable()
+
+        def pre_process():
+            pre_TPU_tile_processing.main(
+                self.lastoolsInput.directoryName,
+                self.lasInput.directoryName,
+                self.lasSplitTileInput.directoryName)
+
+            mark_pre_process_complete()
+
+        def skip_pre_processing():
+            app.destroy()
+            mark_pre_process_complete()
+
+        def dont_skip_pre_processing():
+            app.destroy()
+            pre_process()
+
+        if os.listdir(self.lasSplitTileInput.directoryName):  # i.e., if folder not empty
+            app = tk.Tk()
+            app.title("Have you pre-processed the las files already?")
+            app.geometry("500x130")
+
+            msg = '''
+            The output directory already contains pre-processed files.  Do you wish to 
+            continue with pre-processing the las files (and overwrite any existing files),
+            or do you want to use the existing pre-processed files and skip this step?'''
+
+            skip_msg = 'Skip this step (i.e., use existing pre-processed files)'
+            no_skip_msg = 'Continue with pre-processing (i.e., overwrite any existing files'
+
+            label = tk.Label(app, text=msg, height=0, width=100)
+            skip = tk.Button(app, text=skip_msg, width=50, command=skip_pre_processing)
+            no_skip = tk.Button(app, text=no_skip_msg, width=50, command=dont_skip_pre_processing)
+            label.pack()
+            skip.pack(side='bottom', padx=0, pady=0)
+            no_skip.pack(side='bottom', padx=5, pady=5)
+
+        else:
+            pre_process()
+
 
     """
     Callback for the sbetProcess button.
@@ -448,13 +489,14 @@ class Gui:
 
             print('combining subaerial and subaqueous TPU components...')
             vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm
+            subaerial = self.subaerial[:, 5]
+            subaerial = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
+            sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial**2 + vdatum_mcu**2)')
 
-            sigma = np.sqrt(
-                subaqueous**2 +
-                self.subaerial[:, 5]**2 +
-                vdatum_mcu**2)
+            # 'old way' (i.e., without numexpr)
+            # sigma = np.sqrt(subaqueous**2 + self.subaerial[:, 5]**2 + vdatum_mcu**2)
+
             num_points = sigma.shape[0]
-
             output = np.hstack((
                 np.round_(self.subaerial[:, [0, 1, 2, 5]], decimals=5),
                 np.round_(subaqueous.reshape(num_points, 1), decimals=5),
@@ -462,7 +504,8 @@ class Gui:
                 self.flight_lines.reshape(num_points, 1)))
 
             output_tpu_file = r'{}_TPU.csv'.format(ot)
-            output_path = os.path.join(self.lasInput.directoryName, output_tpu_file)
+            output_path ='{}\\{}'.format(self.lasInput.directoryName, output_tpu_file)
+
             print('writing TPU to {}'.format(output_path))
             output_df = pd.DataFrame(output)
             output_df.to_csv(output_path, index=False)
@@ -471,24 +514,14 @@ class Gui:
             line_sep = '-' * 50
             print('creating TPU meta data file...')
             meta_str = '{} TPU METADATA FILE\n'.format(ot)
-            meta_str += '\n{}\n{}\n{}\n'.format(
-                line_sep, 'PARAMETERS', line_sep)
+            meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
 
-            meta_str += '{:20s}:  {}\n'.format(
-                'water surface',
+            meta_str += '{:20s}:  {}\n'.format('water surface',
                 self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
-            meta_str += '{:20s}:  {}\n'.format(
-                'wind',
-                self.windOptions[windSelect])
-            meta_str += '{:20s}:  {}\n'.format(
-                'kd',
-                self.turbidityOptions[kdSelect])
-            meta_str += '{:20s}:  {}\n'.format(
-                'VDatum region',
-                self.tkvar.get())
-            meta_str += '{:<20}:  {} (m)\n'.format(
-                'VDatum region MCU',
-                vdatum_mcu)
+            meta_str += '{:20s}:  {}\n'.format('wind', self.windOptions[windSelect])
+            meta_str += '{:20s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
+            meta_str += '{:20s}:  {}\n'.format('VDatum region', self.tkvar.get())
+            meta_str += '{:<20}:  {} (m)\n'.format('VDatum region MCU', vdatum_mcu)
 
             meta_str += '\n{}\n{}\n{}\n'.format(
                 line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)

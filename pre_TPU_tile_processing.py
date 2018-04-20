@@ -112,31 +112,30 @@ def main(las_tools_dir, las_dir, preprocess_dir):
     lassplit_max_num_pts = 7.5e6
     classes = {'bathymetry': 26, }
 
-    if os.path.exists(bathy_dir):  # dir for extracted bathy las files
-        for fName in os.listdir(bathy_dir):
-            os.remove(os.path.join(bathy_dir, fName))
-    else:
+    # dir for extracted bathy las files
+    if not os.path.exists(bathy_dir):
         print('making {} dir...'.format(bathy_dir))
         os.makedirs(bathy_dir)
-    
-    if os.path.exists(sorted_dir):  # dir for time-sorted bathy files
-        for fName in os.listdir(sorted_dir):
-            os.remove(os.path.join(sorted_dir, fName))
-    else:
+
+    # dir for time-sorted bathy files
+    if not os.path.exists(sorted_dir):
         print('making {} dir...'.format(sorted_dir))
         os.makedirs(sorted_dir)
-    
-    if os.path.exists(preprocess_dir):  # dir for individual flight-line time-sorted bathy files
-        for fName in os.listdir(preprocess_dir):
-            os.remove(os.path.join(preprocess_dir, fName))
-    else:
-        print('making {} dir...'.format(preprocess_dir))
-        os.makedirs(preprocess_dir)
+
+    # # dir for flight-line time-sorted bathy files
+    # if not os.path.exists(preprocess_dir):
+    #     print('making {} dir...'.format(preprocess_dir))
+    #     os.makedirs(preprocess_dir)
 
     '''------------------------------------------------------
     run las2las.exe to extract bathy points (class code 26)'''
     tic_las2las = datetime.now()
     las_tiles = get_las_files(las_dir, contains='.las')
+
+    # las_tiles = [f for f in las_tiles if int(f.split('\\')[-1].split('_')[0:7]) >
+    #              2863000]  2857500
+    print len(las_tiles)
+
     for i, las in enumerate(sorted(las_tiles)):
         las2las(i, las, las_tools_dir)
     toc_las2las = datetime.now()
