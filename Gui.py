@@ -3,6 +3,7 @@
 import Tkinter as tk
 import os
 import numpy as np
+import numexpr as ne  # used to speed up numpy calculations
 # import webbrowser
 import pandas as pd
 
@@ -13,7 +14,6 @@ from RadioFrame import RadioFrame
 
 # Import Processing code
 import load_sbet
-import pre_TPU_tile_processing
 import calc_aerial_TPU
 import SubAqueous
 
@@ -71,20 +71,11 @@ class Gui:
     """
     def buildSubaerialInput(self):
         # Create Frame
-        frame = tk.Frame(
-            self.root, 
-            borderwidth=2, 
-            relief=tk.GROOVE)
-        
+        frame = tk.Frame(self.root, borderwidth=2, relief=tk.GROOVE)
         frame.grid(row=1)
         
         #Create Frame Label
-        tk.Label(frame,
-                 text="Data Directories",
-                 font='Helvetica 10 bold').grid(
-            row=0,
-            columnspan=3,
-            sticky=tk.EW)
+        tk.Label(frame, text="Data Directories", font='Helvetica 10 bold').grid(row=0, columnspan=3, sticky=tk.EW)
         
         # Create variable to measure progress through button stages
         self.buttonEnableStage = 0
@@ -93,41 +84,17 @@ class Gui:
         buttonWidth = 82
         buttonHeight = 1
 
-        self.lastoolsInput = DirectorySelectButton(
-            self,
-            frame,
-            "LAS TOOLS BIN",
-            buttonWidth,
-            buttonHeight,
-            callback=self.updateButtonEnable)
-        self.lastoolsInput.grid(row=1, column=0)
-
-        self.sbetInput = DirectorySelectButton(
-            self,
-            frame,
-            "SBET FILES",
-            buttonWidth,
-            buttonHeight,
-            callback=self.updateButtonEnable)
+        self.sbetInput = DirectorySelectButton(self, frame, "SBET FILES", buttonWidth,
+                                               buttonHeight, callback=self.updateButtonEnable)
         self.sbetInput.grid(row=2, column=0)
 
-        self.lasInput = DirectorySelectButton(
-            self,
-            frame,
-            "ORIGINAL LAS TILES",
-            buttonWidth,
-            buttonHeight,
-            callback=self.updateButtonEnable)
+        self.lasInput = DirectorySelectButton(self, frame, "ORIGINAL LAS TILES", buttonWidth,
+                                              buttonHeight, callback=self.updateButtonEnable)
         self.lasInput.grid(row=3, column=0)
 
-        self.lasSplitTileInput = DirectorySelectButton(
-            self,
-            frame,
-            "OUTPUT LAS FILES",
-            buttonWidth,
-            buttonHeight,
-            callback=self.updateButtonEnable)
-        self.lasSplitTileInput.grid(row=4, column=0)
+        self.tpuOutput = DirectorySelectButton(self, frame, "OUTPUT FILES", buttonWidth,
+                                               buttonHeight, callback=self.updateButtonEnable)
+        self.tpuOutput.grid(row=4, column=0)
         
     """
     Builds the radio button input for the subaqueous portion.
@@ -138,53 +105,26 @@ class Gui:
             self.root,
             borderwidth=2,
             relief=tk.GROOVE)
-        parameters_frame.grid(
-            row=2,
-            sticky=tk.NSEW)
+        parameters_frame.grid(row=2, sticky=tk.NSEW)
 
         # Create Frame Label
         tk.Label(parameters_frame,
                  text="SUB-AQUEOUS Parameters",
-                 font='Helvetica 10 bold').grid(
-            row=0,
-            columnspan=2,
-            sticky=tk.EW)
+                 font='Helvetica 10 bold').grid(row=0, columnspan=2, sticky=tk.EW)
 
-        water_surface_subframe = tk.Frame(
-            parameters_frame,
-            borderwidth=2,
-            relief=tk.GROOVE,)
-        water_surface_subframe.grid(
-            row=1,
-            column=0)
+        water_surface_subframe = tk.Frame(parameters_frame, borderwidth=2, relief=tk.GROOVE)
+        water_surface_subframe.grid(row=1, column=0)
 
-        turbidity_subframe = tk.Frame(
-            parameters_frame,
-            borderwidth=2,
-            relief=tk.GROOVE)
-        turbidity_subframe.grid(
-            row=1,
-            column=1,
-            sticky=(tk.N, tk.W, tk.E, tk.S))
+        turbidity_subframe = tk.Frame(parameters_frame, borderwidth=2, relief=tk.GROOVE)
+        turbidity_subframe.grid(row=1, column=1, sticky=(tk.N, tk.W, tk.E, tk.S))
         turbidity_subframe.columnconfigure(0, weight=1)
         turbidity_subframe.rowconfigure(0, weight=1)
 
         tk.Label(parameters_frame,
                  text="Regional VDatum Maximum Cumulative Uncertainty (MCU)",
-                 font='Helvetica 10 bold').grid(
-            row=2,
-            columnspan=2,
-            sticky=tk.EW)
-
-        datum_transform_subframe = tk.Frame(
-            parameters_frame,
-            borderwidth=2,
-            relief=tk.GROOVE)
-        datum_transform_subframe.grid(
-            row=3,
-            column=0,
-            columnspan=2,
-            sticky=tk.EW)
+                 font='Helvetica 10 bold').grid(row=2, columnspan=2, sticky=tk.EW)
+        datum_transform_subframe = tk.Frame(parameters_frame, borderwidth=2, relief=tk.GROOVE)
+        datum_transform_subframe.grid(row=3, column=0, columnspan=2, sticky=tk.EW)
         datum_transform_subframe.columnconfigure(0, weight=1)
         datum_transform_subframe.rowconfigure(0, weight=1)
 
@@ -209,48 +149,18 @@ class Gui:
             "Moderate-High",
             "High"]
 
-        self.waterSurfaceRadio = RadioFrame(
-            water_surface_subframe,
-            "Water Surface",
-            self.waterSurfaceOptions,
-            1,
-            callback=self.updateRadioEnable,
-            width=frameWidth)
-        self.waterSurfaceRadio.grid(
-            row=0,
-            column=0,
-            columnspan=2,
-            sticky=tk.W)
+        self.waterSurfaceRadio = RadioFrame(water_surface_subframe, "Water Surface", self.waterSurfaceOptions,
+                                            1, callback=self.updateRadioEnable, width=frameWidth)
+        self.waterSurfaceRadio.grid(row=0, column=0, columnspan=2, sticky=tk.W)
 
-        self.windRadio = RadioFrame(
-            water_surface_subframe,
-            None,
-            self.windOptions,
-            1,
-            width=frameWidth)
-        self.windRadio.grid(
-            row=1,
-            column=1,
-            sticky=tk.W)
+        self.windRadio = RadioFrame(water_surface_subframe, None, self.windOptions, 1, width=frameWidth)
+        self.windRadio.grid(row=1, column=1, sticky=tk.W)
 
-        self.turbidityRadio = RadioFrame(
-            turbidity_subframe,
-            "Turbidity",
-            self.turbidityOptions,
-            0,
-            width=frameWidth)
-        self.turbidityRadio.grid(
-            row=0,
-            column=0,
-            sticky=tk.N)
+        self.turbidityRadio = RadioFrame(turbidity_subframe, "Turbidity", self.turbidityOptions, 0, width=frameWidth)
+        self.turbidityRadio.grid(row=0, column=0, sticky=tk.N)
         # List with options
 
-        tk.Label(
-            datum_transform_subframe,
-            text="VDatum Region").grid(
-            row=0,
-            column=0,
-            sticky=tk.EW)
+        tk.Label(datum_transform_subframe, text="VDatum Region").grid(row=0, column=0, sticky=tk.EW)
 
         vdatum_regions_MCU_file = r'V_Datum_MCU_Values.txt'
         vdatum_regions_file_obj = open(vdatum_regions_MCU_file, 'r')
@@ -277,67 +187,33 @@ class Gui:
             *sorted(self.vdatum_regions.keys()),
             command=self.updateVdatumMcuValue)
         self.vdatum_region_option_menu.config(width=60)
-        self.vdatum_region_option_menu.grid(
-            row=0,
-            column=1)
+        self.vdatum_region_option_menu.grid(row=0, column=1)
 
     """
     Builds the process buttons.
     """
     def buildProcessButtons(self):
-
-        self.isPreProcessed = False
         self.isSbetLoaded = False
 
-        frame = tk.Frame(
-            self.root,
-            borderwidth=2,
-            relief=tk.GROOVE)
+        frame = tk.Frame(self.root, borderwidth=2, relief=tk.GROOVE)
         frame.grid(row=3, sticky=tk.S)
 
         # Create Frame Label
-        tk.Label(
-            frame,
-            text='Process Buttons',
-            font='Helvetica 10 bold').grid(
-            row=0,
-            columnspan=3,
-            sticky=tk.EW)
+        tk.Label(frame, text='Process Buttons', font='Helvetica 10 bold').grid(row=0, columnspan=3, sticky=tk.EW)
 
         buttonWidth = 26
         buttonHeight = 3
 
-        self.las_btn_text = tk.StringVar()
-        self.las_btn_text.set("Pre-Process Tiles")
-        self.lasProcess = tk.Button(
-            frame,
-            textvariable=self.las_btn_text,
-            width=buttonWidth,
-            height=buttonHeight,
-            state=tk.DISABLED,
-            command=self.lasProcessCallback)
-        self.lasProcess.grid(row=1, column=0)
-
         self.sbet_btn_text = tk.StringVar()
         self.sbet_btn_text.set("Load SBET Files")
-        self.sbetProcess = tk.Button(
-            frame,
-            textvariable=self.sbet_btn_text,
-            width=buttonWidth,
-            height=buttonHeight,
-            state=tk.DISABLED,
-            command=self.sbetProcessCallback)
+        self.sbetProcess = tk.Button(frame, textvariable=self.sbet_btn_text, width=buttonWidth,
+                                     height=buttonHeight, state=tk.DISABLED, command=self.sbetProcessCallback)
         self.sbetProcess.grid(row=1, column=1)
 
         self.tpu_btn_text = tk.StringVar()
         self.tpu_btn_text.set("Process TPU")
-        self.tpuProcess = tk.Button(
-            frame,
-            textvariable=self.tpu_btn_text,
-            width=buttonWidth,
-            height=buttonHeight,
-            state=tk.DISABLED,
-            command=self.tpuProcessCallback)
+        self.tpuProcess = tk.Button(frame, textvariable=self.tpu_btn_text, width=buttonWidth,
+                                    height=buttonHeight, state=tk.DISABLED, command=self.tpuProcessCallback)
         self.tpuProcess.grid(row=1, column=2)
 
     # Button Callbacks
@@ -348,34 +224,14 @@ class Gui:
 
     def updateButtonEnable(self, newValue=None):
         if newValue == None:
-
-            if self.lasInput.directoryName != "" \
-                    and self.lastoolsInput.directoryName != ""\
-                    and self.lasSplitTileInput.directoryName != "":
-                self.lasProcess.config(state=tk.ACTIVE)
-
             if self.sbetInput.directoryName != "":
                 self.sbetProcess.config(state=tk.ACTIVE)
 
-            if self.lasSplitTileInput.directoryName != "" \
-                    and self.isPreProcessed \
-                    and self.isSbetLoaded:
+            if self.tpuOutput.directoryName != "" and self.isSbetLoaded:
                 self.tpuProcess.config(state=tk.ACTIVE)
-
         else:
             self.buttonEnableStage = newValue
 
-    """
-    Callback for the lasProcess button.
-    """
-    def lasProcessCallback(self):
-        pre_TPU_tile_processing.main(
-            self.lastoolsInput.directoryName,
-            self.lasInput.directoryName,
-            self.lasSplitTileInput.directoryName)
-        self.isPreProcessed = True
-        self.las_btn_text.set(u'{} \u2713'.format(self.las_btn_text.get()))
-        self.updateButtonEnable()
 
     """
     Callback for the sbetProcess button.
@@ -390,30 +246,13 @@ class Gui:
     Callback for processing the subaqueous data and inputs and creating outputs.
     """
     def tpuProcessCallback(self):
+        las_files = [os.path.join(self.lasInput.directoryName, l)
+                     for l in os.listdir(self.lasInput.directoryName) if l.endswith('.las')]
 
-        orig_tiles = [
-            f.split('.')[0] for f in os.listdir(self.lasInput.directoryName)
-            if f.endswith('.las')]
-
-        split_las_files = [
-            f for f in os.listdir(self.lasSplitTileInput.directoryName)
-            if f.endswith('.las')]
-
-        for ot in orig_tiles:
-
-            '''
-            get bathy-only flight-line las files
-            corresponding to each original tile
-            '''
-            las_to_process = []
-            for slf in split_las_files:
-                if slf.startswith(ot):
-                    las = r'{}\{}'.format(self.lasSplitTileInput.directoryName, slf)
-                    print('LAS:  {}'.format(las))
-                    las_to_process.append(las)
-
-            self.subaerial, self.flight_lines = calc_aerial_TPU.main(
-                self.sbets_df, las_to_process)
+        for i, las in enumerate(las_files, 1):
+            print '-' * 50
+            print las, '({} of {})'.format(i, len(las_files))
+            self.subaerial, self.flight_lines = calc_aerial_TPU.main(self.sbets_df, las)
             windSelect = self.windRadio.selection.get()
             kdSelect = self.turbidityRadio.selection.get()
 
@@ -443,58 +282,44 @@ class Gui:
 
             print('calculating subaqueous TPU component...')
             depth = self.subaerial[:, 2] + 23
-            subaqueous = SubAqueous.main(
-                self.waterSurfaceRadio.selection.get(), wind, kd, depth)
+            subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
 
             print('combining subaerial and subaqueous TPU components...')
             vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm
+            subaerial = self.subaerial[:, 5]
+            subaerial = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
+            sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial**2 + vdatum_mcu**2)')
 
-            sigma = np.sqrt(
-                subaqueous**2 +
-                self.subaerial[:, 5]**2 +
-                vdatum_mcu**2)
             num_points = sigma.shape[0]
-
             output = np.hstack((
                 np.round_(self.subaerial[:, [0, 1, 2, 5]], decimals=5),
                 np.round_(subaqueous.reshape(num_points, 1), decimals=5),
                 np.round_(sigma.reshape(num_points, 1), decimals=5),
                 self.flight_lines.reshape(num_points, 1)))
 
-            output_tpu_file = r'{}_TPU.csv'.format(ot)
-            output_path ='{}\\{}'.format(
-                self.lasInput.directoryName, output_tpu_file)
-            print('writing TPU to {}'.format(output_path))
+            output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
+            output_path = '{}\\{}'.format(self.tpuOutput.directoryName, output_tpu_file)
             output_df = pd.DataFrame(output)
-            output_df.to_csv(output_path, index=False)
+            h5_path = output_path.replace('csv', 'h5')
+            print('writing TPU to {}'.format(h5_path))
+            output_df.to_hdf(h5_path, 'TPU', mode='w', data_columns=True)
 
             # create meta file
             line_sep = '-' * 50
             print('creating TPU meta data file...')
-            meta_str = '{} TPU METADATA FILE\n'.format(ot)
-            meta_str += '\n{}\n{}\n{}\n'.format(
-                line_sep, 'PARAMETERS', line_sep)
+            meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
+            meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
 
-            meta_str += '{:20s}:  {}\n'.format(
-                'water surface',
-                self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
-            meta_str += '{:20s}:  {}\n'.format(
-                'wind',
-                self.windOptions[windSelect])
-            meta_str += '{:20s}:  {}\n'.format(
-                'kd',
-                self.turbidityOptions[kdSelect])
-            meta_str += '{:20s}:  {}\n'.format(
-                'VDatum region',
-                self.tkvar.get())
-            meta_str += '{:<20}:  {} (m)\n'.format(
-                'VDatum region MCU',
-                vdatum_mcu)
+            meta_str += '{:20s}:  {}\n'.format('water surface', self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
+            meta_str += '{:20s}:  {}\n'.format('wind', self.windOptions[windSelect])
+            meta_str += '{:20s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
+            meta_str += '{:20s}:  {}\n'.format('VDatum region', self.tkvar.get())
+            meta_str += '{:<20}:  {} (m)\n'.format('VDatum region MCU', vdatum_mcu)
 
             meta_str += '\n{}\n{}\n{}\n'.format(
                 line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
             meta_str += '{:10}\t{:10}\t{:10}\t{:10}\t{:10}\t{:10}\n'.format(
-                'FILE ID', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
+                'FIGHT_LINE', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
 
             output = output.astype(np.float)
             unique_flight_line_codes = np.unique(output[:, 6])
@@ -512,14 +337,8 @@ class Gui:
                 meta_str += '{:<10}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{}\n'.format(
                     int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
 
-            meta_str += '\n{}\n{}\n{}\n'.format(
-                line_sep, 'FILE IDS (BATHY-ONLY FLIGHT-LINE FILES)', line_sep)
-            for j, l in enumerate(las_to_process):
-                meta_str += '{} - {}\n'.format(j, l)
-
-            output_tpu_meta_file = r'{}_TPU.meta'.format(ot)
-            outputMetaFile = open("{}\\{}".format(
-                self.lasInput.directoryName, output_tpu_meta_file), "w")
+            output_tpu_meta_file = r'{}_TPU.meta'.format(las.split('\\')[-1].replace('.las', ''))
+            outputMetaFile = open("{}\\{}".format(self.tpuOutput.directoryName, output_tpu_meta_file), "w")
             outputMetaFile.write(meta_str)
             outputMetaFile.close()
 
