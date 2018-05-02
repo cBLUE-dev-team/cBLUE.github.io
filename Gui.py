@@ -417,6 +417,8 @@ class Gui:
         else:
             pre_process()
 
+=======
+>>>>>>> preprocessing_flow_v2
 
     """
     Callback for the sbetProcess button.
@@ -431,7 +433,10 @@ class Gui:
     Callback for processing the subaqueous data and inputs and creating outputs.
     """
     def tpuProcessCallback(self):
+        las_files = [os.path.join(self.lasInput.directoryName, l)
+                     for l in os.listdir(self.lasInput.directoryName) if l.endswith('.las')]
 
+<<<<<<< HEAD
         orig_tiles = [
             f.split('.')[0] for f in os.listdir(self.lasInput.directoryName)
             if f.endswith('.las')]
@@ -455,6 +460,12 @@ class Gui:
 
             self.subaerial, self.flight_lines = calc_aerial_TPU.main(
                 self.sbets_df, las_to_process)
+=======
+        for i, las in enumerate(las_files, 1):
+            print '-' * 50
+            print las, '({} of {})'.format(i, len(las_files))
+            self.subaerial, self.flight_lines = calc_aerial_TPU.main(self.sbets_df, las)
+>>>>>>> preprocessing_flow_v2
             windSelect = self.windRadio.selection.get()
             kdSelect = self.turbidityRadio.selection.get()
 
@@ -482,10 +493,9 @@ class Gui:
             elif kdSelect == 4:
                 kd = range(33, 41)
 
-            print('calculating subaqueous TPU component...')
+            print('\ncalculating subaqueous TPU component...')
             depth = self.subaerial[:, 2] + 23
-            subaqueous = SubAqueous.main(
-                self.waterSurfaceRadio.selection.get(), wind, kd, depth)
+            subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
 
             print('combining subaerial and subaqueous TPU components...')
             vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm
@@ -513,11 +523,18 @@ class Gui:
             # create meta file
             line_sep = '-' * 50
             print('creating TPU meta data file...')
+<<<<<<< HEAD
             meta_str = '{} TPU METADATA FILE\n'.format(ot)
             meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
 
             meta_str += '{:20s}:  {}\n'.format('water surface',
                 self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
+=======
+            meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
+            meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
+
+            meta_str += '{:20s}:  {}\n'.format('water surface', self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
+>>>>>>> preprocessing_flow_v2
             meta_str += '{:20s}:  {}\n'.format('wind', self.windOptions[windSelect])
             meta_str += '{:20s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
             meta_str += '{:20s}:  {}\n'.format('VDatum region', self.tkvar.get())
@@ -526,7 +543,7 @@ class Gui:
             meta_str += '\n{}\n{}\n{}\n'.format(
                 line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
             meta_str += '{:10}\t{:10}\t{:10}\t{:10}\t{:10}\t{:10}\n'.format(
-                'FILE ID', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
+                'FIGHT_LINE', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
 
             output = output.astype(np.float)
             unique_flight_line_codes = np.unique(output[:, 6])
@@ -544,6 +561,7 @@ class Gui:
                 meta_str += '{:<10}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{}\n'.format(
                     int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
 
+<<<<<<< HEAD
             meta_str += '\n{}\n{}\n{}\n'.format(
                 line_sep, 'FILE IDS (BATHY-ONLY FLIGHT-LINE FILES)', line_sep)
             for j, l in enumerate(las_to_process):
@@ -551,6 +569,10 @@ class Gui:
 
             output_tpu_meta_file = r'{}_TPU.meta'.format(ot)
             outputMetaFile = open(os.path.join(self.lasInput.directoryName, output_tpu_meta_file), "w")
+=======
+            output_tpu_meta_file = r'{}_TPU.meta'.format(las.split('\\')[-1].replace('.las', ''))
+            outputMetaFile = open("{}\\{}".format(self.tpuOutput.directoryName, output_tpu_meta_file), "w")
+>>>>>>> preprocessing_flow_v2
             outputMetaFile.write(meta_str)
             outputMetaFile.close()
 
