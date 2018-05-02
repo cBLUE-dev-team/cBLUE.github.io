@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import time
 
 """
 Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
@@ -26,13 +27,13 @@ def main(surface, wind_par, kd_par, depth):
         fit = riegl_process(kd_par)
     else:
         fit = model_process(wind_par, kd_par)
-    res = list()
-    for d in depth:
-        res.append(round(fit[0]*d**2+fit[1]*d+fit[2], 3))
+
+    res = fit[0]*depth**2+fit[1]*depth+fit[2]
+
     return np.asarray(res).T
 
 """
-Retrieves the average fit for all given cominations of wind and kd given from look_up_fit.csv.
+Retrieves the average fit for all given combinations of wind and kd given from look_up_fit.csv.
 look_up_fit.csv uses precalculated uncertainties based on seasurface models.
 
 @param    wind   int[]     (possible wind values as determined by the GUI)

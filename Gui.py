@@ -43,7 +43,7 @@ class Gui:
         self.title = tk.Label(
             text="RIEGL VQ-880-G\n"
                  "TOTAL PROPAGATED UNCERTAINTY (TPU) PROGRAM\n"
-                 "v1.0",
+                 "v1.1",
             background="green")
         self.title.grid(row=0, sticky=tk.EW)
         
@@ -280,7 +280,7 @@ class Gui:
             elif kdSelect == 4:
                 kd = range(33, 41)
 
-            print('calculating subaqueous TPU component...')
+            print('\ncalculating subaqueous TPU component...')
             depth = self.subaerial[:, 2] + 23
             subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
 

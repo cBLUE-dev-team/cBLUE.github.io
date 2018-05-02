@@ -1,17 +1,15 @@
 from math import radians
 from sympy import *  # to symbolically compute Jacobian partial derivatives (which are huge!)
-from datetime import datetime, timedelta
 import numpy as np
-# import scipy.io as sio
 import numexpr as ne  # used to speed up numpy calculations
-# import pandas as pd  # a lot of the code relies on pandas dataframes
-# import os
 import laspy
-import time
 
 
 # match up las and sbet data using timestamps
 def merge(sbet_data, las_t, las_x, las_y, las_z):
+
+    a_std_dev = 0.02  # degrees
+    b_std_dev = 0.02  # degrees
 
     # match sbet and las dfs based on timestamps
     sbet_t = sbet_data[:, 0]
@@ -37,8 +35,8 @@ def merge(sbet_data, las_t, las_x, las_y, las_z):
             np.radians(sbet_data[:, 6][idx][mask]),  # r
             np.radians(sbet_data[:, 7][idx][mask]),  # p
             np.radians(sbet_data[:, 8][idx][mask]),  # h
-            np.full(num_chunk_points, radians(0.001)),  # std_ang1
-            np.full(num_chunk_points, radians(0.001)),  # std_ang2
+            np.full(num_chunk_points, radians(a_std_dev)),  # std_ang1
+            np.full(num_chunk_points, radians(b_std_dev)),  # std_ang2
             np.radians(sbet_data[:, 12][idx][mask]),  # std_r
             np.radians(sbet_data[:, 13][idx][mask]),  # std_p
             np.radians(sbet_data[:, 14][idx][mask]),  # std_h
@@ -279,9 +277,8 @@ def main(sbets_df, las):
 
     flight_lines = []
 
-    #  get data from .las file
     inFile = laspy.file.File(las, mode="r")
-    num_file_points = inFile.__len__()  # i.e., len(point_records)
+    num_file_points = inFile.__len__()
 
     scale_x = np.asarray(inFile.header.scale[0])
     scale_y = np.asarray(inFile.header.scale[1])
@@ -296,7 +293,7 @@ def main(sbets_df, las):
     bathy_records = inFile.points[bathy_class]
     bathy_points = bathy_records['point']
 
-    print 'calculating subaerial TPU for flight line',
+    print 'calculating subaerial TPU for flight line(s)',
     flight_line_ids = np.unique(bathy_points['pt_src_id'])
 
     for fl in flight_line_ids:
@@ -510,11 +507,9 @@ def main(sbets_df, las):
                 sy = ne.evaluate("sqrt(sum_pJ2)")
                 sz = ne.evaluate("sqrt(sum_pJ3)")
 
-                # Added by Firat
                 sz1 = np.concatenate((sz1, sz))
                 sy1 = np.concatenate((sy1, sy))
                 sx1 = np.concatenate((sx1, sx))
-                # ------End of part added by Firat
 
                 flight_lines.extend([fl] * sz.shape[0])
 
@@ -523,16 +518,16 @@ def main(sbets_df, las):
     arr_del = np.delete(LE_post1_arr, 0, 1)
     arr_del = np.transpose(arr_del)
 
-    sz_del = np.delete(sz1, 0)  # Delete the first element wihich is 0
-    sx_del = np.delete(sx1, 0)  # Delete the first element wihich is 0
-    sy_del = np.delete(sy1, 0)  # Delete the first element wihich is 0
+    sz_del = np.delete(sz1, 0)  # Delete the first element which is 0
+    sx_del = np.delete(sx1, 0)  # Delete the first element which is 0
+    sy_del = np.delete(sy1, 0)  # Delete the first element which is 0
 
     sx1 = sx_del[np.newaxis, :].T
     sy1 = sy_del[np.newaxis, :].T
     sz1 = sz_del[np.newaxis, :].T
     arr_del = np.concatenate((arr_del, sx1, sy1, sz1), axis=1)
 
-    return arr_del, np.asarray(flight_lines).T
+    return arr_del, np.asarray(flight_lines).T  # returns tpu data for all flight lines in las tile
 
 
 if __name__ == '__main__':
