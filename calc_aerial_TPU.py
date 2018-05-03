@@ -494,7 +494,7 @@ def main(sbets_df, las):
                 C = np.asarray(D[11:])
                 C = ne.evaluate("C * C")  # variance = stddev**2
 
-                # delete the rows corresponding to the Jacobian functions that equal 0
+                # delete the rows corresponding to the Jacobian functions that equal zero
                 Cx = np.delete(C, [6, 7], 0)
                 Cy = np.delete(C, [5, 7], 0)
                 Cz = np.delete(C, [4, 5, 6], 0)
