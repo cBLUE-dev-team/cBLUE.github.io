@@ -729,7 +729,7 @@ def main(sbets_df, las):
 
                 LE_post_arr=np.asarray(LE_post)
                 LE_post1_arr=np.concatenate((LE_post1_arr,LE_post_arr), axis=1)
-                Er2 = np.asarray([x_las, y_las, z_las]) - np.asarray(LE_post)
+                # Er2 = np.asarray([x_las, y_las, z_las]) - np.asarray(LE_post)
 
                 '''calc partial derivatives (declared these variable 
                 because numexper expression don't allow indexing)'''
