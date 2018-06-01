@@ -42,13 +42,13 @@ look_up_fit.csv uses precalculated uncertainties based on seasurface models.
 @return   fit    float[]   (polynomial fit for SubAqueous TPU)
 """
 def model_process(wind, kd):
-    look_up = open("look_up_fit.csv")
+    look_up = open("ECKV_look_up_fit_HG0995_1sig.csv")
     look_up_data = look_up.readlines()
     look_up.close()
     fit = [0, 0, 0]
     for w in wind:
         for k in kd:
-            fit_par = look_up_data[36*(w-1)+k-5].split(",")
+            fit_par = look_up_data[31*(w-1)+k-6].split(",")
             fit[0] += float(fit_par[0])
             fit[1] += float(fit_par[1])
             fit[2] += float(fit_par[2])
@@ -66,12 +66,12 @@ reigl_look_up_fit.csv uses precalculated uncertainties based on riegl models.
 @return   fit    float[]   (polynomial fit for SubAqueous TPU)
 """
 def riegl_process(kd):
-    look_up = open("Riegl_look_up_fit.csv")
+    look_up = open("Riegl_look_up_fit_HG0995_1sig.csv")
     look_up_data = look_up.readlines()
     look_up.close()
     fit = [0, 0, 0]
     for k in kd:
-        fit_par = look_up_data[k-5].split(",")
+        fit_par = look_up_data[k-6].split(",") 
         fit[0] += float(fit_par[0])
         fit[1] += float(fit_par[1])
         fit[2] += float(fit_par[2])
