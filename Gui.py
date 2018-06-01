@@ -252,7 +252,7 @@ class Gui:
         for i, las in enumerate(las_files, 1):
             print '-' * 50
             print las, '({} of {})'.format(i, len(las_files))
-            self.subaerial, self.flight_lines = calc_aerial_TPU.main(self.sbets_df, las)
+            self.subaerial, self.flight_lines, self.poly_surf_errs = calc_aerial_TPU.main(self.sbets_df, las)
             windSelect = self.windRadio.selection.get()
             kdSelect = self.turbidityRadio.selection.get()
 
@@ -285,8 +285,8 @@ class Gui:
             subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
 
             print('combining subaerial and subaqueous TPU components...')
-            vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm
-            subaerial = self.subaerial[:, 5]
+            vdatum_mcu = 1.96 * float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm (1-sigma)
+            subaerial = self.subaerial[:, 5]  # already 95% confidence level (2 sigma)
             subaerial = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
             sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial**2 + vdatum_mcu**2)')
 
@@ -295,14 +295,18 @@ class Gui:
                 np.round_(self.subaerial[:, [0, 1, 2, 5]], decimals=5),
                 np.round_(subaqueous.reshape(num_points, 1), decimals=5),
                 np.round_(sigma.reshape(num_points, 1), decimals=5),
-                self.flight_lines.reshape(num_points, 1)))
+                self.flight_lines.reshape(num_points, 1),
+                self.poly_surf_errs))
 
             output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
             output_path = '{}\\{}'.format(self.tpuOutput.directoryName, output_tpu_file)
             output_df = pd.DataFrame(output)
-            h5_path = output_path.replace('csv', 'h5')
-            print('writing TPU to {}'.format(h5_path))
-            output_df.to_hdf(h5_path, 'TPU', mode='w', data_columns=True)
+            # h5_path = output_path.replace('csv', 'h5')
+            # print('writing TPU to {}'.format(h5_path))
+            # output_df.to_hdf(h5_path, 'TPU', mode='w', data_columns=True)
+            pkl_path = output_path.replace('csv', 'tpu')
+            print('writing TPU to {}'.format(pkl_path))
+            output_df.to_pickle(pkl_path)
 
             # create meta file
             line_sep = '-' * 50
@@ -323,7 +327,6 @@ class Gui:
 
             output = output.astype(np.float)
             unique_flight_line_codes = np.unique(output[:, 6])
-            print(unique_flight_line_codes)
 
             for u in sorted(unique_flight_line_codes):
                 flight_line_tpu = output[output[:, 6] == u][:, 5]

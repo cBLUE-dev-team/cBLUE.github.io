@@ -3,6 +3,7 @@ from sympy import *  # to symbolically compute Jacobian partial derivatives (whi
 import numpy as np
 import numexpr as ne  # used to speed up numpy calculations
 import laspy
+import time
 
 
 # match up las and sbet data using timestamps
@@ -248,6 +249,8 @@ def define_obs_eqs_and_J(R, M):
 
 def main(sbets_df, las):
 
+    class_codes = {'BATHYMETRY': 26}
+
     '''
     dt_threshold specifies the maximum allowable difference between
     SBET timestamps and corresponding LAS timestamps; LAS and SBET data
@@ -275,8 +278,6 @@ def main(sbets_df, las):
     sy1 = np.zeros(1)
     sx1 = np.zeros(1)
 
-    flight_lines = []
-
     inFile = laspy.file.File(las, mode="r")
     num_file_points = inFile.__len__()
 
@@ -287,15 +288,17 @@ def main(sbets_df, las):
     offset_y = np.asarray(inFile.header.offset[1])
     offset_z = np.asarray(inFile.header.offset[2])
 
-    print 'extracting bathy from {}...'.format(las)
-    all_pnt_classes = inFile.raw_classification
-    bathy_class = all_pnt_classes == 26
-    bathy_records = inFile.points[bathy_class]
-    bathy_points = bathy_records['point']
+    print '({} total points)'.format(num_file_points)
+    print 'extracting bathy points...'
+    bathy_inds = inFile.raw_classification == class_codes['BATHYMETRY']
+    bathy_points = inFile.points[bathy_inds]['point']
 
     print 'calculating subaerial TPU for flight line(s)',
     flight_line_ids = np.unique(bathy_points['pt_src_id'])
-
+    flight_lines = []
+    poly_surf_err_x = []
+    poly_surf_err_y = []
+    poly_surf_err_z = []
     for fl in flight_line_ids:
 
         print '{}...'.format(fl),
@@ -313,10 +316,6 @@ def main(sbets_df, las):
         z = ne.evaluate("Z * scale_z + offset_z")
 
         if len(t) > 8:  # need at least 8 for poly surface fitting
-
-            #  merge sbet and las data
-            min_las_t = np.min(t)
-            max_las_t = np.max(t)
 
             D = merge(sbets_df.values, t, x, y, z)  # D for data
 
@@ -387,9 +386,9 @@ def main(sbets_df, las):
                 the same functionally using np.linalg.lstsq with terms for
                 a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
                 '''
-                (coeffs_x, __, __, __) = np.linalg.lstsq(A, Er1x[::itv])
-                (coeffs_y, __, __, __) = np.linalg.lstsq(A, Er1y[::itv])
-                (coeffs_z, __, __, __) = np.linalg.lstsq(A, Er1z[::itv])
+                (coeffs_x, __, __, __) = np.linalg.lstsq(A, Er1x[::itv], rcond=None)  # rcond=None is FutureWarning
+                (coeffs_y, __, __, __) = np.linalg.lstsq(A, Er1y[::itv], rcond=None)  # rcond=None is FutureWarning
+                (coeffs_z, __, __, __) = np.linalg.lstsq(A, Er1z[::itv], rcond=None)  # rcond=None is FutureWarning
 
                 p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs_x
                 p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs_y
@@ -411,13 +410,16 @@ def main(sbets_df, las):
                 err_y = np.sum(A * coeffs_y, axis=1)
                 err_z = np.sum(A * coeffs_z, axis=1)
 
-                LE_post = [LE_pre_x + err_x,
-                           LE_pre_y + err_y,
-                           LE_pre_z + err_z]
+                LE_post_x = ne.evaluate('LE_pre_x + err_x')
+                LE_post_y = ne.evaluate('LE_pre_y + err_y')
+                LE_post_z = ne.evaluate('LE_pre_z + err_z')
 
-                LE_post_arr=np.asarray(LE_post)
-                LE_post1_arr=np.concatenate((LE_post1_arr,LE_post_arr), axis=1)
-                # Er2 = np.asarray([x_las, y_las, z_las]) - np.asarray(LE_post)
+                poly_surf_err_x.extend(ne.evaluate('LE_post_x - x_las'))
+                poly_surf_err_y.extend(ne.evaluate('LE_post_y - y_las'))
+                poly_surf_err_z.extend(ne.evaluate('LE_post_z - z_las'))
+
+                LE_post_arr = np.asarray([x_las, y_las, z_las])
+                LE_post1_arr = np.concatenate((LE_post1_arr, LE_post_arr), axis=1)
 
                 '''calc partial derivatives (declared these variable 
                 because numexper expression don't allow indexing)'''
@@ -451,44 +453,53 @@ def main(sbets_df, las):
                 cos_h0 = ne.evaluate("cos(h0)")
 
                 pJ1 = np.vstack(
-                    (fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_h0),
-                     fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
-                            cos_h0),
-                     fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_p0, cos_h0),
+                    (fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
+                            sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                     fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
+                            sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                     fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                     fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                     fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                      np.ones(num_points),
-                     fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
-                            cos_h0)))
+                     fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
                 pJ2 = np.vstack(
-                    (fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y, sin_b0, sin_w0, sin_r0, sin_p0,
-                            sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                     fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_h0),
-                     fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_p0),
-                     fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0,
-                            cos_p0, cos_h0),
+                    (fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
+                            sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                     fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
+                            sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                     fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                     fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                     fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                      np.ones(num_points),
-                     fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0,
-                            cos_h0)))
+                     fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
                 pJ3 = np.vstack(
-                    (fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                    (fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
+                            sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                     fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z, sin_b0, sin_w0, sin_r0, sin_p0,
+                     fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
+                            sin_b0, sin_w0, sin_r0, sin_p0,
                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                     fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                     fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                     fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                     fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                      np.ones(num_points),
-                     fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
+                     fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                            cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
 
                 # prop error
                 C = np.asarray(D[11:])
@@ -527,7 +538,9 @@ def main(sbets_df, las):
     sz1 = sz_del[np.newaxis, :].T
     arr_del = np.concatenate((arr_del, sx1, sy1, sz1), axis=1)
 
-    return arr_del, np.asarray(flight_lines).T  # returns tpu data for all flight lines in las tile
+    poly_surf_errs = np.vstack((poly_surf_err_x, poly_surf_err_y, poly_surf_err_z)).T
+
+    return arr_del, np.asarray(flight_lines).T, poly_surf_errs  # returns tpu data for all flight lines in las tile
 
 
 if __name__ == '__main__':
