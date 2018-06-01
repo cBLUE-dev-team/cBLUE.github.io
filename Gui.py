@@ -285,9 +285,10 @@ class Gui:
             subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
 
             print('combining subaerial and subaqueous TPU components...')
-            vdatum_mcu = 1.96 * float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm (1-sigma)
-            subaerial = self.subaerial[:, 5]  # already 95% confidence level (2 sigma)
-            subaerial = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
+            vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm (1-sigma)
+            subaerial = self.subaerial[:, 5]
+            # subaerial_95 = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
+            # self.subaerial[:, 5] = subaerial_95
             sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial**2 + vdatum_mcu**2)')
 
             num_points = sigma.shape[0]
@@ -297,6 +298,8 @@ class Gui:
                 np.round_(sigma.reshape(num_points, 1), decimals=5),
                 self.flight_lines.reshape(num_points, 1),
                 self.poly_surf_errs))
+            print output[0:5, 3:6]
+            print sigma
 
             output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
             output_path = '{}\\{}'.format(self.tpuOutput.directoryName, output_tpu_file)
@@ -314,11 +317,11 @@ class Gui:
             meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
             meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
 
-            meta_str += '{:20s}:  {}\n'.format('water surface', self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
-            meta_str += '{:20s}:  {}\n'.format('wind', self.windOptions[windSelect])
-            meta_str += '{:20s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
-            meta_str += '{:20s}:  {}\n'.format('VDatum region', self.tkvar.get())
-            meta_str += '{:<20}:  {} (m)\n'.format('VDatum region MCU', vdatum_mcu)
+            meta_str += '{:35s}:  {}\n'.format('water surface', self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
+            meta_str += '{:35s}:  {}\n'.format('wind', self.windOptions[windSelect])
+            meta_str += '{:35s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
+            meta_str += '{:35s}:  {}\n'.format('VDatum region', self.tkvar.get())
+            meta_str += '{:<35}:  {} (m)\n'.format('VDatum region 95% TPU (MCU*1.96)', vdatum_mcu)
 
             meta_str += '\n{}\n{}\n{}\n'.format(
                 line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
