@@ -270,7 +270,7 @@ class Gui:
 
             # Get the Kd value from the GUI
             if kdSelect == 0:
-                kd = range(5, 11)
+                kd = range(6, 11)
             elif kdSelect == 1:
                 kd = range(11, 18)
             elif kdSelect == 2:
@@ -278,7 +278,7 @@ class Gui:
             elif kdSelect == 3:
                 kd = range(26, 33)
             elif kdSelect == 4:
-                kd = range(33, 41)
+                kd = range(33, 37)
 
             print('\ncalculating subaqueous TPU component...')
             depth = self.subaerial[:, 2] + 23
