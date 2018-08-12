@@ -11,6 +11,8 @@ import pandas as pd
 from DirectorySelectButton import DirectorySelectButton
 from RadioFrame import RadioFrame
 
+from multiprocessing import Pool
+import pathos.pools as pp
 
 # Import Processing code
 import load_sbet
@@ -25,6 +27,106 @@ Created: 2017-12-07
 
 @author: Timothy Kammerer
 """
+
+
+class Sbet:
+
+    sbets_df = None
+
+
+class Tpu:
+
+    def __init__(self, sbets_df, windRadio, turbidityRadio, wind_vals, kd_vals,
+                 waterSurfaceRadio, vdatum_regions, tkvar, tpuOutput, waterSurfaceOptions,
+                 windOptions, turbidityOptions):
+        self.windRadio = windRadio
+        self.turbidityRadio = turbidityRadio
+        self.wind_vals = wind_vals
+        self.kd_vals = kd_vals
+        self.waterSurfaceRadio = waterSurfaceRadio
+        self.vdatum_regions = vdatum_regions
+        self.tkvar = tkvar
+        self.tpuOutput = tpuOutput
+        self.waterSurfaceOptions = waterSurfaceOptions
+        self.windOptions = windOptions
+        self.turbidityOptions = turbidityOptions
+
+    def multiprocess_tpu(self, las):
+        subaerial, flight_lines, poly_surf_errs = calc_aerial_TPU.main(Sbet.sbets_df, las)
+        # Get the wind and kd values from the GUI
+        windSelect = self.windRadio.selection.get()
+        kdSelect = self.turbidityRadio.selection.get()
+
+        wind = self.wind_vals[windSelect][1]
+        kd = self.kd_vals[kdSelect][1]
+
+        print('\ncalculating subaqueous TPU component...')
+        depth = subaerial[:, 2] + 23
+        subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
+
+        print('combining subaerial and subaqueous TPU components...')
+        vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm (1-sigma)
+        subaerial = subaerial[:, 5]
+        # subaerial_95 = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
+        # self.subaerial[:, 5] = subaerial_95
+        sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial**2 + vdatum_mcu**2)')
+
+        num_points = sigma.shape[0]
+        output = np.hstack((
+            np.round_(subaerial[:, [0, 1, 2, 5]], decimals=5),
+            np.round_(subaqueous.reshape(num_points, 1), decimals=5),
+            np.round_(sigma.reshape(num_points, 1), decimals=5),
+            flight_lines.reshape(num_points, 1),
+            poly_surf_errs))
+        print output[0:5, 3:6]
+        print sigma
+
+        output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
+        output_path = '{}\\{}'.format(self.tpuOutput.directoryName, output_tpu_file)
+        output_df = pd.DataFrame(output)
+        # h5_path = output_path.replace('csv', 'h5')
+        # print('writing TPU to {}'.format(h5_path))
+        # output_df.to_hdf(h5_path, 'TPU', mode='w', data_columns=True)
+        pkl_path = output_path.replace('csv', 'tpu')
+        print('writing TPU to {}'.format(pkl_path))
+        output_df.to_pickle(pkl_path)
+
+        # create meta file
+        line_sep = '-' * 50
+        print('creating TPU meta data file...')
+        meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
+        meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
+
+        meta_str += '{:35s}:  {}\n'.format('water surface', self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
+        meta_str += '{:35s}:  {}\n'.format('wind', self.windOptions[windSelect])
+        meta_str += '{:35s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
+        meta_str += '{:35s}:  {}\n'.format('VDatum region', self.tkvar.get())
+        meta_str += '{:<35}:  {} (m)\n'.format('VDatum region MCU', vdatum_mcu)
+
+        meta_str += '\n{}\n{}\n{}\n'.format(
+            line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
+        meta_str += '{:10}\t{:10}\t{:10}\t{:10}\t{:10}\t{:10}\n'.format(
+            'FIGHT_LINE', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
+
+        output = output.astype(np.float)
+        unique_flight_line_codes = np.unique(output[:, 6])
+
+        for u in sorted(unique_flight_line_codes):
+            flight_line_tpu = output[output[:, 6] == u][:, 5]
+
+            min_tpu = np.min(flight_line_tpu)
+            max_tpu = np.max(flight_line_tpu)
+            mean_tpu = np.mean(flight_line_tpu)
+            std_tpu = np.std(flight_line_tpu)
+            count_tpu = np.count_nonzero(flight_line_tpu)
+
+            meta_str += '{:<10}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{}\n'.format(
+                int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
+
+        output_tpu_meta_file = r'{}_TPU.meta'.format(las.split('\\')[-1].replace('.las', ''))
+        outputMetaFile = open("{}\\{}".format(self.tpuOutput.directoryName, output_tpu_meta_file), "w")
+        outputMetaFile.write(meta_str)
+        outputMetaFile.close()
 
 
 class Gui:
@@ -43,10 +145,22 @@ class Gui:
         self.title = tk.Label(
             text="RIEGL VQ-880-G\n"
                  "TOTAL PROPAGATED UNCERTAINTY (TPU) PROGRAM\n"
-                 "v1.1",
+                 "v2.0",
             background="green")
         self.title.grid(row=0, sticky=tk.EW)
-        
+
+        self.kd_vals = {0: ('Clear', range(6, 11)),
+                        1: ('Clear-Moderate', range(11, 18)),
+                        2: ('Moderate', range(18, 26)),
+                        3: ('Moderate-High', range(26, 33)),
+                        4: ('High', range(33, 37))}
+
+        self.wind_vals = {0: ('Calm-light air (0-2 kts)', [1]),
+                          1: ('Light Breeze (3-6 kts)', [2, 3]),
+                          2: ('Gentle Breeze (7-10 kts)', [4, 5]),
+                          3: ('Moderate Breeze (11-15 kts)', [6, 7]),
+                          4: ('Fresh Breeze (16-20 kts)', [8, 9, 10])}
+
         #  Build the interface
         self.buildInput()
         self.buildProcessButtons()
@@ -57,7 +171,7 @@ class Gui:
         # mainloop
         self.root.mainloop()
     
-    #%% GUI Building
+    # GUI Building
     """
     Builds the input for the Gui.
     """
@@ -135,19 +249,8 @@ class Gui:
             "Riegl VQ-880-G",
             "Model (ECKV spectrum)"]
 
-        self.windOptions = [
-            "Calm-light air (0-2 knots)",
-            "Light breeze (3-6 knots)",
-            "Gentle Breeze (7-10 knots)",
-            "Moderate Breeze (11-15 knots)",
-            "Fresh Breeze (16-20 knots)"]
-
-        self.turbidityOptions = [
-            "Clear",
-            "Clear-Moderate",
-            "Moderate",
-            "Moderate-High",
-            "High"]
+        self.windOptions = [w[0] for w in self.wind_vals.values()]
+        self.turbidityOptions = [k[0] for k in self.kd_vals.values()]
 
         self.waterSurfaceRadio = RadioFrame(water_surface_subframe, "Water Surface", self.waterSurfaceOptions,
                                             1, callback=self.updateRadioEnable, width=frameWidth)
@@ -226,7 +329,6 @@ class Gui:
         if newValue == None:
             if self.sbetInput.directoryName != "":
                 self.sbetProcess.config(state=tk.ACTIVE)
-
             if self.tpuOutput.directoryName != "" and self.isSbetLoaded:
                 self.tpuProcess.config(state=tk.ACTIVE)
         else:
@@ -237,7 +339,7 @@ class Gui:
     Callback for the sbetProcess button.
     """
     def sbetProcessCallback(self):
-        self.sbets_df = load_sbet.main(self.sbetInput.directoryName)
+        Sbet.sbets_df = load_sbet.main(self.sbetInput.directoryName)
         self.isSbetLoaded = True
         self.sbet_btn_text.set(u'{} \u2713'.format(self.sbet_btn_text.get()))
         self.updateButtonEnable()
@@ -249,104 +351,22 @@ class Gui:
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName) if l.endswith('.las')]
 
-        for i, las in enumerate(las_files, 1):
-            print '-' * 50
-            print las, '({} of {})'.format(i, len(las_files))
-            self.subaerial, self.flight_lines, self.poly_surf_errs = calc_aerial_TPU.main(self.sbets_df, las)
-            windSelect = self.windRadio.selection.get()
-            kdSelect = self.turbidityRadio.selection.get()
+        Tpu.windRadio = self.windRadio.
+        Tpu.turbidityRadio = self.turbidityRadio
+        Tpu.wind_vals = self.wind_vals
+        Tpu.kd_vals = self.kd_vals
+        Tpu.waterSurfaceRadio = self.waterSurfaceRadio
+        Tpu.vdatum_regions = self.vdatum_regions
+        Tpu.tkvar = self.tkvar
+        Tpu.tpuOutput = self.tpuOutput
+        Tpu.waterSurfaceOptions = self.waterSurfaceOptions
+        Tpu.windOptions = self.windOptions
+        Tpu.turbidityOptions = self.turbidityOptions
 
-            # Get the wind value from the GUI
-            if windSelect == 0:
-                wind = [1]
-            elif windSelect == 1:
-                wind = [2, 3]
-            elif windSelect == 2:
-                wind = [4, 5]
-            elif windSelect == 3:
-                wind = [6, 7]
-            elif windSelect == 4:
-                wind = [8, 9, 10]
-
-            # Get the Kd value from the GUI
-            if kdSelect == 0:
-                kd = range(6, 11)
-            elif kdSelect == 1:
-                kd = range(11, 18)
-            elif kdSelect == 2:
-                kd = range(18, 26)
-            elif kdSelect == 3:
-                kd = range(26, 33)
-            elif kdSelect == 4:
-                kd = range(33, 37)
-
-            print('\ncalculating subaqueous TPU component...')
-            depth = self.subaerial[:, 2] + 23
-            subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
-
-            print('combining subaerial and subaqueous TPU components...')
-            vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm (1-sigma)
-            subaerial = self.subaerial[:, 5]
-            # subaerial_95 = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
-            # self.subaerial[:, 5] = subaerial_95
-            sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial**2 + vdatum_mcu**2)')
-
-            num_points = sigma.shape[0]
-            output = np.hstack((
-                np.round_(self.subaerial[:, [0, 1, 2, 5]], decimals=5),
-                np.round_(subaqueous.reshape(num_points, 1), decimals=5),
-                np.round_(sigma.reshape(num_points, 1), decimals=5),
-                self.flight_lines.reshape(num_points, 1),
-                self.poly_surf_errs))
-            print output[0:5, 3:6]
-            print sigma
-
-            output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
-            output_path = '{}\\{}'.format(self.tpuOutput.directoryName, output_tpu_file)
-            output_df = pd.DataFrame(output)
-            # h5_path = output_path.replace('csv', 'h5')
-            # print('writing TPU to {}'.format(h5_path))
-            # output_df.to_hdf(h5_path, 'TPU', mode='w', data_columns=True)
-            pkl_path = output_path.replace('csv', 'tpu')
-            print('writing TPU to {}'.format(pkl_path))
-            output_df.to_pickle(pkl_path)
-
-            # create meta file
-            line_sep = '-' * 50
-            print('creating TPU meta data file...')
-            meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
-            meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
-
-            meta_str += '{:35s}:  {}\n'.format('water surface', self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
-            meta_str += '{:35s}:  {}\n'.format('wind', self.windOptions[windSelect])
-            meta_str += '{:35s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
-            meta_str += '{:35s}:  {}\n'.format('VDatum region', self.tkvar.get())
-            meta_str += '{:<35}:  {} (m)\n'.format('VDatum region 95% TPU (MCU*1.96)', vdatum_mcu)
-
-            meta_str += '\n{}\n{}\n{}\n'.format(
-                line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
-            meta_str += '{:10}\t{:10}\t{:10}\t{:10}\t{:10}\t{:10}\n'.format(
-                'FIGHT_LINE', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
-
-            output = output.astype(np.float)
-            unique_flight_line_codes = np.unique(output[:, 6])
-
-            for u in sorted(unique_flight_line_codes):
-                flight_line_tpu = output[output[:, 6] == u][:, 5]
-
-                min_tpu = np.min(flight_line_tpu)
-                max_tpu = np.max(flight_line_tpu)
-                mean_tpu = np.mean(flight_line_tpu)
-                std_tpu = np.std(flight_line_tpu)
-                count_tpu = np.count_nonzero(flight_line_tpu)
-
-                meta_str += '{:<10}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{}\n'.format(
-                    int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
-
-            output_tpu_meta_file = r'{}_TPU.meta'.format(las.split('\\')[-1].replace('.las', ''))
-            outputMetaFile = open("{}\\{}".format(self.tpuOutput.directoryName, output_tpu_meta_file), "w")
-            outputMetaFile.write(meta_str)
-            outputMetaFile.close()
+        p = pp.ProcessPool()
+        p.map(Tpu.multiprocess_tpu, las_files[20:30])
+        # p.close()
+        # p.join()
 
         self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
 
