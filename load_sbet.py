@@ -20,7 +20,7 @@ def get_sbet_date(sbet):
 # convert the GPS seconds-of-week timestamps
 # to GPS adjusted standard time
 def gps_sow_to_gps_adj(gps_date, gps_wk_sec):
-    print('\tconverting GPS week seconds to GPS adjusted standard time...'),
+    logging.info('\tconverting GPS week seconds to GPS adjusted standard time...'),
     SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
     SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
     GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
@@ -34,7 +34,7 @@ def gps_sow_to_gps_adj(gps_date, gps_wk_sec):
     gps_wk = int((dt.days * SECS_PER_DAY + dt.seconds) / SECS_PER_GPS_WK)
     gps_time = gps_wk * SECS_PER_GPS_WK + gps_wk_sec
     gps_time_adj = gps_time - 1e9
-    print('done')
+    logging.info('done')
 
     return gps_time_adj
 
@@ -44,9 +44,9 @@ def build_sbets_data(sbet_files):
     sbets_df = pd.DataFrame()
     header_sbet = ['time', 'lon', 'lat', 'X', 'Y', 'Z', 'roll', 'pitch', 'heading',
                    'stdX', 'stdY', 'stdZ', 'stdroll', 'stdpitch', 'stdheading']
-    print('getting sbet data from: ')
+    logging.info('getting sbet data from: ')
     for sbet in sorted(sbet_files):
-        print('{}...'.format(sbet))
+        logging.info('{}...'.format(sbet))
         sbet_df = pd.read_table(
             sbet,
             skip_blank_lines=True,
@@ -55,7 +55,7 @@ def build_sbets_data(sbet_files):
             header=None,
             names=header_sbet,
             index_col=False)
-        print('\t({} trajectory points)'.format(sbet_df.shape[0]))
+        logging.info('\t({} trajectory points)'.format(sbet_df.shape[0]))
 
         sbet_date = get_sbet_date(sbet)
         gps_time_adj = gps_sow_to_gps_adj(sbet_date, sbet_df['time'])
@@ -76,7 +76,7 @@ def main(sbet_dir):
     sbet_tic = time.clock()
     sbets_df = build_sbets_data(sbet_files)
     sbet_toc = time.clock()
-    print('It took {:.1f} mins to load sbets.'.format((sbet_toc - sbet_tic) / 60))
+    logging.info('It took {:.1f} mins to load sbets.'.format((sbet_toc - sbet_tic) / 60))
 
     return sbets_df
 

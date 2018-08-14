@@ -1,3 +1,6 @@
+import logging
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+
 from math import radians
 from sympy import *  # to symbolically compute Jacobian partial derivatives (which are huge!)
 import numpy as np
@@ -98,11 +101,11 @@ def calcRMSE(data):
     num_coords, num_points = data.shape
     AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
     RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
-    print('Mean Difference:\n'
+    logging.info('Mean Difference:\n'
           'X: {:.3f}\n'
           'Y: {:.3f}\n'
           'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
-    print('RMSE: {:.3f}\n'.format(RMSE))
+    logging.info('RMSE: {:.3f}\n'.format(RMSE))
 
 
 '''
@@ -320,7 +323,7 @@ def main(sbets_df, las):
             D = merge(sbets_df.values, t, x, y, z)  # D for data
 
             if not D:  # i.e., if D is empty (las and sbet not merged)
-                print('\nWARNING: {} was not merged with loaded sbet data '
+                logging.info('\nWARNING: {} was not merged with loaded sbet data '
                       'because max delta time exceeded acceptable '
                       'threshold of {} sec(s).\n'.format(las, dt_threshold))
 

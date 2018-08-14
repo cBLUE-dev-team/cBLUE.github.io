@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 # Import Statements
+
+import logging
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+
+
 import Tkinter as tk
 import os
 import numpy as np
@@ -11,8 +16,7 @@ import pandas as pd
 from DirectorySelectButton import DirectorySelectButton
 from RadioFrame import RadioFrame
 
-from multiprocessing import Pool
-import pathos.pools as pp
+import pathos.pools as pp  # for multiprocessing of las files
 
 # Import Processing code
 import load_sbet
@@ -28,48 +32,52 @@ Created: 2017-12-07
 @author: Timothy Kammerer
 """
 
-
-class Sbet:
-
-    sbets_df = None
-
-
 class Tpu:
 
-    def __init__(self, sbets_df, windRadio, turbidityRadio, wind_vals, kd_vals,
-                 waterSurfaceRadio, vdatum_regions, tkvar, tpuOutput, waterSurfaceOptions,
-                 windOptions, turbidityOptions):
-        self.windRadio = windRadio
-        self.turbidityRadio = turbidityRadio
-        self.wind_vals = wind_vals
-        self.kd_vals = kd_vals
-        self.waterSurfaceRadio = waterSurfaceRadio
-        self.vdatum_regions = vdatum_regions
-        self.tkvar = tkvar
-        self.tpuOutput = tpuOutput
-        self.waterSurfaceOptions = waterSurfaceOptions
-        self.windOptions = windOptions
-        self.turbidityOptions = turbidityOptions
+    def __init__(self, sbet_df, surface_select,
+                 surface_ind, wind_selection, wind_val,
+                 kd_selection, kd_val, vdatum_region,
+                 vdatum_region_mcu, tpu_output):
+
+        self.sbet_df = sbet_df
+        self.surface_select = surface_select
+        self.surface_ind = surface_ind
+        self.wind_selection = wind_selection
+        self.wind_val = wind_val
+        self.kdSelect = kd_selection
+        self.kd_val = kd_val
+        self.vdatum_region = vdatum_region
+        self.vdatum_region_mcu = vdatum_region_mcu
+        self.tpuOutput = tpu_output
 
     def multiprocess_tpu(self, las):
-        subaerial, flight_lines, poly_surf_errs = calc_aerial_TPU.main(Sbet.sbets_df, las)
-        # Get the wind and kd values from the GUI
-        windSelect = self.windRadio.selection.get()
-        kdSelect = self.turbidityRadio.selection.get()
 
-        wind = self.wind_vals[windSelect][1]
-        kd = self.kd_vals[kdSelect][1]
+        # import these again, here, for multiprocessing
+        import logging
+        logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+        import calc_aerial_TPU
+        import SubAqueous
+        import numpy as np
+        import numexpr as ne
+        import pandas as pd
 
-        print('\ncalculating subaqueous TPU component...')
+        print las
+        subaerial, flight_lines, poly_surf_errs = calc_aerial_TPU.main(self.sbet_df, las)
+
+        logging.info('\ncalculating subaqueous TPU component...')
         depth = subaerial[:, 2] + 23
-        subaqueous = SubAqueous.main(self.waterSurfaceRadio.selection.get(), wind, kd, depth)
+        subaqueous = SubAqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
 
-        print('combining subaerial and subaqueous TPU components...')
-        vdatum_mcu = float(self.vdatum_regions[self.tkvar.get()]) / 100  # file is in cm (1-sigma)
-        subaerial = subaerial[:, 5]
-        # subaerial_95 = ne.evaluate('subaerial * 1.96')  # to standardize to 2 sigma
-        # self.subaerial[:, 5] = subaerial_95
-        sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial**2 + vdatum_mcu**2)')
+        logging.info('combining subaerial and subaqueous TPU components...')
+        vdatum_mcu = float(self.vdatum_region_mcu) / 100  # file is in cm (1-sigma)
+        subaerial_sig_z = subaerial[:, 5]
+        sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial_sig_z**2 + vdatum_mcu**2)')
+
+        logging.debug('{:20s} : {}'.format('subaerial', subaerial.shape))
+        logging.debug('{:20s} : {}'.format('subaqueous', subaqueous.shape))
+        logging.debug('{:20s} : {}'.format('sigma', sigma.shape))
+        logging.debug('{:20s} : {}'.format('flight_lines', flight_lines.shape))
+        logging.debug('{:20s} : {}'.format('poly_surf_errs', poly_surf_errs.shape))
 
         num_points = sigma.shape[0]
         output = np.hstack((
@@ -78,29 +86,25 @@ class Tpu:
             np.round_(sigma.reshape(num_points, 1), decimals=5),
             flight_lines.reshape(num_points, 1),
             poly_surf_errs))
-        print output[0:5, 3:6]
-        print sigma
 
         output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
-        output_path = '{}\\{}'.format(self.tpuOutput.directoryName, output_tpu_file)
+        output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
         output_df = pd.DataFrame(output)
-        # h5_path = output_path.replace('csv', 'h5')
-        # print('writing TPU to {}'.format(h5_path))
-        # output_df.to_hdf(h5_path, 'TPU', mode='w', data_columns=True)
+
         pkl_path = output_path.replace('csv', 'tpu')
-        print('writing TPU to {}'.format(pkl_path))
+        logging.info('writing TPU to {}'.format(pkl_path))
         output_df.to_pickle(pkl_path)
 
         # create meta file
         line_sep = '-' * 50
-        print('creating TPU meta data file...')
+        logging.info('creating TPU meta data file...')
         meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
         meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
 
-        meta_str += '{:35s}:  {}\n'.format('water surface', self.waterSurfaceOptions[self.waterSurfaceRadio.selection.get()])
-        meta_str += '{:35s}:  {}\n'.format('wind', self.windOptions[windSelect])
-        meta_str += '{:35s}:  {}\n'.format('kd', self.turbidityOptions[kdSelect])
-        meta_str += '{:35s}:  {}\n'.format('VDatum region', self.tkvar.get())
+        meta_str += '{:35s}:  {}\n'.format('water surface', self.surface_select)
+        meta_str += '{:35s}:  {}\n'.format('wind', self.wind_selection)
+        meta_str += '{:35s}:  {}\n'.format('kd', self.kdSelect)
+        meta_str += '{:35s}:  {}\n'.format('VDatum region', self.vdatum_region)
         meta_str += '{:<35}:  {} (m)\n'.format('VDatum region MCU', vdatum_mcu)
 
         meta_str += '\n{}\n{}\n{}\n'.format(
@@ -124,10 +128,15 @@ class Tpu:
                 int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
 
         output_tpu_meta_file = r'{}_TPU.meta'.format(las.split('\\')[-1].replace('.las', ''))
-        outputMetaFile = open("{}\\{}".format(self.tpuOutput.directoryName, output_tpu_meta_file), "w")
+        outputMetaFile = open("{}\\{}".format(self.tpuOutput, output_tpu_meta_file), "w")
         outputMetaFile.write(meta_str)
         outputMetaFile.close()
 
+    def run_tpu_multiprocessing(self, las_files):
+        p = pp.ProcessPool()
+        p.map(self.multiprocess_tpu, las_files)
+        p.close()
+        p.join()
 
 class Gui:
     
@@ -224,7 +233,9 @@ class Gui:
         # Create Frame Label
         tk.Label(parameters_frame,
                  text="SUB-AQUEOUS Parameters",
-                 font='Helvetica 10 bold').grid(row=0, columnspan=2, sticky=tk.EW)
+                 font='Helvetica 10 bold').grid(row=0,
+                                                columnspan=2,
+                                                sticky=tk.EW)
 
         water_surface_subframe = tk.Frame(parameters_frame, borderwidth=2, relief=tk.GROOVE)
         water_surface_subframe.grid(row=1, column=0)
@@ -315,15 +326,19 @@ class Gui:
 
         self.tpu_btn_text = tk.StringVar()
         self.tpu_btn_text.set("Process TPU")
-        self.tpuProcess = tk.Button(frame, textvariable=self.tpu_btn_text, width=buttonWidth,
-                                    height=buttonHeight, state=tk.DISABLED, command=self.tpuProcessCallback)
+        self.tpuProcess = tk.Button(frame,
+                                    textvariable=self.tpu_btn_text,
+                                    width=buttonWidth,
+                                    height=buttonHeight,
+                                    state=tk.DISABLED,
+                                    command=self.tpuProcessCallback)
         self.tpuProcess.grid(row=1, column=2)
 
     # Button Callbacks
     def updateVdatumMcuValue(self, region):
-        print(self.tkvar.get())
+        logging.info(self.tkvar.get())
         self.mcu = self.vdatum_regions[region]
-        print('The MCU for {} is {} cm.'.format(region, self.mcu))
+        logging.info('The MCU for {} is {} cm.'.format(region, self.mcu))
 
     def updateButtonEnable(self, newValue=None):
         if newValue == None:
@@ -334,39 +349,46 @@ class Gui:
         else:
             self.buttonEnableStage = newValue
 
-
     """
     Callback for the sbetProcess button.
     """
     def sbetProcessCallback(self):
-        Sbet.sbets_df = load_sbet.main(self.sbetInput.directoryName)
+        self.sbet_df = load_sbet.main(self.sbetInput.directoryName)
         self.isSbetLoaded = True
         self.sbet_btn_text.set(u'{} \u2713'.format(self.sbet_btn_text.get()))
         self.updateButtonEnable()
 
     """
-    Callback for processing the subaqueous data and inputs and creating outputs.
+    Callback for processing tpu and creating outputs.
     """
     def tpuProcessCallback(self):
+        surface_ind = self.waterSurfaceRadio.selection.get()
+        surface_selection = self.waterSurfaceOptions[surface_ind]
+
+        wind_ind = self.windRadio.selection.get()
+        wind_selection = self.windOptions[wind_ind]
+
+        kd_ind = self.turbidityRadio.selection.get()
+        kd_selection = self.turbidityOptions[kd_ind]
+
+        sbet_df_size = self.sbet_df.size
+        tpu = Tpu(
+            self.sbet_df,
+            surface_selection,
+            surface_ind,
+            wind_selection,
+            self.wind_vals[wind_ind][1],
+            kd_selection,
+            self.kd_vals[kd_ind][1],
+            self.vdatum_regions[self.tkvar.get()],
+            self.mcu,
+            self.tpuOutput.directoryName)
+
         las_files = [os.path.join(self.lasInput.directoryName, l)
-                     for l in os.listdir(self.lasInput.directoryName) if l.endswith('.las')]
+                     for l in os.listdir(self.lasInput.directoryName)
+                     if l.endswith('.las')]
 
-        Tpu.windRadio = self.windRadio.
-        Tpu.turbidityRadio = self.turbidityRadio
-        Tpu.wind_vals = self.wind_vals
-        Tpu.kd_vals = self.kd_vals
-        Tpu.waterSurfaceRadio = self.waterSurfaceRadio
-        Tpu.vdatum_regions = self.vdatum_regions
-        Tpu.tkvar = self.tkvar
-        Tpu.tpuOutput = self.tpuOutput
-        Tpu.waterSurfaceOptions = self.waterSurfaceOptions
-        Tpu.windOptions = self.windOptions
-        Tpu.turbidityOptions = self.turbidityOptions
-
-        p = pp.ProcessPool()
-        p.map(Tpu.multiprocess_tpu, las_files[20:30])
-        # p.close()
-        # p.join()
+        tpu.run_tpu_multiprocessing(las_files)
 
         self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
 
