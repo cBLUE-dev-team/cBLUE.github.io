@@ -66,17 +66,17 @@ class Tpu:
     def multiprocess_tpu(self, las):
 
         # import these again, here, for multiprocessing
-        import calc_aerial_TPU
-        import SubAqueous
+        import Subaerial
+        import Subaqueous
         import numpy as np
         import numexpr as ne
         import pandas as pd
 
-        subaerial, flight_lines, poly_surf_errs = calc_aerial_TPU.main(self.sbet_df, las)
+        subaerial, flight_lines, poly_surf_errs = Subaerial.main(self.sbet_df, las)
 
         print('\ncalculating subaqueous TPU component...')
         depth = subaerial[:, 2] + 23
-        subaqueous = SubAqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
+        subaqueous = Subaqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
 
         print('combining subaerial and subaqueous TPU components...')
         vdatum_mcu = float(self.vdatum_region_mcu) / 100  # file is in cm (1-sigma)

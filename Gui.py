@@ -4,7 +4,6 @@
 import logging
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 
-
 import Tkinter as tk
 import os
 import numpy as np
@@ -19,9 +18,13 @@ from RadioFrame import RadioFrame
 import pathos.pools as pp  # for multiprocessing of las files
 
 # Import Processing code
-import load_sbet
-import calc_aerial_TPU
-import SubAqueous
+from Sbet import Sbet
+from Las import Las
+from Merge import Merge
+from Subaerial import Subaerial
+from Subaqueous import Subaqueous
+from Datum import Datum
+from Tpu import Tpu
 
 """
 Gui used to determine the total propagated 
@@ -31,112 +34,6 @@ Created: 2017-12-07
 
 @author: Timothy Kammerer
 """
-
-class Tpu:
-
-    def __init__(self, sbet_df, surface_select,
-                 surface_ind, wind_selection, wind_val,
-                 kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output):
-
-        self.sbet_df = sbet_df
-        self.surface_select = surface_select
-        self.surface_ind = surface_ind
-        self.wind_selection = wind_selection
-        self.wind_val = wind_val
-        self.kdSelect = kd_selection
-        self.kd_val = kd_val
-        self.vdatum_region = vdatum_region
-        self.vdatum_region_mcu = vdatum_region_mcu
-        self.tpuOutput = tpu_output
-
-    def multiprocess_tpu(self, las):
-
-        # import these again, here, for multiprocessing
-        import logging
-        logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
-        import calc_aerial_TPU
-        import SubAqueous
-        import numpy as np
-        import numexpr as ne
-        import pandas as pd
-
-        print las
-        subaerial, flight_lines, poly_surf_errs = calc_aerial_TPU.main(self.sbet_df, las)
-
-        logging.info('\ncalculating subaqueous TPU component...')
-        depth = subaerial[:, 2] + 23
-        subaqueous = SubAqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
-
-        logging.info('combining subaerial and subaqueous TPU components...')
-        vdatum_mcu = float(self.vdatum_region_mcu) / 100  # file is in cm (1-sigma)
-        subaerial_sig_z = subaerial[:, 5]
-        sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial_sig_z**2 + vdatum_mcu**2)')
-
-        logging.debug('{:20s} : {}'.format('subaerial', subaerial.shape))
-        logging.debug('{:20s} : {}'.format('subaqueous', subaqueous.shape))
-        logging.debug('{:20s} : {}'.format('sigma', sigma.shape))
-        logging.debug('{:20s} : {}'.format('flight_lines', flight_lines.shape))
-        logging.debug('{:20s} : {}'.format('poly_surf_errs', poly_surf_errs.shape))
-
-        num_points = sigma.shape[0]
-        output = np.hstack((
-            np.round_(subaerial[:, [0, 1, 2, 5]], decimals=5),
-            np.round_(subaqueous.reshape(num_points, 1), decimals=5),
-            np.round_(sigma.reshape(num_points, 1), decimals=5),
-            flight_lines.reshape(num_points, 1),
-            poly_surf_errs))
-
-        output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
-        output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-        output_df = pd.DataFrame(output)
-
-        pkl_path = output_path.replace('csv', 'tpu')
-        logging.info('writing TPU to {}'.format(pkl_path))
-        output_df.to_pickle(pkl_path)
-
-        # create meta file
-        line_sep = '-' * 50
-        logging.info('creating TPU meta data file...')
-        meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
-        meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
-
-        meta_str += '{:35s}:  {}\n'.format('water surface', self.surface_select)
-        meta_str += '{:35s}:  {}\n'.format('wind', self.wind_selection)
-        meta_str += '{:35s}:  {}\n'.format('kd', self.kdSelect)
-        meta_str += '{:35s}:  {}\n'.format('VDatum region', self.vdatum_region)
-        meta_str += '{:<35}:  {} (m)\n'.format('VDatum region MCU', vdatum_mcu)
-
-        meta_str += '\n{}\n{}\n{}\n'.format(
-            line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
-        meta_str += '{:10}\t{:10}\t{:10}\t{:10}\t{:10}\t{:10}\n'.format(
-            'FIGHT_LINE', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
-
-        output = output.astype(np.float)
-        unique_flight_line_codes = np.unique(output[:, 6])
-
-        for u in sorted(unique_flight_line_codes):
-            flight_line_tpu = output[output[:, 6] == u][:, 5]
-
-            min_tpu = np.min(flight_line_tpu)
-            max_tpu = np.max(flight_line_tpu)
-            mean_tpu = np.mean(flight_line_tpu)
-            std_tpu = np.std(flight_line_tpu)
-            count_tpu = np.count_nonzero(flight_line_tpu)
-
-            meta_str += '{:<10}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{}\n'.format(
-                int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
-
-        output_tpu_meta_file = r'{}_TPU.meta'.format(las.split('\\')[-1].replace('.las', ''))
-        outputMetaFile = open("{}\\{}".format(self.tpuOutput, output_tpu_meta_file), "w")
-        outputMetaFile.write(meta_str)
-        outputMetaFile.close()
-
-    def run_tpu_multiprocessing(self, las_files):
-        p = pp.ProcessPool()
-        p.map(self.multiprocess_tpu, las_files)
-        p.close()
-        p.join()
 
 class Gui:
     
@@ -151,11 +48,9 @@ class Gui:
         self.lastFileLoc = os.getcwd()
         
         # Build the title label
-        self.title = tk.Label(
-            text="RIEGL VQ-880-G\n"
+        self.title = tk.Label(text="RIEGL VQ-880-G\n"
                  "TOTAL PROPAGATED UNCERTAINTY (TPU) PROGRAM\n"
-                 "v2.0",
-            background="green")
+                 "v2.0", background="green")
         self.title.grid(row=0, sticky=tk.EW)
 
         self.kd_vals = {0: ('Clear', range(6, 11)),
@@ -163,7 +58,6 @@ class Gui:
                         2: ('Moderate', range(18, 26)),
                         3: ('Moderate-High', range(26, 33)),
                         4: ('High', range(33, 37))}
-
         self.wind_vals = {0: ('Calm-light air (0-2 kts)', [1]),
                           1: ('Light Breeze (3-6 kts)', [2, 3]),
                           2: ('Gentle Breeze (7-10 kts)', [4, 5]),
@@ -276,20 +170,7 @@ class Gui:
 
         tk.Label(datum_transform_subframe, text="VDatum Region").grid(row=0, column=0, sticky=tk.EW)
 
-        vdatum_regions_MCU_file = r'V_Datum_MCU_Values.txt'
-        vdatum_regions_file_obj = open(vdatum_regions_MCU_file, 'r')
-        vdatum_regions = vdatum_regions_file_obj.readlines()
-        vdatum_regions_file_obj.close()
-
-        # clean up vdatum file; when copying table from internet, some dashes
-        # are 'regular dashes' and others are \x96; get rid of quotes and \n
-
-        default_msg = '---No Region Specified---'
-        vdatum_regions = [v.replace('\x96', '-') for v in vdatum_regions]
-        vdatum_regions = [v.replace('"', '') for v in vdatum_regions]
-        vdatum_regions = [v.replace('\n', '') for v in vdatum_regions]
-        regions = [v.split('\t')[0] for v in vdatum_regions]
-        mcu_values = [v.split('\t')[1] for v in vdatum_regions]
+        regions, mcu_values, default_msg = Datum.get_vdatum_region_mcus()
         self.vdatum_regions = dict({(key, value) for (key, value) in zip(regions, mcu_values)})
         self.vdatum_regions.update({default_msg: 0})
 
@@ -353,7 +234,7 @@ class Gui:
     Callback for the sbetProcess button.
     """
     def sbetProcessCallback(self):
-        self.sbet_df = load_sbet.main(self.sbetInput.directoryName)
+        self.sbet = Sbet(self.sbetInput.directoryName)
         self.isSbetLoaded = True
         self.sbet_btn_text.set(u'{} \u2713'.format(self.sbet_btn_text.get()))
         self.updateButtonEnable()
@@ -371,7 +252,6 @@ class Gui:
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidityOptions[kd_ind]
 
-        sbet_df_size = self.sbet_df.size
         tpu = Tpu(
             self.sbet_df,
             surface_selection,
@@ -387,7 +267,6 @@ class Gui:
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
-
         tpu.run_tpu_multiprocessing(las_files)
 
         self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
