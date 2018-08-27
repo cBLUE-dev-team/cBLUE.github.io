@@ -7,6 +7,16 @@ import numexpr as ne  # used to speed up numpy calculations
 
 
 class Subaerial:
+
+    # # class variables
+    # M = None
+    # R = None
+    # fR = None
+    # fJ1 = None
+    # fJ2 = None
+    # fJ3 = None
+    # fF = None
+
     def __init__(self, D, fR):
         self.is_empty = not D
         self.num_pts = None
@@ -28,17 +38,11 @@ class Subaerial:
         self.fR1 = fR[1](D[8], D[9], D[10])
         self.fR4 = fR[4](D[8], D[9], D[10])
         self.fR7 = fR[7](D[8], D[9])
-        self.M = None
-        self.R = None
-        self.fR = None
-        self.fF = None
-        self.fJ1sub = None
-        self.fJ2sub = None
-        self.fJ3sub = None
         self.C = np.asarray(D[11:])
 
     # define rotation matrices for airplane (R) and scanning sensor (M)
-    def set_rotations_plane_sensor(self):
+    @staticmethod
+    def set_rotation_matrices():
         # calculate M and R matrices
         # M:  rotation matrix for scanning sensor
         # R:  rotation matrix for airplane
@@ -56,20 +60,21 @@ class Subaerial:
                      [sin(h), cos(h), 0],
                      [0, 0, 1]])
 
-        self.R = R3*R2*R1
+        R = R3*R2*R1
+        logging.info(R)
 
         # "functionize" the necessary R components for a, b, and w estimation
         # (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
-        r00 = lambdify((h, p), self.R[0], 'numexpr')
-        r01 = lambdify((r, p, h), self.R[1], 'numexpr')
-        r10 = lambdify((h, p), self.R[3], 'numexpr')
-        r11 = lambdify((r, p, h), self.R[4], 'numexpr')
-        r20 = lambdify(p, self.R[6], 'numexpr')
-        r21 = lambdify((r, p), self.R[7], 'numexpr')
+        r00 = lambdify((h, p), R[0], 'numexpr')
+        r01 = lambdify((r, p, h), R[1], 'numexpr')
+        r10 = lambdify((h, p), R[3], 'numexpr')
+        r11 = lambdify((r, p, h), R[4], 'numexpr')
+        r20 = lambdify(p, R[6], 'numexpr')
+        r21 = lambdify((r, p), R[7], 'numexpr')
 
-        self.fR = [r00, r01, None,
-                   r10, r11, None,
-                   r20, r21, None]
+        fR = [r00, r01, None,
+                  r10, r11, None,
+                  r20, r21, None]
 
         # rotation matrix for scanning sensor
         M1 = Matrix([[1, 0, 0],
@@ -81,25 +86,18 @@ class Subaerial:
         M3 = Matrix([[cos(w), -sin(w), 0],
                      [sin(w), cos(w), 0],
                      [0, 0, 1]])
-        self.M = M3*M2*M1
-
-    # calc root mean square error for input data
-    def calcRMSE(data):
-        num_coords, num_points = data.shape
-        AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
-        RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
-        logging.info('Mean Difference:\n'
-              'X: {:.3f}\n'
-              'Y: {:.3f}\n'
-              'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
-        logging.info('RMSE: {:.3f}\n'.format(RMSE))
+        M = M3*M2*M1
+        logging.info(M)
+        
+        return R, fR, M
 
     '''
     define observation equations and calculate jacobian 
     (i.e., matrix of partial derivatives with respect to 
     component variables) using sympy symbolic math package
     '''
-    def set_Jacobian(self):
+    @staticmethod
+    def set_Jacobian(R, M):
         # create variables for symbolic computations
         a, b, w, r, p, h, x, y, z, rho, p00, p10, p01, p20, p11, p02, p21, p12, p03 \
             = symbols('a b w r p h x y z rho p00 p10 p01 p20 p11 p02 p21 p12 p03')
@@ -108,15 +106,15 @@ class Subaerial:
         # [00, 01, 02      matrix       [0 1 2
         #  10, 11, 12   ---indices-->    3 4 5
         #  20, 21, 22]                   6 7 8]
-        F1 = x - rho * (self.R[0] * self.M[2] + self.R[1] * self.M[5] + self.R[2] * self.M[8])
-        F2 = y - rho * (self.R[3] * self.M[2] + self.R[4] * self.M[5] + self.R[5] * self.M[8])
-        F3 = z - rho * (self.R[6] * self.M[2] + self.R[7] * self.M[5] + self.R[8] * self.M[8])
+        F1 = x - rho * (R[0] * M[2] + R[1] * M[5] + R[2] * M[8])
+        F2 = y - rho * (R[3] * M[2] + R[4] * M[5] + R[5] * M[8])
+        F3 = z - rho * (R[6] * M[2] + R[7] * M[5] + R[8] * M[8])
 
         # converting symbolic to function (faster)
         fF1 = lambdify((a, b, h, p, r, rho, w, x), F1, 'numexpr')
         fF2 = lambdify((a, b, h, p, r, rho, w, y), F2, 'numexpr')
         fF3 = lambdify((a, b, p, r, rho, w, z), F3, 'numexpr')
-        self.fF = [fF1, fF2, fF3]
+        fF = [fF1, fF2, fF3]
 
         # least squares adjustment mimics the Matlab "fit (poly23)" function
         polysurfcorr = p00 + \
@@ -130,9 +128,9 @@ class Subaerial:
                        p03 * b ** 3
 
         # Redefine obs eqs by adding polynomial surface fitting eq
-        F1 = x - rho * (self.R[0] * self.M[2] + self.R[1] * self.M[5] + self.R[2] * self.M[8]) + polysurfcorr
-        F2 = y - rho * (self.R[3] * self.M[2] + self.R[4] * self.M[5] + self.R[5] * self.M[8]) + polysurfcorr
-        F3 = z - rho * (self.R[6] * self.M[2] + self.R[7] * self.M[5] + self.R[8] * self.M[8]) + polysurfcorr
+        F1 = x - rho * (R[0] * M[2] + R[1] * M[5] + R[2] * M[8]) + polysurfcorr
+        F2 = y - rho * (R[3] * M[2] + R[4] * M[5] + R[5] * M[8]) + polysurfcorr
+        F3 = z - rho * (R[6] * M[2] + R[7] * M[5] + R[8] * M[8]) + polysurfcorr
 
         # calculate Jacobian, or vector of partial derivatives
         v = Matrix([a, b, r, p, h, x, y, z, rho])  # vector of unknowns
@@ -229,15 +227,26 @@ class Subaerial:
         fJ3sub7 = lambdify((), J3sub[7], eval_type)
         fJ3sub8 = lambdify((sin_a, sin_b, sin_w, sin_r, sin_p, cos_a, cos_b, cos_w, cos_r, cos_p), J3sub[8], eval_type)
 
-        self.fJ1sub = [fJ1sub0, fJ1sub1, fJ1sub2, fJ1sub3, fJ1sub4, fJ1sub5, fJ1sub6, fJ1sub7, fJ1sub8]
-        self.fJ2sub = [fJ2sub0, fJ2sub1, fJ2sub2, fJ2sub3, fJ2sub4, fJ2sub5, fJ2sub6, fJ2sub7, fJ2sub8]
-        self.fJ3sub = [fJ3sub0, fJ3sub1, fJ3sub2, fJ3sub3, fJ3sub4, fJ3sub5, fJ3sub6, fJ3sub7, fJ3sub8]
+        fJ1 = [fJ1sub0, fJ1sub1, fJ1sub2, fJ1sub3, fJ1sub4, fJ1sub5, fJ1sub6, fJ1sub7, fJ1sub8]
+        fJ2 = [fJ2sub0, fJ2sub1, fJ2sub2, fJ2sub3, fJ2sub4, fJ2sub5, fJ2sub6, fJ2sub7, fJ2sub8]
+        fJ3 = [fJ3sub0, fJ3sub1, fJ3sub2, fJ3sub3, fJ3sub4, fJ3sub5, fJ3sub6, fJ3sub7, fJ3sub8]
+        
+        return fJ1, fJ2, fJ3, fF
 
-    def calc_subaerial(self):
+    # calc root mean square error for input data
+    @staticmethod
+    def calcRMSE(data):
+        num_coords, num_points = data.shape
+        AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
+        RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
+        logging.info('Mean Difference:\n'
+              'X: {:.3f}\n'
+              'Y: {:.3f}\n'
+              'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
+        logging.info('RMSE: {:.3f}\n'.format(RMSE))
+
+    def calc_subaerial(self, fJ1, fJ2, fJ3, fF):
         itv = 10  # surface polynomial fitting interval
-
-        self.set_rotations_plane_sensor()
-        self.set_Jacobian()
 
         if self.is_empty:  # i.e., if D is empty (las and sbet not merged)
             logging.info('WARNING: SBET and LAS not merged because max delta '
@@ -246,19 +255,31 @@ class Subaerial:
             num_points = self.x_las.shape
 
             # assign variables because numexpr variables don't handle indexing
+            x_las = self.x_las
+            y_las = self.y_las
+            z_las = self.z_las
+            x_sbet = self.x_sbet
+            y_sbet = self.y_sbet
+            z_sbet = self.z_sbet
             x_ = ne.evaluate("x_las - x_sbet")
             y_ = ne.evaluate("y_las - y_sbet")
             z_ = ne.evaluate("z_las - z_sbet")
 
+            fR0 = self.fR0
+            fR3 = self.fR3
+            fR6 = self.fR6
+            fR1 = self.fR1
+            fR4 = self.fR4
+            fR7 = self.fR7
             rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
             b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
             a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
             w_est = np.zeros(num_points)
 
             #  calc diff between true and est las xyz (LE = Laser Estimates)
-            LE_pre_x = self.fF[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
-            LE_pre_y = self.fF[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
-            LE_pre_z = self.fF[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+            LE_pre_x = fF[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
+            LE_pre_y = fF[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
+            LE_pre_z = fF[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
 
             Er1x = ne.evaluate("x_las - LE_pre_x")
             Er1y = ne.evaluate("y_las - LE_pre_y")
@@ -317,8 +338,8 @@ class Subaerial:
             poly_surf_err_y = ne.evaluate('LE_post_y - y_las')
             poly_surf_err_z = ne.evaluate('LE_post_z - z_las')
 
-            LE_post_arr = np.asarray([self.x_las, self.y_las, self.z_las])
-            LE_post1_arr = np.concatenate((self.LE_post1_arr, LE_post_arr), axis=1)
+            # LE_post_arr = np.asarray([self.x_las, self.y_las, self.z_las])
+            # LE_post1_arr = np.concatenate((self.LE_post1_arr, LE_post_arr), axis=1)
 
             '''
             simplify the numerous trigonometric calculations of the Jacobian by
@@ -329,6 +350,12 @@ class Subaerial:
             in the equation;  (it complicates the code, but it saves a noticeable
             chunk of time computationally)
             '''
+            r0 = self.r0
+            p0 = self.p0
+            h0 = self.h0
+            x0 = self.x0
+            y0 = self.y0
+            z0 = self.z0
             sin_a0 = ne.evaluate("sin(a_est)")
             sin_b0 = ne.evaluate("sin(b_est)")
             sin_w0 = np.zeros(num_points)  # ne.evaluate("sin(w_est)") ... sin(0) = 0
@@ -344,52 +371,52 @@ class Subaerial:
 
             pJ1 = np.vstack(
                 (fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
-                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                                  sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
-                        sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                                  sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
                  fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  np.ones(num_points),
                  fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
             pJ2 = np.vstack(
                 (fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
-                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                                  sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
-                        sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                                  sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
                  fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  np.ones(num_points),
                  fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
             pJ3 = np.vstack(
                 (fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
-                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                                  sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
-                        sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                                  sin_b0, sin_w0, sin_r0, sin_p0,
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  np.ones(num_points),
                  fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
+                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
 
             # prop error
             C = self.C
@@ -408,7 +435,7 @@ class Subaerial:
             sy = ne.evaluate("sqrt(sum_pJ2)")
             sz = ne.evaluate("sqrt(sum_pJ3)")
 
-            return np.hstack((sx, sy, sz, poly_surf_err_x, poly_surf_err_y, poly_surf_err_z))
+            return np.vstack((LE_post_x, LE_post_y, LE_post_z, sx, sy, sz, poly_surf_err_x, poly_surf_err_y, poly_surf_err_z)).T
 
 
 if __name__ == '__main__':

@@ -42,7 +42,7 @@ class DirectorySelectButton(object):
     Sets the state of the button.
     """
     def setState(self, state):
-        self.button.config(state = state)
+        self.button.config(state=state)
 
     """
     Callback for the button.

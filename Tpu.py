@@ -1,12 +1,27 @@
+import logging
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+import numpy as np
+import numexpr as ne
+import pandas as pd
 
+from Sbet import Sbet
+from Las import Las
+from Merge import Merge
+from Subaerial import Subaerial
+from Subaqueous import Subaqueous
+from Datum import Datum
+
+import pathos.pools as pp  # for multiprocessing of las files
+
+from lxml import etree
 
 
 class Tpu:
-    def __init__(self, sbet_df, surface_select,
+
+    def __init__(self, surface_select,
                  surface_ind, wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output):
-        self.sbet_df = sbet_df
+                 vdatum_region_mcu, tpu_output, fR, fJ1, fJ2, fJ3, fF):
         self.surface_select = surface_select
         self.surface_ind = surface_ind
         self.wind_selection = wind_selection
@@ -16,114 +31,81 @@ class Tpu:
         self.vdatum_region = vdatum_region
         self.vdatum_region_mcu = vdatum_region_mcu
         self.tpuOutput = tpu_output
+        self.fR = fR
+        self.fJ1 = fJ1
+        self.fJ2 = fJ2
+        self.fJ3 = fJ3
+        self.fF = fF
 
-    def calc_tpu(self, las):
+    def calc_tpu(self, las, sbet):
+        las = Las(las)
+        logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
+        las.set_bathy_points()
+        data_to_pickle = []
 
-        # import these again, here, for multiprocessing
-        import logging
-        logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
-        import Subaerial
-        import Subaqueous
-        import numpy as np
-        import numexpr as ne
-        import pandas as pd
+        logging.info(las.get_flight_line_ids())
+        for fl in las.get_flight_line_ids():
+            logging.info('flight line {} {}'.format(fl, '-' * 30))
+            D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
+
+            logging.info('({}) calculating subaerial TPU...'.format(las.las_short_name))
+            subaerial = Subaerial(D, self.fR).calc_subaerial(self.fJ1, self.fJ2, self.fJ3, self.fF)
+            depth = subaerial[:, 2] + 23
+
+            logging.info('({}) calculating subaqueous TPU...'.format(las.las_short_name))
+            subaqueous = Subaqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
+
+            logging.info('({}) calculating datum TPU...'.format(las.las_short_name))
+            # datum = Datum()
+            vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
+
+            logging.info('({}) calculating total TPU...'.format(las.las_short_name))
+            subaerial_sig_xyz = subaerial[:, 6]
+            sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial_sig_xyz**2 + vdatum_mcu**2)')
+
+            num_points = sigma.shape[0]
+            output = np.hstack((
+                np.round_(subaerial, decimals=5),
+                np.round_(np.expand_dims(subaqueous, axis=1), decimals=5),
+                np.round_(np.expand_dims(sigma, axis=1), decimals=5),
+                np.full((num_points, 1), fl)))
+
+            data_to_pickle.append(output)
+
+        # write data to file
+        output_tpu_file = r'{}_TPU.tpu'.format(las.las_short_name.replace('.las', ''))
+        output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
+        output_df = pd.DataFrame(np.vstack(data_to_pickle))
+        logging.info('({}) writing TPU...'.format(las.las_short_name))
+        output_df.to_pickle(output_path)
+
+    def __str__(self):
+        meta_data = {
+            'water surface', self.surface_select,
+            'wind', self.wind_selection,
+            'kd', self.kdSelect,
+            'VDatum region', self.vdatum_region,
+            'VDatum region MCU', self.vdatum_region_mcu,
+        }
+
+        meta_dat_json = json.dumps(meta_data)
+        return meta_data_json
+
+
+    def create_metadata(self, las):
+        logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
 
 
 
 
+    def run_tpu(self, las, sbet):
+        self.calc_tpu(las, sbet)
+        self.create_metadata(las)
 
+    def run_tpu_multiprocessing(self, las_files, sbet_files):
 
-
-
-        for l in las_files:
-            las = Las(l)
-
-            for fl in las.get_flight_line_ids():
-                D = Merge.merge(self.sbet.data, las.get_flight_line_txyz(fl))
-
-                subaerial = Subaerial(D).calc_subaerial()
-                subaqueous = Subaqueous(subaerial.tpu)
-                datum = Datum()
-                total_tpu = Tpu(subaerial.tpu, subaqueous.tpu, datum.tpu)
-
-                # write data to file
-                # keep track of metadata stats
-
-            # output metadata file
-            output_tpu_file = r'{}_TPU.csv'.format(las.split('\\')[-1].replace('.las', ''))
-            output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-            output_df = pd.DataFrame(output)
-            pkl_path = output_path.replace('csv', 'tpu')
-            logging.info('({}) writing TPU...'.format(las_short_name))
-            output_df.to_pickle(pkl_path)
-
-
-
-
-
-
-        las_short_name = las.split('\\')[-1]
-        logging.info('({})'.format(las_short_name))
-        logging.info('({}) calculating subaerial TPU'.format(las_short_name))
-        subaerial, flight_lines, poly_surf_errs = Subaerial.main(self.sbet_df, las)
-        subaerial_sig_z = subaerial[:, 5]
-
-        logging.info('({}) calculating subaqueous TPU component...'.format(las_short_name))
-        depth = subaerial[:, 2] + 23
-        subaqueous = Subaqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
-
-        logging.info('({}) combining subaerial and subaqueous TPU components...'.format(las_short_name))
-        vdatum_mcu = float(self.vdatum_region_mcu) / 100  # file is in cm (1-sigma)
-        sigma = ne.evaluate('sqrt(subaqueous**2 + subaerial_sig_z**2 + vdatum_mcu**2)')
-
-        num_points = sigma.shape[0]
-        output = np.hstack((
-            np.round_(subaerial[:, [0, 1, 2, 5]], decimals=5),
-            np.round_(subaqueous.reshape(num_points, 1), decimals=5),
-            np.round_(sigma.reshape(num_points, 1), decimals=5),
-            flight_lines.reshape(num_points, 1),
-            poly_surf_errs))
-
-    def create_metadata(self):
-        line_sep = '-' * 50
-        logging.info('({}) creating TPU meta data file...'.format(las_short_name))
-        meta_str = 'TPU METADATA FILE\n{}\n'.format(las)
-        meta_str += '\n{}\n{}\n{}\n'.format(line_sep, 'PARAMETERS', line_sep)
-
-        meta_str += '{:35s}:  {}\n'.format('water surface', self.surface_select)
-        meta_str += '{:35s}:  {}\n'.format('wind', self.wind_selection)
-        meta_str += '{:35s}:  {}\n'.format('kd', self.kdSelect)
-        meta_str += '{:35s}:  {}\n'.format('VDatum region', self.vdatum_region)
-        meta_str += '{:<35}:  {} (m)\n'.format('VDatum region MCU', vdatum_mcu)
-
-        meta_str += '\n{}\n{}\n{}\n'.format(
-            line_sep, 'TOTAL SIGMA Z TPU (METERS) SUMMARY', line_sep)
-        meta_str += '{:10}\t{:10}\t{:10}\t{:10}\t{:10}\t{:10}\n'.format(
-            'FIGHT_LINE', 'MIN', 'MAX', 'MEAN', 'STDDEV', 'COUNT')
-
-        output = output.astype(np.float)
-        unique_flight_line_codes = np.unique(output[:, 6])
-
-        for u in sorted(unique_flight_line_codes):
-            flight_line_tpu = output[output[:, 6] == u][:, 5]
-
-            min_tpu = np.min(flight_line_tpu)
-            max_tpu = np.max(flight_line_tpu)
-            mean_tpu = np.mean(flight_line_tpu)
-            std_tpu = np.std(flight_line_tpu)
-            count_tpu = np.count_nonzero(flight_line_tpu)
-
-            meta_str += '{:<10}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{:<10.5f}\t{}\n'.format(
-                int(u), min_tpu, max_tpu, mean_tpu, std_tpu, count_tpu)
-
-        output_tpu_meta_file = r'{}_TPU.meta'.format(las.split('\\')[-1].replace('.las', ''))
-        outputMetaFile = open("{}\\{}".format(self.tpuOutput, output_tpu_meta_file), "w")
-        outputMetaFile.write(meta_str)
-        outputMetaFile.close()
-
-    def run_tpu_multiprocessing(self, las_files):
         p = pp.ProcessPool()
-        p.map(self.calc_tpu, las_files)
+        p.imap(self.run_tpu, las_files, sbet_files)
         p.close()
         p.join()
 

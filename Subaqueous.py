@@ -2,6 +2,7 @@
 
 import numpy as np
 
+
 class Subaqueous:
     def __init__(self):
         pass
@@ -25,11 +26,12 @@ class Subaqueous:
     
     @return   res        float[]   (SubAqueous TPU)
     """
-    def main(self, surface, wind_par, kd_par, depth):
+    @staticmethod
+    def main(surface, wind_par, kd_par, depth):
         if surface == 0:
-            fit = self.riegl_process(kd_par)
+            fit = Subaqueous.riegl_process(kd_par)
         else:
-            fit = self.model_process(wind_par, kd_par)
+            fit = Subaqueous.model_process(wind_par, kd_par)
 
         res = fit[0]*depth**2+fit[1]*depth+fit[2]
 
@@ -44,7 +46,9 @@ class Subaqueous:
     
     @return   fit    float[]   (polynomial fit for SubAqueous TPU)
     """
-    def model_process(self, wind, kd):
+
+    @staticmethod
+    def model_process(wind, kd):
         look_up = open("ECKV_look_up_fit_HG0995_1sig_JALBTCX_temp.csv")
         look_up_data = look_up.readlines()
         look_up.close()
@@ -68,6 +72,8 @@ class Subaqueous:
     
     @return   fit    float[]   (polynomial fit for SubAqueous TPU)
     """
+
+    @staticmethod
     def riegl_process(self, kd):
         look_up = open("Riegl_look_up_fit_HG0995_1sig.csv")
         look_up_data = look_up.readlines()

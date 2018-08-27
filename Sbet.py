@@ -2,6 +2,7 @@ import os
 import time
 import pandas as pd
 from datetime import datetime
+import logging
 
 
 class Sbet:
@@ -9,6 +10,7 @@ class Sbet:
         self.sbet_dir = sbet_dir
         self.sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
                                   if f.endswith('.txt')])
+        self.data = None
 
     # get sbet date from file name
     def get_sbet_date(self, sbet):
@@ -63,13 +65,16 @@ class Sbet:
         sbets_data = sbets_df.sort_values(['time'], ascending=[1])
         return sbets_data
 
-    @property
-    def data(self):
+    def set_data(self):
         sbet_tic = time.clock()
-        sbets_df = self.build_sbets_data()
+        self.data = self.build_sbets_data()  # df
         sbet_toc = time.clock()
         logging.info('It took {:.1f} mins to load sbets.'.format((sbet_toc - sbet_tic) / 60))
-        return sbets_df
+
+    def get_tile(self, north, south, east, west):
+        data = self.data[(self.data.Y >= south) & (self.data.Y <= north) &
+                         (self.data.X >= west) & (self.data.X <= east)]
+        return data
 
 
 if __name__ == '__main__':

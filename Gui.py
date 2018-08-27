@@ -15,8 +15,6 @@ import pandas as pd
 from DirectorySelectButton import DirectorySelectButton
 from RadioFrame import RadioFrame
 
-import pathos.pools as pp  # for multiprocessing of las files
-
 # Import Processing code
 from Sbet import Sbet
 from Las import Las
@@ -170,7 +168,8 @@ class Gui:
 
         tk.Label(datum_transform_subframe, text="VDatum Region").grid(row=0, column=0, sticky=tk.EW)
 
-        regions, mcu_values, default_msg = Datum.get_vdatum_region_mcus()
+        datum = Datum()  # vertical tranformation class
+        regions, mcu_values, default_msg = datum.get_vdatum_region_mcus()
         self.vdatum_regions = dict({(key, value) for (key, value) in zip(regions, mcu_values)})
         self.vdatum_regions.update({default_msg: 0})
 
@@ -202,7 +201,7 @@ class Gui:
         self.sbet_btn_text = tk.StringVar()
         self.sbet_btn_text.set("Load SBET Files")
         self.sbetProcess = tk.Button(frame, textvariable=self.sbet_btn_text, width=buttonWidth,
-                                     height=buttonHeight, state=tk.DISABLED, command=self.sbetProcessCallback)
+                                     height=buttonHeight, state=tk.DISABLED, command=self.sbet_process_callback)
         self.sbetProcess.grid(row=1, column=1)
 
         self.tpu_btn_text = tk.StringVar()
@@ -233,8 +232,9 @@ class Gui:
     """
     Callback for the sbetProcess button.
     """
-    def sbetProcessCallback(self):
+    def sbet_process_callback(self):
         self.sbet = Sbet(self.sbetInput.directoryName)
+        self.sbet.set_data()
         self.isSbetLoaded = True
         self.sbet_btn_text.set(u'{} \u2713'.format(self.sbet_btn_text.get()))
         self.updateButtonEnable()
@@ -252,8 +252,34 @@ class Gui:
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidityOptions[kd_ind]
 
+        # get subaqueous metadata from lookup table header
+        subaqueous_f = open('', 'r')
+        subaqueous_metadata = subaqueous_f.readline().split(',')
+
+
+        # set rotation matrices and Jacobian (need to do only once)
+        R, fR, M = Subaerial.set_rotation_matrices()
+        fJ1, fJ2, fJ3, fF = Subaerial.set_Jacobian(R, M)
+
+        las_files = [os.path.join(self.lasInput.directoryName, l)
+                     for l in os.listdir(self.lasInput.directoryName)
+                     if l.endswith('.las')]
+
+        def sbet_tiles_generator():
+            tile_size = 500  # meters
+            for las in las_files:  # 2016_422000e_2873500n.las
+                las_base = las.split('\\')[-1]
+                ul_x = float(las_base[5:11])
+                ul_y = float(las_base[13:20])
+                west = ul_x - tile_size
+                east = ul_x + 2 * tile_size
+                north = ul_y + tile_size
+                south = ul_y - 2 * tile_size
+
+                logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
+                yield self.sbet.get_tile(north, south, east, west)
+
         tpu = Tpu(
-            self.sbet_df,
             surface_selection,
             surface_ind,
             wind_selection,
@@ -262,12 +288,14 @@ class Gui:
             self.kd_vals[kd_ind][1],
             self.vdatum_regions[self.tkvar.get()],
             self.mcu,
-            self.tpuOutput.directoryName)
+            self.tpuOutput.directoryName,
+            fR,
+            fJ1,
+            fJ2,
+            fJ3,
+            fF)
 
-        las_files = [os.path.join(self.lasInput.directoryName, l)
-                     for l in os.listdir(self.lasInput.directoryName)
-                     if l.endswith('.las')]
-        tpu.run_tpu_multiprocessing(las_files)
+        tpu.run_tpu_multiprocessing(las_files, sbet_tiles_generator())
 
         self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
 

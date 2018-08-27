@@ -11,7 +11,8 @@ class Merge:
         pass
 
     # match up las and sbet data using timestamps
-    def merge(sbet_data, las_t, las_x, las_y, las_z):
+    @staticmethod
+    def merge(las, fl, sbet_data, (las_t, las_x, las_y, las_z)):
 
         a_std_dev = 0.02  # degrees
         b_std_dev = 0.02  # degrees
@@ -24,8 +25,7 @@ class Merge:
 
         dt = las_t[mask] - sbet_data[:, 0][idx][mask]
         max_dt = np.max(dt)
-
-        logging.info('max_dt: {}'.format(max_dt))
+        logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
 
         if max_dt > 1:
             merged_data = []

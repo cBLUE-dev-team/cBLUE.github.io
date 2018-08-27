@@ -18,8 +18,8 @@ class Las:
         bathy_inds = self.inFile.raw_classification == Las.class_codes['BATHYMETRY']
         self.bathy_points = self.inFile.points[bathy_inds]['point']
 
-    def get_flight_line_ids(self, bathy_points):
-        return np.unique(bathy_points['pt_src_id'])
+    def get_flight_line_ids(self):
+        return np.unique(self.bathy_points['pt_src_id'])
 
     def get_flight_line_txyz(self, fl):
         scale_x = np.asarray(self.inFile.header.scale[0])
