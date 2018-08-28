@@ -1,21 +1,12 @@
 import logging
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 from Merge import Merge
-from sympy import *  # to symbolically compute Jacobian partial derivatives (which are huge!)
+from sympy import *
 import numpy as np
-import numexpr as ne  # used to speed up numpy calculations
+import numexpr as ne
 
 
 class Subaerial:
-
-    # # class variables
-    # M = None
-    # R = None
-    # fR = None
-    # fJ1 = None
-    # fJ2 = None
-    # fJ3 = None
-    # fF = None
 
     def __init__(self, D, fR):
         self.is_empty = not D
@@ -40,12 +31,9 @@ class Subaerial:
         self.fR7 = fR[7](D[8], D[9])
         self.C = np.asarray(D[11:])
 
-    # define rotation matrices for airplane (R) and scanning sensor (M)
     @staticmethod
     def set_rotation_matrices():
-        # calculate M and R matrices
-        # M:  rotation matrix for scanning sensor
-        # R:  rotation matrix for airplane
+        """define rotation matrices for airplane (R) and scanning sensor (M)"""
 
         r, p, h, a, b, w = symbols('r p h a b w')
 
@@ -91,13 +79,13 @@ class Subaerial:
         
         return R, fR, M
 
-    '''
-    define observation equations and calculate jacobian 
-    (i.e., matrix of partial derivatives with respect to 
-    component variables) using sympy symbolic math package
-    '''
     @staticmethod
-    def set_Jacobian(R, M):
+    def set_jacobian(R, M):
+        """ define observation equations and calculate jacobian
+        (i.e., matrix of partial derivatives with respect to
+        component variables) using sympy symbolic math package
+        """
+
         # create variables for symbolic computations
         a, b, w, r, p, h, x, y, z, rho, p00, p10, p01, p20, p11, p02, p21, p12, p03 \
             = symbols('a b w r p h x y z rho p00 p10 p01 p20 p11 p02 p21 p12 p03')
@@ -233,9 +221,9 @@ class Subaerial:
         
         return fJ1, fJ2, fJ3, fF
 
-    # calc root mean square error for input data
     @staticmethod
     def calcRMSE(data):
+        """calc root mean square error for input data"""
         num_coords, num_points = data.shape
         AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
         RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
@@ -435,7 +423,13 @@ class Subaerial:
             sy = ne.evaluate("sqrt(sum_pJ2)")
             sz = ne.evaluate("sqrt(sum_pJ3)")
 
-            return np.vstack((LE_post_x, LE_post_y, LE_post_z, sx, sy, sz, poly_surf_err_x, poly_surf_err_y, poly_surf_err_z)).T
+            column_headers = ['LE_post_x', 'LE_post_y', 'LE_post_z', 
+                              'sx', 'sy', 'sz', 
+                              'poly_surf_err_x', 'poly_surf_err_y', 'poly_surf_err_z']
+
+            return np.vstack((LE_post_x, LE_post_y, LE_post_z,
+                              sx, sy, sz,
+                              poly_surf_err_x, poly_surf_err_y, poly_surf_err_z)).T, column_headers
 
 
 if __name__ == '__main__':

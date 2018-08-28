@@ -12,8 +12,9 @@ class Sbet:
                                   if f.endswith('.txt')])
         self.data = None
 
-    # get sbet date from file name
     def get_sbet_date(self, sbet):
+        """get sbet date from file name"""
+
         sbet_parts = sbet.split('\\')
         sbet_name = sbet_parts[-1]
         year = int(sbet_name[0:4])
@@ -22,9 +23,9 @@ class Sbet:
         sbet_date = [year, month, day]
         return sbet_date
 
-    # convert the GPS seconds-of-week timestamps
-    # to GPS adjusted standard time
     def gps_sow_to_gps_adj(self, gps_date, gps_wk_sec):
+        """convert the GPS seconds-of-week timestamps to GPS adjusted standard time"""
+        
         logging.info('converting GPS week seconds to GPS adjusted standard time...'),
         SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
         SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
@@ -41,8 +42,9 @@ class Sbet:
         gps_time_adj = gps_time - 1e9
         return gps_time_adj
 
-    # build 1 pandas dataframe from all ASCII sbet files
     def build_sbets_data(self):
+        """build 1 pandas dataframe from all ASCII sbet files"""
+
         sbets_df = pd.DataFrame()
         header_sbet = ['time', 'lon', 'lat', 'X', 'Y', 'Z', 'roll', 'pitch', 'heading',
                        'stdX', 'stdY', 'stdZ', 'stdroll', 'stdpitch', 'stdheading']

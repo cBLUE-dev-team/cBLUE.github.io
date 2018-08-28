@@ -10,6 +10,7 @@ class Las:
     def __init__(self, las):
         self.las = las
         self.las_short_name = las.split('\\')[-1]
+        self.las_base_name = self.las_short_name.replace('.las', '')
         self.inFile = laspy.file.File(self.las, mode="r")
         self.num_file_points = self.inFile.__len__()
         self.bathy_points = None

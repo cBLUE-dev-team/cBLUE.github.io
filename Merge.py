@@ -10,9 +10,9 @@ class Merge:
     def __init__(self):
         pass
 
-    # match up las and sbet data using timestamps
     @staticmethod
     def merge(las, fl, sbet_data, (las_t, las_x, las_y, las_z)):
+        """match up las and sbet data using timestamps"""
 
         a_std_dev = 0.02  # degrees
         b_std_dev = 0.02  # degrees
