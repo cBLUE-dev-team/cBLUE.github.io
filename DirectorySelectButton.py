@@ -12,7 +12,7 @@ class DirectorySelectButton(object):
     @author Timothy Kammerer
     """
 
-    def __init__(self, master, frame, directType, width, height, callback=None):
+    def __init__(self, master, frame, directType, width, callback=None):
         """Initializes the DirectorySelectButton.
 
         @param   fileType    string
@@ -22,13 +22,11 @@ class DirectorySelectButton(object):
         self.master = master
         self.directType = directType
         self.width = width
-        self.height = height
         self.button = Button(
             frame,
             text="Choose {} Directory".format(self.directType),
             command=self.callback,
-            width=width,
-            height=self.height)
+            width=width)
         self.directoryName = ""
         self.extraCallback = callback
 
@@ -76,8 +74,7 @@ class DirectorySelectButton(object):
             displayDirectory = "{}{}".format(displayDirectory, currentLine)
         
         self.button.config(
-            text="{}: {}".format(self.directType, displayDirectory),
-            anchor='w')
+            text="{} Directory Set".format(self.directType), fg='darkgreen')
         
         if self.extraCallback != None:
             self.extraCallback()

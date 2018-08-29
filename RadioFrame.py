@@ -20,8 +20,6 @@ class RadioFrame:
             width=40):
         self.frame = Frame(
             root,
-            borderwidth=0,
-            relief=GROOVE,
             background=background)
 
         if radioName != None:
