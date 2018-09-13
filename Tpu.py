@@ -54,6 +54,7 @@ class Tpu:
 
             logging.info('({}) calculating subaqueous TPU...'.format(las.las_short_name))
             subaqueous_sz, subaqueous_columns = Subaqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
+            print(subaqueous_sz)
 
             logging.info('({}) calculating datum TPU...'.format(las.las_short_name))
             vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)

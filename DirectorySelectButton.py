@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 import tkFileDialog
-import os
 from Tkinter import Button
 
 
 class DirectorySelectButton(object):
-    """Button used to get the name of a directing containing files that need to be imported during processing.
+    """Button used to get the name of a directing containing
+    files that need to be imported during processing.
 
     Created: 2017-12-07
 
     @author Timothy Kammerer
     """
 
-    def __init__(self, master, frame, directType, width, callback=None):
+    def __init__(self, master, frame, direct_type, dir_path, width, callback=None):
         """Initializes the DirectorySelectButton.
 
         @param   fileType    string
@@ -20,14 +20,14 @@ class DirectorySelectButton(object):
         """
 
         self.master = master
-        self.directType = directType
+        self.directType = direct_type
         self.width = width
         self.button = Button(
             frame,
-            text="Choose {} Directory".format(self.directType),
+            text='Choose {} Directory'.format(self.directType),
             command=self.callback,
             width=width)
-        self.directoryName = ""
+        self.directoryName = dir_path
         self.extraCallback = callback
 
     def grid(self, **args):
@@ -51,7 +51,7 @@ class DirectorySelectButton(object):
             initialdir=self.master.lastFileLoc,
             title="Select {} File".format(self.directType))
 
-        if directoryName == "":
+        if directoryName == '':
             return
 
         self.directoryName = directoryName
@@ -73,10 +73,9 @@ class DirectorySelectButton(object):
             
             displayDirectory = "{}{}".format(displayDirectory, currentLine)
         
-        self.button.config(
-            text="{} Directory Set".format(self.directType), fg='darkgreen')
+        self.button.config(text="{} Directory Set".format(self.directType), fg='darkgreen')
         
-        if self.extraCallback != None:
+        if self.extraCallback is not None:
             self.extraCallback()
 
 

@@ -87,6 +87,13 @@ class Subaqueous:
         fit[2] /= len(kd)
         return fit
 
+    @staticmethod
+    def get_subaqueous_meta_data(f):
+        subaqueous_f = open(f, 'r')
+        subaqueous_metadata = subaqueous_f.readline().split(',')
+        subaqueous_metadata = {k: v.strip() for (k, v) in [n.split(':') for n in subaqueous_metadata]}
+        return subaqueous_metadata
+
 
 if __name__ == '__main__':
     pass
