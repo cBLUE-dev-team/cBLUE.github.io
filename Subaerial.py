@@ -359,52 +359,52 @@ class Subaerial:
 
             pJ1 = np.vstack(
                 (fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
-                                  sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
-                                  sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                        sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
                  fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  np.ones(num_points),
                  fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
             pJ2 = np.vstack(
                 (fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
-                                  sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
-                                  sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                        sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
                  fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  np.ones(num_points),
                  fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
             pJ3 = np.vstack(
                 (fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
-                                  sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
-                                  sin_b0, sin_w0, sin_r0, sin_p0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                        sin_b0, sin_w0, sin_r0, sin_p0,
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  np.ones(num_points),
                  fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                                  cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
+                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
 
             # prop error
             C = self.C
@@ -421,14 +421,16 @@ class Subaerial:
 
             sx = ne.evaluate("sqrt(sum_pJ1)")
             sy = ne.evaluate("sqrt(sum_pJ2)")
-            sz = ne.evaluate("sqrt(sum_pJ3)")
+            subaerial_tvu = ne.evaluate("sqrt(sum_pJ3)")
+
+            subaerial_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
 
             column_headers = ['LE_post_x', 'LE_post_y', 'LE_post_z', 
-                              'sx', 'sy', 'sz', 
+                              'subaerial_thu', 'subaerial_tvu',
                               'poly_surf_err_x', 'poly_surf_err_y', 'poly_surf_err_z']
 
             return np.vstack((LE_post_x, LE_post_y, LE_post_z,
-                              sx, sy, sz,
+                              subaerial_thu, subaerial_tvu,
                               poly_surf_err_x, poly_surf_err_y, poly_surf_err_z)).T, column_headers
 
 

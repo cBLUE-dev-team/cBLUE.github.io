@@ -10,7 +10,7 @@ import pandas as pd
 from Las import Las
 from Merge import Merge
 from Subaerial import Subaerial
-from Subaqueous import Subaqueous
+from Subaqueous_frt import Subaqueous
 
 
 class Tpu:
@@ -48,28 +48,32 @@ class Tpu:
             logging.info('flight line {} {}'.format(fl, '-' * 30))
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
-            logging.info('({}) calculating subaerial TPU...'.format(las.las_short_name))
+            logging.info('({}) calculating subaerial THU/TVU...'.format(las.las_short_name))
             subaerial, subaerial_columns = Subaerial(D, self.fR).calc_subaerial(self.fJ1, self.fJ2, self.fJ3, self.fF)
             depth = subaerial[:, 2] + 23
 
-            logging.info('({}) calculating subaqueous TPU...'.format(las.las_short_name))
-            subaqueous_sz, subaqueous_columns = Subaqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
-            print(subaqueous_sz)
+            logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
+            subaqueous_thu, subaqueous_tvu, subaqueous_columns = Subaqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
 
-            logging.info('({}) calculating datum TPU...'.format(las.las_short_name))
             vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
-            logging.info('({}) calculating total TPU...'.format(las.las_short_name))
-            subaerial_sz = subaerial[:, 5]
-            total_sz = ne.evaluate('sqrt(subaqueous_sz**2 + subaerial_sz**2 + vdatum_mcu**2)')
+            logging.info('({}) calculating total THU...'.format(las.las_short_name))
+            total_thu = ne.evaluate('sqrt(subaqueous_thu**2 + subaerial_thu**2)')
 
-            num_points = total_sz.shape[0]
+            logging.info('({}) calculating total TVU...'.format(las.las_short_name))
+            subaerial_thu = subaerial[:, 3]
+            subaerial_tvu = subaerial[:, 4]
+            total_tvu = ne.evaluate('sqrt(subaqueous_tvu**2 + subaerial_tvu**2 + vdatum_mcu**2)')
+
+            num_points = total_tvu.shape[0]
             output = np.hstack((
                 np.round_(subaerial, decimals=5),
-                np.round_(np.expand_dims(subaqueous_sz, axis=1), decimals=5),
-                np.round_(np.expand_dims(total_sz, axis=1), decimals=5)))
+                np.round_(np.expand_dims(subaqueous_tvu, axis=1), decimals=5),
+                np.round_(np.expand_dims(subaqueous_thu, axis=1), decimals=5),
+                np.round_(np.expand_dims(total_tvu, axis=1), decimals=5),
+                np.round_(np.expand_dims(total_tvu, axis=1), decimals=5)))
 
-            sigma_columns = ['total_sz']
+            sigma_columns = ['total_tvu', 'total_tvu']
             output_columns = subaerial_columns + subaqueous_columns + sigma_columns
             data_to_pickle.append(output)
             stats = ['min', 'max', 'mean', 'std']

@@ -58,6 +58,7 @@ class Subaqueous:
                 fit[0] += float(fit_par[0])
                 fit[1] += float(fit_par[1])
                 fit[2] += float(fit_par[2])
+
         fit[0] /= len(kd)*len(wind)
         fit[1] /= len(kd)*len(wind)
         fit[2] /= len(kd)*len(wind)
