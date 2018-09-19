@@ -48,7 +48,7 @@ class Subaqueous:
         @return   fit    float[]   (polynomial fit for SubAqueous TPU)
         """
 
-        look_up = open("ECKV_look_up_fit_HG0995_1sig_JALBTCX_temp.csv")
+        look_up = open("ECKV_look_up_fit_HG0995_1sig.csv")
         look_up_data = look_up.readlines()
         look_up.close()
         fit = [0, 0, 0]
