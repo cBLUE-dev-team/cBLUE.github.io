@@ -73,13 +73,13 @@ class CBlueApp(tk.Tk):
         exchangeChoice = tk.Menu(menubar, tearoff=0)
         exchangeChoice.add_command(label='Lidar System', command=lambda: self.popupmsg('not supported yet...'))
         exchangeChoice.add_command(label='Properties', command=lambda: self.popupmsg('not supported yet...'))
-        menubar.add_cascade(label='Edit', menu=exchangeChoice)
+        # menubar.add_cascade(label='Edit', menu=exchangeChoice)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Map Window', command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Map Window', command=lambda: self.build_map_panel)
         exchangeChoice.add_command(label='Graph Window', command=lambda: self.popupmsg('not supported yet...'))
         exchangeChoice.add_command(label='Table Window', command=lambda: self.popupmsg('not supported yet...'))
-        menubar.add_cascade(label='Display', menu=exchangeChoice)
+        # menubar.add_cascade(label='Display', menu=exchangeChoice)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
         exchangeChoice.add_command(label='About', command=self.show_about)
@@ -202,6 +202,8 @@ class ControllerPanel(ttk.Frame):
         self.update_button_enable()
 
     def build_map_panel(self):
+        """not used yet; for future option of displaying loaded trajectory"""
+
         self.map_panel = tk.Frame(self)
         self.map_panel.grid(row=0, column=1, sticky=tk.NSEW)
         self.map_panel.grid_rowconfigure(0, weight=1)
