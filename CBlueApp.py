@@ -281,7 +281,8 @@ class ControllerPanel(ttk.Frame):
             callback=self.updateRadioEnable, width=self.control_panel_width)
         self.waterSurfaceRadio.grid(row=0, column=0, columnspan=1, sticky=tk.EW)
 
-        self.windRadio = RadioFrame(water_surface_subframe, None, self.windOptions, 1, width=self.control_panel_width-5)
+        self.windRadio = RadioFrame(water_surface_subframe, None, self.windOptions,
+                                    1, width=self.control_panel_width-5)
         self.windRadio.grid(row=1, column=0, sticky=tk.E)
 
         turbidity_subframe = tk.Frame(tab2)
@@ -293,7 +294,8 @@ class ControllerPanel(ttk.Frame):
             k[0], k[1][0] / 100.0, k[1][-1] / 100.0) for k in self.kd_vals.values()]
 
         self.turbidityRadio = RadioFrame(turbidity_subframe, "Turbidity (kd_490)",
-                                         self.turbidity_options, 0, width=self.control_panel_width)
+                                         self.turbidity_options, 0,
+                                         width=self.control_panel_width)
         self.turbidityRadio.grid(row=0, column=0, sticky=tk.N)
 
     def build_vdatum_input(self):

@@ -45,6 +45,9 @@ class Las:
 
         return t, x, y, z
 
+    def get_average_depth(self):
+        return 23
+
 
 if __name__ == '__main__':
     pass

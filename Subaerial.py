@@ -425,13 +425,11 @@ class Subaerial:
 
             subaerial_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
 
-            column_headers = ['LE_post_x', 'LE_post_y', 'LE_post_z', 
-                              'subaerial_thu', 'subaerial_tvu',
-                              'poly_surf_err_x', 'poly_surf_err_y', 'poly_surf_err_z']
+            column_headers = ['LE_post_x', 'LE_post_y', 'LE_post_z',
+                              'subaerial_thu', 'subaerial_tvu']
 
             return np.vstack((LE_post_x, LE_post_y, LE_post_z,
-                              subaerial_thu, subaerial_tvu,
-                              poly_surf_err_x, poly_surf_err_y, poly_surf_err_z)).T, column_headers
+                              subaerial_thu, subaerial_tvu)).T, column_headers
 
 
 if __name__ == '__main__':

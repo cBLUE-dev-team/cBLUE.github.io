@@ -49,40 +49,43 @@ class Tpu:
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
             logging.info('({}) calculating subaerial THU/TVU...'.format(las.las_short_name))
-            subaerial, subaerial_columns = Subaerial(D, self.fR).calc_subaerial(self.fJ1, self.fJ2, self.fJ3, self.fF)
-            depth = subaerial[:, 2] + 23
+            subaerial, subaerial_columns = Subaerial(D, self.fR).calc_subaerial(
+                self.fJ1, self.fJ2, self.fJ3, self.fF)
+            depth = subaerial[:, 2] + las.get_average_depth()
+            subaerial_thu = subaerial[:, 3]
+            subaerial_tvu = subaerial[:, 4]
 
             logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
-            subaqueous_thu, subaqueous_tvu, subaqueous_columns = Subaqueous.main(self.surface_ind, self.wind_val, self.kd_val, depth)
+            subaqueous_thu, subaqueous_tvu, subaqueous_columns = Subaqueous.main(
+                self.surface_ind, self.wind_val, self.kd_val, depth)
 
             vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
             logging.info('({}) calculating total THU...'.format(las.las_short_name))
-            total_thu = ne.evaluate('sqrt(subaqueous_thu**2 + subaerial_thu**2)')
+            total_thu = ne.evaluate('sqrt(subaerial_thu**2 + subaqueous_thu**2)')
 
             logging.info('({}) calculating total TVU...'.format(las.las_short_name))
-            subaerial_thu = subaerial[:, 3]
-            subaerial_tvu = subaerial[:, 4]
             total_tvu = ne.evaluate('sqrt(subaqueous_tvu**2 + subaerial_tvu**2 + vdatum_mcu**2)')
 
             num_points = total_tvu.shape[0]
             output = np.hstack((
                 np.round_(subaerial, decimals=5),
-                np.round_(np.expand_dims(subaqueous_tvu, axis=1), decimals=5),
                 np.round_(np.expand_dims(subaqueous_thu, axis=1), decimals=5),
-                np.round_(np.expand_dims(total_tvu, axis=1), decimals=5),
+                np.round_(np.expand_dims(subaqueous_tvu, axis=1), decimals=5),
+                np.round_(np.expand_dims(total_thu, axis=1), decimals=5),
                 np.round_(np.expand_dims(total_tvu, axis=1), decimals=5)))
 
-            sigma_columns = ['total_tvu', 'total_tvu']
-            output_columns = subaerial_columns + subaqueous_columns + sigma_columns
+            sigma_columns = ['total_thu', 'total_tvu']
+            output_columns = subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
             data_to_pickle.append(output)
             stats = ['min', 'max', 'mean', 'std']
-            self.flight_line_stats[str(fl)] = pd.DataFrame(output, columns=output_columns).describe().loc[stats].to_dict()
+            self.flight_line_stats[str(fl)] = pd.DataFrame(
+                output, columns=output_columns).describe().loc[stats].to_dict()
 
         # write data to file
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
         output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-        output_df = pd.DataFrame(np.vstack(data_to_pickle))
+        output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
         logging.info('({}) writing TPU...'.format(las.las_short_name))
         output_df.to_pickle(output_path)
 
