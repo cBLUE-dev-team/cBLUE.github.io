@@ -441,3 +441,5 @@ if __name__ == "__main__":
     app.geometry('225x515')
     # ani = animation.FuncAnimation(f, animate, interval=1000)
     app.mainloop()  # tk functionality
+
+    # added comment for github repo test configuration on new machine using visual studio 2015

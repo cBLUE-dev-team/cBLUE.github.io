@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1337ee1b-81ab-489e-87a0-76022010827f}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>CBlueApp.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="cBLUE_icon.ico" />
+    <Content Include="cBLUE_splash.gif" />
+    <Content Include="V_Datum_MCU_Values.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CBlueApp.py" />
+    <Compile Include="Datum.py" />
+    <Compile Include="DirectorySelectButton.py" />
+    <Compile Include="empirical_comparison.py" />
+    <Compile Include="get_las_tile_data.py" />
+    <Compile Include="Las.py" />
+    <Compile Include="Merge.py" />
+    <Compile Include="RadioFrame.py" />
+    <Compile Include="Sbet.py" />
+    <Compile Include="Subaerial.py" />
+    <Compile Include="Subaqueous.py" />
+    <Compile Include="Subaqueous_frt.py" />
+    <Compile Include="Tpu.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\2.7" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>
