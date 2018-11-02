@@ -1,28 +1,17 @@
 # -*- coding: utf-8 -*-
 from Tkinter import IntVar, Radiobutton, Frame, Label, GROOVE, W
 
-"""
-Created: 2017-12-08
-
-@author: Timothy Kammerer
-"""
 
 class RadioFrame:
-    def __init__(
-            self,
-            root,
-            radioName,
-            radioOptions,
-            startSelect=0,
-            background=None,
-            foreground=None,
-            callback=None,
-            width=40):
-        self.frame = Frame(
-            root,
-            borderwidth=0,
-            relief=GROOVE,
-            background=background)
+    """Created: 2017-12-08
+
+    @author: Timothy Kammerer
+    """
+
+    def __init__(self, root, radioName, radioOptions,
+                 startSelect=0, background=None, foreground=None,
+                 callback=None, width=40):
+        self.frame = Frame(root, background=background)
 
         if radioName != None:
             Label(
@@ -33,7 +22,6 @@ class RadioFrame:
                 foreground=foreground).grid(row=0)
 
         self.selection = IntVar(self.frame)
-        
         self.buttons = list()
         
         for i, opt in enumerate(radioOptions):
@@ -55,4 +43,4 @@ class RadioFrame:
     
     def setState(self, state):
         for button in self.buttons:
-            button.config(state = state)
+            button.config(state=state)

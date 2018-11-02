@@ -1,61 +1,57 @@
 # -*- coding: utf-8 -*-
 import tkFileDialog
-import os
 from Tkinter import Button
 
-"""
-Button used to get the name of a directing containing files that need to be imported during processing.
 
-Created: 2017-12-07
-
-@author Timothy Kammerer
-"""
 class DirectorySelectButton(object):
+    """Button used to get the name of a directing containing
+    files that need to be imported during processing.
 
+    Created: 2017-12-07
+
+    @author Timothy Kammerer
     """
-    Initializes the DirectorySelectButton.
-    
-    @param   fileType    string
-    @param   openTypes   string[]
-    """
-    def __init__(self, master, frame, directType, width, height, callback=None):
+
+    def __init__(self, master, frame, direct_type, dir_path, width, callback=None):
+        """Initializes the DirectorySelectButton.
+
+        @param   fileType    string
+        @param   openTypes   string[]
+        """
+
         self.master = master
-        self.directType = directType
+        self.directType = direct_type
         self.width = width
-        self.height = height
         self.button = Button(
             frame,
-            text="Choose {} Directory".format(self.directType),
+            text='Choose {} Directory'.format(self.directType),
             command=self.callback,
-            width=width,
-            height=self.height)
-        self.directoryName = ""
+            width=width)
+        self.directoryName = dir_path
         self.extraCallback = callback
-    
-    """
-    Wrapper function for self.button.grid.
-    """
+
     def grid(self, **args):
+        """Wrapper function for self.button.grid."""
+
         self.button.grid(**args)
     
-    """
-    Sets the state of the button.
-    """
-    def setState(self, state):
-        self.button.config(state = state)
+    def set_state(self, state):
+        """Sets the state of the button."""
 
-    """
-    Callback for the button.
-    
-    Gets the directoryName from user with tkFileDialog.
-    Updates the display to reflect directory choice.
-    """
+        self.button.config(state=state)
+
     def callback(self):
+        """Callback for the button.
+
+        Gets the directoryName from user with tkFileDialog.
+        Updates the display to reflect directory choice.
+        """
+
         directoryName = tkFileDialog.askdirectory(
             initialdir=self.master.lastFileLoc,
             title="Select {} File".format(self.directType))
 
-        if directoryName == "":
+        if directoryName == '':
             return
 
         self.directoryName = directoryName
@@ -77,9 +73,11 @@ class DirectorySelectButton(object):
             
             displayDirectory = "{}{}".format(displayDirectory, currentLine)
         
-        self.button.config(
-            text="{}: {}".format(self.directType, displayDirectory),
-            anchor='w')
+        self.button.config(text="{} Directory Set".format(self.directType), fg='darkgreen')
         
-        if self.extraCallback != None:
+        if self.extraCallback is not None:
             self.extraCallback()
+
+
+if __name__ == '__main__':
+    print(DirectorySelectButton.__doc__)
