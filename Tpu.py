@@ -40,7 +40,6 @@ class Tpu:
     def calc_tpu(self, las, sbet):
         las = Las(las)
         logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
-        las.set_bathy_points()
         data_to_pickle = []
 
         logging.info(las.get_flight_line_ids())
@@ -82,14 +81,33 @@ class Tpu:
             self.flight_line_stats[str(fl)] = pd.DataFrame(
                 output, columns=output_columns).describe().loc[stats].to_dict()
 
-        # write data to file
-        output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
-        output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-        output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
-        logging.info('({}) writing TPU...'.format(las.las_short_name))
-        output_df.to_pickle(output_path)
+        def pickle_tpu():
+            output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
+            output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
+            output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
+            logging.info('({}) writing TPU...'.format(las.las_short_name))
+            output_df.to_pickle(output_path)
 
-        # write metadata to json file
+        def output_new_las_with_tpu_xbytes(las):
+            inFile = laspy.file.File(las, mode = "r")
+            outFile = laspy.file.File("./laspytest/data/output.las", mode = "w",
+                        header = inFile.header)
+
+            # Define our new dimension. Note, this must be done before giving
+            # the output file point records.
+            outFile.define_new_dimension(
+                name = 'total_tpu',
+                data_type = 5, description = 'subaerial and subaqueous tpu combined in quadrature')
+
+            for dimension in inFile.point_format:
+                dat = inFile.reader.get_dimension(dimension.name)
+                outFile.writer.set_dimension(dimension.name, dat)
+
+            outFile.my_special_dimension = range(len(inFile))
+
+        pickle_tpu()
+        output_new_las_with_tpu_xbytes()
+        out
         self.write_metadata(las)
 
     def write_metadata(self, las):
