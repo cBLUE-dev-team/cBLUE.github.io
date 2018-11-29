@@ -43,7 +43,8 @@ class CBlueApp(tk.Tk):
 
     Created: 2017-12-07
 
-    @author: Timothy Kammerer
+    @original author: Timothy Kammerer
+    @modified by: Nick Forfinski-Sarkozi
     """
 
     def __init__(self, *args, **kwargs):

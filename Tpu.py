@@ -38,6 +38,25 @@ class Tpu:
         self.flight_line_stats = {}
 
     def calc_tpu(self, las, sbet):
+        """
+        Summary line.
+
+        Extended description of function.
+
+        Parameters
+        ----------
+        arg1 : int
+            Description of arg1
+        arg2 : str
+            Description of arg2
+
+        Returns
+        -------
+        int
+            Description of return value
+
+        """
+
         las = Las(las)
         logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
         data_to_pickle = []
@@ -81,34 +100,34 @@ class Tpu:
             self.flight_line_stats[str(fl)] = pd.DataFrame(
                 output, columns=output_columns).describe().loc[stats].to_dict()
 
-        def pickle_tpu():
-            output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
-            output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-            output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
-            logging.info('({}) writing TPU...'.format(las.las_short_name))
-            output_df.to_pickle(output_path)
-
-        def output_new_las_with_tpu_xbytes(las):
-            inFile = laspy.file.File(las, mode = "r")
-            outFile = laspy.file.File("./laspytest/data/output.las", mode = "w",
-                        header = inFile.header)
-
-            # Define our new dimension. Note, this must be done before giving
-            # the output file point records.
-            outFile.define_new_dimension(
-                name = 'total_tpu',
-                data_type = 5, description = 'subaerial and subaqueous tpu combined in quadrature')
-
-            for dimension in inFile.point_format:
-                dat = inFile.reader.get_dimension(dimension.name)
-                outFile.writer.set_dimension(dimension.name, dat)
-
-            outFile.my_special_dimension = range(len(inFile))
-
-        pickle_tpu()
-        output_new_las_with_tpu_xbytes()
+        pickle_tpu(data_to_pickle, output_columns)  # current output
+        #output_new_las_with_tpu_xbytes()  # want to move to this?
         out
         self.write_metadata(las)
+
+    def pickle_tpu(self, data_to_pickle, output_columns):
+        output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
+        output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
+        output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
+        logging.info('({}) writing TPU...'.format(las.las_short_name))
+        output_df.to_pickle(output_path)
+
+    def output_new_las_with_tpu_xbytes(self, las):
+        inFile = laspy.file.File(las, mode = "r")
+        outFile = laspy.file.File("./laspytest/data/output.las", mode = "w",
+                    header = inFile.header)
+
+        # Define our new dimension. Note, this must be done before giving
+        # the output file point records.
+        outFile.define_new_dimension(
+            name = 'total_tpu',
+            data_type = 5, description = 'subaerial and subaqueous tpu combined in quadrature')
+
+        for dimension in inFile.point_format:
+            dat = inFile.reader.get_dimension(dimension.name)
+            outFile.writer.set_dimension(dimension.name, dat)
+
+        outFile.my_special_dimension = range(len(inFile))
 
     def write_metadata(self, las):
         logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
