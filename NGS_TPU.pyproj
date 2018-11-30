@@ -5,12 +5,13 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1337ee1b-81ab-489e-87a0-76022010827f}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>extra_bytes_play.py</StartupFile>
+    <StartupFile>CBlueApp.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|ngs_tpu</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -19,6 +20,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="cblue_configuration.json" />
     <Content Include="cBLUE_icon.ico" />
     <Content Include="cBLUE_splash.gif" />
     <Content Include="V_Datum_MCU_Values.txt" />

@@ -1,1 +1,7 @@
-{"directories": {"tpu": "I:/NGS_TPU/DATA/FL1604-TB-N/las/OUTPUT_TEST", "sbet": "I:/NGS_TPU/DATA/FL1604-TB-N/SBET_TEST", "las": "I:/NGS_TPU/DATA/FL1604-TB-N/las"}}
+{
+  "directories": {
+    "tpu": "",
+    "sbet": "",
+    "las": ""
+  }
+}
