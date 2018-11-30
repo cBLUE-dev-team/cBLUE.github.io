@@ -56,13 +56,15 @@ class Tpu:
 			Description of return value
 
 		"""
-
+		logging.info(4)
 		las = Las(las)
 		logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
 		data_to_pickle = []
 
+		logging.info(5)
 		logging.info(las.get_flight_line_ids())
 		for fl in las.get_flight_line_ids():
+			logging.info(6)
 			logging.info('flight line {} {}'.format(fl, '-' * 30))
 			D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
@@ -72,7 +74,7 @@ class Tpu:
 			depth = subaerial[:, 2] + las.get_average_depth()
 			subaerial_thu = subaerial[:, 3]
 			subaerial_tvu = subaerial[:, 4]
-
+			logging.info(7)
 			logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
 			subaqueous_thu, subaqueous_tvu, subaqueous_columns = Subaqueous.main(
 				self.surface_ind, self.wind_val, self.kd_val, depth)
@@ -84,14 +86,15 @@ class Tpu:
 
 			logging.info('({}) calculating total TVU...'.format(las.las_short_name))
 			total_tvu = ne.evaluate('sqrt(subaqueous_tvu**2 + subaerial_tvu**2 + vdatum_mcu**2)')
-
+			logging.info(8)
 			num_points = total_tvu.shape[0]
 			output = np.hstack((
 				np.round_(subaerial, decimals=5),
 				np.round_(np.expand_dims(subaqueous_thu, axis=1), decimals=5),
 				np.round_(np.expand_dims(subaqueous_tvu, axis=1), decimals=5),
 				np.round_(np.expand_dims(total_thu, axis=1), decimals=5),
-				np.round_(np.expand_dims(total_tvu, axis=1), decimals=5)))
+				np.round_(np.expand_dims(total_tvu, axis=1), decimals=5),
+				))
 
 			sigma_columns = ['total_thu', 'total_tvu']
 			output_columns = subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
@@ -100,33 +103,16 @@ class Tpu:
 			self.flight_line_stats[str(fl)] = pd.DataFrame(
 				output, columns=output_columns).describe().loc[stats].to_dict()
 
-		#self.pickle_tpu(las, data_to_pickle, output_columns)  # current output
-		#output_new_las_with_tpu_xbytes()  # want to move to this?
+			logging.info(9)
+
 		self.write_metadata(las)
 
-	#def pickle_tpu(self, las, data_to_pickle, output_columns):
+		logging.info(10)
 		output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
 		output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
 		output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
 		logging.info('({}) writing TPU...'.format(las.las_short_name))
 		output_df.to_pickle(output_path)
-
-	#def output_new_las_with_tpu_xbytes(self, las):
-	#	inFile = laspy.file.File(las, mode = "r")
-	#	outFile = laspy.file.File("./laspytest/data/output.las", mode = "w",
-	#				header = inFile.header)
-
-	#	# Define our new dimension. Note, this must be done before giving
-	#	# the output file point records.
-	#	outFile.define_new_dimension(
-	#		name = 'total_tpu',
-	#		data_type = 5, description = 'subaerial and subaqueous tpu combined in quadrature')
-
-	#	for dimension in inFile.point_format:
-	#		dat = inFile.reader.get_dimension(dimension.name)
-	#		outFile.writer.set_dimension(dimension.name, dat)
-
-	#	outFile.my_special_dimension = range(len(inFile))
 
 	def write_metadata(self, las):
 		logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
@@ -150,6 +136,7 @@ class Tpu:
 	def run_tpu_multiprocessing(self, las_files, sbet_files):
 		logging.info(3)
 		p = pp.ProcessPool(4)
+		logging.info(22)
 		p.imap(self.calc_tpu, las_files, sbet_files)
 		p.close()
 		p.join()
