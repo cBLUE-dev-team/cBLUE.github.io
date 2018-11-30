@@ -36,33 +36,16 @@ class Tpu:
 		self.fF = fF
 		self.metadata = {}
 		self.flight_line_stats = {}
-
+		self.data_to_pickle = []
+		self.output_columns = None
+		
 	def calc_tpu(self, las, sbet):
-		"""
-		Summary line.
-
-		Extended description of function.
-
-		Parameters
-		----------
-		arg1 : int
-			Description of arg1
-		arg2 : str
-			Description of arg2
-
-		Returns
-		-------
-		int
-			Description of return value
-
-		"""
 		logging.info(4)
 		las = Las(las)
 		logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
-		data_to_pickle = []
-
-		logging.info(5)
+		
 		logging.info(las.get_flight_line_ids())
+
 		for fl in las.get_flight_line_ids():
 			logging.info(6)
 			logging.info('flight line {} {}'.format(fl, '-' * 30))
@@ -74,7 +57,6 @@ class Tpu:
 			depth = subaerial[:, 2] + las.get_average_depth()
 			subaerial_thu = subaerial[:, 3]
 			subaerial_tvu = subaerial[:, 4]
-			logging.info(7)
 			logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
 			subaqueous_thu, subaqueous_tvu, subaqueous_columns = Subaqueous.main(
 				self.surface_ind, self.wind_val, self.kd_val, depth)
@@ -86,7 +68,6 @@ class Tpu:
 
 			logging.info('({}) calculating total TVU...'.format(las.las_short_name))
 			total_tvu = ne.evaluate('sqrt(subaqueous_tvu**2 + subaerial_tvu**2 + vdatum_mcu**2)')
-			logging.info(8)
 			num_points = total_tvu.shape[0]
 			output = np.hstack((
 				np.round_(subaerial, decimals=5),
@@ -97,22 +78,51 @@ class Tpu:
 				))
 
 			sigma_columns = ['total_thu', 'total_tvu']
-			output_columns = subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
-			data_to_pickle.append(output)
+			self.output_columns = subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
+			self.data_to_pickle.append(output)
 			stats = ['min', 'max', 'mean', 'std']
 			self.flight_line_stats[str(fl)] = pd.DataFrame(
-				output, columns=output_columns).describe().loc[stats].to_dict()
+				output, columns=self.output_columns).describe().loc[stats].to_dict()
 
-			logging.info(9)
+		self.write_metadata(las)  # TODO: include as VLR?
+		#self.output_tpu_to_las()
+		self.output_tpu_to_pickle()
 
-		self.write_metadata(las)
-
-		logging.info(10)
+	def output_tpu_to_pickle(self, las):
 		output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
 		output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-		output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
+		output_df = pd.DataFrame(np.vstack(self.data_to_pickle), columns=self.output_columns)
 		logging.info('({}) writing TPU...'.format(las.las_short_name))
 		output_df.to_pickle(output_path)
+
+	def output_tpu_to_las(self, las, total_tvu):
+		in_las = laspy.file.File(las, mode = "r")
+		out_las_name = las.replace('.las', '_TPU.las')
+		out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
+
+		extra_byte_dimensions = {
+			'subaerial_tvu': 'subaerial total propagated vertical uncertainty',
+			'subaqueous_tvu': 'subaqueous total propagated vertical uncertainty',
+			'subaerial_thu': 'subaerial total propagated horizontal uncertainty',
+			'subaqueous_thu': 'subaqueous total propagated horizontal uncertainty',
+			'total_tvu': 'subaerial and subaqueous tvu joined in quadrature',
+			'total_thu': 'subaerial and subaqueous thu joined in quadrature',
+			}
+
+		for dimension, description in extra_byte_dimensions.iteritems():
+
+			# define new dimension
+			description =   # TODO: maybe have dict of descriptions
+			outFile.define_new_dimension(name="total_tvu", data_type=5, description=description)
+
+			# copy data from in_las
+			for field in in_las.point_format:
+				print('writing {} to {} ...'.format(field.name, outFile))
+				dat = in_las.reader.get_dimension(field.name)
+				outFile.writer.set_dimension(field.name, dat)
+
+			# put data in new dimension
+			outFile.my_special_dimension = tpu_results[d]
 
 	def write_metadata(self, las):
 		logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
@@ -134,9 +144,7 @@ class Tpu:
 			print(e)
 
 	def run_tpu_multiprocessing(self, las_files, sbet_files):
-		logging.info(3)
 		p = pp.ProcessPool(4)
-		logging.info(22)
 		p.imap(self.calc_tpu, las_files, sbet_files)
 		p.close()
 		p.join()
