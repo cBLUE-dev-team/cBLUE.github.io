@@ -37,16 +37,17 @@ class Tpu:
         self.fF = fF
         self.metadata = {}
         self.flight_line_stats = {}
-        self.data_to_pickle = []
-        self.output_columns = None
         
     def calc_tpu(self, las, sbet):
+        
+        data_to_pickle = []
+        output_columns = []
+        
         las = Las(las)
         logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
         logging.info(las.get_flight_line_ids())
 
         for fl in las.get_flight_line_ids():
-            logging.info(6)
             logging.info('flight line {} {}'.format(fl, '-' * 30))
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
@@ -77,24 +78,25 @@ class Tpu:
                 ))
 
             sigma_columns = ['total_thu', 'total_tvu']
-            self.output_columns = subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
-            self.data_to_pickle.append(output)
+            output_columns = subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
+            data_to_pickle.append(output)
             stats = ['min', 'max', 'mean', 'std']
             self.flight_line_stats[str(fl)] = pd.DataFrame(
-                output, columns=self.output_columns).describe().loc[stats].to_dict()
+                output, columns=output_columns).describe().loc[stats].to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
         #self.output_tpu_to_las()
-        self.output_tpu_to_pickle()
+        self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
-    def output_tpu_to_pickle(self, las):
+    def output_tpu_to_pickle(self, las, data_to_pickle, output_columns):
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
         output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-        output_df = pd.DataFrame(np.vstack(self.data_to_pickle), columns=self.output_columns)
+        output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
         logging.info('({}) writing TPU...'.format(las.las_short_name))
         output_df.to_pickle(output_path)
+        logging.info('finished writing')
 
-    def output_tpu_to_las(self, las, total_tvu):
+    def output_tpu_to_las(self, las, data_to_pickle):
         in_las = laspy.file.File(las, mode = "r")
         out_las_name = las.replace('.las', '_TPU.las')
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
@@ -152,8 +154,7 @@ class Tpu:
         p.imap(self.calc_tpu, las_files, sbet_files)
         p.close()
         p.join()
-
+        
 
 if __name__ == '__main__':
     pass
-

@@ -442,6 +442,5 @@ class ControllerPanel(ttk.Frame):
 if __name__ == "__main__":
 	app = CBlueApp()
 	app.geometry('225x515')
-	# ani = animation.FuncAnimation(f, animate, interval=1000)
 	app.mainloop()  # tk functionality
 
