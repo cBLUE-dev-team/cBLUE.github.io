@@ -7,6 +7,7 @@ import numpy as np
 import numexpr as ne
 import pandas as pd
 from collections import OrderedDict
+import laspy
 
 from Las import Las
 from Merge import Merge
@@ -97,7 +98,7 @@ class Tpu:
         logging.info('finished writing')
 
     def output_tpu_to_las(self, las, data_to_pickle):
-        in_las = laspy.file.File(las, mode = "r")
+        in_las = laspy.file.File(las, mode="r")
         out_las_name = las.replace('.las', '_TPU.las')
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
