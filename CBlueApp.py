@@ -16,10 +16,11 @@ from Sbet import Sbet
 from Subaerial import Subaerial
 from Subaqueous import Subaqueous
 from Datum import Datum
-from Tpu_ORIGINAL import Tpu
+from Tpu import Tpu
 
 import matplotlib
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
+matplotlib.use('Agg')
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import matplotlib.animation as animation
@@ -420,17 +421,14 @@ class ControllerPanel(ttk.Frame):
                 south = ul_y - 2 * tile_size
 
                 logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
-                print self.sbet.get_tile(north, south, east, west)
                 yield self.sbet.get_tile(north, south, east, west)
 
         subaqueous_metadata = Subaqueous.get_subaqueous_meta_data('ECKV_look_up_fit_HG0995_1sig.csv')
-        print subaqueous_metadata
         tpu = Tpu(subaqueous_metadata, surface_selection, surface_ind,
                   wind_selection, self.wind_vals[wind_ind][1], kd_selection,
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
                   self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
         logging.info(1)
-        print(las_files)
         tpu.run_tpu_multiprocessing(las_files, sbet_tiles_generator())
         logging.info(2)
         self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))

@@ -43,6 +43,7 @@ class Tpu:
         
         data_to_pickle = []
         output_columns = []
+        print '-' * 30
         print las
         # las = Las(las)
         # logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
