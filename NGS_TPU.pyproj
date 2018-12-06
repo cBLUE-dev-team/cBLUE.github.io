@@ -5,14 +5,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1337ee1b-81ab-489e-87a0-76022010827f}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>CBlueApp.py</StartupFile>
+    <StartupFile>tpu_dash.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>CondaEnv|CondaEnv|ngs_tpu</InterpreterId>
+    <InterpreterId>CondaEnv|CondaEnv|tpu_dash</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -32,6 +32,9 @@
     <Compile Include="get_las_tile_data.py" />
     <Compile Include="Las.py" />
     <Compile Include="Merge.py" />
+    <Compile Include="tpu_dash.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RadioFrame.py" />
     <Compile Include="Sbet.py" />
     <Compile Include="Subaerial.py" />
@@ -41,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|ngs_tpu" />
+    <InterpreterReference Include="CondaEnv|CondaEnv|tpu_dash" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
