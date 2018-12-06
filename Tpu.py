@@ -85,8 +85,8 @@ class Tpu:
                 output, columns=output_columns).describe().loc[stats].to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
-        #self.output_tpu_to_las()
-        self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
+        self.output_tpu_to_las(las, data_to_pickle)
+        #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
     def output_tpu_to_pickle(self, las, data_to_pickle, output_columns):
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
@@ -101,28 +101,20 @@ class Tpu:
         out_las_name = las.replace('.las', '_TPU.las')
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        output_data_indexes = {
-            'subaerial_thu': 3,
-            'subaerial_tvu': 4,
-            'subaqueous_thu': 5,
-            'subaqueous_tvu': 6,
-            'total_thu': 7,
-            'total_tvu': 8,
-            }
-
         extra_byte_dimensions = OrderedDict([
-            ('subaerial_thu', 'subaerial total propagated vertical uncertainty'),
-            ('subaerial_tvu', 'subaerial total propagated horizontal uncertainty'),
-            ('subaqueous_thu', 'subaqueous total propagated vertical uncertainty'),
-            ('subaqueous_tvu', 'subaqueous total propagated horizontal uncertainty'),
-            ('total_thu', 'subaerial and subaqueous tvu combined in quadrature'),
-            ('total_tvu', 'subaerial and subaqueous thu combined in quadrature')
+            ('subaerial_thu', ('subaerial total propagated vertical uncertainty', 3)),
+            ('subaerial_tvu', ('subaerial total propagated horizontal uncertainty', 4)),
+            ('subaqueous_thu', ('subaqueous total propagated vertical uncertainty', 5)),
+            ('subaqueous_tvu', ('subaqueous total propagated horizontal uncertainty', 6)),
+            ('total_thu', ('subaerial and subaqueous tvu combined in quadrature', 7)),
+            ('total_tvu', ('subaerial and subaqueous thu combined in quadrature', 8)),
             ])
 
         # define and populate new extrabyte dimensions
         for dimension, description in extra_byte_dimensions.iteritems():
-            out_las.define_new_dimension(name=dimension, data_type=5, description=description)
-            exec('outFile.{} = tpu_results[{}]'.format(dimension, output_data_indexes[dimension]))
+            logging.info('creating and populating extra byte data for {}...'.format(dimension))
+            out_las.define_new_dimension(name=dimension, data_type=5, description=description[0])
+            exec('outFile.{} = data_to_pickle[{}]'.format(dimension, description[1]))
 
         # copy data from in_las
         for field in in_las.point_format:
