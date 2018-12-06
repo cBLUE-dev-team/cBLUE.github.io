@@ -19,7 +19,8 @@ from Datum import Datum
 from Tpu import Tpu
 
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('Agg')
+# matplotlib.use('TkAgg')
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import matplotlib.animation as animation
