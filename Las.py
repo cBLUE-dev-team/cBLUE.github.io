@@ -13,14 +13,10 @@ class Las:
         self.las_base_name = self.las_short_name.replace('.las', '')
         self.inFile = laspy.file.File(self.las, mode="r")
         self.num_file_points = self.inFile.__len__()
-        self.bathy_points = None
-
-    def set_bathy_points(self):
-        bathy_inds = self.inFile.raw_classification == Las.class_codes['BATHYMETRY']
-        self.bathy_points = self.inFile.points[bathy_inds]['point']
+        self.points_to_process = self.inFile.points['point']
 
     def get_flight_line_ids(self):
-        return np.unique(self.bathy_points['pt_src_id'])
+        return np.unique(self.points_to_process['pt_src_id'])
 
     def get_flight_line_txyz(self, fl):
         scale_x = np.asarray(self.inFile.header.scale[0])
@@ -30,8 +26,8 @@ class Las:
         offset_y = np.asarray(self.inFile.header.offset[1])
         offset_z = np.asarray(self.inFile.header.offset[2])
 
-        flight_line_indx = self.bathy_points['pt_src_id'] == fl
-        flight_line_bathy = self.bathy_points[flight_line_indx]
+        flight_line_indx = self.points_to_process['pt_src_id'] == fl
+        flight_line_bathy = self.points_to_process[flight_line_indx]
         flight_line_bathy_sorted = np.sort(flight_line_bathy, order='gps_time')
 
         t = flight_line_bathy_sorted['gps_time']

@@ -20,6 +20,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="cblue_configuration.json" />
     <Content Include="cBLUE_icon.ico" />
     <Content Include="cBLUE_splash.gif" />
     <Content Include="V_Datum_MCU_Values.txt" />
@@ -32,6 +33,9 @@
     <Compile Include="get_las_tile_data.py" />
     <Compile Include="Las.py" />
     <Compile Include="Merge.py" />
+    <Compile Include="extra_bytes_play.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RadioFrame.py" />
     <Compile Include="Sbet.py" />
     <Compile Include="Subaerial.py" />
