@@ -3,8 +3,8 @@ import laspy
 extra_byte_dimension = 'subaerial_tvu'
 
 # Set up our input and output files.
-inFile = laspy.file.File(r"C:\QAQC_contract\marco_island\2016_429500e_2868500n.las", mode = "r")
-outFile = laspy.file.File(r"C:\QAQC_contract\marco_island\2016_429500e_2868500n_COPY.las", mode = "w",
+inFile = laspy.file.File(r"C:\QAQC_contract\marco_island\2016_429500e_2870000n.las", mode = "r")
+outFile = laspy.file.File("C:/QAQC_contract/marco_island\2016_429500e_2870000n_TPU.las", mode = "w",
 			header = inFile.header)
 
 # Define our new dimension. Note, this must be done before giving

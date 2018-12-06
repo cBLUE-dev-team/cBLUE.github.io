@@ -5,8 +5,6 @@ import laspy
 
 class Las:
 
-    class_codes = {'BATHYMETRY': 26}
-
     def __init__(self, las):
         self.las = las
         self.las_short_name = las.split('\\')[-1]
@@ -27,13 +25,13 @@ class Las:
         offset_z = np.asarray(self.inFile.header.offset[2])
 
         flight_line_indx = self.points_to_process['pt_src_id'] == fl
-        flight_line_bathy = self.points_to_process[flight_line_indx]
-        flight_line_bathy_sorted = np.sort(flight_line_bathy, order='gps_time')
+        flight_line_points = self.points_to_process[flight_line_indx]
+        flight_line_points_sorted = np.sort(flight_line_points, order='gps_time')
 
-        t = flight_line_bathy_sorted['gps_time']
-        X = flight_line_bathy_sorted['X']
-        Y = flight_line_bathy_sorted['Y']
-        Z = flight_line_bathy_sorted['Z']
+        t = flight_line_points_sorted['gps_time']
+        X = flight_line_points_sorted['X']
+        Y = flight_line_points_sorted['Y']
+        Z = flight_line_points_sorted['Z']
 
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
@@ -41,7 +39,7 @@ class Las:
 
         return t, x, y, z
 
-    def get_average_depth(self):
+    def get_average_depth(self):  # TODO: define better way to determine depth?
         return 23
 
 

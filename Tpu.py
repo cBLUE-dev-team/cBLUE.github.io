@@ -3,11 +3,11 @@ logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 import pathos.pools as pp
 import json
 import os
+import laspy
 import numpy as np
 import numexpr as ne
 import pandas as pd
 from collections import OrderedDict
-
 from Las import Las
 from Merge import Merge
 from Subaerial import Subaerial
@@ -85,7 +85,7 @@ class Tpu:
                 output, columns=output_columns).describe().loc[stats].to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
-        self.output_tpu_to_las(las, data_to_pickle)
+        self.output_tpu_to_las(las, data_to_pickle, output_columns)
         #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
     def output_tpu_to_pickle(self, las, data_to_pickle, output_columns):
@@ -96,25 +96,33 @@ class Tpu:
         output_df.to_pickle(output_path)
         logging.info('finished writing')
 
-    def output_tpu_to_las(self, las, data_to_pickle):
-        in_las = laspy.file.File(las, mode = "r")
-        out_las_name = las.replace('.las', '_TPU.las')
+    def output_tpu_to_las(self, las, data_to_pickle, output_columns):
+        out_las_name = las.las.replace('.las', '_TPU.las')
+        logging.info('logging las and tpu results to {}'.format(out_las_name))
+        in_las = laspy.file.File(las.las, mode = "r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
         extra_byte_dimensions = OrderedDict([
-            ('subaerial_thu', ('subaerial total propagated vertical uncertainty', 3)),
-            ('subaerial_tvu', ('subaerial total propagated horizontal uncertainty', 4)),
-            ('subaqueous_thu', ('subaqueous total propagated vertical uncertainty', 5)),
-            ('subaqueous_tvu', ('subaqueous total propagated horizontal uncertainty', 6)),
-            ('total_thu', ('subaerial and subaqueous tvu combined in quadrature', 7)),
-            ('total_tvu', ('subaerial and subaqueous thu combined in quadrature', 8)),
+            ('subaerial_thu', 'subaerial total propagated vertical uncertainty'),
+            ('subaerial_tvu', 'subaerial total propagated horizontal uncertainty'),
+            ('subaqueous_thu', 'subaqueous total propagated vertical uncertainty'),
+            ('subaqueous_tvu', 'subaqueous total propagated horizontal uncertainty'),
+            ('total_thu', 'subaerial and subaqueous tvu combined in quadrature'),
+            ('total_tvu', 'subaerial and subaqueous thu combined in quadrature')
             ])
 
+        print extra_byte_dimensions
         # define and populate new extrabyte dimensions
         for dimension, description in extra_byte_dimensions.iteritems():
+            output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
+            decimals = pd.Series([3] * len(output_columns), index=output_columns)
+            output_df = output_df.round(decimals) * 1000
+            output_df = output_df.astype('int')
+            print output_df
             logging.info('creating and populating extra byte data for {}...'.format(dimension))
-            out_las.define_new_dimension(name=dimension, data_type=5, description=description[0])
-            exec('outFile.{} = data_to_pickle[{}]'.format(dimension, description[1]))
+            out_las.define_new_dimension(name=dimension, data_type=5, description=description)
+            logging.info('HI, ya dummy.')
+            exec('outFile.{} = output_df[{}]'.format(dimension, dimension))
 
         # copy data from in_las
         for field in in_las.point_format:
@@ -146,7 +154,7 @@ class Tpu:
         p.imap(self.calc_tpu, las_files, sbet_files)
         p.close()
         p.join()
-        
+
 
 if __name__ == '__main__':
     pass

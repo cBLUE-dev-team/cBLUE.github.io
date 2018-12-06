@@ -379,7 +379,7 @@ class ControllerPanel(ttk.Frame):
 		self.sbet = Sbet(self.sbetInput.directoryName)
 		self.sbet.set_data()
 		self.is_sbet_loaded = True
-		self.sbet_btn_text.set('Trajectory Loaded')
+		self.sbet_btn_text.set('Trajectory Loaded')  # TODO: do for compute, too
 		self.sbetProcess.config(fg='darkgreen')
 		self.update_button_enable()
 
