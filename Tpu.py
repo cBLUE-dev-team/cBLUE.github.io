@@ -103,26 +103,31 @@ class Tpu:
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
         extra_byte_dimensions = OrderedDict([
-            ('subaerial_thu', 'subaerial total propagated vertical uncertainty'),
-            ('subaerial_tvu', 'subaerial total propagated horizontal uncertainty'),
-            ('subaqueous_thu', 'subaqueous total propagated vertical uncertainty'),
-            ('subaqueous_tvu', 'subaqueous total propagated horizontal uncertainty'),
-            ('total_thu', 'subaerial and subaqueous tvu combined in quadrature'),
-            ('total_tvu', 'subaerial and subaqueous thu combined in quadrature')
+            ('LE_post_x', 'calculated x'),
+            ('LE_post_y', 'calculated y'),
+            ('LE_post_z', 'calculated z'),
+            ('subaerial_thu', 'subaerial thu'),
+            ('subaerial_tvu', 'subaerial tvu'),
+            ('subaqueous_thu', 'subaqueous thu'),
+            ('subaqueous_tvu', 'subaqueous tvu'),
+            ('total_thu', 'total thu'),
+            ('total_tvu', 'total tvu')
             ])
 
         print extra_byte_dimensions
         # define and populate new extrabyte dimensions
         for dimension, description in extra_byte_dimensions.iteritems():
+            logging.info('creating extra byte dimension for {}...'.format(dimension))
             output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
             decimals = pd.Series([3] * len(output_columns), index=output_columns)
             output_df = output_df.round(decimals) * 1000
             output_df = output_df.astype('int')
-            print output_df
-            logging.info('creating and populating extra byte data for {}...'.format(dimension))
             out_las.define_new_dimension(name=dimension, data_type=5, description=description)
-            logging.info('HI, ya dummy.')
-            exec('outFile.{} = output_df[{}]'.format(dimension, dimension))
+
+        for dimension, description in extra_byte_dimensions.iteritems():
+            logging.info('populating extra byte data for {}...'.format(dimension))
+            extra_byte_data = output_df[dimension].tolist()
+            exec('out_las.{} = {}'.format(dimension, extra_byte_data))
 
         # copy data from in_las
         for field in in_las.point_format:
@@ -154,6 +159,10 @@ class Tpu:
         p.imap(self.calc_tpu, las_files, sbet_files)
         p.close()
         p.join()
+
+    def run_tpu_singleprocessing(self, sbet_las_tiles):
+        for sbet, las in sbet_las_tiles:
+            self.calc_tpu(las, sbet)
 
 
 if __name__ == '__main__':

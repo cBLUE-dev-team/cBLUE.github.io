@@ -11,6 +11,7 @@ class Las:
         self.las_base_name = self.las_short_name.replace('.las', '')
         self.inFile = laspy.file.File(self.las, mode="r")
         self.num_file_points = self.inFile.__len__()
+        print('{} has {} points.'.format(self.las_short_name, self.num_file_points))
         self.points_to_process = self.inFile.points['point']
 
     def get_flight_line_ids(self):
