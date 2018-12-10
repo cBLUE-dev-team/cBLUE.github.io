@@ -428,8 +428,8 @@ class ControllerPanel(ttk.Frame):
                   self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
         logging.info(1)
         print(las_files)
-        # tpu.run_tpu_multiprocessing(las_files, sbet_tiles_generator())
-        tpu.run_tpu_singleprocessing(sbet_las_tiles_generator())
+        tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
+        # tpu.run_tpu_singleprocessing(sbet_las_tiles_generator())
         logging.info(2)
         #self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
 

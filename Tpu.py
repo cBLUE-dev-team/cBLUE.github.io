@@ -38,8 +38,10 @@ class Tpu:
         self.metadata = {}
         self.flight_line_stats = {}
         
-    def calc_tpu(self, las, sbet):
+    def calc_tpu(self, sbet_las_tile):
         
+        sbet, las = sbet_las_tile
+
         data_to_pickle = []
         output_columns = []
         
@@ -97,36 +99,43 @@ class Tpu:
         logging.info('finished writing')
 
     def output_tpu_to_las(self, las, data_to_pickle, output_columns):
+        output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
+        decimals = pd.Series([3] * len(output_columns), index=output_columns)  # round to millimeters
+        output_df = output_df.round(decimals) * 1000
+        
         out_las_name = las.las.replace('.las', '_TPU.las')
         logging.info('logging las and tpu results to {}'.format(out_las_name))
         in_las = laspy.file.File(las.las, mode = "r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
+        xy_data_type = {'laspy': 10, 'python': 'int64'}  # 10 = laspy Double
+        z_data_type = {'laspy': 10, 'python': 'int'}  # 5 = laspy unsigned long
+        tpu_data_type = {'laspy': 10, 'python': 'int'}  # 5 = laspy unsigned long
+
         extra_byte_dimensions = OrderedDict([
-            ('LE_post_x', 'calculated x'),
-            ('LE_post_y', 'calculated y'),
-            ('LE_post_z', 'calculated z'),
-            ('subaerial_thu', 'subaerial thu'),
-            ('subaerial_tvu', 'subaerial tvu'),
-            ('subaqueous_thu', 'subaqueous thu'),
-            ('subaqueous_tvu', 'subaqueous tvu'),
-            ('total_thu', 'total thu'),
-            ('total_tvu', 'total tvu')
+            ('cblue_x', ('calculated x', xy_data_type)),
+            ('cblue_y', ('calculated y', xy_data_type)),
+            ('cblue_z', ('calculated z', z_data_type)),
+            ('subaerial_thu', ('subaerial thu', tpu_data_type)),
+            ('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
+            ('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
+            ('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
+            ('total_thu', ('total thu', tpu_data_type)),
+            ('total_tvu', ('total tvu', tpu_data_type))
             ])
 
-        print extra_byte_dimensions
-        # define and populate new extrabyte dimensions
+        # define new extrabyte dimensions
         for dimension, description in extra_byte_dimensions.iteritems():
             logging.info('creating extra byte dimension for {}...'.format(dimension))
-            output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
-            decimals = pd.Series([3] * len(output_columns), index=output_columns)
-            output_df = output_df.round(decimals) * 1000
-            output_df = output_df.astype('int')
-            out_las.define_new_dimension(name=dimension, data_type=5, description=description)
+            out_las.define_new_dimension(
+                name=dimension, 
+                data_type=description[1]['laspy'], 
+                description=description[0])
 
+        # populate new extrabyte dimensions
         for dimension, description in extra_byte_dimensions.iteritems():
             logging.info('populating extra byte data for {}...'.format(dimension))
-            extra_byte_data = output_df[dimension].tolist()
+            extra_byte_data = output_df[dimension].astype(description[1]['python']).tolist()
             exec('out_las.{} = {}'.format(dimension, extra_byte_data))
 
         # copy data from in_las
@@ -154,9 +163,9 @@ class Tpu:
         except Exception, e:
             print(e)
 
-    def run_tpu_multiprocessing(self, las_files, sbet_files):
+    def run_tpu_multiprocessing(self, sbet_las_tiles):
         p = pp.ProcessPool(4)
-        p.imap(self.calc_tpu, las_files, sbet_files)
+        p.imap(self.calc_tpu, sbet_las_tiles)
         p.close()
         p.join()
 
