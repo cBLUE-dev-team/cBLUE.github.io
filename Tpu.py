@@ -72,6 +72,7 @@ class Tpu:
             total_tvu = ne.evaluate('sqrt(subaqueous_tvu**2 + subaerial_tvu**2 + vdatum_mcu**2)')
             num_points = total_tvu.shape[0]
             output = np.hstack((
+                np.expand_dims(D[1], axis=1),  # las time
                 np.round_(subaerial, decimals=5),
                 np.round_(np.expand_dims(subaqueous_thu, axis=1), decimals=5),
                 np.round_(np.expand_dims(subaqueous_tvu, axis=1), decimals=5),
@@ -80,14 +81,14 @@ class Tpu:
                 ))
 
             sigma_columns = ['total_thu', 'total_tvu']
-            output_columns = subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
+            output_columns = ['gps_time'] + subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
             data_to_pickle.append(output)
             stats = ['min', 'max', 'mean', 'std']
             self.flight_line_stats[str(fl)] = pd.DataFrame(
                 output, columns=output_columns).describe().loc[stats].to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
-        self.output_tpu_to_las(las, data_to_pickle, output_columns)
+        self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
         #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
     def output_tpu_to_pickle(self, las, data_to_pickle, output_columns):
@@ -98,9 +99,11 @@ class Tpu:
         output_df.to_pickle(output_path)
         logging.info('finished writing')
 
-    def output_tpu_to_las(self, las, data_to_pickle, output_columns):
+    def output_tpu_to_las_extra_bytes(self, las, data_to_pickle, output_columns):
         output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
-        decimals = pd.Series([3] * len(output_columns), index=output_columns)  # round to millimeters
+        output_df = output_df.sort_values(by=['gps_time'])
+        #output_df = output_df.drop('gps_time', axis=1)
+        decimals = pd.Series([3] * len(output_df.columns), index=output_columns)
         output_df = output_df.round(decimals) * 1000
         output_df = output_df.astype('int64')
 
@@ -109,9 +112,9 @@ class Tpu:
         in_las = laspy.file.File(las.las, mode = "r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        xy_data_type = 5  # 7 = laspy unsigned long long (8 bytes)
-        z_data_type = 5  # 5 = laspy unsigned long (4 bytes)
-        tpu_data_type = 3  # laspy unsigned short (2 bytes)
+        xy_data_type = 7  # 7 = laspy unsigned long long (8 bytes)
+        z_data_type = 6  # 6 = laspy long (4 bytes)
+        tpu_data_type = 3  # 3 = laspy unsigned short (2 bytes)
 
         extra_byte_dimensions = OrderedDict([
             ('cblue_x', ('calculated x', xy_data_type)),
@@ -133,18 +136,51 @@ class Tpu:
                 data_type=description[1], 
                 description=description[0])
 
-        # populate new extrabyte dimensions
-        for dimension, description in extra_byte_dimensions.iteritems():
-            logging.info('populating extra byte data for {}...'.format(dimension))
-            extra_byte_data = output_df[dimension].tolist()
-            command_to_run = 'out_las.{} = {}'.format(dimension, extra_byte_data)
-            exec(command_to_run)
+        '''populate new extrabyte dimensions; originally, I looped 
+        through the items of extra_byte_dimensions using exec(...), 
+        but it was to  slow running exec(...); explicity running each 
+        command (i.e., without using exec(...)) is noticably faster
+        (I think it's faster because it's now not writing the numpy
+        array to a list first, which I think was required with 
+        exec(...))
+        '''
+        logging.info('populating extra byte data for cblue_x...')
+        out_las.cblue_x = output_df['cblue_x']
+
+        logging.info('populating extra byte data for cblue_y...')
+        out_las.cblue_y = output_df['cblue_y']
+        
+        logging.info('populating extra byte data for cblue_z...')
+        out_las.cblue_z = output_df['cblue_z']
+        
+        logging.info('populating extra byte data for subaerial_thu...')
+        out_las.subaerial_thu = output_df['subaerial_thu']
+        
+        logging.info('populating extra byte data for subaerial_tvu...')
+        out_las.subaerial_tvu = output_df['subaerial_tvu']
+        
+        logging.info('populating extra byte data for subaqueous_thu...')
+        out_las.subaqueous_thu = output_df['subaqueous_thu']
+        
+        logging.info('populating extra byte data for subaqueous_tvu...')
+        out_las.subaqueous_tvu = output_df['subaqueous_tvu']
+        
+        logging.info('populating extra byte data for total_thu...')
+        out_las.total_thu = output_df['total_thu']
+        
+        logging.info('populating extra byte data for total_tvu...')
+        out_las.total_tvu = output_df['total_tvu']
+
+        #for dimension, description in extra_byte_dimensions.iteritems():
+        #    logging.info('populating extra byte data for {}...'.format(dimension))
+        #    extra_byte_data = output_df[dimension].tolist()
+        #    command_to_run = 'out_las.{} = {}'.format(dimension, extra_byte_data)
+        #    exec(command_to_run)
 
         # copy data from in_las
         for field in in_las.point_format:
             logging.info('writing {} to {} ...'.format(field.name, out_las))
             dat = in_las.reader.get_dimension(field.name)
-            print '-' * 50
             out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
 
     def write_metadata(self, las):

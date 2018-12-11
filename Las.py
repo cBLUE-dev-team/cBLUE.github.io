@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 import numpy as np
 import numexpr as ne
 import laspy
@@ -18,6 +20,7 @@ class Las:
         later when exporting las data and calculated tpu to a las
         file
         """
+        logging.info('generating time-sorting indices...')
         self.time_sort_indices = np.argsort(self.points_to_process, order='gps_time')
 
     def get_flight_line_ids(self):
