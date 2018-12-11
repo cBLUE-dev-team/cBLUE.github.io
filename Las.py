@@ -14,6 +14,12 @@ class Las:
         print('{} has {} points.'.format(self.las_short_name, self.num_file_points))
         self.points_to_process = self.inFile.points['point']
 
+        """get index list that would sort gps_time (to be used to
+        later when exporting las data and calculated tpu to a las
+        file
+        """
+        self.time_sort_indices = np.argsort(self.points_to_process, order='gps_time')
+
     def get_flight_line_ids(self):
         return np.unique(self.points_to_process['pt_src_id'])
 

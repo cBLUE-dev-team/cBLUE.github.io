@@ -102,15 +102,16 @@ class Tpu:
         output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
         decimals = pd.Series([3] * len(output_columns), index=output_columns)  # round to millimeters
         output_df = output_df.round(decimals) * 1000
-        
+        output_df = output_df.astype('int64')
+
         out_las_name = las.las.replace('.las', '_TPU.las')
         logging.info('logging las and tpu results to {}'.format(out_las_name))
         in_las = laspy.file.File(las.las, mode = "r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        xy_data_type = {'laspy': 10, 'python': 'int64'}  # 10 = laspy Double
-        z_data_type = {'laspy': 10, 'python': 'int'}  # 5 = laspy unsigned long
-        tpu_data_type = {'laspy': 10, 'python': 'int'}  # 5 = laspy unsigned long
+        xy_data_type = 5  # 7 = laspy unsigned long long (8 bytes)
+        z_data_type = 5  # 5 = laspy unsigned long (4 bytes)
+        tpu_data_type = 3  # laspy unsigned short (2 bytes)
 
         extra_byte_dimensions = OrderedDict([
             ('cblue_x', ('calculated x', xy_data_type)),
@@ -121,7 +122,7 @@ class Tpu:
             ('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
             ('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
             ('total_thu', ('total thu', tpu_data_type)),
-            ('total_tvu', ('total tvu', tpu_data_type))
+            ('total_tvu', ('total tvu', tpu_data_type)),
             ])
 
         # define new extrabyte dimensions
@@ -129,20 +130,22 @@ class Tpu:
             logging.info('creating extra byte dimension for {}...'.format(dimension))
             out_las.define_new_dimension(
                 name=dimension, 
-                data_type=description[1]['laspy'], 
+                data_type=description[1], 
                 description=description[0])
 
         # populate new extrabyte dimensions
         for dimension, description in extra_byte_dimensions.iteritems():
             logging.info('populating extra byte data for {}...'.format(dimension))
-            extra_byte_data = output_df[dimension].astype(description[1]['python']).tolist()
-            exec('out_las.{} = {}'.format(dimension, extra_byte_data))
+            extra_byte_data = output_df[dimension].tolist()
+            command_to_run = 'out_las.{} = {}'.format(dimension, extra_byte_data)
+            exec(command_to_run)
 
         # copy data from in_las
         for field in in_las.point_format:
-            print('writing {} to {} ...'.format(field.name, out_las))
+            logging.info('writing {} to {} ...'.format(field.name, out_las))
             dat = in_las.reader.get_dimension(field.name)
-            out_las.writer.set_dimension(field.name, dat)
+            print '-' * 50
+            out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
 
     def write_metadata(self, las):
         logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
@@ -170,8 +173,8 @@ class Tpu:
         p.join()
 
     def run_tpu_singleprocessing(self, sbet_las_tiles):
-        for sbet, las in sbet_las_tiles:
-            self.calc_tpu(las, sbet)
+        for sbet_las in sbet_las_tiles:
+            self.calc_tpu(sbet_las)
 
 
 if __name__ == '__main__':
