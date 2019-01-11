@@ -19,8 +19,8 @@ from Datum import Datum
 from Tpu import Tpu
 
 import matplotlib
-# matplotlib.use('TkAgg')
 matplotlib.use('Agg')
+# matplotlib.use('TkAgg')
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import matplotlib.animation as animation
@@ -332,21 +332,19 @@ class ControllerPanel(ttk.Frame):
 
         self.sbet_btn_text = tk.StringVar(self)
         self.sbet_btn_text.set("Load Trajectory Files")
-        self.sbetProcess = tk.Button(
-            process_frame, textvariable=self.sbet_btn_text,
-            width=self.control_panel_width,
-            state=tk.DISABLED,
-            command=self.sbet_process_callback)
+        self.sbetProcess = tk.Button(process_frame, textvariable=self.sbet_btn_text,
+                                     width=self.control_panel_width,
+                                     state=tk.DISABLED,
+                                     command=self.sbet_process_callback)
         self.sbetProcess.grid(row=1, column=0, padx=(3, 0), sticky=tk.EW)
 
         self.tpu_btn_text = tk.StringVar(self)
         self.tpu_btn_text.set("Process TPU")
-        self.tpuProcess = tk.Button(
-            process_frame,
-            textvar=self.tpu_btn_text,
-            width=self.control_panel_width,
-            state=tk.DISABLED,
-            command=self.tpu_process_callback)
+        self.tpuProcess = tk.Button(process_frame,
+                                    textvar=self.tpu_btn_text,
+                                    width=self.control_panel_width,
+                                    state=tk.DISABLED,
+                                    command=self.tpu_process_callback)
         self.tpuProcess.grid(row=2, column=0, padx=(3, 0), sticky=tk.EW)
 
     def update_vdatum_mcu_value(self, region):
@@ -381,7 +379,7 @@ class ControllerPanel(ttk.Frame):
         self.sbet = Sbet(self.sbetInput.directoryName)
         self.sbet.set_data()
         self.is_sbet_loaded = True
-        self.sbet_btn_text.set('Trajectory Loaded')
+        self.sbet_btn_text.set('Trajectory Loaded')  # TODO: do for compute, too
         self.sbetProcess.config(fg='darkgreen')
         self.update_button_enable()
 
@@ -403,7 +401,7 @@ class ControllerPanel(ttk.Frame):
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
 
-        def sbet_tiles_generator():
+        def sbet_las_tiles_generator():
             """generator is 2nd argument for the
             run_tpu_multiprocessing method, to avoid
             passing entire sbet or list of tiled
@@ -421,7 +419,7 @@ class ControllerPanel(ttk.Frame):
                 south = ul_y - 2 * tile_size
 
                 logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
-                yield self.sbet.get_tile(north, south, east, west)
+                yield self.sbet.get_tile(north, south, east, west), las
 
         subaqueous_metadata = Subaqueous.get_subaqueous_meta_data('ECKV_look_up_fit_HG0995_1sig.csv')
         tpu = Tpu(subaqueous_metadata, surface_selection, surface_ind,
@@ -429,9 +427,11 @@ class ControllerPanel(ttk.Frame):
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
                   self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
         logging.info(1)
-        tpu.run_tpu_multiprocessing(las_files, sbet_tiles_generator())
+        print(las_files)
+        # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
+        tpu.run_tpu_singleprocessing(sbet_las_tiles_generator())
         logging.info(2)
-        self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
+        #self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""
