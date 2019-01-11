@@ -39,6 +39,11 @@ class Tpu:
         self.flight_line_stats = {}
         
     def calc_tpu(self, sbet_las_tile):
+        """
+
+        :param sbet_las_tile:
+        :return:
+        """
         
         sbet, las = sbet_las_tile
 
@@ -107,9 +112,9 @@ class Tpu:
         output_df = output_df.round(decimals) * 1000
         output_df = output_df.astype('int64')
 
-        out_las_name = las.las.replace('.las', '_TPU.las')
+        out_las_name = os.path.join(self.tpuOutput, las.las_base_name) + '_TPU.las'
         logging.info('logging las and tpu results to {}'.format(out_las_name))
-        in_las = laspy.file.File(las.las, mode = "r")  # las is Las object
+        in_las = laspy.file.File(las.las, mode="r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
         xy_data_type = 7  # 7 = laspy unsigned long long (8 bytes)
@@ -138,7 +143,7 @@ class Tpu:
 
         '''populate new extrabyte dimensions; originally, I looped 
         through the items of extra_byte_dimensions using exec(...), 
-        but it was to  slow running exec(...); explicity running each 
+        but it was too slow running exec(...); explicity running each 
         command (i.e., without using exec(...)) is noticably faster
         (I think it's faster because it's now not writing the numpy
         array to a list first, which I think was required with 

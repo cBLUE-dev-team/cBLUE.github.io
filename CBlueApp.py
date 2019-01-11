@@ -89,8 +89,6 @@ class CBlueApp(tk.Tk):
 
         tk.Tk.config(self, menu=menubar)
 
-        print(self.controller_configuration)
-
         self.frames = {}
         for F in (ControllerPanel,):  # makes it easy to add "pages" in future
             frame = F(container, self)
@@ -426,12 +424,9 @@ class ControllerPanel(ttk.Frame):
                   wind_selection, self.wind_vals[wind_ind][1], kd_selection,
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
                   self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
-        logging.info(1)
-        print(las_files)
         # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
         tpu.run_tpu_singleprocessing(sbet_las_tiles_generator())
-        logging.info(2)
-        #self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
+        self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""
