@@ -11,11 +11,9 @@ class Subaqueous:
 
     @author: Timothy Kammerer
     """
-
     def __init__(self):
         pass
 
-    @staticmethod
     def main(surface, wind_par, kd_par, depth):
         """Called to begin the SubAqueous processing.
 
@@ -26,19 +24,25 @@ class Subaqueous:
 
         @return   res        float[]   (SubAqueous TPU)
         """
-        if surface == 0:
-            fit = Subaqueous.riegl_process(kd_par)
-        else:
-            fit = Subaqueous.model_process(wind_par, kd_par)
+        with open(self.config_file) as cf:
+            controller_configuration = json.load(cf)
 
-        res = fit[0]*depth**2+fit[1]*depth+fit[2]
+        lut_files = {'ECKV': 'ECKV_look_up_fit_HG0995_1sig.csv',
+                     'Reigl': 'Riegl_look_up_fit_HG0995_1sig.csv'}
+
+        if surface == 0:
+            fit = Subaqueous.riegl_process(kd_par, lut_files['Reigl'])
+        else:
+            fit = Subaqueous.model_process(wind_par, kd_par, lut_files['ECKV'])
+
+        res = fit[0] * depth ** 2 + fit[1] * depth + fit[2]
 
         columns = ['subaqueous_sz']
 
         return np.asarray(res).T, columns
 
     @staticmethod
-    def model_process(wind, kd):
+    def model_process(wind, kd, lut):
         """Retrieves the average fit for all given combinations of wind and kd given from look_up_fit.csv.
         look_up_fit.csv uses precalculated uncertainties based on seasurface models.
 
@@ -48,7 +52,7 @@ class Subaqueous:
         @return   fit    float[]   (polynomial fit for SubAqueous TPU)
         """
 
-        look_up = open("ECKV_look_up_fit_HG0995_1sig.csv")
+        look_up = open(lut)
         look_up_data = look_up.readlines()
         look_up.close()
         fit = [0, 0, 0]
@@ -59,13 +63,13 @@ class Subaqueous:
                 fit[1] += float(fit_par[1])
                 fit[2] += float(fit_par[2])
 
-        fit[0] /= len(kd)*len(wind)
-        fit[1] /= len(kd)*len(wind)
-        fit[2] /= len(kd)*len(wind)
+        fit[0] /= len(kd) * len(wind)
+        fit[1] /= len(kd) * len(wind)
+        fit[2] /= len(kd) * len(wind)
         return fit
 
     @staticmethod
-    def riegl_process(self, kd):
+    def riegl_process(kd, lut):
         """Retrieves the average fit for all kd given from reigl_look_up_fit.csv.
         reigl_look_up_fit.csv uses precalculated uncertainties based on riegl models.
 
@@ -74,7 +78,7 @@ class Subaqueous:
         @return   fit    float[]   (polynomial fit for SubAqueous TPU)
         """
 
-        look_up = open("Riegl_look_up_fit_HG0995_1sig.csv")
+        look_up = open(lut)
         look_up_data = look_up.readlines()
         look_up.close()
         fit = [0, 0, 0]

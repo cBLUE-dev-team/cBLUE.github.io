@@ -51,6 +51,7 @@ class CBlueApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
+        self.config_file = 'cblue_configuration.json'
         self.load_config()
 
         # show splash screen
@@ -103,12 +104,11 @@ class CBlueApp(tk.Tk):
         self.deiconify()
 
     def load_config(self):
-        self.config_file = 'cblue_configuration.json'
         if os.path.isfile(self.config_file):
             with open(self.config_file) as cf:
                 self.controller_configuration = json.load(cf)
         else:
-            self.controller_configuration = {'directories': {'sbet': '', 'las': '', 'tpu': ''}}
+            logging.info("configuration file doesn't exist")
 
     def save_config(self):
         config = 'cblue_configuration.json'
@@ -124,8 +124,8 @@ class CBlueApp(tk.Tk):
         splash_img = tk.PhotoImage(file='cBLUE_splash.gif')
         label = tk.Label(about, image=splash_img)
         label.pack()
-        B1 = ttk.Button(about, text='Ok', command=about.destroy)
-        B1.pack()
+        b1 = ttk.Button(about, text='Ok', command=about.destroy)
+        b1.pack()
         about.mainloop()
 
     @staticmethod
@@ -134,8 +134,8 @@ class CBlueApp(tk.Tk):
         popup.wm_title('!')
         label = ttk.Label(popup, text=msg, font=NORM_FONT)
         label.pack(side='top', fill='x', pady=10)
-        B1 = ttk.Button(popup, text='Ok', command=popup.destroy)
-        B1.pack()
+        b1 = ttk.Button(popup, text='Ok', command=popup.destroy)
+        b1.pack()
         popup.mainloop()
 
     def show_frame(self, cont):
@@ -163,16 +163,21 @@ class ControllerPanel(ttk.Frame):
         self.title = tk.Label(self, text="RIEGL VQ-880-G\n"
                                          "TOTAL PROPAGATED UNCERTAINTY (TPU) PROGRAM\n"
                                          "v2.0", background="green")
+
+        # TODO:  get from separate text file
         self.kd_vals = {0: ('Clear', range(6, 11)),
                         1: ('Clear-Moderate', range(11, 18)),
                         2: ('Moderate', range(18, 26)),
                         3: ('Moderate-High', range(26, 33)),
                         4: ('High', range(33, 37))}
+
+        # TODO:  get from separate text file
         self.wind_vals = {0: ('Calm-light air (0-2 kts)', [1]),
                           1: ('Light Breeze (3-6 kts)', [2, 3]),
                           2: ('Gentle Breeze (7-10 kts)', [4, 5]),
                           3: ('Moderate Breeze (11-15 kts)', [6, 7]),
                           4: ('Fresh Breeze (16-20 kts)', [8, 9, 10])}
+
         self.is_sbet_dir_set = False
         self.is_las_dir_set = False
         self.is_tpu_dir_set = False
@@ -419,7 +424,7 @@ class ControllerPanel(ttk.Frame):
                 logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
                 yield self.sbet.get_tile(north, south, east, west), las
 
-        subaqueous_metadata = Subaqueous.get_subaqueous_meta_data('ECKV_look_up_fit_HG0995_1sig.csv')
+        subaqueous_metadata = Subaqueous.get_subaqueous_meta_data(self.controller_configuration['LUTs']['ECKV'])
         tpu = Tpu(subaqueous_metadata, surface_selection, surface_ind,
                   wind_selection, self.wind_vals[wind_ind][1], kd_selection,
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,

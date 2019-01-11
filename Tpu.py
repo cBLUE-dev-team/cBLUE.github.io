@@ -86,7 +86,10 @@ class Tpu:
                 ))
 
             sigma_columns = ['total_thu', 'total_tvu']
-            output_columns = ['gps_time'] + subaerial_columns + subaqueous_columns + sigma_columns  # TODO: doesn't need to happen every iteration
+
+            # TODO: doesn't need to happen every iteration
+            output_columns = ['gps_time'] + subaerial_columns + subaqueous_columns + sigma_columns
+
             data_to_pickle.append(output)
             stats = ['min', 'max', 'mean', 'std']
             self.flight_line_stats[str(fl)] = pd.DataFrame(
@@ -107,7 +110,6 @@ class Tpu:
     def output_tpu_to_las_extra_bytes(self, las, data_to_pickle, output_columns):
         output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
         output_df = output_df.sort_values(by=['gps_time'])
-        #output_df = output_df.drop('gps_time', axis=1)
         decimals = pd.Series([3] * len(output_df.columns), index=output_columns)
         output_df = output_df.round(decimals) * 1000
         output_df = output_df.astype('int64')
@@ -141,14 +143,6 @@ class Tpu:
                 data_type=description[1], 
                 description=description[0])
 
-        '''populate new extrabyte dimensions; originally, I looped 
-        through the items of extra_byte_dimensions using exec(...), 
-        but it was too slow running exec(...); explicity running each 
-        command (i.e., without using exec(...)) is noticably faster
-        (I think it's faster because it's now not writing the numpy
-        array to a list first, which I think was required with 
-        exec(...))
-        '''
         logging.info('populating extra byte data for cblue_x...')
         out_las.cblue_x = output_df['cblue_x']
 
@@ -175,12 +169,6 @@ class Tpu:
         
         logging.info('populating extra byte data for total_tvu...')
         out_las.total_tvu = output_df['total_tvu']
-
-        #for dimension, description in extra_byte_dimensions.iteritems():
-        #    logging.info('populating extra byte data for {}...'.format(dimension))
-        #    extra_byte_data = output_df[dimension].tolist()
-        #    command_to_run = 'out_las.{} = {}'.format(dimension, extra_byte_data)
-        #    exec(command_to_run)
 
         # copy data from in_las
         for field in in_las.point_format:
