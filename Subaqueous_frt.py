@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import json
 
 
 class Subaqueous:
     """Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
     To be used in conjunction with the associated Gui.py.
-
-    Created on 2017-12-11
-
-    @author: Timothy Kammerer
     """
 
     def __init__(self):
@@ -18,11 +15,6 @@ class Subaqueous:
     @staticmethod
     def main(surface, wind_par, kd_par, depth):
         """Called to begin the SubAqueous processing.
-
-        @param    surface    int       (Type of surface generation)   0=riegl 1=model
-        @param    wind_par   int[]     (possible wind values as determined by the GUI)
-        @param    kd_par     int[]     (possible turbidity levels as determined by the GUI)
-        @param    depth      float[]   (Depth of the points, for which TPU will be determined)
 
         @return   res        float[]   (SubAqueous TPU)
         """

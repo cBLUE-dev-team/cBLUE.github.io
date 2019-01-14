@@ -6,70 +6,66 @@ import numpy as np
 class Subaqueous:
     """Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
     To be used in conjunction with the associated Gui.py.
-
-    Created on 2017-12-11
-
-    @author: Timothy Kammerer
     """
-    def __init__(self):
-        pass
+    def __init__(self, surface, wind_par, kd_par, depth):
+        self.surface = surface
+        self.wind_par = wind_par
+        self.kd_par = kd_par
+        self.depth = depth
+        self.lut_files = {'ECKV': 'ECKV_look_up_fit_HG0995_1sig.csv',
+                          'Reigl': 'Riegl_look_up_fit_HG0995_1sig.csv'}
+        self.curr_lut = None
 
-    def main(surface, wind_par, kd_par, depth):
+    def fit_lut(self):
         """Called to begin the SubAqueous processing.
-
-        @param    surface    int       (Type of surface generation)   0=riegl 1=model
-        @param    wind_par   int[]     (possible wind values as determined by the GUI)
-        @param    kd_par     int[]     (possible turbidity levels as determined by the GUI)
-        @param    depth      float[]   (Depth of the points, for which TPU will be determined)
 
         @return   res        float[]   (SubAqueous TPU)
         """
-        with open(self.config_file) as cf:
-            controller_configuration = json.load(cf)
-
-        lut_files = {'ECKV': 'ECKV_look_up_fit_HG0995_1sig.csv',
-                     'Reigl': 'Riegl_look_up_fit_HG0995_1sig.csv'}
-
-        if surface == 0:
-            fit = Subaqueous.riegl_process(kd_par, lut_files['Reigl'])
+        if self.surface == 0:
+            self.curr_lut = self.lut_files['Reigl']
+            fit_tvu = self.riegl_process(self.curr_lut)
         else:
-            fit = Subaqueous.model_process(wind_par, kd_par, lut_files['ECKV'])
+            self.curr_lut = self.lut_files['ECKV']
+            fit_thu, fit_tvu = self.model_process(self.curr_lut)
 
-        res = fit[0] * depth ** 2 + fit[1] * depth + fit[2]
+        res_tvu = fit_tvu[0] * self.depth ** 2 + fit_tvu[1] * self.depth + fit_tvu[2]
+        res_thu = fit_thu[0] * self.depth ** 2 + fit_thu[1] * self.depth + fit_thu[2]
 
-        columns = ['subaqueous_sz']
+        columns = ['subaqueous_thu', 'subaqueous_tvu']
+        return res_thu.T, res_tvu.T, columns
 
-        return np.asarray(res).T, columns
-
-    @staticmethod
-    def model_process(wind, kd, lut):
+    def model_process(self, lut):
         """Retrieves the average fit for all given combinations of wind and kd given from look_up_fit.csv.
         look_up_fit.csv uses precalculated uncertainties based on seasurface models.
-
-        @param    wind   int[]     (possible wind values as determined by the GUI)
-        @param    kd     int[]     (possible turbidity levels as determined by the GUI)
 
         @return   fit    float[]   (polynomial fit for SubAqueous TPU)
         """
 
-        look_up = open(lut)
-        look_up_data = look_up.readlines()
-        look_up.close()
-        fit = [0, 0, 0]
-        for w in wind:
-            for k in kd:
-                fit_par = look_up_data[31*(w-1)+k-6].split(",")
-                fit[0] += float(fit_par[0])
-                fit[1] += float(fit_par[1])
-                fit[2] += float(fit_par[2])
+        look_up_tvu = open(lut)
+        look_up_tvu_data = look_up_tvu.readlines()
+        look_up_tvu.close()
+        fit_tvu = np.asarray([0.0, 0.0, 0.0])
 
-        fit[0] /= len(kd) * len(wind)
-        fit[1] /= len(kd) * len(wind)
-        fit[2] /= len(kd) * len(wind)
-        return fit
+        look_up_thu = open("THU.csv")
+        look_up_thu_data = look_up_thu.readlines()
+        look_up_thu.close()
+        fit_thu = np.asarray([0.0, 0.0, 0.0])
 
-    @staticmethod
-    def riegl_process(kd, lut):
+        for w in self.wind_par:
+            for k in self.kd_par:
+                fit_par_tvu_strings = look_up_tvu_data[31 * (w - 1) + k - 6].split(",")[:-1]  # exclude trailing \n
+                fit_par_tvu = np.asarray(fit_par_tvu_strings).astype(np.float64)
+                fit_tvu += fit_par_tvu  # adding two 3-element arrays
+
+                fit_par_thu_strings = look_up_thu_data[31 * (w - 1) + k - 6].split(",")[:-1]  # exclude trailing \n
+                fit_par_thu = np.asarray(fit_par_thu_strings).astype(np.float64)
+                fit_thu += fit_par_thu  # adding two 3-element arrays
+
+        fit_tvu /= len(self.kd_par)*len(self.wind_par)
+        fit_thu /= len(self.kd_par)*len(self.wind_par)
+        return fit_thu, fit_tvu
+
+    def riegl_process(self, lut):
         """Retrieves the average fit for all kd given from reigl_look_up_fit.csv.
         reigl_look_up_fit.csv uses precalculated uncertainties based on riegl models.
 
@@ -81,21 +77,20 @@ class Subaqueous:
         look_up = open(lut)
         look_up_data = look_up.readlines()
         look_up.close()
-        fit = [0, 0, 0]
-        for k in kd:
-            fit_par = look_up_data[k-6].split(",")
-            fit[0] += float(fit_par[0])
-            fit[1] += float(fit_par[1])
-            fit[2] += float(fit_par[2])
-        fit[0] /= len(kd)
-        fit[1] /= len(kd)
-        fit[2] /= len(kd)
+        fit = np.asarray([0, 0, 0])
+        for k in self.kd_par:
+            fit_par_str = look_up_data[k-6].split(",")
+            fit_par = np.asarray(fit_par_str)[:-1].astype(np.float64)
+            fit += fit_par  # adding two 3-element arrays
+
+        fit /= len(self.kd_par)
+
         return fit
 
-    @staticmethod
-    def get_subaqueous_meta_data(f):
-        subaqueous_f = open(f, 'r')
+    def get_subaqueous_meta_data(self):
+        subaqueous_f = open(self.curr_lut, 'r')
         subaqueous_metadata = subaqueous_f.readline().split(',')
+        subaqueous_f.close()
         subaqueous_metadata = {k: v.strip() for (k, v) in [n.split(':') for n in subaqueous_metadata]}
         return subaqueous_metadata
 

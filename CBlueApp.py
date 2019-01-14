@@ -424,8 +424,7 @@ class ControllerPanel(ttk.Frame):
                 logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
                 yield self.sbet.get_tile(north, south, east, west), las
 
-        subaqueous_metadata = Subaqueous.get_subaqueous_meta_data(self.controller_configuration['LUTs']['ECKV'])
-        tpu = Tpu(subaqueous_metadata, surface_selection, surface_ind,
+        tpu = Tpu(surface_selection, surface_ind,
                   wind_selection, self.wind_vals[wind_ind][1], kd_selection,
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
                   self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)

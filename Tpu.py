@@ -11,16 +11,17 @@ from collections import OrderedDict
 from Las import Las
 from Merge import Merge
 from Subaerial import Subaerial
-from Subaqueous_frt import Subaqueous
+from Subaqueous import Subaqueous
 
 
 class Tpu:
 
-    def __init__(self, subaqueous_metadata, surface_select,
-                 surface_ind, wind_selection, wind_val,
+    def __init__(self, surface_select, surface_ind,
+                 wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output, fR, fJ1, fJ2, fJ3, fF):
-        self.subaqueous_lookup_params = subaqueous_metadata
+                 vdatum_region_mcu, tpu_output,
+                 fR, fJ1, fJ2, fJ3, fF):
+        self.subaqueous_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
         self.wind_selection = wind_selection
@@ -65,8 +66,9 @@ class Tpu:
             subaerial_thu = subaerial[:, 3]
             subaerial_tvu = subaerial[:, 4]
             logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
-            subaqueous_thu, subaqueous_tvu, subaqueous_columns = Subaqueous.main(
-                self.surface_ind, self.wind_val, self.kd_val, depth)
+            subaqueous_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
+            subaqueous_thu, subaqueous_tvu, subaqueous_columns = subaqueous_obj.fit_lut()
+            self.subaqueous_lookup_params = subaqueous_obj.get_subaqueous_meta_data()
 
             vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
