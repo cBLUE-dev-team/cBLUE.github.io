@@ -73,10 +73,30 @@ class Sbet:
         sbet_toc = time.clock()
         logging.info('It took {:.1f} mins to load sbets.'.format((sbet_toc - sbet_tic) / 60))
 
-    def get_tile(self, north, south, east, west):
+    def get_tile_data(self, north, south, east, west):
         data = self.data[(self.data.Y >= south) & (self.data.Y <= north) &
                          (self.data.X >= west) & (self.data.X <= east)]
         return data
+
+    def tile_sbet(self, las_files):
+        tile_size = 500  # meters
+        sbet_tiles = []
+        for las in las_files:  # 2016_422000e_2873500n.las
+            las_base = las.split('\\')[-1]
+            ul_x = float(las_base[5:11])
+            ul_y = float(las_base[13:20])
+            west = ul_x - tile_size
+            east = ul_x + 2 * tile_size
+            north = ul_y + tile_size
+            south = ul_y - 2 * tile_size
+
+            sbet_df = self.get_tile_data(north, south, east, west)
+            sbet_tile = las.replace('.las', '.sbet')
+            logging.info('generating {}...'.format(sbet_tile))
+            pd.to_pickle(sbet_df, sbet_tile)
+            sbet_tiles.append(sbet_tile)
+
+        return sbet_tiles
 
 
 if __name__ == '__main__':

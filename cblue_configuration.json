@@ -1,1 +1,11 @@
-{"directories": {"tpu": "C:/QAQC_contract/marco_island", "sbet": "C:/QAQC_contract/marco_island", "las": "C:/QAQC_contract/marco_island"}}
+{
+  "directories": {
+    "tpu": "C:/Users/nickf/OneDrive/OSU_PhD/OSU_Parrish_Forfinski_Share/DATA/ouput",
+    "sbet": "C:/Users/nickf/OneDrive/OSU_PhD/OSU_Parrish_Forfinski_Share/DATA",
+    "las": "C:/Users/nickf/OneDrive/OSU_PhD/OSU_Parrish_Forfinski_Share/DATA"
+  },
+  "subaqueous_LUTs": {
+    "RIEGL": "Riegl_look_up_fit_HG0995_1sig.csv",
+    "ECKV": "ECKV_look_up_fit_HG0995_1sig.csv"
+  }
+}
