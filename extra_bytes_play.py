@@ -1,5 +1,6 @@
 import laspy
 from collections import OrderedDict
+import os
 
 xy_data_type = 7  # 10 = laspy unsigned long long (8 bytes)
 z_data_type = 5  # 5 = laspy unsigned long (4 bytes)
@@ -17,8 +18,12 @@ extra_byte_dimensions = OrderedDict([
     ('total_tvu', ('total tvu', tpu_data_type))
     ])
 
+las_dir = r'C:\Users\nickf\OneDrive\OSU_PhD\OSU_Parrish_Forfinski_Share\DATA\ouput'
+
+las_files = [os.path.join(las_dir, l) for l in os.listdir(las_dir) if l.endswith('.las')]
+
 # Set up our input and output files.
-inFile = laspy.file.File(r"C:\QAQC_contract\marco_island\2016_429500e_2870000n_TPU.las", mode = "r")
+inFile = laspy.file.File(las_files[0], mode="r")
 
 headerformat = inFile.header.header_format
 for spec in headerformat:
@@ -28,4 +33,5 @@ point_records = inFile.points
 print(point_records)
 
 for dim in extra_byte_dimensions:
+    print(dim),
     print(inFile.reader.get_dimension(dim))

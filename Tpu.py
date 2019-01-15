@@ -39,18 +39,18 @@ class Tpu:
         self.metadata = {}
         self.flight_line_stats = {}
         
-    def calc_tpu(self, sbet_las_tile):
+    def calc_tpu(self, sbet_las_files):
         """
 
         :param sbet_las_tile:
         :return:
         """
-        
-        sbet, las = sbet_las_tile
+
+        sbet, las = sbet_las_files
 
         data_to_pickle = []
         output_columns = []
-        
+
         las = Las(las)
         logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
         logging.info(las.get_flight_line_ids())
@@ -65,11 +65,11 @@ class Tpu:
             depth = subaerial[:, 2] + las.get_average_depth()
             subaerial_thu = subaerial[:, 3]
             subaerial_tvu = subaerial[:, 4]
+
             logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
             subaqueous_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
             subaqueous_thu, subaqueous_tvu, subaqueous_columns = subaqueous_obj.fit_lut()
             self.subaqueous_lookup_params = subaqueous_obj.get_subaqueous_meta_data()
-
             vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
             logging.info('({}) calculating total THU...'.format(las.las_short_name))
@@ -94,12 +94,13 @@ class Tpu:
 
             data_to_pickle.append(output)
             stats = ['min', 'max', 'mean', 'std']
-            self.flight_line_stats[str(fl)] = pd.DataFrame(
-                output, columns=output_columns).describe().loc[stats].to_dict()
+            decimals = pd.Series([15] + [3] * (len(output_columns) - 1), index=output_columns)
+            df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
+            self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
         self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
-        #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
+        # self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
     def output_tpu_to_pickle(self, las, data_to_pickle, output_columns):
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
@@ -197,14 +198,14 @@ class Tpu:
         except Exception, e:
             print(e)
 
-    def run_tpu_multiprocessing(self, sbet_las_tiles):
-        p = pp.ProcessPool(4)
-        p.imap(self.calc_tpu, sbet_las_tiles)
+    def run_tpu_multiprocessing(self, sbet_las_generator):
+        p = pp.ProcessPool()
+        p.map(self.calc_tpu, sbet_las_generator)
         p.close()
         p.join()
 
-    def run_tpu_singleprocessing(self, sbet_las_tiles):
-        for sbet_las in sbet_las_tiles:
+    def run_tpu_singleprocessing(self, sbet_las_generator):
+        for sbet_las in sbet_las_generator:
             self.calc_tpu(sbet_las)
 
 

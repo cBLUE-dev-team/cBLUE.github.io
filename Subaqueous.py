@@ -18,8 +18,6 @@ class Subaqueous:
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing.
-
-        @return   res        float[]   (SubAqueous TPU)
         """
         if self.surface == 0:
             self.curr_lut = self.lut_files['Reigl']
@@ -37,8 +35,6 @@ class Subaqueous:
     def model_process(self, lut):
         """Retrieves the average fit for all given combinations of wind and kd given from look_up_fit.csv.
         look_up_fit.csv uses precalculated uncertainties based on seasurface models.
-
-        @return   fit    float[]   (polynomial fit for SubAqueous TPU)
         """
 
         look_up_tvu = open(lut)
@@ -68,10 +64,6 @@ class Subaqueous:
     def riegl_process(self, lut):
         """Retrieves the average fit for all kd given from reigl_look_up_fit.csv.
         reigl_look_up_fit.csv uses precalculated uncertainties based on riegl models.
-
-        @param    kd     int[]     (possible turbidity levels as determined by the GUI)
-
-        @return   fit    float[]   (polynomial fit for SubAqueous TPU)
         """
 
         look_up = open(lut)

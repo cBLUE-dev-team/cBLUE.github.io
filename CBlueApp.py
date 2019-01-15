@@ -68,20 +68,26 @@ class CBlueApp(tk.Tk):
 
         menubar = tk.Menu(container)
         filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label='Save settings', command=lambda: self.save_config())
+        filemenu.add_command(label='Save settings',
+                             command=lambda: self.save_config())
         filemenu.add_separator()
         filemenu.add_command(label='exit', command=quit)
         menubar.add_cascade(label='File', menu=filemenu)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Lidar System', command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Properties', command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Lidar System',
+                                   command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Properties',
+                                   command=lambda: self.popupmsg('not supported yet...'))
         # menubar.add_cascade(label='Edit', menu=exchangeChoice)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Map Window', command=lambda: self.build_map_panel)
-        exchangeChoice.add_command(label='Graph Window', command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Table Window', command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Map Window',
+                                   command=lambda: self.build_map_panel)
+        exchangeChoice.add_command(label='Graph Window',
+                                   command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Table Window',
+                                   command=lambda: self.popupmsg('not supported yet...'))
         # menubar.add_cascade(label='Display', menu=exchangeChoice)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
@@ -422,12 +428,13 @@ class ControllerPanel(ttk.Frame):
                 south = ul_y - 2 * tile_size
 
                 logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
-                yield self.sbet.get_tile(north, south, east, west), las
+                yield self.sbet.get_tile_data(north, south, east, west), las
 
         tpu = Tpu(surface_selection, surface_ind,
                   wind_selection, self.wind_vals[wind_ind][1], kd_selection,
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
                   self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
+
         # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
         tpu.run_tpu_singleprocessing(sbet_las_tiles_generator())
         self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
