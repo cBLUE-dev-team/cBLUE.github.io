@@ -12,7 +12,8 @@ class Sbet:
                                   if f.endswith('.txt')])
         self.data = None
 
-    def get_sbet_date(self, sbet):
+    @staticmethod
+    def get_sbet_date(sbet):
         """get sbet date from file name"""
 
         sbet_parts = sbet.split('\\')
@@ -23,7 +24,8 @@ class Sbet:
         sbet_date = [year, month, day]
         return sbet_date
 
-    def gps_sow_to_gps_adj(self, gps_date, gps_wk_sec):
+    @staticmethod
+    def gps_sow_to_gps_adj(gps_date, gps_wk_sec):
         """convert the GPS seconds-of-week timestamps to GPS adjusted standard time"""
         
         logging.info('converting GPS week seconds to GPS adjusted standard time...'),
@@ -77,26 +79,6 @@ class Sbet:
         data = self.data[(self.data.Y >= south) & (self.data.Y <= north) &
                          (self.data.X >= west) & (self.data.X <= east)]
         return data
-
-    def tile_sbet(self, las_files):
-        tile_size = 500  # meters
-        sbet_tiles = []
-        for las in las_files:  # 2016_422000e_2873500n.las
-            las_base = las.split('\\')[-1]
-            ul_x = float(las_base[5:11])
-            ul_y = float(las_base[13:20])
-            west = ul_x - tile_size
-            east = ul_x + 2 * tile_size
-            north = ul_y + tile_size
-            south = ul_y - 2 * tile_size
-
-            sbet_df = self.get_tile_data(north, south, east, west)
-            sbet_tile = las.replace('.las', '.sbet')
-            logging.info('generating {}...'.format(sbet_tile))
-            pd.to_pickle(sbet_df, sbet_tile)
-            sbet_tiles.append(sbet_tile)
-
-        return sbet_tiles
 
 
 if __name__ == '__main__':
