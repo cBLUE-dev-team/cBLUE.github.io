@@ -341,7 +341,8 @@ class ControllerPanel(ttk.Frame):
 
         self.sbet_btn_text = tk.StringVar(self)
         self.sbet_btn_text.set("Load Trajectory Files")
-        self.sbetProcess = tk.Button(process_frame, textvariable=self.sbet_btn_text,
+        self.sbetProcess = tk.Button(process_frame,
+                                     textvariable=self.sbet_btn_text,
                                      width=self.control_panel_width,
                                      state=tk.DISABLED,
                                      command=self.sbet_process_callback)
@@ -436,8 +437,9 @@ class ControllerPanel(ttk.Frame):
                   self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
 
         # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
-        tpu.run_tpu_singleprocessing(sbet_las_tiles_generator())
-        self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
+        tpu.run_tpu_singleprocess(sbet_las_tiles_generator())
+        self.tpu_btn_text.set('TPU Calculated')
+        self.tpuProcess.config(fg='darkgreen')
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""

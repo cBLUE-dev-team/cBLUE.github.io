@@ -198,13 +198,13 @@ class Tpu:
         except Exception, e:
             print(e)
 
-    def run_tpu_multiprocessing(self, sbet_las_generator):
+    def run_tpu_multiprocess(self, sbet_las_generator):
         p = pp.ProcessPool()
         p.map(self.calc_tpu, sbet_las_generator)
         p.close()
         p.join()
 
-    def run_tpu_singleprocessing(self, sbet_las_generator):
+    def run_tpu_singleprocess(self, sbet_las_generator):
         for sbet_las in sbet_las_generator:
             self.calc_tpu(sbet_las)
 

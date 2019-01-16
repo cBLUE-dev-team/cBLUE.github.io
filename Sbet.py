@@ -5,6 +5,12 @@ from datetime import datetime
 import logging
 
 
+"""
+This class provides the functionality to load trajectory data into cBLUE.  One pandas dataframe is
+created from the sbet file(s) loaded by the user.
+"""
+
+
 class Sbet:
     def __init__(self, sbet_dir):
         self.sbet_dir = sbet_dir
@@ -14,8 +20,11 @@ class Sbet:
 
     @staticmethod
     def get_sbet_date(sbet):
-        """get sbet date from file name"""
+        """parse year, month, and day from ASCII sbet filename
 
+        :param str sbet: ASCII sbet filename
+        :return: List[int]
+        """
         sbet_parts = sbet.split('\\')
         sbet_name = sbet_parts[-1]
         year = int(sbet_name[0:4])
@@ -26,7 +35,12 @@ class Sbet:
 
     @staticmethod
     def gps_sow_to_gps_adj(gps_date, gps_wk_sec):
-        """convert the GPS seconds-of-week timestamps to GPS adjusted standard time"""
+        """converts GPS seconds-of-week timestamp to GPS adjusted standard time
+
+        :param ? gps_date: [year, month, day]
+        :param ? gps_wk_sec: GPS seconds-of-week timestamp
+        :return: float
+        """
         
         logging.info('converting GPS week seconds to GPS adjusted standard time...'),
         SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
@@ -45,7 +59,10 @@ class Sbet:
         return gps_time_adj
 
     def build_sbets_data(self):
-        """build 1 pandas dataframe from all ASCII sbet files"""
+        """build 1 pandas dataframe from all ASCII sbet files
+
+        :return: pandas dataframe
+        """
 
         sbets_df = pd.DataFrame()
         header_sbet = ['time', 'lon', 'lat', 'X', 'Y', 'Z', 'roll', 'pitch', 'heading',
@@ -70,12 +87,24 @@ class Sbet:
         return sbets_data
 
     def set_data(self):
+        """populates Sbet objects data field with pandas dataframe (when user hits "Load SBET" button)
+
+        :return: n/a
+        """
         sbet_tic = time.clock()
         self.data = self.build_sbets_data()  # df
         sbet_toc = time.clock()
         logging.info('It took {:.1f} mins to load sbets.'.format((sbet_toc - sbet_tic) / 60))
 
     def get_tile_data(self, north, south, east, west):
+        """queries the sbet data points that lie within the given las tile bounding coordinates
+
+        :param float north: northern limit of las tile
+        :param float south: southern limit of las tile
+        :param float east: eastern limit of las tile
+        :param float west: western limit of las tile
+        :return: pandas dataframe
+        """
         data = self.data[(self.data.Y >= south) & (self.data.Y <= north) &
                          (self.data.X >= west) & (self.data.X <= east)]
         return data

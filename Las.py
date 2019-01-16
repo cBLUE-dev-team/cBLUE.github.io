@@ -48,7 +48,8 @@ class Las:
 
         return t, x, y, z
 
-    def get_average_depth(self):  # TODO: define better way to determine depth?
+    @staticmethod
+    def get_average_depth():  # TODO: define better way to determine depth?
         return 23
 
 

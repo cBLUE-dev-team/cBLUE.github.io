@@ -20,18 +20,22 @@ extra_byte_dimensions = OrderedDict([
 
 las_dir = r'C:\Users\nickf\OneDrive\OSU_PhD\OSU_Parrish_Forfinski_Share\DATA\ouput'
 
-las_files = [os.path.join(las_dir, l) for l in os.listdir(las_dir) if l.endswith('.las')]
+las_files = [os.path.join(las_dir, l) for l in os.listdir(las_dir) if l.endswith('_HEADER.las')]
 
 # Set up our input and output files.
 inFile = laspy.file.File(las_files[0], mode="r")
 
 headerformat = inFile.header.header_format
 for spec in headerformat:
-    print(spec.name)
+    print(spec.name),
+    print(inFile.header.reader.get_header_property(spec.name))
     
 point_records = inFile.points
 print(point_records)
 
-for dim in extra_byte_dimensions:
-    print(dim),
-    print(inFile.reader.get_dimension(dim))
+# for dim in extra_byte_dimensions:
+#     print(dim),
+#     print(inFile.reader.get_dimension(dim))
+
+print inFile.extra_bytes
+
