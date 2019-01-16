@@ -214,16 +214,13 @@ class ControllerPanel(ttk.Frame):
 
     def build_map_panel(self):
         """not used yet; for future option of displaying loaded trajectory"""
-
         self.map_panel = tk.Frame(self)
         self.map_panel.grid(row=0, column=1, sticky=tk.NSEW)
         self.map_panel.grid_rowconfigure(0, weight=1)
         self.map_panel.grid_columnconfigure(0, weight=1)
-
         canvas = FigureCanvasTkAgg(f, self.map_panel)
         canvas.show()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
         toolbar = NavigationToolbar2TkAgg(canvas, self.map_panel)
         toolbar.update()
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -270,13 +267,10 @@ class ControllerPanel(ttk.Frame):
 
         subaqueous_method_tabs = ttk.Notebook(subaqueous_frame)
         subaqueous_method_tabs.grid(row=1, column=0)
-
         tab1 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab1, text='Water Surface')
-
         tab2 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab2, text='Turbidity')
-
         water_surface_subframe = tk.Frame(tab1)
         water_surface_subframe.grid(row=1, column=0)
 
@@ -340,7 +334,7 @@ class ControllerPanel(ttk.Frame):
         label.grid(row=0, columnspan=2, pady=(10, 0), sticky=tk.EW)
 
         self.sbet_btn_text = tk.StringVar(self)
-        self.sbet_btn_text.set("Load Trajectory Files")
+        self.sbet_btn_text.set("Load Trajectory File(s)")
         self.sbetProcess = tk.Button(process_frame,
                                      textvariable=self.sbet_btn_text,
                                      width=self.control_panel_width,
@@ -405,7 +399,7 @@ class ControllerPanel(ttk.Frame):
 
         # set rotation matrices and Jacobian (need to do only once)
         R, fR, M = Subaerial.set_rotation_matrices()
-        fJ1, fJ2, fJ3, fF = Subaerial.set_jacobian(R, M)
+        fJ1, fJ2, fJ3, fF = Subaerial.calc_jacobian(R, M)
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)

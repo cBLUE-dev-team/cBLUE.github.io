@@ -5,10 +5,19 @@ from sympy import *
 import numpy as np
 import numexpr as ne
 
+"""
+This class provides the functionality to calculate the subaerial
+portion of the total propagated uncertainty (TPU).
+"""
 
 class Subaerial:
 
     def __init__(self, D, fR):
+        """
+        The __init__() method populate the variables need to
+        :param D:
+        :param fR:
+        """
         self.is_empty = not D
         self.num_pts = None
         self.x_las = D[2]
@@ -61,8 +70,8 @@ class Subaerial:
         r21 = lambdify((r, p), R[7], 'numexpr')
 
         fR = [r00, r01, None,
-                  r10, r11, None,
-                  r20, r21, None]
+              r10, r11, None,
+              r20, r21, None]
 
         # rotation matrix for scanning sensor
         M1 = Matrix([[1, 0, 0],
@@ -80,7 +89,7 @@ class Subaerial:
         return R, fR, M
 
     @staticmethod
-    def set_jacobian(R, M):
+    def calc_jacobian(R, M):
         """ define observation equations and calculate jacobian
         (i.e., matrix of partial derivatives with respect to
         component variables) using sympy symbolic math package

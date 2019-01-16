@@ -6,13 +6,22 @@ import logging
 
 
 """
-This class provides the functionality to load trajectory data into cBLUE.  One pandas dataframe is
-created from the sbet file(s) loaded by the user.
+This class provides the functionality to load trajectory data into 
+cBLUE.  Currently, the sbet files are expected to be ASCII files
+that are exported from Applanix's PosPac software.  
 """
 
 
 class Sbet:
     def __init__(self, sbet_dir):
+        """
+        The data from all of the loaded sbet files are represented by
+        a single Sbet object.  When the Sbet class is instantiated,
+        the sbet object does not contain any sbet data.  The data
+        are "loaded" (assigned to a field of the sbet object) when
+        the user clicks the 'Load Sbet Data' button.
+        :param str sbet_dir: directory contained trajectory files
+        """
         self.sbet_dir = sbet_dir
         self.sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
                                   if f.endswith('.txt')])
@@ -68,6 +77,28 @@ class Sbet:
         """builds 1 pandas dataframe from all ASCII sbet files
 
         :return: pandas dataframe
+
+        The following table lists the contents of the returned pandas sbet dataframe:
+
+        =====   =============================================================
+        Index   description
+        =====   =============================================================
+        0       timestamp (GPS seconds-of-week or GPS standard adjusted time)
+        1       longitude
+        2       latitude
+        3       X (easting)
+        4       Y (northing)
+        5       Z (ellipsoid height)
+        6       roll
+        7       pitch
+        8       heading
+        9       standard deviation X
+        10      standard deviation Y
+        11      standard deviation Z
+        12      standard deviation roll
+        13      standard deviation pitch
+        14      standard deviation heading
+        =====   =============================================================
         """
 
         sbets_df = pd.DataFrame()
@@ -93,8 +124,8 @@ class Sbet:
         return sbets_data
 
     def set_data(self):
-        """populates Sbet objects data field with pandas dataframe (when user
-        presses the "Load SBET" button)
+        """populates Sbet object's data field with pandas dataframe (when user
+        presses the "Load Trajectory File(s)" button)
 
         :return: n/a
         """
