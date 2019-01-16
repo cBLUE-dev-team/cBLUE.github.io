@@ -20,7 +20,7 @@ class Sbet:
 
     @staticmethod
     def get_sbet_date(sbet):
-        """parse year, month, and day from ASCII sbet filename
+        """parses year, month, and day from ASCII sbet filename
 
         :param str sbet: ASCII sbet filename
         :return: List[int]
@@ -36,6 +36,12 @@ class Sbet:
     @staticmethod
     def gps_sow_to_gps_adj(gps_date, gps_wk_sec):
         """converts GPS seconds-of-week timestamp to GPS adjusted standard time
+
+        In the case that the timestamps in the sbet files are GPS week seconds,
+        this method is called to convert the timestamps to GPS adjusted standard
+        time, which is what the las file timestamps are.  The timestamps in the
+        sbet and las files need to be the same format, because the merging process
+        merges the data in the sbet and las files based on timestamps.
 
         :param ? gps_date: [year, month, day]
         :param ? gps_wk_sec: GPS seconds-of-week timestamp
@@ -59,7 +65,7 @@ class Sbet:
         return gps_time_adj
 
     def build_sbets_data(self):
-        """build 1 pandas dataframe from all ASCII sbet files
+        """builds 1 pandas dataframe from all ASCII sbet files
 
         :return: pandas dataframe
         """
@@ -87,7 +93,8 @@ class Sbet:
         return sbets_data
 
     def set_data(self):
-        """populates Sbet objects data field with pandas dataframe (when user hits "Load SBET" button)
+        """populates Sbet objects data field with pandas dataframe (when user
+        presses the "Load SBET" button)
 
         :return: n/a
         """
@@ -98,6 +105,10 @@ class Sbet:
 
     def get_tile_data(self, north, south, east, west):
         """queries the sbet data points that lie within the given las tile bounding coordinates
+
+        One pandas dataframe is created from all of the loaded ASCII sbet files,
+        but as each las tile is processed, only the sbet data located within the
+        las tile limits are sent to the calc_tpu() method.
 
         :param float north: northern limit of las tile
         :param float south: southern limit of las tile

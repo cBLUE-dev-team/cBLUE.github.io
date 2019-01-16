@@ -62,7 +62,7 @@ class Tpu:
             logging.info('({}) calculating subaerial THU/TVU...'.format(las.las_short_name))
             subaerial, subaerial_columns = Subaerial(D, self.fR).calc_subaerial(
                 self.fJ1, self.fJ2, self.fJ3, self.fF)
-            depth = subaerial[:, 2] + las.get_average_depth()
+            depth = subaerial[:, 2] + las.get_average_water_surface_ellip_height()
             subaerial_thu = subaerial[:, 3]
             subaerial_tvu = subaerial[:, 4]
 
