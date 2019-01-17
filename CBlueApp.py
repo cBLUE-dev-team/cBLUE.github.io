@@ -397,9 +397,10 @@ class ControllerPanel(ttk.Frame):
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidity_options[kd_ind]
 
-        # set rotation matrices and Jacobian (need to do only once)
-        R, fR, M = Subaerial.set_rotation_matrices()
-        fJ1, fJ2, fJ3, fF = Subaerial.calc_jacobian(R, M)
+        tpu = Tpu(surface_selection, surface_ind,
+                  wind_selection, self.wind_vals[wind_ind][1], kd_selection,
+                  self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
+                  self.tpuOutput.directoryName)
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
@@ -424,11 +425,6 @@ class ControllerPanel(ttk.Frame):
 
                 logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
                 yield self.sbet.get_tile_data(north, south, east, west), las
-
-        tpu = Tpu(surface_selection, surface_ind,
-                  wind_selection, self.wind_vals[wind_ind][1], kd_selection,
-                  self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
-                  self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
 
         # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
         tpu.run_tpu_singleprocess(sbet_las_tiles_generator())

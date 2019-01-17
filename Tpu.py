@@ -19,8 +19,7 @@ class Tpu:
     def __init__(self, surface_select, surface_ind,
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output,
-                 fR, fJ1, fJ2, fJ3, fF):
+                 vdatum_region_mcu, tpu_output):
         self.subaqueous_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
@@ -31,14 +30,9 @@ class Tpu:
         self.vdatum_region = vdatum_region
         self.vdatum_region_mcu = vdatum_region_mcu
         self.tpuOutput = tpu_output
-        self.fR = fR
-        self.fJ1 = fJ1
-        self.fJ2 = fJ2
-        self.fJ3 = fJ3
-        self.fF = fF
         self.metadata = {}
         self.flight_line_stats = {}
-        
+
     def calc_tpu(self, sbet_las_files):
         """
 
@@ -60,8 +54,7 @@ class Tpu:
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
             logging.info('({}) calculating subaerial THU/TVU...'.format(las.las_short_name))
-            subaerial, subaerial_columns = Subaerial(D, self.fR).calc_subaerial(
-                self.fJ1, self.fJ2, self.fJ3, self.fF)
+            subaerial, subaerial_columns = Subaerial(D).calc_subaerial()
             depth = subaerial[:, 2] + las.get_average_water_surface_ellip_height()
             subaerial_thu = subaerial[:, 3]
             subaerial_tvu = subaerial[:, 4]

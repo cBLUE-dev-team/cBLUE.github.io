@@ -12,7 +12,7 @@ portion of the total propagated uncertainty (TPU).
 
 class Subaerial:
 
-    def __init__(self, D, fR):
+    def __init__(self, D):
         """
         The __init__() method populate the variables need to
         :param D:
@@ -29,16 +29,12 @@ class Subaerial:
         self.r0 = D[8]
         self.p0 = D[9]
         self.h0 = D[10]
-        self.x0 = D[5]
-        self.y0 = D[6]
-        self.z0 = D[7]
-        self.fR0 = fR[0](D[10], D[9])
-        self.fR3 = fR[3](D[10], D[9])
-        self.fR6 = fR[6](D[9])
-        self.fR1 = fR[1](D[8], D[9], D[10])
-        self.fR4 = fR[4](D[8], D[9], D[10])
-        self.fR7 = fR[7](D[8], D[9])
+        self.x0 = self.x_sbet
+        self.y0 = self.y_sbet
+        self.z0 = self.z_sbet
         self.C = np.asarray(D[11:])
+        self.M, self.R, self.fR = self.set_rotation_matrices()
+        self.fJ1, self.fJ2, self.fJ3, self.fF = self.calc_jacobian()
 
     @staticmethod
     def set_rotation_matrices():
@@ -60,6 +56,19 @@ class Subaerial:
         R = R3*R2*R1
         logging.info(R)
 
+        # rotation matrix for scanning sensor
+        M1 = Matrix([[1, 0, 0],
+                     [0, cos(a), -sin(a)],
+                     [0, sin(a), cos(a)]])
+        M2 = Matrix([[cos(b), 0, sin(b)],
+                     [0, 1, 0],
+                     [-sin(b), 0, cos(b)]])
+        M3 = Matrix([[cos(w), -sin(w), 0],
+                     [sin(w), cos(w), 0],
+                     [0, 0, 1]])
+        M = M3*M2*M1
+        logging.info(M)
+
         # "functionize" the necessary R components for a, b, and w estimation
         # (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
         r00 = lambdify((h, p), R[0], 'numexpr')
@@ -73,23 +82,9 @@ class Subaerial:
               r10, r11, None,
               r20, r21, None]
 
-        # rotation matrix for scanning sensor
-        M1 = Matrix([[1, 0, 0],
-                     [0, cos(a), -sin(a)],
-                     [0, sin(a), cos(a)]])
-        M2 = Matrix([[cos(b), 0, sin(b)],
-                     [0, 1, 0],
-                     [-sin(b), 0, cos(b)]])
-        M3 = Matrix([[cos(w), -sin(w), 0],
-                     [sin(w), cos(w), 0],
-                     [0, 0, 1]])
-        M = M3*M2*M1
-        logging.info(M)
-        
-        return R, fR, M
+        return M, R, fR
 
-    @staticmethod
-    def calc_jacobian(R, M):
+    def calc_jacobian(self):
         """ define observation equations and calculate jacobian
         (i.e., matrix of partial derivatives with respect to
         component variables) using sympy symbolic math package
@@ -103,6 +98,8 @@ class Subaerial:
         # [00, 01, 02      matrix       [0 1 2
         #  10, 11, 12   ---indices-->    3 4 5
         #  20, 21, 22]                   6 7 8]
+        R = self.R  # TODO: to simply following formulas
+        M = self.M
         F1 = x - rho * (R[0] * M[2] + R[1] * M[5] + R[2] * M[8])
         F2 = y - rho * (R[3] * M[2] + R[4] * M[5] + R[5] * M[8])
         F3 = z - rho * (R[6] * M[2] + R[7] * M[5] + R[8] * M[8])
@@ -191,7 +188,7 @@ class Subaerial:
                 (cos(p), cos_p),
                 (cos(h), cos_h)]))
 
-        # 'functionize' the Jacobian components (faster than symbolic calculations)
+        # 'lambdify' the Jacobian components (faster than symbolic calculations)
         eval_type = 'numexpr'
 
         fJ1sub0 = lambdify((a, b, rho, p10, p21, p12, p11, p20, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J1sub[0], eval_type)
@@ -237,12 +234,12 @@ class Subaerial:
         AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
         RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
         logging.info('Mean Difference:\n'
-              'X: {:.3f}\n'
-              'Y: {:.3f}\n'
-              'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
+                     'X: {:.3f}\n'
+                     'Y: {:.3f}\n'
+                     'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
         logging.info('RMSE: {:.3f}\n'.format(RMSE))
 
-    def calc_subaerial(self, fJ1, fJ2, fJ3, fF):
+    def calc_subaerial(self):
         itv = 10  # surface polynomial fitting interval
 
         if self.is_empty:  # i.e., if D is empty (las and sbet not merged)
@@ -262,21 +259,22 @@ class Subaerial:
             y_ = ne.evaluate("y_las - y_sbet")
             z_ = ne.evaluate("z_las - z_sbet")
 
-            fR0 = self.fR0
-            fR3 = self.fR3
-            fR6 = self.fR6
-            fR1 = self.fR1
-            fR4 = self.fR4
-            fR7 = self.fR7
+            fR0 = self.fR[0](self.h0, self.p0)
+            fR3 = self.fR[3](self.h0, self.p0)
+            fR6 = self.fR[6](self.p0)
+            fR1 = self.fR[1](self.r0, self.p0, self.h0)
+            fR4 = self.fR[4](self.r0, self.p0, self.h0)
+            fR7 = self.fR[7](self.r0, self.p0)
+
             rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
             b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
             a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
             w_est = np.zeros(num_points)
 
             #  calc diff between true and est las xyz (LE = Laser Estimates)
-            LE_pre_x = fF[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
-            LE_pre_y = fF[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
-            LE_pre_z = fF[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+            LE_pre_x = self.fF[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
+            LE_pre_y = self.fF[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
+            LE_pre_z = self.fF[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
 
             Er1x = ne.evaluate("x_las - LE_pre_x")
             Er1y = ne.evaluate("y_las - LE_pre_y")
@@ -367,53 +365,53 @@ class Subaerial:
             cos_h0 = ne.evaluate("cos(h0)")
 
             pJ1 = np.vstack(
-                (fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
-                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
-                        sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
-                 fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                (self.fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
+                             sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                 self.fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
+                             sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                 self.fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                 self.fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                 self.fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  np.ones(num_points),
-                 fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
+                 self.fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
             pJ2 = np.vstack(
-                (fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
-                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
-                        sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
-                 fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                (self.fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
+                             sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                 self.fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
+                             sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
+                 self.fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
+                 self.fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                 self.fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
                  np.ones(num_points),
-                 fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
+                 self.fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
 
             pJ3 = np.vstack(
-                (fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
-                        sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
-                        sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                (self.fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
+                             sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                 self.fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
+                             sin_b0, sin_w0, sin_r0, sin_p0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                 self.fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
+                 self.fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
                  np.ones(num_points),
-                 fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                        cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
+                 self.fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
+                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
 
             # prop error
             C = self.C
