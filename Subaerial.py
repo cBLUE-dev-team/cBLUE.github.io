@@ -78,7 +78,8 @@ class Subaerial:
         describing the assumed scan pattern, which is an approximation of the
         manufacturer's proprietary scan pattern.
 
-        :return:
+        :return: Matrix
+        :return: List[lambdify functions]
         """
         r, p, h = symbols('r p h')
         R1 = Matrix([[1, 0, 0],
@@ -138,7 +139,9 @@ class Subaerial:
     def define_obseration_equation(self):
         """define the lidar geolocation observation equation
 
+        The lidar geolocation equation used by cBLUE is shown below:
 
+        TODO: add latex
 
         :return:
         """
@@ -380,102 +383,117 @@ class Subaerial:
                      'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
         logging.info('RMSE: {:.3f}\n'.format(RMSE))
 
+    def estimate_rho_a_b_w(self, x_las, y_las, z_las, x_sbet, y_sbet, z_sbet):
+        num_points = self.x_las.shape
+        x_ = ne.evaluate("x_las - x_sbet")  # uses passed variable
+        y_ = ne.evaluate("y_las - y_sbet")  # uses passed variable
+        z_ = ne.evaluate("z_las - z_sbet")  # uses passed variable
+
+        fR0 = self.fR[0](self.h0, self.p0)
+        fR3 = self.fR[3](self.h0, self.p0)
+        fR6 = self.fR[6](self.p0)
+        fR1 = self.fR[1](self.r0, self.p0, self.h0)
+        fR4 = self.fR[4](self.r0, self.p0, self.h0)
+        fR7 = self.fR[7](self.r0, self.p0)
+
+        rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
+        b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
+        a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
+        w_est = np.zeros(num_points)
+        return rho_est, a_est, b_est, w_est
+
+    def calc_diff_1(self, rho_est, a_est, b_est, w_est):
+        # calc diff between true and est las xyz (LE = Laser Estimates)
+        LE_pre_x = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
+        LE_pre_y = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
+        LE_pre_z = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+
+        Er1x = ne.evaluate("x_las - LE_pre_x")
+        Er1y = ne.evaluate("y_las - LE_pre_y")
+        Er1z = ne.evaluate("z_las - LE_pre_z")
+        return Er1x, Er1y, Er1z
+
+    def calc_diff_2(self, coeffs):  # TODO: break down into apply coeffs and calc poly_surf_error?
+        A = np.vstack((
+            ne.evaluate('a_est * 0 + 1'),
+            ne.evaluate('a_est'),
+            ne.evaluate('b_est'),
+            ne.evaluate('a_est ** 2'),
+            ne.evaluate('a_est * b_est'),
+            ne.evaluate('b_est ** 2'),
+            ne.evaluate('a_est ** 2 * b_est'),
+            ne.evaluate('a_est * b_est ** 2'),
+            ne.evaluate('b_est ** 3'))).T
+
+        err_x = np.sum(A * coeffs[0], axis=1)
+        err_y = np.sum(A * coeffs[1], axis=1)
+        err_z = np.sum(A * coeffs[2], axis=1)
+
+        LE_post_x = ne.evaluate('LE_pre_x + err_x')
+        LE_post_y = ne.evaluate('LE_pre_y + err_y')
+        LE_post_z = ne.evaluate('LE_pre_z + err_z')
+
+        poly_surf_err_x = ne.evaluate('LE_post_x - x_las')
+        poly_surf_err_y = ne.evaluate('LE_post_y - y_las')
+        poly_surf_err_z = ne.evaluate('LE_post_z - z_las')
+
+        # LE_post_arr = np.asarray([self.x_las, self.y_las, self.z_las])
+        # LE_post1_arr = np.concatenate((self.LE_post1_arr, LE_post_arr), axis=1)
+        return poly_surf_err_x, poly_surf_err_y, poly_surf_err_z, LE_post_x, LE_post_y, LE_post_z
+
+    def fit_polynomila_surface(self, a_est, b_est, Er1x, Er1y, Er1z, itv=10):
+        # estimate error model using polynomial surface fitting
+        B0 = b_est[::itv]
+        A0 = a_est[::itv]
+
+        A = np.vstack((
+            ne.evaluate('A0 * 0 + 1'),
+            ne.evaluate('A0'),
+            ne.evaluate('B0'),
+            ne.evaluate('A0 ** 2'),
+            ne.evaluate('A0 * B0'),
+            ne.evaluate('B0 ** 2'),
+            ne.evaluate('A0 ** 2 * B0'),
+            ne.evaluate('A0 * B0 ** 2'),
+            ne.evaluate('B0 ** 3'))).T
+
+        '''
+        Originally, Jaehoon used the Matlab "fit" function with a "poly23" option,
+        but I didn't find a matching function to use in Python, so I manually coded
+        the same functionally using np.linalg.lstsq with terms for
+        a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
+        '''
+        (coeffs_x, __, __, __) = np.linalg.lstsq(A, Er1x[::itv], rcond=None)  # rcond=None is FutureWarning
+        (coeffs_y, __, __, __) = np.linalg.lstsq(A, Er1y[::itv], rcond=None)  # rcond=None is FutureWarning
+        (coeffs_z, __, __, __) = np.linalg.lstsq(A, Er1z[::itv], rcond=None)  # rcond=None is FutureWarning
+        return [coeffs_x, coeffs_y, coeffs_z]
+
     def calc_subaerial(self):
-        itv = 10  # surface polynomial fitting interval
+        """
+
+        # assign variables because numexpr variables don't handle indexing
+
+        for example...
+         x_las = self.x_las
+         x_ = ne.evaluate("x_las - x_sbet")
+
+        :return:
+        """
 
         if self.is_empty:  # i.e., if D is empty (las and sbet not merged)
             logging.warning('SBET and LAS not merged because max delta '
                             'time exceeded acceptable threshold of {} sec(s).'.format(Merge.dt_threshold))
         else:
-            num_points = self.x_las.shape
+            rho_est, a_est, b_est, w_est = self.estimate_rho_a_b_w(self.x_las, self.y_las, self.z_las,
+                                                                   self.x_sbet, self.y_sbet, self.z_sbet)
 
-            # assign variables because numexpr variables don't handle indexing
-            x_las = self.x_las
-            y_las = self.y_las
-            z_las = self.z_las
-            x_sbet = self.x_sbet
-            y_sbet = self.y_sbet
-            z_sbet = self.z_sbet
-            x_ = ne.evaluate("x_las - x_sbet")
-            y_ = ne.evaluate("y_las - y_sbet")
-            z_ = ne.evaluate("z_las - z_sbet")
+            Er1x, Er1y, Er1z = self.calc_diff_1(rho_est, a_est, b_est, w_est)
 
-            fR0 = self.fR[0](self.h0, self.p0)
-            fR3 = self.fR[3](self.h0, self.p0)
-            fR6 = self.fR[6](self.p0)
-            fR1 = self.fR[1](self.r0, self.p0, self.h0)
-            fR4 = self.fR[4](self.r0, self.p0, self.h0)
-            fR7 = self.fR[7](self.r0, self.p0)
+            coeffs = self.fit_polynomila_surface(a_est, b_est, Er1x, Er1y, Er1z)
 
-            rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
-            b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
-            a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
-            w_est = np.zeros(num_points)
+            poly_surf_err_x, poly_surf_err_y, poly_surf_err_z, \
+            LE_post_x, LE_post_y, LE_post_z = self.calc_diff_2(coeffs)
 
-            # calc diff between true and est las xyz (LE = Laser Estimates)
-            LE_pre_x = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
-            LE_pre_y = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
-            LE_pre_z = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
-
-            Er1x = ne.evaluate("x_las - LE_pre_x")
-            Er1y = ne.evaluate("y_las - LE_pre_y")
-            Er1z = ne.evaluate("z_las - LE_pre_z")
-
-            # estimate error model using polynomial surface fitting
-            B0 = b_est[::itv]
-            A0 = a_est[::itv]
-
-            A = np.vstack((
-                ne.evaluate('A0 * 0 + 1'),
-                ne.evaluate('A0'),
-                ne.evaluate('B0'),
-                ne.evaluate('A0 ** 2'),
-                ne.evaluate('A0 * B0'),
-                ne.evaluate('B0 ** 2'),
-                ne.evaluate('A0 ** 2 * B0'),
-                ne.evaluate('A0 * B0 ** 2'),
-                ne.evaluate('B0 ** 3'))).T
-
-            '''
-            Originally, Jaehoon used the Matlab "fit" function with a "poly23" option,
-            but I didn't find a matching function to use in Python, so I manually coded
-            the same functionally using np.linalg.lstsq with terms for
-            a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
-            '''
-            (coeffs_x, __, __, __) = np.linalg.lstsq(A, Er1x[::itv], rcond=None)  # rcond=None is FutureWarning
-            (coeffs_y, __, __, __) = np.linalg.lstsq(A, Er1y[::itv], rcond=None)  # rcond=None is FutureWarning
-            (coeffs_z, __, __, __) = np.linalg.lstsq(A, Er1z[::itv], rcond=None)  # rcond=None is FutureWarning
-
-            p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs_x
-            p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs_y
-            p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs_z
-
-            #  calc ert2
-            A = np.vstack((
-                ne.evaluate('a_est * 0 + 1'),
-                ne.evaluate('a_est'),
-                ne.evaluate('b_est'),
-                ne.evaluate('a_est ** 2'),
-                ne.evaluate('a_est * b_est'),
-                ne.evaluate('b_est ** 2'),
-                ne.evaluate('a_est ** 2 * b_est'),
-                ne.evaluate('a_est * b_est ** 2'),
-                ne.evaluate('b_est ** 3'))).T
-
-            err_x = np.sum(A * coeffs_x, axis=1)
-            err_y = np.sum(A * coeffs_y, axis=1)
-            err_z = np.sum(A * coeffs_z, axis=1)
-
-            LE_post_x = ne.evaluate('LE_pre_x + err_x')
-            LE_post_y = ne.evaluate('LE_pre_y + err_y')
-            LE_post_z = ne.evaluate('LE_pre_z + err_z')
-
-            poly_surf_err_x = ne.evaluate('LE_post_x - x_las')
-            poly_surf_err_y = ne.evaluate('LE_post_y - y_las')
-            poly_surf_err_z = ne.evaluate('LE_post_z - z_las')
-
-            # LE_post_arr = np.asarray([self.x_las, self.y_las, self.z_las])
-            # LE_post1_arr = np.concatenate((self.LE_post1_arr, LE_post_arr), axis=1)
 
             '''
             simplify the numerous trigonometric calculations of the Jacobian by
@@ -504,6 +522,10 @@ class Subaerial:
             cos_r0 = ne.evaluate("cos(r0)")
             cos_p0 = ne.evaluate("cos(p0)")
             cos_h0 = ne.evaluate("cos(h0)")
+
+            p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs[0]
+            p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
+            p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs[2]
 
             pJ1 = np.vstack(
                 (self.fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
@@ -570,7 +592,6 @@ class Subaerial:
             sx = ne.evaluate("sqrt(sum_pJ1)")
             sy = ne.evaluate("sqrt(sum_pJ2)")
             subaerial_tvu = ne.evaluate("sqrt(sum_pJ3)")
-
             subaerial_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
 
             column_headers = ['cblue_x', 'cblue_y', 'cblue_z',
