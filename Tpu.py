@@ -54,7 +54,7 @@ class Tpu:
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
             logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            subaer, subaer_cols = Subaerial(D).calc_subaerial()
+            subaer, subaer_cols = Subaerial(D).calc_subaerial_tpu()
             depth = subaer[:, 2] + las.get_average_water_surface_ellip_height()
             subaer_thu = subaer[:, 3]
             subaer_tvu = subaer[:, 4]

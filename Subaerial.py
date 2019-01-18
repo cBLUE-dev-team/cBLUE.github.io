@@ -45,7 +45,7 @@ class Subaerial:
         =====   =========   =======================
         """
         self.is_empty = not D
-        self.num_pts = None
+
         self.x_las = D[2]
         self.y_las = D[3]
         self.z_las = D[4]
@@ -59,10 +59,11 @@ class Subaerial:
         self.y0 = self.y_sbet
         self.z0 = self.z_sbet
         self.C = np.asarray(D[11:])
+        self.num_points = self.x_las.shape
         self.R, self.fR = self.set_rotation_matrix_airplane()
         self.M = self.set_rotation_matrix_scanning_sensor()
         self.F1, self.F2, self.F3, self.fF_orig = self.define_obseration_equation()
-        self.fJ1, self.fJ2, self.fJ3 = self.calc_jacobian(self.F1, self.F2, self.F3)
+        self.fJ1, self.fJ2, self.fJ3 = self.form_jacobian(self.F1, self.F2, self.F3)
 
     @staticmethod
     def set_rotation_matrix_airplane():
@@ -181,7 +182,7 @@ class Subaerial:
         F3 += polysurfcorr
         return F1, F2, F3, fF_orig
 
-    def calc_jacobian(self, F1, F2, F3):
+    def form_jacobian(self, F1, F2, F3):
         """define observation equations and calculate jacobian
         (i.e., matrix of partial derivatives with respect to
         component variables) using sympy symbolic math package
@@ -368,7 +369,7 @@ class Subaerial:
         fJ1 = [fJ1sub0, fJ1sub1, fJ1sub2, fJ1sub3, fJ1sub4, fJ1sub5, fJ1sub6, fJ1sub7, fJ1sub8]
         fJ2 = [fJ2sub0, fJ2sub1, fJ2sub2, fJ2sub3, fJ2sub4, fJ2sub5, fJ2sub6, fJ2sub7, fJ2sub8]
         fJ3 = [fJ3sub0, fJ3sub1, fJ3sub2, fJ3sub3, fJ3sub4, fJ3sub5, fJ3sub6, fJ3sub7, fJ3sub8]
-        
+
         return fJ1, fJ2, fJ3
 
     @staticmethod
@@ -383,8 +384,13 @@ class Subaerial:
                      'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
         logging.info('RMSE: {:.3f}\n'.format(RMSE))
 
-    def estimate_rho_a_b_w(self, x_las, y_las, z_las, x_sbet, y_sbet, z_sbet):
-        num_points = self.x_las.shape
+    def estimate_rho_a_b_w(self):
+        x_las = self.x_las
+        y_las = self.y_las
+        z_las = self.z_las
+        x_sbet = self.x_sbet
+        y_sbet = self.y_sbet
+        z_sbet = self.z_sbet
         x_ = ne.evaluate("x_las - x_sbet")  # uses passed variable
         y_ = ne.evaluate("y_las - y_sbet")  # uses passed variable
         z_ = ne.evaluate("z_las - z_sbet")  # uses passed variable
@@ -399,21 +405,33 @@ class Subaerial:
         rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
         b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
         a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
-        w_est = np.zeros(num_points)
+        w_est = np.zeros(self.num_points)
         return rho_est, a_est, b_est, w_est
 
-    def calc_diff_1(self, rho_est, a_est, b_est, w_est):
+    def calc_diff(self, LE_pre):
         # calc diff between true and est las xyz (LE = Laser Estimates)
+        x_las = self.x_las
+        y_las = self.y_las
+        z_las = self.z_las
+        LE_pre_x = LE_pre[0]
+        LE_pre_y = LE_pre[1]
+        LE_pre_z = LE_pre[2]
+        dx = ne.evaluate("x_las - LE_pre_x")  # uses passed variable
+        dy = ne.evaluate("y_las - LE_pre_y")  # uses passed variable
+        dz = ne.evaluate("z_las - LE_pre_z")  # uses passed variable
+        return dx, dy, dz
+
+    def calc_LE_pre(self, rho_est, a_est, b_est, w_est):
         LE_pre_x = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
         LE_pre_y = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
         LE_pre_z = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+        return LE_pre_x, LE_pre_y, LE_pre_z
 
-        Er1x = ne.evaluate("x_las - LE_pre_x")
-        Er1y = ne.evaluate("y_las - LE_pre_y")
-        Er1z = ne.evaluate("z_las - LE_pre_z")
-        return Er1x, Er1y, Er1z
+    def calc_LE(self, coeffs, a_est, b_est, LE_pre):
+        LE_pre_x = LE_pre[0]
+        LE_pre_y = LE_pre[1]
+        LE_pre_z = LE_pre[2]
 
-    def calc_diff_2(self, coeffs):  # TODO: break down into apply coeffs and calc poly_surf_error?
         A = np.vstack((
             ne.evaluate('a_est * 0 + 1'),
             ne.evaluate('a_est'),
@@ -429,19 +447,21 @@ class Subaerial:
         err_y = np.sum(A * coeffs[1], axis=1)
         err_z = np.sum(A * coeffs[2], axis=1)
 
-        LE_post_x = ne.evaluate('LE_pre_x + err_x')
-        LE_post_y = ne.evaluate('LE_pre_y + err_y')
-        LE_post_z = ne.evaluate('LE_pre_z + err_z')
+        LE_x = ne.evaluate('LE_pre_x + err_x')
+        LE_y = ne.evaluate('LE_pre_y + err_y')
+        LE_z = ne.evaluate('LE_pre_z + err_z')
+        return LE_x, LE_y, LE_z
 
-        poly_surf_err_x = ne.evaluate('LE_post_x - x_las')
-        poly_surf_err_y = ne.evaluate('LE_post_y - y_las')
-        poly_surf_err_z = ne.evaluate('LE_post_z - z_las')
+    def calc_LE_err(self, LE):
+        LE_x = LE[0]
+        LE_y = LE[1]
+        LE_z = LE[2]
+        LE_err_x = ne.evaluate('LE_x - x_las')
+        LE_err_y = ne.evaluate('LE_y - y_las')
+        LE_err_z = ne.evaluate('LE_z - z_las')
+        return [LE_err_x, LE_err_y, LE_err_z]
 
-        # LE_post_arr = np.asarray([self.x_las, self.y_las, self.z_las])
-        # LE_post1_arr = np.concatenate((self.LE_post1_arr, LE_post_arr), axis=1)
-        return poly_surf_err_x, poly_surf_err_y, poly_surf_err_z, LE_post_x, LE_post_y, LE_post_z
-
-    def fit_polynomila_surface(self, a_est, b_est, Er1x, Er1y, Er1z, itv=10):
+    def calc_poly_surf_coeffs(self, a_est, b_est, dx, dy, dz, itv=10):
         # estimate error model using polynomial surface fitting
         B0 = b_est[::itv]
         A0 = a_est[::itv]
@@ -463,12 +483,114 @@ class Subaerial:
         the same functionally using np.linalg.lstsq with terms for
         a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
         '''
-        (coeffs_x, __, __, __) = np.linalg.lstsq(A, Er1x[::itv], rcond=None)  # rcond=None is FutureWarning
-        (coeffs_y, __, __, __) = np.linalg.lstsq(A, Er1y[::itv], rcond=None)  # rcond=None is FutureWarning
-        (coeffs_z, __, __, __) = np.linalg.lstsq(A, Er1z[::itv], rcond=None)  # rcond=None is FutureWarning
+        (coeffs_x, __, __, __) = np.linalg.lstsq(A, dx[::itv], rcond=None)  # rcond=None is FutureWarning
+        (coeffs_y, __, __, __) = np.linalg.lstsq(A, dy[::itv], rcond=None)  # rcond=None is FutureWarning
+        (coeffs_z, __, __, __) = np.linalg.lstsq(A, dz[::itv], rcond=None)  # rcond=None is FutureWarning
         return [coeffs_x, coeffs_y, coeffs_z]
 
-    def calc_subaerial(self):
+    def calc_trig_terms(self, a_est, b_est, r0, p0, h0, x0, y0, z0):
+        sin_a0 = ne.evaluate("sin(a_est)")  # uses passed variable
+        sin_b0 = ne.evaluate("sin(b_est)")  # uses passed variable
+        sin_w0 = np.zeros(self.num_points)  # ne.evaluate("sin(w_est)") ... sin(0) = 0
+        sin_r0 = ne.evaluate("sin(r0)")  # uses passed variable
+        sin_p0 = ne.evaluate("sin(p0)")  # uses passed variable
+        sin_h0 = ne.evaluate("sin(h0)")  # uses passed variable
+        cos_a0 = ne.evaluate("cos(a_est)")  # uses passed variable
+        cos_b0 = ne.evaluate("cos(b_est)")  # uses passed variable
+        cos_w0 = np.ones(self.num_points)  # ne.evaluate("cos(w_est)") ... cos(0) = 1
+        cos_r0 = ne.evaluate("cos(r0)")  # uses passed variable
+        cos_p0 = ne.evaluate("cos(p0)")  # uses passed variable
+        cos_h0 = ne.evaluate("cos(h0)")  # uses passed variable
+        return (sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
+                cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)
+
+    def calc_jacobian(self, rho_est, a_est, b_est, coeffs):
+        '''
+        simplify the numerous trigonometric calculations of the Jacobian by
+        defining the Jacobian functions to be functions of the calculated sines and cosines
+        of the various parameters, instead of the sin and cos functions directly;
+        for example, instead of calculating sin(a_est) every time it shows up
+        in an equation (which is a lot), calculate sin(a_est) once and use the value
+        in the equation;  (it complicates the code, but it saves a noticeable
+        chunk of time computationally)
+
+        sa = sin(a0)
+        sb = sin(b0)
+        sw = sin(w0)
+        sr = sin(r0)
+        sp = sin(p0)
+        sh = sin(h0)
+        ca = cos(a0)
+        cb = cos(b0)
+        cw = cos(w0)
+        cr = cos(r0)
+        cp = cos(p0)
+        ch = cos(h0)
+        '''
+        sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch \
+            = self.calc_trig_terms(a_est, b_est,
+                                   self.r0, self.p0, self.h0,
+                                   self.x0, self.y0, self.z0)
+
+        p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs[0]
+        p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
+        p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs[2]
+
+        pJ1 = np.vstack(
+            (self.fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
+                         sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             self.fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
+                         sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             self.fJ1[2](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, ch),
+             self.fJ1[3](rho_est, sa, sb, sw, sr, sp, ca, cb, cw, cr, cp, ch),
+             self.fJ1[4](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             np.ones(self.num_points),
+             self.fJ1[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
+
+        pJ2 = np.vstack(
+            (self.fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
+                         sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             self.fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
+                         sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             self.fJ2[2](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, ch),
+             self.fJ2[3](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp),
+             self.fJ2[4](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             np.ones(self.num_points),
+             self.fJ2[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
+
+        pJ3 = np.vstack(
+            (self.fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
+                         sa, sb, sw, sr, sp, ca, cb, cw, cr, cp),
+             self.fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
+                         sb, sw, sr, sp, ca, cb, cw, cr, cp),
+             self.fJ3[2](rho_est, sa, sb, sw, sr, ca, cb, cw, cr, cp),
+             self.fJ3[3](rho_est, sa, sb, sw, sr, sp, ca, cb, cw, cr, cp),
+             np.ones(self.num_points),
+             self.fJ3[8](sa, sb, sw, sr, sp, ca, cb, cw, cr, cp)))
+
+        return pJ1, pJ2, pJ3
+
+    def propogate_error(self, pJ1, pJ2, pJ3):
+        C = self.C
+        C = ne.evaluate("C * C")  # variance = stddev**2
+
+        # delete the rows corresponding to the Jacobian functions that equal 0
+        Cx = np.delete(C, [6, 7], 0)
+        Cy = np.delete(C, [5, 7], 0)
+        Cz = np.delete(C, [4, 5, 6], 0)
+
+        sum_pJ1 = ne.evaluate("sum(pJ1 * pJ1 * Cx, axis=0)")
+        sum_pJ2 = ne.evaluate("sum(pJ2 * pJ2 * Cy, axis=0)")
+        sum_pJ3 = ne.evaluate("sum(pJ3 * pJ3 * Cz, axis=0)")
+
+        sx = ne.evaluate("sqrt(sum_pJ1)")
+        sy = ne.evaluate("sqrt(sum_pJ2)")
+        subaer_tvu = ne.evaluate("sqrt(sum_pJ3)")
+        subaer_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
+
+        return subaer_thu, subaer_tvu, ['subaerial_thu', 'subaerial_tvu']
+
+    def calc_subaerial_tpu(self):
         """
 
         # assign variables because numexpr variables don't handle indexing
@@ -482,123 +604,22 @@ class Subaerial:
 
         if self.is_empty:  # i.e., if D is empty (las and sbet not merged)
             logging.warning('SBET and LAS not merged because max delta '
-                            'time exceeded acceptable threshold of {} sec(s).'.format(Merge.dt_threshold))
+                            'time exceeded acceptable threshold of {} '
+                            'sec(s).'.format(Merge.dt_threshold))
         else:
-            rho_est, a_est, b_est, w_est = self.estimate_rho_a_b_w(self.x_las, self.y_las, self.z_las,
-                                                                   self.x_sbet, self.y_sbet, self.z_sbet)
+            rho_est, a_est, b_est, w_est = self.estimate_rho_a_b_w()
+            LE_pre = self.calc_LE_pre(rho_est, a_est, b_est, w_est)
+            dx, dy, dz = self.calc_diff(LE_pre)
 
-            Er1x, Er1y, Er1z = self.calc_diff_1(rho_est, a_est, b_est, w_est)
+            coeffs = self.calc_poly_surf_coeffs(a_est, b_est, dx, dy, dz)
+            LE_x, LE_y, LE_z = self.calc_LE(coeffs, a_est, b_est, LE_pre)
 
-            coeffs = self.fit_polynomila_surface(a_est, b_est, Er1x, Er1y, Er1z)
+            pJ1, pJ2, pJ3 = self.calc_jacobian(rho_est, a_est, b_est, coeffs)
+            subaer_thu, subaer_tvu, subaer_cols = self.propogate_error(pJ1, pJ2, pJ3)
 
-            poly_surf_err_x, poly_surf_err_y, poly_surf_err_z, \
-            LE_post_x, LE_post_y, LE_post_z = self.calc_diff_2(coeffs)
-
-
-            '''
-            simplify the numerous trigonometric calculations of the Jacobian by
-            defining the Jacobian functions to be functions of the calculated sines and cosines
-            of the various parameters, instead of the sin and cos functions directly;
-            for example, instead of calculating sin(a_est) every time it shows up
-            in an equation (which is a lot), calculate sin(a_est) once and use the value
-            in the equation;  (it complicates the code, but it saves a noticeable
-            chunk of time computationally)
-            '''
-            r0 = self.r0
-            p0 = self.p0
-            h0 = self.h0
-            x0 = self.x0
-            y0 = self.y0
-            z0 = self.z0
-            sin_a0 = ne.evaluate("sin(a_est)")
-            sin_b0 = ne.evaluate("sin(b_est)")
-            sin_w0 = np.zeros(num_points)  # ne.evaluate("sin(w_est)") ... sin(0) = 0
-            sin_r0 = ne.evaluate("sin(r0)")
-            sin_p0 = ne.evaluate("sin(p0)")
-            sin_h0 = ne.evaluate("sin(h0)")
-            cos_a0 = ne.evaluate("cos(a_est)")
-            cos_b0 = ne.evaluate("cos(b_est)")
-            cos_w0 = np.ones(num_points)  # ne.evaluate("cos(w_est)") ... cos(0) = 1
-            cos_r0 = ne.evaluate("cos(r0)")
-            cos_p0 = ne.evaluate("cos(p0)")
-            cos_h0 = ne.evaluate("cos(h0)")
-
-            p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs[0]
-            p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
-            p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs[2]
-
-            pJ1 = np.vstack(
-                (self.fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
-                             sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 self.fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
-                             sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 self.fJ1[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
-                 self.fJ1[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 self.fJ1[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 np.ones(num_points),
-                 self.fJ1[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
-
-            pJ2 = np.vstack(
-                (self.fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
-                             sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 self.fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
-                             sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 self.fJ2[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_h0),
-                 self.fJ2[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 self.fJ2[4](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0),
-                 np.ones(num_points),
-                 self.fJ2[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)))
-
-            pJ3 = np.vstack(
-                (self.fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
-                             sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 self.fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
-                             sin_b0, sin_w0, sin_r0, sin_p0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 self.fJ3[2](rho_est, sin_a0, sin_b0, sin_w0, sin_r0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 self.fJ3[3](rho_est, sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0),
-                 np.ones(num_points),
-                 self.fJ3[8](sin_a0, sin_b0, sin_w0, sin_r0, sin_p0,
-                             cos_a0, cos_b0, cos_w0, cos_r0, cos_p0)))
-
-            # prop error
-            C = self.C
-            C = ne.evaluate("C * C")  # variance = stddev**2
-
-            # delete the rows corresponding to the Jacobian functions that equal 0
-            Cx = np.delete(C, [6, 7], 0)
-            Cy = np.delete(C, [5, 7], 0)
-            Cz = np.delete(C, [4, 5, 6], 0)
-
-            sum_pJ1 = ne.evaluate("sum(pJ1 * pJ1 * Cx, axis=0)")
-            sum_pJ2 = ne.evaluate("sum(pJ2 * pJ2 * Cy, axis=0)")
-            sum_pJ3 = ne.evaluate("sum(pJ3 * pJ3 * Cz, axis=0)")
-
-            sx = ne.evaluate("sqrt(sum_pJ1)")
-            sy = ne.evaluate("sqrt(sum_pJ2)")
-            subaerial_tvu = ne.evaluate("sqrt(sum_pJ3)")
-            subaerial_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
-
-            column_headers = ['cblue_x', 'cblue_y', 'cblue_z',
-                              'subaerial_thu', 'subaerial_tvu']
-
-            return np.vstack((LE_post_x, LE_post_y, LE_post_z,
-                              subaerial_thu, subaerial_tvu)).T, column_headers
+            column_headers = ['cblue_x', 'cblue_y', 'cblue_z'] + subaer_cols
+            subaer_data = (LE_x, LE_y, LE_z, subaer_thu, subaer_tvu)
+            return np.vstack(subaer_data).T, column_headers
 
 
 if __name__ == '__main__':
