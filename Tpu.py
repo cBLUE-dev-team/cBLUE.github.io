@@ -20,12 +20,12 @@ class Tpu:
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
                  vdatum_region_mcu, tpu_output):
-        self.subaqueous_lookup_params = None
+        self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
         self.wind_selection = wind_selection
         self.wind_val = wind_val
-        self.kdSelect = kd_selection
+        self.kd_selection = kd_selection
         self.kd_val = kd_val
         self.vdatum_region = vdatum_region
         self.vdatum_region_mcu = vdatum_region_mcu
@@ -53,29 +53,29 @@ class Tpu:
             logging.info('flight line {} {}'.format(fl, '-' * 30))
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
-            logging.info('({}) calculating subaerial THU/TVU...'.format(las.las_short_name))
-            subaerial, subaerial_columns = Subaerial(D).calc_subaerial()
-            depth = subaerial[:, 2] + las.get_average_water_surface_ellip_height()
-            subaerial_thu = subaerial[:, 3]
-            subaerial_tvu = subaerial[:, 4]
+            logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
+            subaer, subaer_cols = Subaerial(D).calc_subaerial()
+            depth = subaer[:, 2] + las.get_average_water_surface_ellip_height()
+            subaer_thu = subaer[:, 3]
+            subaer_tvu = subaer[:, 4]
 
             logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
-            subaqueous_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
-            subaqueous_thu, subaqueous_tvu, subaqueous_columns = subaqueous_obj.fit_lut()
-            self.subaqueous_lookup_params = subaqueous_obj.get_subaqueous_meta_data()
+            subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
+            subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
+            self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
             vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
             logging.info('({}) calculating total THU...'.format(las.las_short_name))
-            total_thu = ne.evaluate('sqrt(subaerial_thu**2 + subaqueous_thu**2)')
+            total_thu = ne.evaluate('sqrt(subaer_thu**2 + subaqu_thu**2)')
 
             logging.info('({}) calculating total TVU...'.format(las.las_short_name))
-            total_tvu = ne.evaluate('sqrt(subaqueous_tvu**2 + subaerial_tvu**2 + vdatum_mcu**2)')
+            total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
             num_points = total_tvu.shape[0]
             output = np.hstack((
                 np.expand_dims(D[1], axis=1),  # las time
-                np.round_(subaerial, decimals=5),
-                np.round_(np.expand_dims(subaqueous_thu, axis=1), decimals=5),
-                np.round_(np.expand_dims(subaqueous_tvu, axis=1), decimals=5),
+                np.round_(subaer, decimals=5),
+                np.round_(np.expand_dims(subaqu_thu, axis=1), decimals=5),
+                np.round_(np.expand_dims(subaqu_tvu, axis=1), decimals=5),
                 np.round_(np.expand_dims(total_thu, axis=1), decimals=5),
                 np.round_(np.expand_dims(total_tvu, axis=1), decimals=5),
                 ))
@@ -83,7 +83,7 @@ class Tpu:
             sigma_columns = ['total_thu', 'total_tvu']
 
             # TODO: doesn't need to happen every iteration
-            output_columns = ['gps_time'] + subaerial_columns + subaqueous_columns + sigma_columns
+            output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
 
             data_to_pickle.append(output)
             stats = ['min', 'max', 'mean', 'std']
@@ -175,10 +175,10 @@ class Tpu:
     def write_metadata(self, las):
         logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
         self.metadata.update({
-            'subaqueous lookup params': self.subaqueous_lookup_params,
+            'subaqueous lookup params': self.subaqu_lookup_params,
             'water surface': self.surface_select,
             'wind': self.wind_selection,
-            'kd': self.kdSelect,
+            'kd': self.kd_selection,
             'VDatum region': self.vdatum_region,
             'VDatum region MCU': self.vdatum_region_mcu,
             'flight line stats': {}

@@ -407,7 +407,7 @@ class ControllerPanel(ttk.Frame):
                      if l.endswith('.las')]
 
         def sbet_las_tiles_generator():
-            """generator is 2nd argument for the
+            """This generator is the 2nd argument for the
             run_tpu_multiprocessing method, to avoid
             passing entire sbet or list of tiled
             sbets to multiprocessing pool

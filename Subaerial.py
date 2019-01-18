@@ -10,13 +10,39 @@ This class provides the functionality to calculate the subaerial
 portion of the total propagated uncertainty (TPU).
 """
 
+
 class Subaerial:
 
     def __init__(self, D):
         """
-        The __init__() method populate the variables need to
-        :param D:
-        :param fR:
+        :param List[ndarray] D: the merged data
+
+        The following table lists the contents of D:
+
+        =====   =========   =======================
+        Index   ndarray     description
+        =====   =========   =======================
+        0       t_sbet      sbet timestamps
+        1       t_las       las timestamps
+        2       x_las       las x coordinates
+        3       y_las       las y coordinates
+        4       z_las       las z coordinates
+        5       x_sbet      sbet x coordinates
+        6       y_sbet      sbet y coordinates
+        7       z_sbet      sbet z coordinates
+        8       r           sbet roll
+        9       p           sbet pitch
+        10      h           sbet heading
+        11      std_ang1    ang1 uncertainty
+        12      std_ang2    ang2 uncertainty
+        13      std_r       sbet roll uncertainty
+        14      std_p       sbet pitch uncertainty
+        15      std_h       sbet heading uncertainty
+        16      stdx_sbet   sbet x uncertainty
+        17      stdy_sbet   sbet y uncertainty
+        18      stdz_sbet   sbet z uncertainty
+        19      std_rho     ?
+        =====   =========   =======================
         """
         self.is_empty = not D
         self.num_pts = None
@@ -33,16 +59,28 @@ class Subaerial:
         self.y0 = self.y_sbet
         self.z0 = self.z_sbet
         self.C = np.asarray(D[11:])
-        self.M, self.R, self.fR = self.set_rotation_matrices()
-        self.fJ1, self.fJ2, self.fJ3, self.fF = self.calc_jacobian()
+        self.R, self.fR = self.set_rotation_matrix_airplane()
+        self.M = self.set_rotation_matrix_scanning_sensor()
+        self.F1, self.F2, self.F3, self.fF_orig = self.define_obseration_equation()
+        self.fJ1, self.fJ2, self.fJ3 = self.calc_jacobian(self.F1, self.F2, self.F3)
 
     @staticmethod
-    def set_rotation_matrices():
-        """define rotation matrices for airplane (R) and scanning sensor (M)"""
+    def set_rotation_matrix_airplane():
+        """define rotation matrix for airplane
 
-        r, p, h, a, b, w = symbols('r p h a b w')
+        This method first generates the airplane rotation matrix, R, using
+        symbolic calculations.  The symbolic components of the matrix R are
+        then "functionized", or "lambdified", for faster processing (because
+        symbolic calculations are relatively slow).  The components of R are
+        functionized separately from the general observation equation, which
+        includes R, M (the sensor rotation matrix), and polynomial-surface-
+        correction terms, because R is later used to estimate parameters
+        describing the assumed scan pattern, which is an approximation of the
+        manufacturer's proprietary scan pattern.
 
-        # rotation matrix for airplane
+        :return:
+        """
+        r, p, h = symbols('r p h')
         R1 = Matrix([[1, 0, 0],
                      [0, cos(r), -sin(r)],
                      [0, sin(r), cos(r)]])
@@ -52,11 +90,38 @@ class Subaerial:
         R3 = Matrix([[cos(h), -sin(h), 0],
                      [sin(h), cos(h), 0],
                      [0, 0, 1]])
-
         R = R3*R2*R1
         logging.info(R)
 
-        # rotation matrix for scanning sensor
+        # "functionize" the necessary R components for a, b, and w estimation
+        # (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
+        r00 = lambdify((h, p), R[0], 'numexpr')
+        r01 = lambdify((r, p, h), R[1], 'numexpr')
+        r10 = lambdify((h, p), R[3], 'numexpr')
+        r11 = lambdify((r, p, h), R[4], 'numexpr')
+        r20 = lambdify(p, R[6], 'numexpr')
+        r21 = lambdify((r, p), R[7], 'numexpr')
+        fR = [r00, r01, None,
+              r10, r11, None,
+              r20, r21, None]
+        return R, fR
+
+    @staticmethod
+    def set_rotation_matrix_scanning_sensor():
+        """define the lidar sensor rotation matrix
+
+        This method generates the rotation matrix associated with the
+        scanning sensor.  The variables a, b, and w describe the assumed
+        scan pattern, which is an approximation of the manufacturer's
+        proprietary scan pattern.
+
+        a: the rotation in the YZ plane
+        b: the rotation in the XZ plane
+        w: ?
+
+        :return Matrix M: the scanning sensor rotation matrix
+        """
+        a, b, w = symbols('a b w')
         M1 = Matrix([[1, 0, 0],
                      [0, cos(a), -sin(a)],
                      [0, sin(a), cos(a)]])
@@ -67,27 +132,15 @@ class Subaerial:
                      [sin(w), cos(w), 0],
                      [0, 0, 1]])
         M = M3*M2*M1
-        logging.info(M)
+        logging.info('sensor rotation matrix: {}'.format(M))
+        return M
 
-        # "functionize" the necessary R components for a, b, and w estimation
-        # (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
-        r00 = lambdify((h, p), R[0], 'numexpr')
-        r01 = lambdify((r, p, h), R[1], 'numexpr')
-        r10 = lambdify((h, p), R[3], 'numexpr')
-        r11 = lambdify((r, p, h), R[4], 'numexpr')
-        r20 = lambdify(p, R[6], 'numexpr')
-        r21 = lambdify((r, p), R[7], 'numexpr')
+    def define_obseration_equation(self):
+        """define the lidar geolocation observation equation
 
-        fR = [r00, r01, None,
-              r10, r11, None,
-              r20, r21, None]
 
-        return M, R, fR
 
-    def calc_jacobian(self):
-        """ define observation equations and calculate jacobian
-        (i.e., matrix of partial derivatives with respect to
-        component variables) using sympy symbolic math package
+        :return:
         """
 
         # create variables for symbolic computations
@@ -98,17 +151,15 @@ class Subaerial:
         # [00, 01, 02      matrix       [0 1 2
         #  10, 11, 12   ---indices-->    3 4 5
         #  20, 21, 22]                   6 7 8]
-        R = self.R  # TODO: to simply following formulas
-        M = self.M
-        F1 = x - rho * (R[0] * M[2] + R[1] * M[5] + R[2] * M[8])
-        F2 = y - rho * (R[3] * M[2] + R[4] * M[5] + R[5] * M[8])
-        F3 = z - rho * (R[6] * M[2] + R[7] * M[5] + R[8] * M[8])
+        F1 = x - rho * (self.R[0] * self.M[2] + self.R[1] * self.M[5] + self.R[2] * self.M[8])
+        F2 = y - rho * (self.R[3] * self.M[2] + self.R[4] * self.M[5] + self.R[5] * self.M[8])
+        F3 = z - rho * (self.R[6] * self.M[2] + self.R[7] * self.M[5] + self.R[8] * self.M[8])
 
         # converting symbolic to function (faster)
         fF1 = lambdify((a, b, h, p, r, rho, w, x), F1, 'numexpr')
         fF2 = lambdify((a, b, h, p, r, rho, w, y), F2, 'numexpr')
         fF3 = lambdify((a, b, p, r, rho, w, z), F3, 'numexpr')
-        fF = [fF1, fF2, fF3]
+        fF_orig = [fF1, fF2, fF3]
 
         # least squares adjustment mimics the Matlab "fit (poly23)" function
         polysurfcorr = p00 + \
@@ -122,22 +173,38 @@ class Subaerial:
                        p03 * b ** 3
 
         # Redefine obs eqs by adding polynomial surface fitting eq
-        F1 = x - rho * (R[0] * M[2] + R[1] * M[5] + R[2] * M[8]) + polysurfcorr
-        F2 = y - rho * (R[3] * M[2] + R[4] * M[5] + R[5] * M[8]) + polysurfcorr
-        F3 = z - rho * (R[6] * M[2] + R[7] * M[5] + R[8] * M[8]) + polysurfcorr
+        F1 += polysurfcorr
+        F2 += polysurfcorr
+        F3 += polysurfcorr
+        return F1, F2, F3, fF_orig
 
-        # calculate Jacobian, or vector of partial derivatives
+    def calc_jacobian(self, F1, F2, F3):
+        """define observation equations and calculate jacobian
+        (i.e., matrix of partial derivatives with respect to
+        component variables) using sympy symbolic math package
+        """
+        a, b, r, p, h, x, y, z, rho = symbols('a b r p h x y z rho')
+
         v = Matrix([a, b, r, p, h, x, y, z, rho])  # vector of unknowns
         J1 = Matrix([F1]).jacobian(v)
         J2 = Matrix([F2]).jacobian(v)
         J3 = Matrix([F3]).jacobian(v)
+        return self.lambdify_jacobian(J1, J2, J3)
 
-        # simplify the numerous trigonometric calculations of the Jacobian by
-        # defining the Jacobian functions to be functions of the sines and cosines
-        # of the various parameters, instead of the parameters directly
+    def lambdify_jacobian(self, J1, J2, J3):
+        """lambdify the Jacobian components (faster than symbolic calculations) and
+        simplify the numerous trigonometric calculations of the Jacobian by
+        defining the Jacobian functions to be functions of the sines and cosines
+        of the various parameters, instead of the parameters directly
+        """
+        # create variables for symbolic computations
+        a, b, w, r, p, h, rho, \
+        p00, p10, p01, p20, p11, p02, p21, p12, p03, \
         sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, \
         cos_a, cos_b, cos_w, cos_r, cos_p, cos_h \
-            = symbols('sin_a sin_b sin_w sin_r sin_p sin_h '
+            = symbols('a b w r p h rho '
+                      'p00 p10 p01 p20 p11 p02 p21 p12 p03 '
+                      'sin_a sin_b sin_w sin_r sin_p sin_h '
                       'cos_a cos_b cos_w cos_r cos_p cos_h')
 
         J1sub = []
@@ -188,44 +255,118 @@ class Subaerial:
                 (cos(p), cos_p),
                 (cos(h), cos_h)]))
 
-        # 'lambdify' the Jacobian components (faster than symbolic calculations)
         eval_type = 'numexpr'
 
-        fJ1sub0 = lambdify((a, b, rho, p10, p21, p12, p11, p20, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J1sub[0], eval_type)
-        fJ1sub1 = lambdify((a, b, rho, p02, p03, p21, p12, p01, p11, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J1sub[1], eval_type)
-        fJ1sub2 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_h), J1sub[2], eval_type)
-        fJ1sub3 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, sin_p, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J1sub[3], eval_type)
-        fJ1sub4 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J1sub[4], eval_type)
-        fJ1sub5 = lambdify((), J1sub[5], eval_type)
-        fJ1sub6 = lambdify((), J1sub[6], eval_type)
-        fJ1sub7 = lambdify((), J1sub[7], eval_type)
-        fJ1sub8 = lambdify((sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J1sub[8], eval_type)
 
-        fJ2sub0 = lambdify((a, b, rho, p10, p21, p12, p11, p20, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J2sub[0], eval_type)
-        fJ2sub1 = lambdify((a, b, rho, p02, p03, p21, p12, p01, p11, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J2sub[1], eval_type)
-        fJ2sub2 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_h), J2sub[2], eval_type)
-        fJ2sub3 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p), J2sub[3], eval_type)
-        fJ2sub4 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J2sub[4], eval_type)
-        fJ2sub5 = lambdify((), J2sub[5], eval_type)
-        fJ2sub6 = lambdify((), J2sub[6], eval_type)
-        fJ2sub7 = lambdify((), J2sub[7], eval_type)
-        fJ2sub8 = lambdify((sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, cos_a, cos_b, cos_w, cos_r, cos_p, cos_h), J2sub[8], eval_type)
+        '''functionize the x component'''
+        J1sub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
+                       sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
 
-        fJ3sub0 = lambdify((a, b, rho, p10, p21, p12, p11, p20, sin_a, sin_b, sin_w, sin_r, sin_p, cos_a, cos_b, cos_w, cos_r, cos_p), J3sub[0], eval_type)
-        fJ3sub1 = lambdify((a, b, rho, p02, p03, p21, p12, p01, p11, sin_b, sin_w, sin_r, sin_p, cos_a, cos_b, cos_w, cos_r, cos_p), J3sub[1], eval_type)
-        fJ3sub2 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, cos_a, cos_b, cos_w, cos_r, cos_p), J3sub[2], eval_type)
-        fJ3sub3 = lambdify((rho, sin_a, sin_b, sin_w, sin_r, sin_p, cos_a, cos_b, cos_w, cos_r, cos_p), J3sub[3], eval_type)
-        fJ3sub4 = lambdify((), J3sub[4], eval_type)
-        fJ3sub5 = lambdify((), J3sub[5], eval_type)
-        fJ3sub6 = lambdify((), J3sub[6], eval_type)
-        fJ3sub7 = lambdify((), J3sub[7], eval_type)
-        fJ3sub8 = lambdify((sin_a, sin_b, sin_w, sin_r, sin_p, cos_a, cos_b, cos_w, cos_r, cos_p), J3sub[8], eval_type)
+        J1sub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
+                       sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
 
+        J1sub2_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_h)
+
+        J1sub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        J1sub4_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        J1sub5_vars = ()
+        J1sub6_vars = ()
+        J1sub7_vars = ()
+
+        J1sub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        fJ1sub0 = lambdify(J1sub0_vars, J1sub[0], eval_type)
+        fJ1sub1 = lambdify(J1sub1_vars, J1sub[1], eval_type)
+        fJ1sub2 = lambdify(J1sub2_vars, J1sub[2], eval_type)
+        fJ1sub3 = lambdify(J1sub3_vars, J1sub[3], eval_type)
+        fJ1sub4 = lambdify(J1sub4_vars, J1sub[4], eval_type)
+        fJ1sub5 = lambdify(J1sub5_vars, J1sub[5], eval_type)
+        fJ1sub6 = lambdify(J1sub6_vars, J1sub[6], eval_type)
+        fJ1sub7 = lambdify(J1sub7_vars, J1sub[7], eval_type)
+        fJ1sub8 = lambdify(J1sub8_vars, J1sub[8], eval_type)
+
+        '''functionize the y component'''
+        J2sub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
+                       sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        J2sub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
+                       sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        J2sub2_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_h)
+
+        J2sub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        J2sub4_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        J2sub5_vars = ()
+        J2sub6_vars = ()
+        J2sub7_vars = ()
+
+        J2sub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        fJ2sub0 = lambdify(J2sub0_vars, J2sub[0], eval_type)
+        fJ2sub1 = lambdify(J2sub1_vars, J2sub[1], eval_type)
+        fJ2sub2 = lambdify(J2sub2_vars, J2sub[2], eval_type)
+        fJ2sub3 = lambdify(J2sub3_vars, J2sub[3], eval_type)
+        fJ2sub4 = lambdify(J2sub4_vars, J2sub[4], eval_type)
+        fJ2sub5 = lambdify(J2sub5_vars, J2sub[5], eval_type)
+        fJ2sub6 = lambdify(J2sub6_vars, J2sub[6], eval_type)
+        fJ2sub7 = lambdify(J2sub7_vars, J2sub[7], eval_type)
+        fJ2sub8 = lambdify(J2sub8_vars, J2sub[8], eval_type)
+
+        '''functionize the z component'''
+        J3sub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
+                       sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        J3sub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
+                       sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        J3sub2_vars = (rho, sin_a, sin_b, sin_w, sin_r,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        J3sub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        J3sub4_vars = ()
+        J3sub5_vars = ()
+        J3sub6_vars = ()
+        J3sub7_vars = ()
+
+        J3sub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        fJ3sub0 = lambdify(J3sub0_vars, J3sub[0], eval_type)
+        fJ3sub1 = lambdify(J3sub1_vars, J3sub[1], eval_type)
+        fJ3sub2 = lambdify(J3sub2_vars, J3sub[2], eval_type)
+        fJ3sub3 = lambdify(J3sub3_vars, J3sub[3], eval_type)
+        fJ3sub4 = lambdify(J3sub4_vars, J3sub[4], eval_type)
+        fJ3sub5 = lambdify(J3sub5_vars, J3sub[5], eval_type)
+        fJ3sub6 = lambdify(J3sub6_vars, J3sub[6], eval_type)
+        fJ3sub7 = lambdify(J3sub7_vars, J3sub[7], eval_type)
+        fJ3sub8 = lambdify(J3sub8_vars, J3sub[8], eval_type)
+
+        '''group the functioned jacobian components'''
         fJ1 = [fJ1sub0, fJ1sub1, fJ1sub2, fJ1sub3, fJ1sub4, fJ1sub5, fJ1sub6, fJ1sub7, fJ1sub8]
         fJ2 = [fJ2sub0, fJ2sub1, fJ2sub2, fJ2sub3, fJ2sub4, fJ2sub5, fJ2sub6, fJ2sub7, fJ2sub8]
         fJ3 = [fJ3sub0, fJ3sub1, fJ3sub2, fJ3sub3, fJ3sub4, fJ3sub5, fJ3sub6, fJ3sub7, fJ3sub8]
         
-        return fJ1, fJ2, fJ3, fF
+        return fJ1, fJ2, fJ3
 
     @staticmethod
     def calcRMSE(data):
@@ -243,8 +384,8 @@ class Subaerial:
         itv = 10  # surface polynomial fitting interval
 
         if self.is_empty:  # i.e., if D is empty (las and sbet not merged)
-            logging.info('WARNING: SBET and LAS not merged because max delta '
-                         'time exceeded acceptable threshold of {} sec(s).'.format(Merge.dt_threshold))
+            logging.warning('SBET and LAS not merged because max delta '
+                            'time exceeded acceptable threshold of {} sec(s).'.format(Merge.dt_threshold))
         else:
             num_points = self.x_las.shape
 
@@ -271,10 +412,10 @@ class Subaerial:
             a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
             w_est = np.zeros(num_points)
 
-            #  calc diff between true and est las xyz (LE = Laser Estimates)
-            LE_pre_x = self.fF[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
-            LE_pre_y = self.fF[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
-            LE_pre_z = self.fF[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+            # calc diff between true and est las xyz (LE = Laser Estimates)
+            LE_pre_x = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
+            LE_pre_y = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
+            LE_pre_z = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
 
             Er1x = ne.evaluate("x_las - LE_pre_x")
             Er1y = ne.evaluate("y_las - LE_pre_y")
