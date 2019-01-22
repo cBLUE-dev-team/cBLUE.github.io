@@ -6,7 +6,7 @@ import numpy as np
 import numexpr as ne
 
 """
-This class provides the functionality to calculate the subaerial
+This class provides the functionality to calculate the aerial
 portion of the total propagated uncertainty (TPU).
 """
 
@@ -45,7 +45,6 @@ class Subaerial:
         =====   =========   =======================
         """
         self.is_empty = not D
-
         self.x_las = D[2]
         self.y_las = D[3]
         self.z_las = D[4]
@@ -86,13 +85,16 @@ class Subaerial:
         R1 = Matrix([[1, 0, 0],
                      [0, cos(r), -sin(r)],
                      [0, sin(r), cos(r)]])
+
         R2 = Matrix([[cos(p), 0, sin(p)],
                      [0, 1, 0],
                      [-sin(p), 0, cos(p)]])
+
         R3 = Matrix([[cos(h), -sin(h), 0],
                      [sin(h), cos(h), 0],
                      [0, 0, 1]])
-        R = R3*R2*R1
+
+        R = R3 * R2 * R1
         logging.info(R)
 
         # "functionize" the necessary R components for a, b, and w estimation
@@ -127,13 +129,16 @@ class Subaerial:
         M1 = Matrix([[1, 0, 0],
                      [0, cos(a), -sin(a)],
                      [0, sin(a), cos(a)]])
+
         M2 = Matrix([[cos(b), 0, sin(b)],
                      [0, 1, 0],
                      [-sin(b), 0, cos(b)]])
+
         M3 = Matrix([[cos(w), -sin(w), 0],
                      [sin(w), cos(w), 0],
                      [0, 0, 1]])
-        M = M3*M2*M1
+
+        M = M3 * M2 * M1
         logging.info('sensor rotation matrix: {}'.format(M))
         return M
 
@@ -144,7 +149,7 @@ class Subaerial:
 
         TODO: add latex
 
-        :return:
+        :return: (sympy object, sympy object, sympy object, function)
         """
 
         # create variables for symbolic computations
@@ -183,9 +188,18 @@ class Subaerial:
         return F1, F2, F3, fF_orig
 
     def form_jacobian(self, F1, F2, F3):
-        """define observation equations and calculate jacobian
-        (i.e., matrix of partial derivatives with respect to
-        component variables) using sympy symbolic math package
+        """generate the jacobian of the specified geolocation equation
+
+        This method generates the Jacobian (i.e., the matrix of partial
+        derivatives with respect to component variables) of the specified
+        geoloation equation using the sympy symbolic math package.  Using
+        sympy to symbolically calculate the Jacobian simplifies the coding
+        of what would otherwise be very long equations.
+
+        :param F1:
+        :param F2:
+        :param F3:
+        :return: (function, function, function)
         """
         a, b, r, p, h, x, y, z, rho = symbols('a b r p h x y z rho')
 
@@ -195,12 +209,25 @@ class Subaerial:
         J3 = Matrix([F3]).jacobian(v)
         return self.lambdify_jacobian(J1, J2, J3)
 
-    def lambdify_jacobian(self, J1, J2, J3):
-        """lambdify the Jacobian components (faster than symbolic calculations) and
-        simplify the numerous trigonometric calculations of the Jacobian by
-        defining the Jacobian functions to be functions of the sines and cosines
-        of the various parameters, instead of the parameters directly
+    def lambdify_jacobian(self, J1, J2, J3, eval_type='numexpr'):
+        """turn the symbolical Jacobian into a function for faster computation
+
+        This method "lambdifies" (or "functionizes") the Jacobian components, for
+        faster calculations. Part of this lambdify process includes simplifying
+        the numerous trigonometric calculations of the Jacobian by defining the
+        Jacobian functions to be functions of the sines and cosines of the various
+        parameters, instead of the parameters directly.
+
+        Reference:
+        https://docs.sympy.org/latest/modules/utilities/lambdify.html
+
+        :param J1:
+        :param J2:
+        :param J3:
+        :param eval_type:
+        :return: (function, function, function)
         """
+
         # create variables for symbolic computations
         a, b, w, r, p, h, rho, \
         p00, p10, p01, p20, p11, p02, p21, p12, p03, \
@@ -211,6 +238,7 @@ class Subaerial:
                       'sin_a sin_b sin_w sin_r sin_p sin_h '
                       'cos_a cos_b cos_w cos_r cos_p cos_h')
 
+        '''functionize the trig terms of the Jacobian x component'''
         J1sub = []
         for i, j in enumerate(J1):
             J1sub.append(j.subs([
@@ -227,6 +255,7 @@ class Subaerial:
                 (cos(p), cos_p),
                 (cos(h), cos_h)]))
 
+        '''functionize the trig terms of the Jacobian y component'''
         J2sub = []
         for i, j in enumerate(J2):
             J2sub.append(j.subs([
@@ -243,6 +272,7 @@ class Subaerial:
                 (cos(p), cos_p),
                 (cos(h), cos_h)]))
 
+        '''functionize the trig terms of the Jacobian z component'''
         J3sub = []
         for i, j in enumerate(J3):
             J3sub.append(j.subs([
@@ -258,9 +288,6 @@ class Subaerial:
                 (cos(r), cos_r),
                 (cos(p), cos_p),
                 (cos(h), cos_h)]))
-
-        eval_type = 'numexpr'
-
 
         '''functionize the x component'''
         J1sub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
@@ -385,15 +412,24 @@ class Subaerial:
         logging.info('RMSE: {:.3f}\n'.format(RMSE))
 
     def estimate_rho_a_b_w(self):
+        """calculates estimates for rho, alpha, and beta
+
+        This method calculates the estimated values for rho, alpha, and beta, which
+        are illustrated in the following image:
+
+        .. image:: ../rho_alpha_beta.png
+
+        :return: (list[], list[], list[], list[])
+        """
         x_las = self.x_las
         y_las = self.y_las
         z_las = self.z_las
         x_sbet = self.x_sbet
         y_sbet = self.y_sbet
         z_sbet = self.z_sbet
-        x_ = ne.evaluate("x_las - x_sbet")  # uses passed variable
-        y_ = ne.evaluate("y_las - y_sbet")  # uses passed variable
-        z_ = ne.evaluate("z_las - z_sbet")  # uses passed variable
+        x_ = ne.evaluate("x_las - x_sbet")
+        y_ = ne.evaluate("y_las - y_sbet")
+        z_ = ne.evaluate("z_las - z_sbet")
 
         fR0 = self.fR[0](self.h0, self.p0)
         fR3 = self.fR[3](self.h0, self.p0)
@@ -408,29 +444,29 @@ class Subaerial:
         w_est = np.zeros(self.num_points)
         return rho_est, a_est, b_est, w_est
 
-    def calc_diff(self, LE_pre):
-        # calc diff between true and est las xyz (LE = Laser Estimates)
+    def calc_diff(self, aer_pos_pre):
+        # calc diff between true and est las xyz (aer_pos = Laser Estimates)
         x_las = self.x_las
         y_las = self.y_las
         z_las = self.z_las
-        LE_pre_x = LE_pre[0]
-        LE_pre_y = LE_pre[1]
-        LE_pre_z = LE_pre[2]
-        dx = ne.evaluate("x_las - LE_pre_x")  # uses passed variable
-        dy = ne.evaluate("y_las - LE_pre_y")  # uses passed variable
-        dz = ne.evaluate("z_las - LE_pre_z")  # uses passed variable
+        aer_pos_pre_x = aer_pos_pre[0]
+        aer_pos_pre_y = aer_pos_pre[1]
+        aer_pos_pre_z = aer_pos_pre[2]
+        dx = ne.evaluate("x_las - aer_pos_pre_x")
+        dy = ne.evaluate("y_las - aer_pos_pre_y")
+        dz = ne.evaluate("z_las - aer_pos_pre_z")
         return dx, dy, dz
 
-    def calc_LE_pre(self, rho_est, a_est, b_est, w_est):
-        LE_pre_x = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
-        LE_pre_y = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
-        LE_pre_z = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
-        return LE_pre_x, LE_pre_y, LE_pre_z
+    def calc_aer_pos_pre(self, rho_est, a_est, b_est, w_est):
+        aer_pos_pre_x = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
+        aer_pos_pre_y = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
+        aer_pos_pre_z = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+        return aer_pos_pre_x, aer_pos_pre_y, aer_pos_pre_z
 
-    def calc_LE(self, coeffs, a_est, b_est, LE_pre):
-        LE_pre_x = LE_pre[0]
-        LE_pre_y = LE_pre[1]
-        LE_pre_z = LE_pre[2]
+    def calc_aer_pos(self, coeffs, a_est, b_est, aer_pos_pre):
+        aer_pos_pre_x = aer_pos_pre[0]
+        aer_pos_pre_y = aer_pos_pre[1]
+        aer_pos_pre_z = aer_pos_pre[2]
 
         A = np.vstack((
             ne.evaluate('a_est * 0 + 1'),
@@ -447,19 +483,19 @@ class Subaerial:
         err_y = np.sum(A * coeffs[1], axis=1)
         err_z = np.sum(A * coeffs[2], axis=1)
 
-        LE_x = ne.evaluate('LE_pre_x + err_x')
-        LE_y = ne.evaluate('LE_pre_y + err_y')
-        LE_z = ne.evaluate('LE_pre_z + err_z')
-        return LE_x, LE_y, LE_z
+        aer_pos_x = ne.evaluate('aer_pos_pre_x + err_x')
+        aer_pos_y = ne.evaluate('aer_pos_pre_y + err_y')
+        aer_pos_z = ne.evaluate('aer_pos_pre_z + err_z')
+        return aer_pos_x, aer_pos_y, aer_pos_z
 
-    def calc_LE_err(self, LE):
-        LE_x = LE[0]
-        LE_y = LE[1]
-        LE_z = LE[2]
-        LE_err_x = ne.evaluate('LE_x - x_las')
-        LE_err_y = ne.evaluate('LE_y - y_las')
-        LE_err_z = ne.evaluate('LE_z - z_las')
-        return [LE_err_x, LE_err_y, LE_err_z]
+    def calc_aer_pos_err(self, aer_pos):
+        aer_pos_x = aer_pos[0]
+        aer_pos_y = aer_pos[1]
+        aer_pos_z = aer_pos[2]
+        aer_pos_err_x = ne.evaluate('aer_pos_x - x_las')
+        aer_pos_err_y = ne.evaluate('aer_pos_y - y_las')
+        aer_pos_err_z = ne.evaluate('aer_pos_z - z_las')
+        return [aer_pos_err_x, aer_pos_err_y, aer_pos_err_z]
 
     def calc_poly_surf_coeffs(self, a_est, b_est, dx, dy, dz, itv=10):
         # estimate error model using polynomial surface fitting
@@ -505,7 +541,7 @@ class Subaerial:
                 cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)
 
     def calc_jacobian(self, rho_est, a_est, b_est, coeffs):
-        '''
+        """
         simplify the numerous trigonometric calculations of the Jacobian by
         defining the Jacobian functions to be functions of the calculated sines and cosines
         of the various parameters, instead of the sin and cos functions directly;
@@ -526,7 +562,8 @@ class Subaerial:
         cr = cos(r0)
         cp = cos(p0)
         ch = cos(h0)
-        '''
+        """
+
         sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch \
             = self.calc_trig_terms(a_est, b_est,
                                    self.r0, self.p0, self.h0,
@@ -585,10 +622,10 @@ class Subaerial:
 
         sx = ne.evaluate("sqrt(sum_pJ1)")
         sy = ne.evaluate("sqrt(sum_pJ2)")
-        subaer_tvu = ne.evaluate("sqrt(sum_pJ3)")
-        subaer_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
+        aer_tvu = ne.evaluate("sqrt(sum_pJ3)")
+        aer_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
 
-        return subaer_thu, subaer_tvu, ['subaerial_thu', 'subaerial_tvu']
+        return aer_thu, aer_tvu, ['subaerial_thu', 'subaerial_tvu']
 
     def calc_subaerial_tpu(self):
         """
@@ -608,18 +645,18 @@ class Subaerial:
                             'sec(s).'.format(Merge.dt_threshold))
         else:
             rho_est, a_est, b_est, w_est = self.estimate_rho_a_b_w()
-            LE_pre = self.calc_LE_pre(rho_est, a_est, b_est, w_est)
-            dx, dy, dz = self.calc_diff(LE_pre)
+            aer_pos_pre = self.calc_aer_pos_pre(rho_est, a_est, b_est, w_est)
+            dx, dy, dz = self.calc_diff(aer_pos_pre)
 
             coeffs = self.calc_poly_surf_coeffs(a_est, b_est, dx, dy, dz)
-            LE_x, LE_y, LE_z = self.calc_LE(coeffs, a_est, b_est, LE_pre)
+            aer_x, aer_y, aer_z = self.calc_aer_pos(coeffs, a_est, b_est, aer_pos_pre)
 
             pJ1, pJ2, pJ3 = self.calc_jacobian(rho_est, a_est, b_est, coeffs)
-            subaer_thu, subaer_tvu, subaer_cols = self.propogate_error(pJ1, pJ2, pJ3)
+            aer_thu, aer_tvu, aer_cols = self.propogate_error(pJ1, pJ2, pJ3)
 
-            column_headers = ['cblue_x', 'cblue_y', 'cblue_z'] + subaer_cols
-            subaer_data = (LE_x, LE_y, LE_z, subaer_thu, subaer_tvu)
-            return np.vstack(subaer_data).T, column_headers
+            column_headers = ['cblue_x', 'cblue_y', 'cblue_z'] + aer_cols
+            aer_data = (aer_x, aer_y, aer_z, aer_thu, aer_tvu)
+            return np.vstack(aer_data).T, column_headers
 
 
 if __name__ == '__main__':

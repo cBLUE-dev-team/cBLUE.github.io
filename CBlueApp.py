@@ -13,17 +13,11 @@ from DirectorySelectButton import DirectorySelectButton
 from RadioFrame import RadioFrame
 
 from Sbet import Sbet
-from Subaerial import Subaerial
-from Subaqueous import Subaqueous
 from Datum import Datum
 from Tpu import Tpu
 
 import matplotlib
 matplotlib.use('Agg')
-# matplotlib.use('TkAgg')
-
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-import matplotlib.animation as animation
 from matplotlib import style
 from matplotlib import pyplot as plt
 
@@ -211,19 +205,6 @@ class ControllerPanel(ttk.Frame):
         self.build_vdatum_input()
         self.build_process_buttons()
         self.update_button_enable()
-
-    def build_map_panel(self):
-        """not used yet; for future option of displaying loaded trajectory"""
-        self.map_panel = tk.Frame(self)
-        self.map_panel.grid(row=0, column=1, sticky=tk.NSEW)
-        self.map_panel.grid_rowconfigure(0, weight=1)
-        self.map_panel.grid_columnconfigure(0, weight=1)
-        canvas = FigureCanvasTkAgg(f, self.map_panel)
-        canvas.show()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        toolbar = NavigationToolbar2TkAgg(canvas, self.map_panel)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def build_directories_input(self):
         """Builds the directory selection input and processing Buttons for the subaerial portion."""

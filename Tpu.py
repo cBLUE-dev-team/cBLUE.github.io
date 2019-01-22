@@ -92,10 +92,35 @@ class Tpu:
             self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
-        self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
-        # self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
+        # self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
+        self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
     def output_tpu_to_pickle(self, las, data_to_pickle, output_columns):
+        """output the calculated tpu to a Python "pickle" file
+
+        This method outputs the calculated tpu to a Python "pickle" file, with the
+        following fields:
+
+        =====   =========           =======================================
+        Index   ndarray             description
+        =====   =========           =======================================
+        0       gps_time            GPS standard adjusted time
+        1       cblue_x             cBLUE-calculated x coordinate
+        2       cblue_y             cBLUE-calculated y coordinate
+        3       cblue_z             cBLUE-calculated z coordinate
+        4       subaerial_thu       subaerial total horizontal uncertainty
+        5       subaerial_tvu       subaerial total vertical uncertainty
+        6       subaqueous_thu      subaqueous total horizontal uncertainty
+        7       subaqueous_tvu      subaqueous total vertical uncertainty
+        8       total_thu           total horizontal uncertainty
+        9       total_tvu           otal vertical uncertainty
+        =====   =========           =======================================
+
+        :param las:
+        :param data_to_pickle:
+        :param output_columns:
+        :return: n/a
+        """
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
         output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
         output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
@@ -104,6 +129,46 @@ class Tpu:
         logging.info('finished writing')
 
     def output_tpu_to_las_extra_bytes(self, las, data_to_pickle, output_columns):
+        """output the calculated tpu to a las file
+
+        This method creates a las file tht contains the contents of the
+        original las file and the calculated tpu values as VLR extra bytes.
+        The las file is generated using "The laspy way", as documented in
+        https://laspy.readthedocs.io/en/latest/tut_part_3.html.
+
+        The following references have additional information describing las
+        extra bytes:
+
+        LAS v1.4 specifications:
+        https://www.asprs.org/a/society/committees/standards/LAS_1_4_r13.pdf
+
+        The LAS 1.4 Specification (ASPRS PERS article)
+        https://www.asprs.org/wp-content/uploads/2010/12/LAS_Specification.pdf
+
+        ASPRS LAS Working Group Github repository
+        https://github.com/ASPRSorg/LAS
+
+        The following table lists the information contained as extra bytes:
+
+        ==============  ============================    =======================================
+        id              dtype                           description
+        ==============  ============================    =======================================
+        cblue_x         unsigned long long (8 bytes)    cBLUE-calculated x coordinate
+        cblue_y         unsigned long long (8 bytes)    cBLUE-calculated y coordinate
+        cblue_z         long (4 bytes)                  cBLUE-calculated z coordinate
+        subaerial_thu   unsigned short (2 bytes)        subaerial total horizontal uncertainty
+        subaerial_tvu   unsigned short (2 bytes)        subaerial total vertical uncertainty
+        subaqueous_thu  unsigned short (2 bytes)        subaqueous total horizontal uncertainty
+        subaqueous_tvu  unsigned short (2 bytes)        subaqueous total vertical uncertainty
+        total_thu       unsigned short (2 bytes)        total horizontal uncertainty
+        total_tvu       unsigned short (2 bytes)        total vertical uncertainty
+        ==============  ============================    =======================================
+
+        :param las:
+        :param data_to_pickle:
+        :param output_columns:
+        :return:
+        """
         output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
         output_df = output_df.sort_values(by=['gps_time'])
         decimals = pd.Series([3] * len(output_df.columns), index=output_columns)
@@ -173,6 +238,17 @@ class Tpu:
             out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
 
     def write_metadata(self, las):
+        """creates a json file with summary statistics and metedata
+
+        This method creates a json file containing summary statistics for each
+        tpu field, per flight line, and a record of the environmental and VDatum
+        parameters specified by the user.  The file also records certain
+        parameters used during the monte carlo simulations used to create
+        the lookup tables used in the subaqueous portion of the tpu calculations.
+
+        :param las:
+        :return: n/a
+        """
         logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
         self.metadata.update({
             'subaqueous lookup params': self.subaqu_lookup_params,
@@ -192,12 +268,36 @@ class Tpu:
             print(e)
 
     def run_tpu_multiprocess(self, sbet_las_generator):
+        """runs the tpu calculations using multiprocessing
+
+        This methods initiates the tpu calculations using the pathos multiprocessing
+        framework (https://pypi.org/project/pathos/).  Whether the tpu calculations
+        are done with multiprocessing or not is currently determined by which
+        "run_tpu_*" method is manually specified in the tpu_process_callback()
+        method of the CBlueApp class.  Including a user option to select single
+        processing or multiprocessing is deferred to future versions.
+
+        :param sbet_las_generator:
+        :return:
+        """
         p = pp.ProcessPool()
         p.map(self.calc_tpu, sbet_las_generator)
         p.close()
         p.join()
 
     def run_tpu_singleprocess(self, sbet_las_generator):
+        """runs the tpu calculations using a single processing
+
+        This methods initiates the tpu calculations using single processing.
+        Whether the tpu calculations  are done with multiprocessing or not is
+        currently determined by which "run_tpu_*" method is manually specified
+        the tpu_process_callback()  method of the CBlueApp class.  Including
+        a user option to select single processing or multiprocessing is
+        deferred to a future version.
+
+        :param sbet_las_generator:
+        :return:
+        """
         for sbet_las in sbet_las_generator:
             self.calc_tpu(sbet_las)
 
