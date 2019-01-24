@@ -12,8 +12,8 @@ class Subaqueous:
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
-        self.lut_files = {'ECKV': 'ECKV_look_up_fit_HG0995_1sig.csv',
-                          'Reigl': 'Riegl_look_up_fit_HG0995_1sig.csv'}
+        self.lut_files = {'ECKV': './lookup_tables/ECKV_look_up_fit_HG0995_1sig.csv',
+                          'Reigl': './lookup_tables/Riegl_look_up_fit_HG0995_1sig.csv'}
         self.curr_lut = None
 
     def fit_lut(self):
@@ -42,7 +42,7 @@ class Subaqueous:
         look_up_tvu.close()
         fit_tvu = np.asarray([0.0, 0.0, 0.0])
 
-        look_up_thu = open("THU.csv")
+        look_up_thu = open("./lookup_tables/THU.csv")
         look_up_thu_data = look_up_thu.readlines()
         look_up_thu.close()
         fit_thu = np.asarray([0.0, 0.0, 0.0])

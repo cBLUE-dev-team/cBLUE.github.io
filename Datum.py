@@ -3,7 +3,7 @@ class Datum:
         pass
 
     def get_vdatum_region_mcus(self):
-        vdatum_regions_MCU_file = r'V_Datum_MCU_Values.txt'
+        vdatum_regions_MCU_file = r'.\lookup_tables\V_Datum_MCU_Values.txt'
         vdatum_regions_file_obj = open(vdatum_regions_MCU_file, 'r')
         vdatum_regions = vdatum_regions_file_obj.readlines()
         vdatum_regions_file_obj.close()
