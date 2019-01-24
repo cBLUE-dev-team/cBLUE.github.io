@@ -1,0 +1,344 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tpu module &#8212; cBLUE v2.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Tpu.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-Tpu">
+<span id="tpu-module"></span><h1>Tpu module<a class="headerlink" href="#module-Tpu" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Tpu.Tpu">
+<em class="property">class </em><code class="descclassname">Tpu.</code><code class="descname">Tpu</code><span class="sig-paren">(</span><em>surface_select</em>, <em>surface_ind</em>, <em>wind_selection</em>, <em>wind_val</em>, <em>kd_selection</em>, <em>kd_val</em>, <em>vdatum_region</em>, <em>vdatum_region_mcu</em>, <em>tpu_output</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="Tpu.Tpu.calc_tpu">
+<code class="descname">calc_tpu</code><span class="sig-paren">(</span><em>sbet_las_files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.calc_tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.calc_tpu" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sbet_las_tile</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tpu.Tpu.output_tpu_to_las_extra_bytes">
+<code class="descname">output_tpu_to_las_extra_bytes</code><span class="sig-paren">(</span><em>las</em>, <em>data_to_pickle</em>, <em>output_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.output_tpu_to_las_extra_bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.output_tpu_to_las_extra_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>output the calculated tpu to a las file</p>
+<p>This method creates a las file tht contains the contents of the
+original las file and the calculated tpu values as VLR extra bytes.
+The las file is generated using “The laspy way”, as documented in
+<a class="reference external" href="https://laspy.readthedocs.io/en/latest/tut_part_3.html">https://laspy.readthedocs.io/en/latest/tut_part_3.html</a>.</p>
+<p>The following references have additional information describing las
+extra bytes:</p>
+<p>LAS v1.4 specifications:
+<a class="reference external" href="https://www.asprs.org/a/society/committees/standards/LAS_1_4_r13.pdf">https://www.asprs.org/a/society/committees/standards/LAS_1_4_r13.pdf</a></p>
+<p>The LAS 1.4 Specification (ASPRS PERS article)
+<a class="reference external" href="https://www.asprs.org/wp-content/uploads/2010/12/LAS_Specification.pdf">https://www.asprs.org/wp-content/uploads/2010/12/LAS_Specification.pdf</a></p>
+<p>ASPRS LAS Working Group Github repository
+<a class="reference external" href="https://github.com/ASPRSorg/LAS">https://github.com/ASPRSorg/LAS</a></p>
+<p>The following table lists the information contained as extra bytes:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="36%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">id</th>
+<th class="head">dtype</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>cblue_x</td>
+<td>unsigned long long (8 bytes)</td>
+<td>cBLUE-calculated x coordinate</td>
+</tr>
+<tr class="row-odd"><td>cblue_y</td>
+<td>unsigned long long (8 bytes)</td>
+<td>cBLUE-calculated y coordinate</td>
+</tr>
+<tr class="row-even"><td>cblue_z</td>
+<td>long (4 bytes)</td>
+<td>cBLUE-calculated z coordinate</td>
+</tr>
+<tr class="row-odd"><td>subaerial_thu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaerial total horizontal uncertainty</td>
+</tr>
+<tr class="row-even"><td>subaerial_tvu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaerial total vertical uncertainty</td>
+</tr>
+<tr class="row-odd"><td>subaqueous_thu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaqueous total horizontal uncertainty</td>
+</tr>
+<tr class="row-even"><td>subaqueous_tvu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaqueous total vertical uncertainty</td>
+</tr>
+<tr class="row-odd"><td>total_thu</td>
+<td>unsigned short (2 bytes)</td>
+<td>total horizontal uncertainty</td>
+</tr>
+<tr class="row-even"><td>total_tvu</td>
+<td>unsigned short (2 bytes)</td>
+<td>total vertical uncertainty</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>las</strong> – </li>
+<li><strong>data_to_pickle</strong> – </li>
+<li><strong>output_columns</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tpu.Tpu.output_tpu_to_pickle">
+<code class="descname">output_tpu_to_pickle</code><span class="sig-paren">(</span><em>las</em>, <em>data_to_pickle</em>, <em>output_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.output_tpu_to_pickle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.output_tpu_to_pickle" title="Permalink to this definition">¶</a></dt>
+<dd><p>output the calculated tpu to a Python “pickle” file</p>
+<p>This method outputs the calculated tpu to a Python “pickle” file, with the
+following fields:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="24%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">ndarray</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>gps_time</td>
+<td>GPS standard adjusted time</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>cblue_x</td>
+<td>cBLUE-calculated x coordinate</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>cblue_y</td>
+<td>cBLUE-calculated y coordinate</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>cblue_z</td>
+<td>cBLUE-calculated z coordinate</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>subaerial_thu</td>
+<td>subaerial total horizontal uncertainty</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>subaerial_tvu</td>
+<td>subaerial total vertical uncertainty</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>subaqueous_thu</td>
+<td>subaqueous total horizontal uncertainty</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>subaqueous_tvu</td>
+<td>subaqueous total vertical uncertainty</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>total_thu</td>
+<td>total horizontal uncertainty</td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>total_tvu</td>
+<td>otal vertical uncertainty</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>las</strong> – </li>
+<li><strong>data_to_pickle</strong> – </li>
+<li><strong>output_columns</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">n/a</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tpu.Tpu.run_tpu_multiprocess">
+<code class="descname">run_tpu_multiprocess</code><span class="sig-paren">(</span><em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_multiprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_multiprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>runs the tpu calculations using multiprocessing</p>
+<p>This methods initiates the tpu calculations using the pathos multiprocessing
+framework (<a class="reference external" href="https://pypi.org/project/pathos/">https://pypi.org/project/pathos/</a>).  Whether the tpu calculations
+are done with multiprocessing or not is currently determined by which
+“run_tpu_*” method is manually specified in the tpu_process_callback()
+method of the CBlueApp class.  Including a user option to select single
+processing or multiprocessing is deferred to future versions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sbet_las_generator</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tpu.Tpu.run_tpu_singleprocess">
+<code class="descname">run_tpu_singleprocess</code><span class="sig-paren">(</span><em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_singleprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_singleprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>runs the tpu calculations using a single processing</p>
+<p>This methods initiates the tpu calculations using single processing.
+Whether the tpu calculations  are done with multiprocessing or not is
+currently determined by which “run_tpu_*” method is manually specified
+the tpu_process_callback()  method of the CBlueApp class.  Including
+a user option to select single processing or multiprocessing is
+deferred to a future version.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sbet_las_generator</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tpu.Tpu.write_metadata">
+<code class="descname">write_metadata</code><span class="sig-paren">(</span><em>las</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.write_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.write_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a json file with summary statistics and metedata</p>
+<p>This method creates a json file containing summary statistics for each
+tpu field, per flight line, and a record of the environmental and VDatum
+parameters specified by the user.  The file also records certain
+parameters used during the monte carlo simulations used to create
+the lookup tables used in the subaqueous portion of the tpu calculations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>las</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">n/a</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, NOAA Remote Sensing Division.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

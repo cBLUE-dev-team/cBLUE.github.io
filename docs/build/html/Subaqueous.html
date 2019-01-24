@@ -1,0 +1,126 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Subaqueous module &#8212; cBLUE v2.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Subaqueous.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-Subaqueous">
+<span id="subaqueous-module"></span><h1>Subaqueous module<a class="headerlink" href="#module-Subaqueous" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Subaqueous.Subaqueous">
+<em class="property">class </em><code class="descclassname">Subaqueous.</code><code class="descname">Subaqueous</code><span class="sig-paren">(</span><em>surface</em>, <em>wind_par</em>, <em>kd_par</em>, <em>depth</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaqueous.html#Subaqueous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaqueous.Subaqueous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
+To be used in conjunction with the associated Gui.py.</p>
+<dl class="method">
+<dt id="Subaqueous.Subaqueous.fit_lut">
+<code class="descname">fit_lut</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaqueous.html#Subaqueous.fit_lut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaqueous.Subaqueous.fit_lut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called to begin the SubAqueous processing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaqueous.Subaqueous.get_subaqueous_meta_data">
+<code class="descname">get_subaqueous_meta_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaqueous.html#Subaqueous.get_subaqueous_meta_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaqueous.Subaqueous.get_subaqueous_meta_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Subaqueous.Subaqueous.model_process">
+<code class="descname">model_process</code><span class="sig-paren">(</span><em>lut</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaqueous.html#Subaqueous.model_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaqueous.Subaqueous.model_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the average fit for all given combinations of wind and kd given from look_up_fit.csv.
+look_up_fit.csv uses precalculated uncertainties based on seasurface models.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaqueous.Subaqueous.riegl_process">
+<code class="descname">riegl_process</code><span class="sig-paren">(</span><em>lut</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaqueous.html#Subaqueous.riegl_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaqueous.Subaqueous.riegl_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the average fit for all kd given from reigl_look_up_fit.csv.
+reigl_look_up_fit.csv uses precalculated uncertainties based on riegl models.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, NOAA Remote Sensing Division.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

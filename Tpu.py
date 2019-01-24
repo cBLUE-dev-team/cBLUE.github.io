@@ -289,9 +289,9 @@ class Tpu:
         """runs the tpu calculations using a single processing
 
         This methods initiates the tpu calculations using single processing.
-        Whether the tpu calculations  are done with multiprocessing or not is
+        Whether the tpu calculations are done with multiprocessing or not is
         currently determined by which "run_tpu_*" method is manually specified
-        the tpu_process_callback()  method of the CBlueApp class.  Including
+        the tpu_process_callback() method of the CBlueApp class.  Including
         a user option to select single processing or multiprocessing is
         deferred to a future version.
 
