@@ -8,6 +8,14 @@ import numexpr as ne
 """
 This class provides the functionality to calculate the aerial
 portion of the total propagated uncertainty (TPU).
+
+Two key modules that are used throughout are sympy and numexpr.  
+The module sympy ....  The module numexpr....  
+        # assign variables because numexpr variables don't handle indexing
+
+        for example...
+         x_las = self.x_las
+         x_ = ne.evaluate("x_las - x_sbet")
 """
 
 
@@ -415,9 +423,16 @@ class Subaerial:
         """calculates estimates for rho, alpha, and beta
 
         This method calculates the estimated values for rho, alpha, and beta, which
-        are illustrated in the following image:
+        are the lidar range, angle in the YZ plane, and angle in the XZ plane,
+        respectively (see the following image).
 
-        .. image:: ../rho_alpha_beta.png
+        .. image:: ../../rho_alpha_beta.png
+
+        Alpha and beta are used to model the scan pattern, as a substitute for the
+        actual, unknown, proprietary scan pattern model implemented by the
+        manufacturer.  Polynomial-surface error modeling is used to account for the
+        positional differences resulting from the difference between the cBLUE scan
+        model and the manufacturer scan model.
 
         :return: (list[], list[], list[], list[])
         """
@@ -427,9 +442,9 @@ class Subaerial:
         x_sbet = self.x_sbet
         y_sbet = self.y_sbet
         z_sbet = self.z_sbet
-        x_ = ne.evaluate("x_las - x_sbet")
-        y_ = ne.evaluate("y_las - y_sbet")
-        z_ = ne.evaluate("z_las - z_sbet")
+        dx = ne.evaluate("x_las - x_sbet")
+        dy = ne.evaluate("y_las - y_sbet")
+        dz = ne.evaluate("z_las - z_sbet")
 
         fR0 = self.fR[0](self.h0, self.p0)
         fR3 = self.fR[3](self.h0, self.p0)
@@ -438,35 +453,71 @@ class Subaerial:
         fR4 = self.fR[4](self.r0, self.p0, self.h0)
         fR7 = self.fR[7](self.r0, self.p0)
 
-        rho_est = ne.evaluate("sqrt(x_**2 + y_**2 + z_**2)")
-        b_est = ne.evaluate("arcsin(((fR0 * x_) + (fR3 * y_) + (fR6 * z_)) / (-rho_est))")
-        a_est = ne.evaluate("arcsin(((fR1 * x_) + (fR4 * y_) + (fR7 * z_)) / (rho_est * cos(b_est)))")
+        rho_est = ne.evaluate("sqrt(dx**2 + dy**2 + dz**2)")
+        b_est = ne.evaluate("arcsin(((fR0 * dx) + (fR3 * dy) + (fR6 * dz)) / (-rho_est))")
+        a_est = ne.evaluate("arcsin(((fR1 * dx) + (fR4 * dy) + (fR7 * dz)) / (rho_est * cos(b_est)))")
         w_est = np.zeros(self.num_points)
         return rho_est, a_est, b_est, w_est
 
-    def calc_diff(self, aer_pos_pre):
+    def calc_diff(self, subaer_pos_pre):
+        """calculate the difference between the las position and the initial cBLUE position
+
+        This method calculates the difference between the x, y, and z components of the
+        positions in the las file and the respective cBLUE-calculated position components.
+        Ideally, a cBLUE-calculated position would identically match the corresponding
+        position in the las file, but due to differences between the proprietary manufacturer
+        sensor model and the sensor model used by cBLUE, the positions are not identical.
+        The differences calculated by this method are used in the polynomial-surface error
+        modeling process to correct for the errors caused by the sensor model discrepancies.
+
+        :param subaer_pos_pre:
+        :return:
+        """
         # calc diff between true and est las xyz (aer_pos = Laser Estimates)
         x_las = self.x_las
         y_las = self.y_las
         z_las = self.z_las
-        aer_pos_pre_x = aer_pos_pre[0]
-        aer_pos_pre_y = aer_pos_pre[1]
-        aer_pos_pre_z = aer_pos_pre[2]
-        dx = ne.evaluate("x_las - aer_pos_pre_x")
-        dy = ne.evaluate("y_las - aer_pos_pre_y")
-        dz = ne.evaluate("z_las - aer_pos_pre_z")
+        aer_x_pre = subaer_pos_pre[0]
+        aer_y_pre = subaer_pos_pre[1]
+        aer_z_pre = subaer_pos_pre[2]
+        dx = ne.evaluate("x_las - aer_x_pre")
+        dy = ne.evaluate("y_las - aer_y_pre")
+        dz = ne.evaluate("z_las - aer_z_pre")
         return dx, dy, dz
 
     def calc_aer_pos_pre(self, rho_est, a_est, b_est, w_est):
-        aer_pos_pre_x = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
-        aer_pos_pre_y = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
-        aer_pos_pre_z = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
-        return aer_pos_pre_x, aer_pos_pre_y, aer_pos_pre_z
+        """calculates the inital cBLUE aubaerial position
+
+        This method calculates the inital cBLUE subaerial position using the
+        'lambdified' geolocation equation without the polynomial-surface
+        error terms.
+
+        :param rho_est:
+        :param a_est:
+        :param b_est:
+        :param w_est:
+        :return:
+        """
+        aer_x_pre = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
+        aer_y_pre = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
+        aer_z_pre = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+        return aer_x_pre, aer_y_pre, aer_z_pre
 
     def calc_aer_pos(self, coeffs, a_est, b_est, aer_pos_pre):
-        aer_pos_pre_x = aer_pos_pre[0]
-        aer_pos_pre_y = aer_pos_pre[1]
-        aer_pos_pre_z = aer_pos_pre[2]
+        """calculates the final cBLUE subearial position
+
+        This method calculates the final cBLUE subaerial position by adding
+        a polynomial-surface modelled error term
+
+        :param coeffs:
+        :param a_est:
+        :param b_est:
+        :param aer_pos_pre:
+        :return:
+        """
+        aer_x_pre = aer_pos_pre[0]
+        aer_y_pre = aer_pos_pre[1]
+        aer_z_pre = aer_pos_pre[2]
 
         A = np.vstack((
             ne.evaluate('a_est * 0 + 1'),
@@ -483,22 +534,50 @@ class Subaerial:
         err_y = np.sum(A * coeffs[1], axis=1)
         err_z = np.sum(A * coeffs[2], axis=1)
 
-        aer_pos_x = ne.evaluate('aer_pos_pre_x + err_x')
-        aer_pos_y = ne.evaluate('aer_pos_pre_y + err_y')
-        aer_pos_z = ne.evaluate('aer_pos_pre_z + err_z')
+        aer_pos_x = ne.evaluate('aer_x_pre + err_x')
+        aer_pos_y = ne.evaluate('aer_y_pre + err_y')
+        aer_pos_z = ne.evaluate('aer_z_pre + err_z')
         return aer_pos_x, aer_pos_y, aer_pos_z
 
     def calc_aer_pos_err(self, aer_pos):
-        aer_pos_x = aer_pos[0]
-        aer_pos_y = aer_pos[1]
-        aer_pos_z = aer_pos[2]
-        aer_pos_err_x = ne.evaluate('aer_pos_x - x_las')
-        aer_pos_err_y = ne.evaluate('aer_pos_y - y_las')
-        aer_pos_err_z = ne.evaluate('aer_pos_z - z_las')
-        return [aer_pos_err_x, aer_pos_err_y, aer_pos_err_z]
+        """calculates the difference between the las and cBLUE positions
+
+        This method calculates the differences between the x, y, and z
+        components of the final cBLUE positions and the corresponding
+        las file positions.
+
+        :param aer_pos:
+        :return:
+        """
+        aer_x = aer_pos[0]
+        aer_y = aer_pos[1]
+        aer_z = aer_pos[2]
+        aer_x_err = ne.evaluate('aer_x - x_las')
+        aer_y_err = ne.evaluate('aer_y - y_las')
+        aer_z_err = ne.evaluate('aer_z - z_las')
+        return [aer_x_err, aer_y_err, aer_z_err]
 
     def calc_poly_surf_coeffs(self, a_est, b_est, dx, dy, dz, itv=10):
-        # estimate error model using polynomial surface fitting
+        """estimates error model using polynomial surface fitting
+
+        This method calculates the coefficients of the polynomial-surface
+        error model intended to account for the positional errors resulting
+        from differences between the sensor model implemented in cBLUE and
+        the unknown, proprietary manufacturer sensor model.
+
+        The original Matlab research code used a 'fit' function with a
+        'poly23' option, which is emulated here by using np.linalg.lstsq
+        with terms for a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
+
+        :param a_est:
+        :param b_est:
+        :param dx:
+        :param dy:
+        :param dz:
+        :param itv:
+        :return: list[tuple, tuple, tuple] TODO: verify
+        """
+
         B0 = b_est[::itv]
         A0 = a_est[::itv]
 
@@ -513,43 +592,54 @@ class Subaerial:
             ne.evaluate('A0 * B0 ** 2'),
             ne.evaluate('B0 ** 3'))).T
 
-        '''
-        Originally, Jaehoon used the Matlab "fit" function with a "poly23" option,
-        but I didn't find a matching function to use in Python, so I manually coded
-        the same functionally using np.linalg.lstsq with terms for
-        a, b, a^2, ab, b^2, a^2b, ab^2, and b^3
-        '''
         (coeffs_x, __, __, __) = np.linalg.lstsq(A, dx[::itv], rcond=None)  # rcond=None is FutureWarning
         (coeffs_y, __, __, __) = np.linalg.lstsq(A, dy[::itv], rcond=None)  # rcond=None is FutureWarning
         (coeffs_z, __, __, __) = np.linalg.lstsq(A, dz[::itv], rcond=None)  # rcond=None is FutureWarning
         return [coeffs_x, coeffs_y, coeffs_z]
 
     def calc_trig_terms(self, a_est, b_est, r0, p0, h0, x0, y0, z0):
-        sin_a0 = ne.evaluate("sin(a_est)")  # uses passed variable
-        sin_b0 = ne.evaluate("sin(b_est)")  # uses passed variable
+        """evaluates the trigonometric terms in the Jocobian
+
+        This method aims to simplify evaluation of the Jacobian by pre-evaluating
+        the trigonometic terms of the Jacobian.  The reasoning is that this speeds
+        up the computations because the trigonometric terms are only evaluated
+        once, instead of every time they show up in the Jacobian.
+
+        :param a_est:
+        :param b_est:
+        :param r0:
+        :param p0:
+        :param h0:
+        :param x0:
+        :param y0:
+        :param z0:
+        :return:
+        """
+
+        sin_a0 = ne.evaluate("sin(a_est)")  # uses passed parameter
+        sin_b0 = ne.evaluate("sin(b_est)")  # uses passed parameter
         sin_w0 = np.zeros(self.num_points)  # ne.evaluate("sin(w_est)") ... sin(0) = 0
-        sin_r0 = ne.evaluate("sin(r0)")  # uses passed variable
-        sin_p0 = ne.evaluate("sin(p0)")  # uses passed variable
-        sin_h0 = ne.evaluate("sin(h0)")  # uses passed variable
-        cos_a0 = ne.evaluate("cos(a_est)")  # uses passed variable
-        cos_b0 = ne.evaluate("cos(b_est)")  # uses passed variable
+        sin_r0 = ne.evaluate("sin(r0)")  # uses passed parameter
+        sin_p0 = ne.evaluate("sin(p0)")  # uses passed parameter
+        sin_h0 = ne.evaluate("sin(h0)")  # uses passed parameter
+        cos_a0 = ne.evaluate("cos(a_est)")  # uses passed parameter
+        cos_b0 = ne.evaluate("cos(b_est)")  # uses passed parameter
         cos_w0 = np.ones(self.num_points)  # ne.evaluate("cos(w_est)") ... cos(0) = 1
-        cos_r0 = ne.evaluate("cos(r0)")  # uses passed variable
-        cos_p0 = ne.evaluate("cos(p0)")  # uses passed variable
-        cos_h0 = ne.evaluate("cos(h0)")  # uses passed variable
+        cos_r0 = ne.evaluate("cos(r0)")  # uses passed parameter
+        cos_p0 = ne.evaluate("cos(p0)")  # uses passed parameter
+        cos_h0 = ne.evaluate("cos(h0)")  # uses passed parameter
         return (sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
                 cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)
 
-    def calc_jacobian(self, rho_est, a_est, b_est, coeffs):
-        """
-        simplify the numerous trigonometric calculations of the Jacobian by
-        defining the Jacobian functions to be functions of the calculated sines and cosines
-        of the various parameters, instead of the sin and cos functions directly;
-        for example, instead of calculating sin(a_est) every time it shows up
-        in an equation (which is a lot), calculate sin(a_est) once and use the value
-        in the equation;  (it complicates the code, but it saves a noticeable
-        chunk of time computationally)
+    def eval_jacobian(self, rho_est, a_est, b_est, coeffs):
+        """evaluate the Jacobian of the laser geolocation equation
 
+        This method evaluates the Jacobian by passing the relevant parameters
+        to the lambdified functions representing the x, y, and z components
+        of the Jacobian.
+
+        To simplify the computations, the trigonometric terms are pre-evaluated and
+        are represented by the following variables:
         sa = sin(a0)
         sb = sin(b0)
         sw = sin(w0)
@@ -562,6 +652,16 @@ class Subaerial:
         cr = cos(r0)
         cp = cos(p0)
         ch = cos(h0)
+
+        :param rho_est:
+        :param a_est:
+        :param b_est:
+        :param coeffs:
+        :return:
+        """
+        """
+        simplify the numerous trigonometric calculations of the Jacobian by
+
         """
 
         sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch \
@@ -573,6 +673,7 @@ class Subaerial:
         p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
         p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs[2]
 
+        '''evaluate the x component'''
         pJ1 = np.vstack(
             (self.fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
                          sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
@@ -584,6 +685,7 @@ class Subaerial:
              np.ones(self.num_points),
              self.fJ1[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
 
+        '''evaluate the y component'''
         pJ2 = np.vstack(
             (self.fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
                          sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
@@ -595,6 +697,7 @@ class Subaerial:
              np.ones(self.num_points),
              self.fJ2[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
 
+        '''evaluate the z component'''
         pJ3 = np.vstack(
             (self.fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
                          sa, sb, sw, sr, sp, ca, cb, cw, cr, cp),
@@ -607,7 +710,20 @@ class Subaerial:
 
         return pJ1, pJ2, pJ3
 
-    def propogate_error(self, pJ1, pJ2, pJ3):
+    def propogate_uncertainty(self, pJ1, pJ2, pJ3):
+        """propogates the subaerial uncertatinty
+
+        This method propogates the uncertainty of the component uncertainties
+        using the following equation:
+
+        TODO: insert latex
+
+        :param pJ1:
+        :param pJ2:
+        :param pJ3:
+        :return: (ndarray, ndarray)
+        """
+
         C = self.C
         C = ne.evaluate("C * C")  # variance = stddev**2
 
@@ -628,32 +744,57 @@ class Subaerial:
         return aer_thu, aer_tvu, ['subaerial_thu', 'subaerial_tvu']
 
     def calc_subaerial_tpu(self):
-        """
+        """calculates the subaerial uncertainty
 
-        # assign variables because numexpr variables don't handle indexing
+        This method calculates the subaerial uncertainty through four major
+        steps:
 
-        for example...
-         x_las = self.x_las
-         x_ = ne.evaluate("x_las - x_sbet")
+        1) Evaluate the preliminary geolocation equation
+            First, a preliminary position for each data point is calculated
+            using the preliminary geolocation equation (i.e., the one
+            without the polynomial-surface error terms).  The preliminary
+            positions are not expected to match the corresponding positions
+            in the las file because the sensor model implemented in cBLUE
+            is only an approximation of the unknown, proprietary
+            manufacturer sensor model.
+
+        2) Calculate and apply the polynomial-surface error coefficients
+            Second, the position errors resulting from the differences
+            between the sensor model implemented in cBLUE and the unknown,
+            proprietary manufacturer sensor model are accounted for with
+            polynomial-surface error modeling.  The coefficients of the
+            error model are calculated using a least squares calculation
+            intended to be equivalent to Matlab's fit(poly23) function,
+            which was used in the original Matlab research code.
+
+        3) Evaluate the Jacobian
+            Third, the Jacobian of the modified laser geolocation equation,
+            (i.e., the one with the polynomial-surface error terms)
+
+        4) Propagate Uncertainty
 
         :return:
         """
-
         if self.is_empty:  # i.e., if D is empty (las and sbet not merged)
             logging.warning('SBET and LAS not merged because max delta '
                             'time exceeded acceptable threshold of {} '
                             'sec(s).'.format(Merge.dt_threshold))
         else:
+
+            '''1) Evaluate the preliminary geolocation equation'''
             rho_est, a_est, b_est, w_est = self.estimate_rho_a_b_w()
             aer_pos_pre = self.calc_aer_pos_pre(rho_est, a_est, b_est, w_est)
             dx, dy, dz = self.calc_diff(aer_pos_pre)
 
+            '''2) Calculate and apply the polynomial-surface error coefficients'''
             coeffs = self.calc_poly_surf_coeffs(a_est, b_est, dx, dy, dz)
             aer_x, aer_y, aer_z = self.calc_aer_pos(coeffs, a_est, b_est, aer_pos_pre)
 
-            pJ1, pJ2, pJ3 = self.calc_jacobian(rho_est, a_est, b_est, coeffs)
-            aer_thu, aer_tvu, aer_cols = self.propogate_error(pJ1, pJ2, pJ3)
+            '''3) Evaluate the Jacobian'''
+            pJ1, pJ2, pJ3 = self.eval_jacobian(rho_est, a_est, b_est, coeffs)
+            aer_thu, aer_tvu, aer_cols = self.propogate_uncertainty(pJ1, pJ2, pJ3)
 
+            '''4) Propagate Uncertainty'''
             column_headers = ['cblue_x', 'cblue_y', 'cblue_z'] + aer_cols
             aer_data = (aer_x, aer_y, aer_z, aer_thu, aer_tvu)
             return np.vstack(aer_data).T, column_headers

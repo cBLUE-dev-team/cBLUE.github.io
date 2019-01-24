@@ -101,20 +101,20 @@ class Tpu:
         This method outputs the calculated tpu to a Python "pickle" file, with the
         following fields:
 
-        =====   =========           =======================================
-        Index   ndarray             description
-        =====   =========           =======================================
-        0       gps_time            GPS standard adjusted time
-        1       cblue_x             cBLUE-calculated x coordinate
-        2       cblue_y             cBLUE-calculated y coordinate
-        3       cblue_z             cBLUE-calculated z coordinate
-        4       subaerial_thu       subaerial total horizontal uncertainty
-        5       subaerial_tvu       subaerial total vertical uncertainty
-        6       subaqueous_thu      subaqueous total horizontal uncertainty
-        7       subaqueous_tvu      subaqueous total vertical uncertainty
-        8       total_thu           total horizontal uncertainty
-        9       total_tvu           otal vertical uncertainty
-        =====   =========           =======================================
+        =====   =============== ==========================================
+        Index   ndarray         description
+        =====   =============== ==========================================
+        0       gps_time        GPS standard adjusted time
+        1       cblue_x         cBLUE-calculated x coordinate
+        2       cblue_y         cBLUE-calculated y coordinate
+        3       cblue_z         cBLUE-calculated z coordinate
+        4       subaerial_thu   subaerial total horizontal uncertainty
+        5       subaerial_tvu   subaerial total vertical uncertainty
+        6       subaqueous_thu  subaqueous total horizontal uncertainty
+        7       subaqueous_tvu  subaqueous total vertical uncertainty
+        8       total_thu       total horizontal uncertainty
+        9       total_tvu       otal vertical uncertainty
+        =====   =============== ==========================================
 
         :param las:
         :param data_to_pickle:
@@ -150,9 +150,9 @@ class Tpu:
 
         The following table lists the information contained as extra bytes:
 
-        ==============  ============================    =======================================
+        ==============  ==============================  =======================================
         id              dtype                           description
-        ==============  ============================    =======================================
+        ==============  ==============================  =======================================
         cblue_x         unsigned long long (8 bytes)    cBLUE-calculated x coordinate
         cblue_y         unsigned long long (8 bytes)    cBLUE-calculated y coordinate
         cblue_z         long (4 bytes)                  cBLUE-calculated z coordinate
@@ -162,7 +162,7 @@ class Tpu:
         subaqueous_tvu  unsigned short (2 bytes)        subaqueous total vertical uncertainty
         total_thu       unsigned short (2 bytes)        total horizontal uncertainty
         total_tvu       unsigned short (2 bytes)        total vertical uncertainty
-        ==============  ============================    =======================================
+        ==============  ==============================  =======================================
 
         :param las:
         :param data_to_pickle:
