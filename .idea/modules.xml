@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" filepath="$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../MyPy/pythonEquationStuff/.idea/pythonEquationStuff.iml" filepath="$PROJECT_DIR$/../../../MyPy/pythonEquationStuff/.idea/pythonEquationStuff.iml" />
     </modules>
   </component>
 </project>

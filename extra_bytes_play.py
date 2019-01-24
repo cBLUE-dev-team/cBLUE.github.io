@@ -20,7 +20,7 @@ extra_byte_dimensions = OrderedDict([
 
 las_dir = r'C:\Users\nickf\OneDrive\OSU_PhD\OSU_Parrish_Forfinski_Share\DATA\ouput'
 
-las_files = [os.path.join(las_dir, l) for l in os.listdir(las_dir) if l.endswith('_HEADER.las')]
+las_files = [os.path.join(las_dir, l) for l in os.listdir(las_dir) if l.endswith('.las')]
 
 # Set up our input and output files.
 inFile = laspy.file.File(las_files[0], mode="r")
