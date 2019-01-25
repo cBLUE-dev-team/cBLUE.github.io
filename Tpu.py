@@ -150,7 +150,7 @@ class Tpu:
 
         The following table lists the information contained as extra bytes:
 
-        .. csv-table:: Frozen Delights!
+        .. csv-table:: cBLUE VLR Extra Bytes
             :header: id, dtype, description
             :widths: 14, 20, 20
 

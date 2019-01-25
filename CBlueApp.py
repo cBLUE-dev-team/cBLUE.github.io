@@ -64,7 +64,7 @@ class CBlueApp(tk.Tk):
         filemenu.add_command(label='Save settings',
                              command=lambda: self.save_config())
         filemenu.add_separator()
-        filemenu.add_command(label='exit', command=quit)
+        filemenu.add_command(label='Exit', command=quit)
         menubar.add_cascade(label='File', menu=filemenu)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)

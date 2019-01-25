@@ -3,43 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="952a2797-c399-4d3c-958a-7eabbd760343" name="Default" comment="moved RadioFrame and DirectorySelectButton to GuiSupport">
       <change beforePath="$PROJECT_DIR$/../../../NOAA/RSD_QAQC_GITHUB/QAQC_dash.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../../NOAA/RSD_QAQC_GITHUB/QAQC_dash.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CBlueApp.py" beforeDir="false" afterPath="$PROJECT_DIR$/CBlueApp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GuiSupport.py" beforeDir="false" afterPath="$PROJECT_DIR$/GuiSupport.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Las.py" beforeDir="false" afterPath="$PROJECT_DIR$/Las.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Subaerial.py" beforeDir="false" afterPath="$PROJECT_DIR$/Subaerial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Subaqueous.py" beforeDir="false" afterPath="$PROJECT_DIR$/Subaqueous.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tpu.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tpu.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cblue_configuration.json" beforeDir="false" afterPath="$PROJECT_DIR$/cblue_configuration.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/Datum.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/Datum.doctree" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/DirectorySelectButton.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/DirectorySelectButton.doctree" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/RadioFrame.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/RadioFrame.doctree" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/Sbet.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/Sbet.doctree" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/Subaerial.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/Subaerial.doctree" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/doctrees/Tpu.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/Tpu.doctree" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/doctrees/environment.pickle" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/environment.pickle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/extra_bytes_play.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/extra_bytes_play.doctree" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/doctrees/index.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/index.doctree" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/doctrees/install.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/install.doctree" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/intro.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/intro.doctree" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/doctrees/modules.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/modules.doctree" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/doctrees/workflow.doctree" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/doctrees/workflow.doctree" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/.buildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/.buildinfo" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/CBlueApp.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/CBlueApp.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/Datum.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/Datum.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/DirectorySelectButton.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/DirectorySelectButton.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/Las.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/Las.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/Merge.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/Merge.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/RadioFrame.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/RadioFrame.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/Sbet.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/Sbet.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/Subaerial.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/Subaerial.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/Subaqueous.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/Subaqueous.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/Tpu.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/Tpu.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/_images/SubaerialLaserGeolocationEquation.png" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_images/SubaerialLaserGeolocationEquation.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/_modules/CBlueApp.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_modules/CBlueApp.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/_modules/Datum.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_modules/Datum.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/_modules/DirectorySelectButton.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_modules/DirectorySelectButton.html" afterDir="false" />
@@ -54,36 +27,19 @@
       <change beforePath="$PROJECT_DIR$/docs/build/html/_modules/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_modules/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/_sources/index.rst.txt" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_sources/index.rst.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/_sources/install.rst.txt" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_sources/install.rst.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/_sources/intro.rst.txt" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_sources/intro.rst.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/_sources/modules.rst.txt" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_sources/modules.rst.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/_sources/workflow.rst.txt" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_sources/workflow.rst.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/_static/bizstyle.js" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_static/bizstyle.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/_static/documentation_options.js" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_static/documentation_options.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/_static/searchtools.js" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/_static/searchtools.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/extra_bytes_play.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/extra_bytes_play.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/genindex.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/genindex.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/install.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/install.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/build/html/intro.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/intro.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/modules.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/modules.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/objects.inv" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/objects.inv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/py-modindex.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/py-modindex.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/search.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/search.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/searchindex.js" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/searchindex.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/build/html/workflow.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/build/html/workflow.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/cBLUE_install.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/images/GUI_HomePage.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/images/SubaqueousMonteCarlo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/images/Workflow.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/source/DirectorySelectButton.rst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/source/RadioFrame.rst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/source/conf.py" beforeDir="false" afterPath="$PROJECT_DIR$/docs/source/conf.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/source/extra_bytes_play.rst" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/source/index.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/source/index.rst" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/source/install.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/source/install.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/source/modules.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/source/modules.rst" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/source/workflow.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/source/workflow.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lookup_tables/ECKV_look_up_fit_HG0995_1sig.csv" beforeDir="false" afterPath="$PROJECT_DIR$/lookup_tables/ECKV_LUT_HG0995_1sig.csv" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -112,7 +68,7 @@
     <session id="-1570191246">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="10" />
+          <entry key="project.closed" value="11" />
           <entry key="project.open.time.0" value="1" />
           <entry key="project.open.time.3" value="2" />
           <entry key="project.open.time.4" value="6" />
@@ -125,14 +81,14 @@
           <entry key="Python Console" value="36" />
           <entry key="dummy" value="79" />
           <entry key="gitignore" value="3" />
-          <entry key="py" value="21165" />
-          <entry key="txt" value="678" />
+          <entry key="py" value="21196" />
+          <entry key="txt" value="698" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="PLAIN_TEXT" value="760" />
-          <entry key="Python" value="21201" />
+          <entry key="PLAIN_TEXT" value="780" />
+          <entry key="Python" value="21232" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -167,11 +123,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/CBlueApp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-88">
-              <caret line="143" selection-start-line="143" selection-end-line="143" />
+            <state relative-caret-position="388">
+              <caret line="66" column="37" selection-start-line="66" selection-start-column="37" selection-end-line="66" selection-end-column="37" />
             </state>
           </provider>
         </entry>
@@ -199,11 +155,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Tpu.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="199">
-              <caret line="168" column="30" selection-start-line="168" selection-start-column="30" selection-end-line="168" selection-end-column="30" />
+            <state relative-caret-position="182">
+              <caret line="147" column="40" selection-start-line="147" selection-start-column="40" selection-end-line="147" selection-end-column="40" />
             </state>
           </provider>
         </entry>
@@ -280,18 +236,18 @@
         <option value="$PROJECT_DIR$/RadioFrame.py" />
         <option value="$PROJECT_DIR$/DirectorySelectButton.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/CBlueApp.py" />
         <option value="$PROJECT_DIR$/GuiSupport.py" />
         <option value="$PROJECT_DIR$/Subaerial.py" />
         <option value="$PROJECT_DIR$/Las.py" />
+        <option value="$PROJECT_DIR$/CBlueApp.py" />
         <option value="$PROJECT_DIR$/Tpu.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="223" />
-    <option name="width" value="1704" />
-    <option name="height" value="1038" />
+    <option name="x" value="-8" />
+    <option name="width" value="1935" />
+    <option name="height" value="1039" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -646,7 +602,14 @@
       <option name="project" value="LOCAL" />
       <updated>1548365366284</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="adding documentation">
+      <created>1548441635146</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1548441635146</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
@@ -665,7 +628,7 @@
     <frame x="179" y="0" width="1363" height="830" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" x="151" y="60" width="403" height="732" id="Project" order="0" visible="true" weight="0.13123561" />
+      <window_info active="true" content_ui="combo" x="151" y="60" width="403" height="732" id="Project" order="0" visible="true" weight="0.13123561" />
       <window_info id="Structure" order="1" weight="0.30703422" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Database Changes" order="0" />
@@ -688,7 +651,7 @@
       <window_info anchor="right" id="Ant Build" order="5" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="6" weight="0.25" />
       <window_info anchor="right" id="Data View" order="7" />
-      <window_info active="true" anchor="right" x="305" y="352" width="925" height="120" id="Run" order="8" visible="true" weight="0.29470453" />
+      <window_info anchor="right" x="305" y="352" width="925" height="120" id="Run" order="8" weight="0.29470453" />
       <window_info anchor="right" id="PlantUML" order="9" weight="0.2147651" />
     </layout>
   </component>
@@ -768,7 +731,8 @@
     <MESSAGE value="move cBLUE docs to Github pages" />
     <MESSAGE value="testing github pages" />
     <MESSAGE value="moved RadioFrame and DirectorySelectButton to GuiSupport" />
-    <option name="LAST_COMMIT_MESSAGE" value="moved RadioFrame and DirectorySelectButton to GuiSupport" />
+    <MESSAGE value="adding documentation" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding documentation" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/cBLUE_Python_env.txt" />
@@ -925,13 +889,6 @@
         <state showInfoPanel="true" rowLines="3" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Tpu.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="168" column="30" selection-start-line="168" selection-start-column="30" selection-end-line="168" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Subaqueous.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="748">
@@ -941,8 +898,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/CBlueApp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-88">
-          <caret line="143" selection-start-line="143" selection-end-line="143" />
+        <state relative-caret-position="388">
+          <caret line="66" column="37" selection-start-line="66" selection-start-column="37" selection-end-line="66" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Tpu.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="182">
+          <caret line="147" column="40" selection-start-line="147" selection-start-column="40" selection-end-line="147" selection-end-column="40" />
         </state>
       </provider>
     </entry>
