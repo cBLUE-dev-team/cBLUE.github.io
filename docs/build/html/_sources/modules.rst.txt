@@ -1,15 +1,14 @@
-cBLUE modules
-=============
+NGS_TPU
+=======
 
 .. toctree::
    :maxdepth: 4
 
    CBlueApp
    Datum
-   DirectorySelectButton
+   GuiSupport
    Las
    Merge
-   RadioFrame
    Sbet
    Subaerial
    Subaqueous

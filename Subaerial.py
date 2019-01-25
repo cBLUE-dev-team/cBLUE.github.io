@@ -426,7 +426,7 @@ class Subaerial:
         are the lidar range, angle in the YZ plane, and angle in the XZ plane,
         respectively (see the following image).
 
-        .. image:: ../../rho_alpha_beta.png
+        .. image:: ../images/rho_alpha_beta.png
 
         Alpha and beta are used to model the scan pattern, as a substitute for the
         actual, unknown, proprietary scan pattern model implemented by the

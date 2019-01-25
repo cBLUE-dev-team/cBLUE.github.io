@@ -6,6 +6,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="R User Library" level="project" />
     <orderEntry type="library" name="R Skeletons" level="application" />
-    <orderEntry type="module" module-name="pythonEquationStuff" />
+    <orderEntry type="module" module-name="RSD_QAQC_GITHUB" />
+    <orderEntry type="module" module-name="RSD_QAQC_GITHUB" />
   </component>
 </module>

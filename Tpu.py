@@ -95,40 +95,40 @@ class Tpu:
         # self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
         self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
-    def output_tpu_to_pickle(self, las, data_to_pickle, output_columns):
+    def output_tpu_to_pickle(self, las, data_to_output, output_columns):
         """output the calculated tpu to a Python "pickle" file
 
         This method outputs the calculated tpu to a Python "pickle" file, with the
         following fields:
 
-        =====   =============== ==========================================
-        Index   ndarray         description
-        =====   =============== ==========================================
-        0       gps_time        GPS standard adjusted time
-        1       cblue_x         cBLUE-calculated x coordinate
-        2       cblue_y         cBLUE-calculated y coordinate
-        3       cblue_z         cBLUE-calculated z coordinate
-        4       subaerial_thu   subaerial total horizontal uncertainty
-        5       subaerial_tvu   subaerial total vertical uncertainty
-        6       subaqueous_thu  subaqueous total horizontal uncertainty
-        7       subaqueous_tvu  subaqueous total vertical uncertainty
-        8       total_thu       total horizontal uncertainty
-        9       total_tvu       otal vertical uncertainty
-        =====   =============== ==========================================
+        .. csv-table:: Frozen Delights!
+            :header: index, ndarray, description
+            :widths: 14, 20, 20
+
+            0, gps_time, GPS standard adjusted time
+            1, cblue_x, cBLUE-calculated x coordinate
+            2, cblue_y, cBLUE-calculated y coordinate
+            3, cblue_z, cBLUE-calculated z coordinate
+            4, subaerial_thu, subaerial total horizontal uncertainty
+            5, subaerial_tvu, subaerial total vertical uncertainty
+            6, subaqueous_thu, subaqueous total horizontal uncertainty
+            7, subaqueous_tvu, subaqueous total vertical uncertainty
+            8, total_thu, total horizontal uncertainty
+            9, total_tvu, otal vertical uncertainty
 
         :param las:
-        :param data_to_pickle:
+        :param data_to_output:
         :param output_columns:
         :return: n/a
         """
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
         output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
-        output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
+        output_df = pd.DataFrame(np.vstack(data_to_output), columns=output_columns)
         logging.info('({}) writing TPU...'.format(las.las_short_name))
         output_df.to_pickle(output_path)
         logging.info('finished writing')
 
-    def output_tpu_to_las_extra_bytes(self, las, data_to_pickle, output_columns):
+    def output_tpu_to_las_extra_bytes(self, las, data_to_output, output_columns):
         """output the calculated tpu to a las file
 
         This method creates a las file tht contains the contents of the
@@ -150,26 +150,26 @@ class Tpu:
 
         The following table lists the information contained as extra bytes:
 
-        ==============  ==============================  =======================================
-        id              dtype                           description
-        ==============  ==============================  =======================================
-        cblue_x         unsigned long long (8 bytes)    cBLUE-calculated x coordinate
-        cblue_y         unsigned long long (8 bytes)    cBLUE-calculated y coordinate
-        cblue_z         long (4 bytes)                  cBLUE-calculated z coordinate
-        subaerial_thu   unsigned short (2 bytes)        subaerial total horizontal uncertainty
-        subaerial_tvu   unsigned short (2 bytes)        subaerial total vertical uncertainty
-        subaqueous_thu  unsigned short (2 bytes)        subaqueous total horizontal uncertainty
-        subaqueous_tvu  unsigned short (2 bytes)        subaqueous total vertical uncertainty
-        total_thu       unsigned short (2 bytes)        total horizontal uncertainty
-        total_tvu       unsigned short (2 bytes)        total vertical uncertainty
-        ==============  ==============================  =======================================
+        .. csv-table:: Frozen Delights!
+            :header: id, dtype, description
+            :widths: 14, 20, 20
+
+            cblue_x, unsigned long long (8 bytes), cBLUE-calculated x coordinate
+            cblue_y, unsigned long long (8 bytes), cBLUE-calculated y coordinate
+            cblue_z, long (4 bytes), cBLUE-calculated z coordinate
+            subaerial_thu, unsigned short (2 bytes), subaerial total horizontal uncertainty
+            subaerial_tvu, unsigned short (2 bytes), subaerial total vertical uncertainty
+            subaqueous_thu, unsigned short (2 bytes), subaqueous total horizontal uncertainty
+            subaqueous_tvu, unsigned short (2 bytes), subaqueous total vertical uncertainty
+            total_thu,  unsigned short (2 bytes), total horizontal uncertainty
+            total_tvu,  unsigned short (2 bytes), total vertical uncertainty
 
         :param las:
-        :param data_to_pickle:
+        :param data_to_output:
         :param output_columns:
         :return:
         """
-        output_df = pd.DataFrame(np.vstack(data_to_pickle), columns=output_columns)
+        output_df = pd.DataFrame(np.vstack(data_to_output), columns=output_columns)
         output_df = output_df.sort_values(by=['gps_time'])
         decimals = pd.Series([3] * len(output_df.columns), index=output_columns)
         output_df = output_df.round(decimals) * 1000

@@ -22,10 +22,10 @@ class Las:
         self.num_file_points = self.inFile.__len__()
         self.points_to_process = self.inFile.points['point']
 
-        """get index list that would sort gps_time (to be used to
+        '''get index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
         file
-        """
+        '''
         logging.info('generating time-sorting indices...')
         self.time_sort_indices = np.argsort(self.points_to_process, order='gps_time')
 

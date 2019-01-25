@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Workflow Overview &#8212; cBLUE v2.0.0 documentation</title>
+    <title>Workflow Overview &#8212; cBLUE v1.1.0 documentation</title>
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -14,11 +14,11 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="cBLUE Overview" href="index.html" />
+    <link rel="next" title="Output Files" href="output.html" />
+    <link rel="prev" title="Installation" href="install.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -34,16 +34,45 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="cBLUE Overview"
+          <a href="output.html" title="Output Files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.1.0 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Workflow Overview</a><ul>
+<li><a class="reference internal" href="#open-gui">1. Open Gui</a></li>
+<li><a class="reference internal" href="#specify-directories">2. Specify Directories</a></li>
+<li><a class="reference internal" href="#specify-parameters">3. Specify Parameters</a><ul>
+<li><a class="reference internal" href="#subaqueous-parameters">Subaqueous Parameters</a><ul>
+<li><a class="reference internal" href="#water-surface">Water Surface</a></li>
+<li><a class="reference internal" href="#turbidity">Turbidity</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vdatum-parameters">VDatum Parameters</a><ul>
+<li><a class="reference internal" href="#vdatum-zone">VDatum Zone</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#load-trajectory-file-s">4. Load Trajectory File(s)</a></li>
+<li><a class="reference internal" href="#process-tpu">5. Process TPU</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">cBLUE Overview</a></p>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="output.html"
+                        title="next chapter">Output Files</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -73,7 +102,98 @@
             
   <div class="section" id="workflow-overview">
 <h1>Workflow Overview<a class="headerlink" href="#workflow-overview" title="Permalink to this headline">¶</a></h1>
-<p>The workflow of cBLUE…</p>
+<p>The recommended workflow consists of 5 steps:</p>
+<ol class="arabic simple">
+<li>Open GUI</li>
+<li>Specify directories</li>
+<li>Specify parameters</li>
+<li>Load trajectory file(s)</li>
+<li>Process TPU</li>
+</ol>
+<p>Many of the processes within the TPU tool have status messages that are visible in either the DOS window or the IDE output window, depending on how the GUI was run. Although not always useful in production mode, these status messages may be useful when monitoring long processes or troubleshooting unintended behavior.</p>
+<div class="section" id="open-gui">
+<h2>1. Open Gui<a class="headerlink" href="#open-gui" title="Permalink to this headline">¶</a></h2>
+<p>The GUI can be initiated from the command line with the following command (specify the full path of Gui.py if the current directory is not the location of Gui.py):</p>
+<p>NOTE: If there are multiple Python installations on the computer running the GUI, ensure the desired installation is specified in the path environment variables or explicitly specify the full path of the relevant python executable in the command. For example:</p>
+<blockquote>
+<div>(command line)&gt; C:\Python27\64-bit\python.exe Gui.py</div></blockquote>
+<p>The GUI can also be initiated by running the Gui.py file from a Python IDE, such as IDLE or PyCharm.</p>
+</div>
+<div class="section" id="specify-directories">
+<h2>2. Specify Directories<a class="headerlink" href="#specify-directories" title="Permalink to this headline">¶</a></h2>
+<p>The data directories can be specified in any order. Once a directory is specified, any corresponding process button will become enabled. For example, once the SBET Directory is specified, the Load SBET Files button will become enabled.</p>
+</div>
+<div class="section" id="specify-parameters">
+<h2>3. Specify Parameters<a class="headerlink" href="#specify-parameters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="subaqueous-parameters">
+<h3>Subaqueous Parameters<a class="headerlink" href="#subaqueous-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The user is required to characterize two environmental conditions - the water surface and turdity.</p>
+<div class="section" id="water-surface">
+<h4>Water Surface<a class="headerlink" href="#water-surface" title="Permalink to this headline">¶</a></h4>
+<p>The user has two options to characterize the water-surface. Both options use pre-computed coefficient lookup tables generated using Monte Carlo simulations.</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><em>Riegl VQ-880-G</em></dt>
+<dd>This proof-of-concept option is currently limited in applicability. The lookup table used in this approach is generated from a water surface defined by a sampling of the first returns in a small area of the Marcos Island project. Future development plans include deriving representative surface models for each flight line within each input tile.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>Model (ECKV spectrum)</em></dt>
+<dd>The lookup table used in this option is generated using a version of the Elfouhaily et al. (ECKV) directional gravity-capillary wave spectrum model that characterizes the distribution of wave frequencies using estimates of wind speed.</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="turbidity">
+<h4>Turbidity<a class="headerlink" href="#turbidity" title="Permalink to this headline">¶</a></h4>
+<p>The user is required to select a turbidity category. The table below shows the kd490 values corresponding to each turbidity category.</p>
+<table border="1" class="colwidths-given docutils" id="id1">
+<caption><span class="caption-text">Turdibity (Kd_490) Classes</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">class</th>
+<th class="head">value range</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Clear</td>
+<td>0.06-0.10</td>
+</tr>
+<tr class="row-odd"><td>Clear-Moderate</td>
+<td>0.11-0.17</td>
+</tr>
+<tr class="row-even"><td>Moderate</td>
+<td>0.18-0.25</td>
+</tr>
+<tr class="row-odd"><td>Moderate-High</td>
+<td>0.26-0.32</td>
+</tr>
+<tr class="row-even"><td>High</td>
+<td>0.33-0.36</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="vdatum-parameters">
+<h3>VDatum Parameters<a class="headerlink" href="#vdatum-parameters" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="vdatum-zone">
+<h4>VDatum Zone<a class="headerlink" href="#vdatum-zone" title="Permalink to this headline">¶</a></h4>
+<p>The user may specify a VDatum region to include that region’s maximum cumulative uncertainty (MCU) in the TPU calculation. The MCU values, obtained from <a class="reference external" href="https://vdatum.noaa.gov/docs/est_uncertainties.html">https://vdatum.noaa.gov/docs/est_uncertainties.html</a>, are stored in the file .\lookup_tables\V_Datum_MCU_Values.txt.</p>
+</div>
+</div>
+</div>
+<div class="section" id="load-trajectory-file-s">
+<h2>4. Load Trajectory File(s)<a class="headerlink" href="#load-trajectory-file-s" title="Permalink to this headline">¶</a></h2>
+<p>The Load SBET Files button, which calls load_sbet.py, loads the trajectory data from the ASCII SBET files in the specified SBET directory.</p>
+</div>
+<div class="section" id="process-tpu">
+<h2>5. Process TPU<a class="headerlink" href="#process-tpu" title="Permalink to this headline">¶</a></h2>
+<p>The Process TPU button, which calls calc_aerial_TPU.py, becomes enabled once the original tiles have been pre-processed and the SBET data have been loaded.</p>
+</div>
 </div>
 
 
@@ -92,14 +212,17 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="cBLUE Overview"
+          <a href="output.html" title="Output Files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.1.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

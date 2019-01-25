@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import tkFileDialog
-from Tkinter import Button, IntVar, Radiobutton, Frame, Label, GROOVE, W
+from Tkinter import Button, IntVar, Radiobutton, Frame, Label, W
 
 
 class DirectorySelectButton(object):
@@ -124,4 +124,4 @@ class RadioFrame:
 
 
 if __name__ == '__main__':
-    print(DirectorySelectButton.__doc__)
+    pass

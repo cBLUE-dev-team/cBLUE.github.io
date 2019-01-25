@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+import logging
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+
+import Tkinter as tk
+import ttk
+import os
+import time
+import json
+
 # Import Gui helper classes
 from GuiSupport import DirectorySelectButton, RadioFrame
 
@@ -7,18 +16,10 @@ from Datum import Datum
 from Tpu import Tpu
 
 import matplotlib
+matplotlib.use('Agg')
 from matplotlib import style
 from matplotlib import pyplot as plt
 
-import logging
-import Tkinter as tk
-import ttk
-import os
-import time
-import json
-
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
-matplotlib.use('Agg')
 
 LARGE_FONT = ('Verdanna', 12)
 NORM_FONT = ('Verdanna', 10)

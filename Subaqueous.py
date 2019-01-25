@@ -12,7 +12,7 @@ class Subaqueous:
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
-        self.lut_files = {'ECKV': './lookup_tables/ECKV_look_up_fit_HG0995_1sig.csv',
+        self.lut_files = {'ECKV': './lookup_tables/ECKV_LUT_HG0995_1sig.csv',
                           'Reigl': './lookup_tables/Riegl_look_up_fit_HG0995_1sig.csv'}
         self.curr_lut = None
 
