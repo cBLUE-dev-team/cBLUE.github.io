@@ -1,37 +1,41 @@
 import laspy
+from collections import OrderedDict
+import os
 
-extra_byte_dimension = 'subaerial_tvu'
+xy_data_type = 7  # 10 = laspy unsigned long long (8 bytes)
+z_data_type = 5  # 5 = laspy unsigned long (4 bytes)
+tpu_data_type = 5
+
+extra_byte_dimensions = OrderedDict([
+    ('cblue_x', ('calculated x', xy_data_type)),
+    ('cblue_y', ('calculated y', xy_data_type)),
+    ('cblue_z', ('calculated z', z_data_type)),
+    ('subaerial_thu', ('subaerial thu', tpu_data_type)),
+    ('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
+    ('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
+    ('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
+    ('total_thu', ('total thu', tpu_data_type)),
+    ('total_tvu', ('total tvu', tpu_data_type))
+    ])
+
+las_dir = r'C:\Users\nickf\OneDrive\OSU_PhD\OSU_Parrish_Forfinski_Share\DATA\ouput'
+
+las_files = [os.path.join(las_dir, l) for l in os.listdir(las_dir) if l.endswith('.las')]
 
 # Set up our input and output files.
-inFile = laspy.file.File(r"C:\QAQC_contract\marco_island\2016_429500e_2868500n.las", mode = "r")
-outFile = laspy.file.File(r"C:\QAQC_contract\marco_island\2016_429500e_2868500n_COPY.las", mode = "w",
-			header = inFile.header)
+inFile = laspy.file.File(las_files[0], mode="r")
 
-# Define our new dimension. Note, this must be done before giving
-# the output file point records.
-outFile.define_new_dimension(name=extra_byte_dimension,
-						data_type=5, description="Test Dimension")
-
-# Lets go ahead and copy all the existing data from inFile:
-for dimension in inFile.point_format:
-	print('writing {} to {} ...'.format(dimension.name, outFile))
-	dat = inFile.reader.get_dimension(dimension.name)
-	outFile.writer.set_dimension(dimension.name, dat)
-
-# Now lets put data in our new dimension
-# (though we could have done this first)
-
-# Note that the data type 5 refers to a long integer
-#outFile.my_special_dimension = range(len(inFile))
-
-exec('outFile.{} = range(len(inFile))'.format(extra_byte_dimension))
-
-
-headerformat = outFile.header.header_format
+headerformat = inFile.header.header_format
 for spec in headerformat:
-	print(spec.name)
-
-
+    print(spec.name),
+    print(inFile.header.reader.get_header_property(spec.name))
+    
 point_records = inFile.points
 print(point_records)
-print(outFile.reader.get_dimension(extra_byte_dimension))
+
+# for dim in extra_byte_dimensions:
+#     print(dim),
+#     print(inFile.reader.get_dimension(dim))
+
+print inFile.extra_bytes
+

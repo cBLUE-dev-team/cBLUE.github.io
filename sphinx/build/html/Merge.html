@@ -1,0 +1,232 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Merge module &#8212; cBLUE v1.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Merge.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-Merge">
+<span id="merge-module"></span><h1>Merge module<a class="headerlink" href="#module-Merge" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Merge.Merge">
+<em class="property">class </em><code class="descclassname">Merge.</code><code class="descname">Merge</code><a class="reference internal" href="_modules/Merge.html#Merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Merge.Merge" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="Merge.Merge.dt_threshold">
+<code class="descname">dt_threshold</code><em class="property"> = 1</em><a class="headerlink" href="#Merge.Merge.dt_threshold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="Merge.Merge.merge">
+<em class="property">static </em><code class="descname">merge</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Merge.html#Merge.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Merge.Merge.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns sbet &amp; las data merged based on timestamps</p>
+<p>The cBLUE TPU calculations require the sbet and las data to be in
+a single array, so the sbet and lidar data, which are contained in
+separate files, are ‘merged’, based on time.  cBLUE uses the numpy
+searchsorted function to match lidar datapoints with the nearest-in-time
+(with sorter=’left’) sbet datapoints.</p>
+<p>If the delta_t between any of the matched datapoints is &gt; 1, TPU is
+not calculated.  Future versions might be smart enough to exclude only
+the offending datapoints rather than discarding the whole file, but for
+the time being, if a single datapoint’s delta_t exceeds the allowable
+maximum dt, the entire line is ignored.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>las</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </li>
+<li><strong>fl</strong> (<em>?</em>) – </li>
+<li><strong>sbet_data</strong> (<em>?</em>) – </li>
+<li><strong># TODO</strong> (<em>Tuple</em><em>(</em><em>ndarray</em><em>)</em>) – are the parentheses necessary?</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">List[ndarray]</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The following table lists the contents of the returned list of ndarrays:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="24%" />
+<col width="63%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">ndarray</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>t_sbet</td>
+<td>sbet timestamps</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>t_las</td>
+<td>las timestamps</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>x_las</td>
+<td>las x coordinates</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>y_las</td>
+<td>las y coordinates</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>z_las</td>
+<td>las z coordinates</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>x_sbet</td>
+<td>sbet x coordinates</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>y_sbet</td>
+<td>sbet y coordinates</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>z_sbet</td>
+<td>sbet z coordinates</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>r</td>
+<td>sbet roll</td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>p</td>
+<td>sbet pitch</td>
+</tr>
+<tr class="row-even"><td>10</td>
+<td>h</td>
+<td>sbet heading</td>
+</tr>
+<tr class="row-odd"><td>11</td>
+<td>std_ang1</td>
+<td>ang1 uncertainty</td>
+</tr>
+<tr class="row-even"><td>12</td>
+<td>std_ang2</td>
+<td>ang2 uncertainty</td>
+</tr>
+<tr class="row-odd"><td>13</td>
+<td>std_r</td>
+<td>sbet roll uncertainty</td>
+</tr>
+<tr class="row-even"><td>14</td>
+<td>std_p</td>
+<td>sbet pitch uncertainty</td>
+</tr>
+<tr class="row-odd"><td>15</td>
+<td>std_h</td>
+<td>sbet heading uncertainty</td>
+</tr>
+<tr class="row-even"><td>16</td>
+<td>stdx_sbet</td>
+<td>sbet x uncertainty</td>
+</tr>
+<tr class="row-odd"><td>17</td>
+<td>stdy_sbet</td>
+<td>sbet y uncertainty</td>
+</tr>
+<tr class="row-even"><td>18</td>
+<td>stdz_sbet</td>
+<td>sbet z uncertainty</td>
+</tr>
+<tr class="row-odd"><td>19</td>
+<td>std_rho</td>
+<td>?</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, NOAA Remote Sensing Division.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>

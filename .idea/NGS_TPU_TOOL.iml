@@ -2,9 +2,11 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Python 2.7 (spaceborne-sdb) (1)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7 (NGS_TPU)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="R User Library" level="project" />
     <orderEntry type="library" name="R Skeletons" level="application" />
+    <orderEntry type="module" module-name="RSD_QAQC_GITHUB" />
+    <orderEntry type="module" module-name="RSD_QAQC_GITHUB" />
   </component>
 </module>
