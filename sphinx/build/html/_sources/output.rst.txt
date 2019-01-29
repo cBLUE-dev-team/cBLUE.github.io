@@ -5,11 +5,11 @@ cBLUE creates, in the specifeid Output directory, a new LAS file and metedata fi
 
 LAS File (.las)
 ****************
-The output .las file contains the data desribed in the following table as VLR extra bytes, along with the contents of the original .las file.
+The output .las file contains the data described in the following table as VLR extra bytes, along with the contents of the original .las file.
 
 .. note::
 
-	The scale associated with the VLR extra bytes is the same as the (typeically 0.01).  To convert the VLR extra bytes data into 
+	The scale associated with the VLR extra bytes is 0.001, which is NOT necessarily the same as the scale value specified in the las header (typically 0.01).  THIS IS NOT STANDARD IN THE LAS COMMUNITY.  The ASPRS Las Working Group has an active conversation regarding how to standardized the use of extra bytes for supplementary fields such as uncertainty (https://github.com/ASPRSorg/LAS/issues/37).
 
 .. csv-table:: Output cBLUE Data
 	:header: id, dtype, description
@@ -27,3 +27,5 @@ The output .las file contains the data desribed in the following table as VLR ex
 
 Metadata File (.json)
 *********************
+The .json metadata file contains the following information:
+

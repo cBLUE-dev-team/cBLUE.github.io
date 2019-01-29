@@ -67,4 +67,4 @@ The GUI can also be initiated by running the Gui.py file from a Python IDE, such
 Documentation
 =============
 
-Access cBLUE documentation by opening docs/index.html in a web browser.  
+Access cBLUE documentation by opening docs/index.html (from your local repo) in a web browser.  

@@ -1,6 +1,8 @@
 Installation
 ============
 
+The latest release of cBLUE can be found at https://github.com/forkozi/cBLUE/releases.
+
 cBLUE is designed to run on 64-bit Python 2.7.  Rigorous performance testing was not conducted during tool development, but memory errors were encountered when not using a 64-bit installation of Python to process the Marcos Island test dataset.  Support for Python 3 is deferred to future versions.  
 
 The cBLUE source code is available in a private GitHub repository (https://github.com/forkozi/cBLUE).
