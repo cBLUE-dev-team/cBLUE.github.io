@@ -12,7 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>CondaEnv|CondaEnv|ngs_tpu</InterpreterId>
+    <InterpreterId>CondaEnv|CondaEnv|cblue</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -36,6 +36,9 @@
     <Compile Include="extra_bytes_play.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="test_Las.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RadioFrame.py" />
     <Compile Include="Sbet.py" />
     <Compile Include="Subaerial.py" />
@@ -44,6 +47,7 @@
     <Compile Include="Tpu.py" />
   </ItemGroup>
   <ItemGroup>
+    <InterpreterReference Include="CondaEnv|CondaEnv|cblue" />
     <InterpreterReference Include="CondaEnv|CondaEnv|ngs_tpu" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

@@ -14,7 +14,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -550,8 +551,8 @@
         <span class="sd">&quot;&quot;&quot;calculates the inital cBLUE aubaerial position</span>
 
 <span class="sd">        This method calculates the inital cBLUE subaerial position using the</span>
-<span class="sd">        &#39;lambdified&#39; geolocation equation without the polynomial-surface</span>
-<span class="sd">        error terms.</span>
+<span class="sd">        &#39;lambdified&#39; geolocation equation (without the polynomial-surface</span>
+<span class="sd">        error terms).</span>
 
 <span class="sd">        :param rho_est:</span>
 <span class="sd">        :param a_est:</span>
@@ -782,7 +783,7 @@
 <span class="sd">        :param pJ1:</span>
 <span class="sd">        :param pJ2:</span>
 <span class="sd">        :param pJ3:</span>
-<span class="sd">        :return: (ndarray, ndarray)</span>
+<span class="sd">        :return: (ndarray, ndarray, list[str])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C</span>
@@ -885,7 +886,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

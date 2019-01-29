@@ -32,7 +32,9 @@ class Las:
     def get_flight_line_ids(self):
         """generates a list of unique flight line ids
 
-        :return: np array
+        This method returns a list of unique flight line ids.
+
+        :return: ndarray
         """
         return np.unique(self.points_to_process['pt_src_id'])
 
@@ -75,7 +77,8 @@ class Las:
         Currently, this method returns a visually-determined estimate of the average ellipsoid height
         of the water surface returns in the survey area, which is used during tpu
         calculation to calculate the depth of each data point.
-        # TODO: define better way to determine average ellipsoid height of surface?
+
+        # TODO: define better way to determine average ellipsoid height of surface
 
         :return: float
         """

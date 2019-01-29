@@ -14,6 +14,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -123,8 +125,8 @@ las file positions.</p>
 <code class="descname">calc_aer_pos_pre</code><span class="sig-paren">(</span><em>rho_est</em>, <em>a_est</em>, <em>b_est</em>, <em>w_est</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Subaerial.calc_aer_pos_pre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Subaerial.calc_aer_pos_pre" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculates the inital cBLUE aubaerial position</p>
 <p>This method calculates the inital cBLUE subaerial position using the
-‘lambdified’ geolocation equation without the polynomial-surface
-error terms.</p>
+‘lambdified’ geolocation equation (without the polynomial-surface
+error terms).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -431,7 +433,7 @@ using the following equation:</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(ndarray, ndarray)</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(ndarray, ndarray, list[str])</p>
 </td>
 </tr>
 </tbody>
@@ -509,7 +511,7 @@ w: ?</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

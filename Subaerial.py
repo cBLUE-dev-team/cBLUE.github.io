@@ -489,8 +489,8 @@ class Subaerial:
         """calculates the inital cBLUE aubaerial position
 
         This method calculates the inital cBLUE subaerial position using the
-        'lambdified' geolocation equation without the polynomial-surface
-        error terms.
+        'lambdified' geolocation equation (without the polynomial-surface
+        error terms).
 
         :param rho_est:
         :param a_est:
@@ -659,10 +659,6 @@ class Subaerial:
         :param coeffs:
         :return:
         """
-        """
-        simplify the numerous trigonometric calculations of the Jacobian by
-
-        """
 
         sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch \
             = self.calc_trig_terms(a_est, b_est,
@@ -721,7 +717,7 @@ class Subaerial:
         :param pJ1:
         :param pJ2:
         :param pJ3:
-        :return: (ndarray, ndarray)
+        :return: (ndarray, ndarray, list[str])
         """
 
         C = self.C
