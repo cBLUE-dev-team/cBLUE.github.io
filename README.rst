@@ -8,8 +8,6 @@ Installation
 
 cBLUE is designed to run on 64-bit Python 2.7.  Rigorous performance testing was not conducted during tool development, but memory errors were encountered when not using a 64-bit installation of Python to process the Marcos Island test dataset.  Support for Python 3 is deferred to future versions.  
 
-The cBLUE source code is available in a private GitHub repository (https://github.com/forkozi/cBLUE).
-
 cBLUE is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
 
 
@@ -66,3 +64,10 @@ NOTE: If there are multiple Python installations on the computer running the GUI
 	(command line)> C:\\Python27\\64-bit\\python.exe Gui.py
 
 The GUI can also be initiated by running the Gui.py file from a Python IDE, such as IDLE or PyCharm.
+
+Documentation
+=============
+
+Access cBLUE documentation available in the docs folder of this repo by clicking here_.
+
+.. _here: doc/index.html

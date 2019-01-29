@@ -34,7 +34,7 @@ cBLUE requires three directories to be set:
 Environmental Parameters
 ************************
 
-The subaquesous TPU calculations rely on characterizing two general enviornmental conditions:  water-surface wave conditions and turbidity.
+The subaqueous TPU calculations rely on characterizing two general environmental conditions:  water-surface wave conditions and turbidity.
 
 Water Surface
 -------------
@@ -60,7 +60,7 @@ Turbidity
 ---------
 The user can chose among 5 turbidity classes.
 
-.. csv-table:: Turdibity (Kd_490) Classes
+.. csv-table:: Turbidity (Kd_490) Classes
 	:header: class, value range (:math:`m^{-1}`)
 	:widths: 10, 10
 	
@@ -73,7 +73,7 @@ The user can chose among 5 turbidity classes.
 VDatum Region
 *************
 
-The user has the option to select a VDatum region, to inclue the corresponding maximum cummulative uncertainy (MCU_) in the final TPU calculations.  
+The user has the option to select a VDatum region, to include the corresponding maximum cumulative uncertainty (MCU_) in the final TPU calculations.  
 
 .. _MCU: https://vdatum.noaa.gov/docs/est_uncertainties.html
 
