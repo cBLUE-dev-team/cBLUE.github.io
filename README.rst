@@ -10,7 +10,6 @@ cBLUE is designed to run on 64-bit Python 2.7.  Rigorous performance testing was
 
 cBLUE is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
 
-
 cBLUE Files
 -----------
 
@@ -68,8 +67,4 @@ The GUI can also be initiated by running the Gui.py file from a Python IDE, such
 Documentation
 =============
 
-Access cBLUE documentation available in the docs folder of this repo by clicking |here|.
-
-.. |here| raw:: html
-
-	<a href="docs/index.html" target="_blank">check your location here</a>
+Access cBLUE documentation by opening docs/index.html in a web browser.  
