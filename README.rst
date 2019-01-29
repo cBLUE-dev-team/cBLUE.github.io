@@ -72,4 +72,4 @@ Access cBLUE documentation available in the docs folder of this repo by clicking
 
 .. |here| raw:: html
 
-	docs/index.html
+	<a href="docs/index.html" target="_blank">check your location here</a>
