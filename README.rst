@@ -5,14 +5,14 @@ cBLUE is a tool to calculate the total propagated uncertainty of bathymetric lid
 
 .. sidebar:: cBLUE GUI
 
-	.. image:: ..docs/images/GUI.png
+	.. image:: docs/images/GUI.png
 	
 .. toctree::
 	:maxdepth: 3
    
-	..docs/source/intro
-	..docs/source/install
-	..docs/source/gui
-	..docs/source/workflow
-	..docs/source/output
+	docs/source/intro
+	docs/source/install
+	docs/source/gui
+	docs/source/workflow
+	docs/source/output
 	
