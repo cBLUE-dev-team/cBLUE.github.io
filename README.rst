@@ -68,6 +68,8 @@ The GUI can also be initiated by running the Gui.py file from a Python IDE, such
 Documentation
 =============
 
-Access cBLUE documentation available in the docs folder of this repo by clicking here_.
+Access cBLUE documentation available in the docs folder of this repo by clicking |here|.
 
-.. _here: https://forkozi.github.io/cBLUE/
+.. |here| raw:: html
+
+	docs/index.html
