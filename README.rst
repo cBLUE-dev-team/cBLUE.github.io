@@ -70,4 +70,4 @@ Documentation
 
 Access cBLUE documentation available in the docs folder of this repo by clicking here_.
 
-.. _here: doc/index.html
+.. _here: https://github.com/forkozi/cBLUE/blob/master/docs/index.html
