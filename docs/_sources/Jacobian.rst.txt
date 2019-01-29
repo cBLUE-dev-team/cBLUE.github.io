@@ -1,7 +1,0 @@
-Jacobian module
-===============
-
-.. automodule:: Jacobian
-    :members:
-    :undoc-members:
-    :show-inheritance:

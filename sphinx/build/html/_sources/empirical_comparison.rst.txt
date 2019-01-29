@@ -1,7 +1,0 @@
-empirical\_comparison module
-============================
-
-.. automodule:: empirical_comparison
-    :members:
-    :undoc-members:
-    :show-inheritance:

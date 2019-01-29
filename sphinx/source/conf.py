@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = u'cBLUE'
-copyright = u'2019, NOAA Remote Sensing Division'
+copyright = u'2019, NOAA, National Geodetic Survey, Remote Sensing Division'
 author = u'Nick Forfinski-Sarkozi'
 
 # The short X.Y version
