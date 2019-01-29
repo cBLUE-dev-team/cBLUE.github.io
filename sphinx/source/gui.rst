@@ -8,7 +8,7 @@ The cBLUE GUI consists on a single window, a simple menu bar and main section.
 Menu bar
 ********
 
-The menu bar has two catetories - File and Help.
+The menu bar has the following categories.
 
 .. csv-table:: cBLUE File Menu Options
 	:header: Category, Options, Description
