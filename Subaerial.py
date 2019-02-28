@@ -24,66 +24,6 @@ class SensorModel:
     def __init__(self):
         pass
 
-
-class Jacobian:
-
-    def __init(self):
-        pass
-
-
-class Subaerial:
-
-    def __init__(self, D):
-        """
-        :param List[ndarray] D: the merged data
-
-        The following table lists the contents of D:
-
-        =====   =========   =======================
-        Index   ndarray     description
-        =====   =========   =======================
-        0       t_sbet      sbet timestamps
-        1       t_las       las timestamps
-        2       x_las       las x coordinates
-        3       y_las       las y coordinates
-        4       z_las       las z coordinates
-        5       x_sbet      sbet x coordinates
-        6       y_sbet      sbet y coordinates
-        7       z_sbet      sbet z coordinates
-        8       r           sbet roll
-        9       p           sbet pitch
-        10      h           sbet heading
-        11      std_ang1    ang1 uncertainty
-        12      std_ang2    ang2 uncertainty
-        13      std_r       sbet roll uncertainty
-        14      std_p       sbet pitch uncertainty
-        15      std_h       sbet heading uncertainty
-        16      stdx_sbet   sbet x uncertainty
-        17      stdy_sbet   sbet y uncertainty
-        18      stdz_sbet   sbet z uncertainty
-        19      std_rho     ?
-        =====   =========   =======================
-        """
-        self.is_empty = not D
-        self.x_las = D[2]
-        self.y_las = D[3]
-        self.z_las = D[4]
-        self.x_sbet = D[5]
-        self.y_sbet = D[6]
-        self.z_sbet = D[7]
-        self.r0 = D[8]
-        self.p0 = D[9]
-        self.h0 = D[10]
-        self.x0 = self.x_sbet
-        self.y0 = self.y_sbet
-        self.z0 = self.z_sbet
-        self.C = np.asarray(D[11:])
-        self.num_points = self.x_las.shape
-        self.R, self.fR = self.set_rotation_matrix_airplane()
-        self.M = self.set_rotation_matrix_scanning_sensor()
-        self.F1, self.F2, self.F3, self.fF_orig = self.define_obseration_equation()
-        self.fJ1, self.fJ2, self.fJ3 = self.form_jacobian(self.F1, self.F2, self.F3)
-
     @staticmethod
     def set_rotation_matrix_airplane():
         """define rotation matrix for airplane
@@ -206,6 +146,52 @@ class Subaerial:
         F2 += polysurfcorr
         F3 += polysurfcorr
         return F1, F2, F3, fF_orig
+
+    def estimate_rho_a_b_w(self):
+        """calculates estimates for rho, alpha, and beta
+
+        This method calculates the estimated values for rho, alpha, and beta, which
+        are the lidar range, angle in the YZ plane, and angle in the XZ plane,
+        respectively (see the following image).
+
+        .. image:: ../images/rho_alpha_beta.png
+
+        Alpha and beta are used to model the scan pattern, as a substitute for the
+        actual, unknown, proprietary scan pattern model implemented by the
+        manufacturer.  Polynomial-surface error modeling is used to account for the
+        positional differences resulting from the difference between the cBLUE scan
+        model and the manufacturer scan model.
+
+        :return: (list[], list[], list[], list[])
+        """
+        x_las = self.x_las
+        y_las = self.y_las
+        z_las = self.z_las
+        x_sbet = self.x_sbet
+        y_sbet = self.y_sbet
+        z_sbet = self.z_sbet
+        dx = ne.evaluate("x_las - x_sbet")
+        dy = ne.evaluate("y_las - y_sbet")
+        dz = ne.evaluate("z_las - z_sbet")
+
+        fR0 = self.fR[0](self.h0, self.p0)
+        fR3 = self.fR[3](self.h0, self.p0)
+        fR6 = self.fR[6](self.p0)
+        fR1 = self.fR[1](self.r0, self.p0, self.h0)
+        fR4 = self.fR[4](self.r0, self.p0, self.h0)
+        fR7 = self.fR[7](self.r0, self.p0)
+
+        rho_est = ne.evaluate("sqrt(dx**2 + dy**2 + dz**2)")
+        b_est = ne.evaluate("arcsin(((fR0 * dx) + (fR3 * dy) + (fR6 * dz)) / (-rho_est))")
+        a_est = ne.evaluate("arcsin(((fR1 * dx) + (fR4 * dy) + (fR7 * dz)) / (rho_est * cos(b_est)))")
+        w_est = np.zeros(self.num_points)
+        return rho_est, a_est, b_est, w_est
+
+
+class Jacobian:
+
+    def __init(self):
+        pass
 
     def form_jacobian(self, F1, F2, F3):
         """generate the jacobian of the specified geolocation equation
@@ -419,6 +405,60 @@ class Subaerial:
 
         return fJ1, fJ2, fJ3
 
+
+class Subaerial:
+
+    def __init__(self, D):
+        """
+        :param List[ndarray] D: the merged data
+
+        The following table lists the contents of D:
+
+        =====   =========   =======================
+        Index   ndarray     description
+        =====   =========   =======================
+        0       t_sbet      sbet timestamps
+        1       t_las       las timestamps
+        2       x_las       las x coordinates
+        3       y_las       las y coordinates
+        4       z_las       las z coordinates
+        5       x_sbet      sbet x coordinates
+        6       y_sbet      sbet y coordinates
+        7       z_sbet      sbet z coordinates
+        8       r           sbet roll
+        9       p           sbet pitch
+        10      h           sbet heading
+        11      std_ang1    ang1 uncertainty
+        12      std_ang2    ang2 uncertainty
+        13      std_r       sbet roll uncertainty
+        14      std_p       sbet pitch uncertainty
+        15      std_h       sbet heading uncertainty
+        16      stdx_sbet   sbet x uncertainty
+        17      stdy_sbet   sbet y uncertainty
+        18      stdz_sbet   sbet z uncertainty
+        19      std_rho     ?
+        =====   =========   =======================
+        """
+        self.is_empty = not D
+        self.x_las = D[2]
+        self.y_las = D[3]
+        self.z_las = D[4]
+        self.x_sbet = D[5]
+        self.y_sbet = D[6]
+        self.z_sbet = D[7]
+        self.r0 = D[8]
+        self.p0 = D[9]
+        self.h0 = D[10]
+        self.x0 = self.x_sbet
+        self.y0 = self.y_sbet
+        self.z0 = self.z_sbet
+        self.C = np.asarray(D[11:])
+        self.num_points = self.x_las.shape
+        self.R, self.fR = self.set_rotation_matrix_airplane()
+        self.M = self.set_rotation_matrix_scanning_sensor()
+        self.F1, self.F2, self.F3, self.fF_orig = self.define_obseration_equation()
+        self.fJ1, self.fJ2, self.fJ3 = self.form_jacobian(self.F1, self.F2, self.F3)
+
     @staticmethod
     def calcRMSE(data):
         """calc root mean square error for input data"""
@@ -430,46 +470,6 @@ class Subaerial:
                      'Y: {:.3f}\n'
                      'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
         logging.info('RMSE: {:.3f}\n'.format(RMSE))
-
-    def estimate_rho_a_b_w(self):
-        """calculates estimates for rho, alpha, and beta
-
-        This method calculates the estimated values for rho, alpha, and beta, which
-        are the lidar range, angle in the YZ plane, and angle in the XZ plane,
-        respectively (see the following image).
-
-        .. image:: ../images/rho_alpha_beta.png
-
-        Alpha and beta are used to model the scan pattern, as a substitute for the
-        actual, unknown, proprietary scan pattern model implemented by the
-        manufacturer.  Polynomial-surface error modeling is used to account for the
-        positional differences resulting from the difference between the cBLUE scan
-        model and the manufacturer scan model.
-
-        :return: (list[], list[], list[], list[])
-        """
-        x_las = self.x_las
-        y_las = self.y_las
-        z_las = self.z_las
-        x_sbet = self.x_sbet
-        y_sbet = self.y_sbet
-        z_sbet = self.z_sbet
-        dx = ne.evaluate("x_las - x_sbet")
-        dy = ne.evaluate("y_las - y_sbet")
-        dz = ne.evaluate("z_las - z_sbet")
-
-        fR0 = self.fR[0](self.h0, self.p0)
-        fR3 = self.fR[3](self.h0, self.p0)
-        fR6 = self.fR[6](self.p0)
-        fR1 = self.fR[1](self.r0, self.p0, self.h0)
-        fR4 = self.fR[4](self.r0, self.p0, self.h0)
-        fR7 = self.fR[7](self.r0, self.p0)
-
-        rho_est = ne.evaluate("sqrt(dx**2 + dy**2 + dz**2)")
-        b_est = ne.evaluate("arcsin(((fR0 * dx) + (fR3 * dy) + (fR6 * dz)) / (-rho_est))")
-        a_est = ne.evaluate("arcsin(((fR1 * dx) + (fR4 * dy) + (fR7 * dz)) / (rho_est * cos(b_est)))")
-        w_est = np.zeros(self.num_points)
-        return rho_est, a_est, b_est, w_est
 
     def calc_diff(self, subaer_pos_pre):
         """calculate the difference between the las position and the initial cBLUE position

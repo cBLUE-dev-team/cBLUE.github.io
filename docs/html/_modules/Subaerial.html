@@ -81,60 +81,12 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 
-<div class="viewcode-block" id="Subaerial"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial">[docs]</a><span class="k">class</span> <span class="nc">Subaerial</span><span class="p">:</span>
+<div class="viewcode-block" id="SensorModel"><a class="viewcode-back" href="../Subaerial.html#Subaerial.SensorModel">[docs]</a><span class="k">class</span> <span class="nc">SensorModel</span><span class="p">:</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param List[ndarray] D: the merged data</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
 
-<span class="sd">        The following table lists the contents of D:</span>
-
-<span class="sd">        =====   =========   =======================</span>
-<span class="sd">        Index   ndarray     description</span>
-<span class="sd">        =====   =========   =======================</span>
-<span class="sd">        0       t_sbet      sbet timestamps</span>
-<span class="sd">        1       t_las       las timestamps</span>
-<span class="sd">        2       x_las       las x coordinates</span>
-<span class="sd">        3       y_las       las y coordinates</span>
-<span class="sd">        4       z_las       las z coordinates</span>
-<span class="sd">        5       x_sbet      sbet x coordinates</span>
-<span class="sd">        6       y_sbet      sbet y coordinates</span>
-<span class="sd">        7       z_sbet      sbet z coordinates</span>
-<span class="sd">        8       r           sbet roll</span>
-<span class="sd">        9       p           sbet pitch</span>
-<span class="sd">        10      h           sbet heading</span>
-<span class="sd">        11      std_ang1    ang1 uncertainty</span>
-<span class="sd">        12      std_ang2    ang2 uncertainty</span>
-<span class="sd">        13      std_r       sbet roll uncertainty</span>
-<span class="sd">        14      std_p       sbet pitch uncertainty</span>
-<span class="sd">        15      std_h       sbet heading uncertainty</span>
-<span class="sd">        16      stdx_sbet   sbet x uncertainty</span>
-<span class="sd">        17      stdy_sbet   sbet y uncertainty</span>
-<span class="sd">        18      stdz_sbet   sbet z uncertainty</span>
-<span class="sd">        19      std_rho     ?</span>
-<span class="sd">        =====   =========   =======================</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">D</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x_las</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y_las</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">z_las</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x_sbet</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y_sbet</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">z_sbet</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">r0</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">p0</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">h0</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_sbet</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_sbet</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_sbet</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="mi">11</span><span class="p">:])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_las</span><span class="o">.</span><span class="n">shape</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_rotation_matrix_airplane</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_rotation_matrix_scanning_sensor</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">F1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fF_orig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">define_obseration_equation</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fJ1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fJ2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fJ3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F3</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Subaerial.set_rotation_matrix_airplane"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.set_rotation_matrix_airplane">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="SensorModel.set_rotation_matrix_airplane"><a class="viewcode-back" href="../Subaerial.html#Subaerial.SensorModel.set_rotation_matrix_airplane">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_rotation_matrix_airplane</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;define rotation matrix for airplane</span>
 
@@ -180,7 +132,7 @@
               <span class="n">r20</span><span class="p">,</span> <span class="n">r21</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">R</span><span class="p">,</span> <span class="n">fR</span></div>
 
-<div class="viewcode-block" id="Subaerial.set_rotation_matrix_scanning_sensor"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.set_rotation_matrix_scanning_sensor">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="SensorModel.set_rotation_matrix_scanning_sensor"><a class="viewcode-back" href="../Subaerial.html#Subaerial.SensorModel.set_rotation_matrix_scanning_sensor">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_rotation_matrix_scanning_sensor</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;define the lidar sensor rotation matrix</span>
 
@@ -212,7 +164,7 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;sensor rotation matrix: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">M</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">M</span></div>
 
-<div class="viewcode-block" id="Subaerial.define_obseration_equation"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.define_obseration_equation">[docs]</a>    <span class="k">def</span> <span class="nf">define_obseration_equation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SensorModel.define_obseration_equation"><a class="viewcode-back" href="../Subaerial.html#Subaerial.SensorModel.define_obseration_equation">[docs]</a>    <span class="k">def</span> <span class="nf">define_obseration_equation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;define the lidar geolocation observation equation</span>
 
 <span class="sd">        The lidar geolocation equation used by cBLUE is shown below:</span>
@@ -257,7 +209,53 @@
         <span class="n">F3</span> <span class="o">+=</span> <span class="n">polysurfcorr</span>
         <span class="k">return</span> <span class="n">F1</span><span class="p">,</span> <span class="n">F2</span><span class="p">,</span> <span class="n">F3</span><span class="p">,</span> <span class="n">fF_orig</span></div>
 
-<div class="viewcode-block" id="Subaerial.form_jacobian"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.form_jacobian">[docs]</a>    <span class="k">def</span> <span class="nf">form_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F1</span><span class="p">,</span> <span class="n">F2</span><span class="p">,</span> <span class="n">F3</span><span class="p">):</span>
+<div class="viewcode-block" id="SensorModel.estimate_rho_a_b_w"><a class="viewcode-back" href="../Subaerial.html#Subaerial.SensorModel.estimate_rho_a_b_w">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_rho_a_b_w</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculates estimates for rho, alpha, and beta</span>
+
+<span class="sd">        This method calculates the estimated values for rho, alpha, and beta, which</span>
+<span class="sd">        are the lidar range, angle in the YZ plane, and angle in the XZ plane,</span>
+<span class="sd">        respectively (see the following image).</span>
+
+<span class="sd">        .. image:: ../images/rho_alpha_beta.png</span>
+
+<span class="sd">        Alpha and beta are used to model the scan pattern, as a substitute for the</span>
+<span class="sd">        actual, unknown, proprietary scan pattern model implemented by the</span>
+<span class="sd">        manufacturer.  Polynomial-surface error modeling is used to account for the</span>
+<span class="sd">        positional differences resulting from the difference between the cBLUE scan</span>
+<span class="sd">        model and the manufacturer scan model.</span>
+
+<span class="sd">        :return: (list[], list[], list[], list[])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x_las</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_las</span>
+        <span class="n">y_las</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_las</span>
+        <span class="n">z_las</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_las</span>
+        <span class="n">x_sbet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_sbet</span>
+        <span class="n">y_sbet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_sbet</span>
+        <span class="n">z_sbet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_sbet</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;x_las - x_sbet&quot;</span><span class="p">)</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;y_las - y_sbet&quot;</span><span class="p">)</span>
+        <span class="n">dz</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;z_las - z_sbet&quot;</span><span class="p">)</span>
+
+        <span class="n">fR0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
+        <span class="n">fR3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">3</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
+        <span class="n">fR6</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">6</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
+        <span class="n">fR1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">)</span>
+        <span class="n">fR4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">4</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">)</span>
+        <span class="n">fR7</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">7</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
+
+        <span class="n">rho_est</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;sqrt(dx**2 + dy**2 + dz**2)&quot;</span><span class="p">)</span>
+        <span class="n">b_est</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;arcsin(((fR0 * dx) + (fR3 * dy) + (fR6 * dz)) / (-rho_est))&quot;</span><span class="p">)</span>
+        <span class="n">a_est</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;arcsin(((fR1 * dx) + (fR4 * dy) + (fR7 * dz)) / (rho_est * cos(b_est)))&quot;</span><span class="p">)</span>
+        <span class="n">w_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_points</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rho_est</span><span class="p">,</span> <span class="n">a_est</span><span class="p">,</span> <span class="n">b_est</span><span class="p">,</span> <span class="n">w_est</span></div></div>
+
+
+<div class="viewcode-block" id="Jacobian"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Jacobian">[docs]</a><span class="k">class</span> <span class="nc">Jacobian</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Jacobian.form_jacobian"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Jacobian.form_jacobian">[docs]</a>    <span class="k">def</span> <span class="nf">form_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F1</span><span class="p">,</span> <span class="n">F2</span><span class="p">,</span> <span class="n">F3</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;generate the jacobian of the specified geolocation equation</span>
 
 <span class="sd">        This method generates the Jacobian (i.e., the matrix of partial</span>
@@ -279,7 +277,7 @@
         <span class="n">J3</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="n">F3</span><span class="p">])</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambdify_jacobian</span><span class="p">(</span><span class="n">J1</span><span class="p">,</span> <span class="n">J2</span><span class="p">,</span> <span class="n">J3</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Subaerial.lambdify_jacobian"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.lambdify_jacobian">[docs]</a>    <span class="k">def</span> <span class="nf">lambdify_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J1</span><span class="p">,</span> <span class="n">J2</span><span class="p">,</span> <span class="n">J3</span><span class="p">,</span> <span class="n">eval_type</span><span class="o">=</span><span class="s1">&#39;numexpr&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="Jacobian.lambdify_jacobian"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Jacobian.lambdify_jacobian">[docs]</a>    <span class="k">def</span> <span class="nf">lambdify_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J1</span><span class="p">,</span> <span class="n">J2</span><span class="p">,</span> <span class="n">J3</span><span class="p">,</span> <span class="n">eval_type</span><span class="o">=</span><span class="s1">&#39;numexpr&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;turn the symbolical Jacobian into a function for faster computation</span>
 
 <span class="sd">        This method &quot;lambdifies&quot; (or &quot;functionizes&quot;) the Jacobian components, for</span>
@@ -467,7 +465,61 @@
         <span class="n">fJ2</span> <span class="o">=</span> <span class="p">[</span><span class="n">fJ2sub0</span><span class="p">,</span> <span class="n">fJ2sub1</span><span class="p">,</span> <span class="n">fJ2sub2</span><span class="p">,</span> <span class="n">fJ2sub3</span><span class="p">,</span> <span class="n">fJ2sub4</span><span class="p">,</span> <span class="n">fJ2sub5</span><span class="p">,</span> <span class="n">fJ2sub6</span><span class="p">,</span> <span class="n">fJ2sub7</span><span class="p">,</span> <span class="n">fJ2sub8</span><span class="p">]</span>
         <span class="n">fJ3</span> <span class="o">=</span> <span class="p">[</span><span class="n">fJ3sub0</span><span class="p">,</span> <span class="n">fJ3sub1</span><span class="p">,</span> <span class="n">fJ3sub2</span><span class="p">,</span> <span class="n">fJ3sub3</span><span class="p">,</span> <span class="n">fJ3sub4</span><span class="p">,</span> <span class="n">fJ3sub5</span><span class="p">,</span> <span class="n">fJ3sub6</span><span class="p">,</span> <span class="n">fJ3sub7</span><span class="p">,</span> <span class="n">fJ3sub8</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">fJ1</span><span class="p">,</span> <span class="n">fJ2</span><span class="p">,</span> <span class="n">fJ3</span></div>
+        <span class="k">return</span> <span class="n">fJ1</span><span class="p">,</span> <span class="n">fJ2</span><span class="p">,</span> <span class="n">fJ3</span></div></div>
+
+
+<div class="viewcode-block" id="Subaerial"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial">[docs]</a><span class="k">class</span> <span class="nc">Subaerial</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param List[ndarray] D: the merged data</span>
+
+<span class="sd">        The following table lists the contents of D:</span>
+
+<span class="sd">        =====   =========   =======================</span>
+<span class="sd">        Index   ndarray     description</span>
+<span class="sd">        =====   =========   =======================</span>
+<span class="sd">        0       t_sbet      sbet timestamps</span>
+<span class="sd">        1       t_las       las timestamps</span>
+<span class="sd">        2       x_las       las x coordinates</span>
+<span class="sd">        3       y_las       las y coordinates</span>
+<span class="sd">        4       z_las       las z coordinates</span>
+<span class="sd">        5       x_sbet      sbet x coordinates</span>
+<span class="sd">        6       y_sbet      sbet y coordinates</span>
+<span class="sd">        7       z_sbet      sbet z coordinates</span>
+<span class="sd">        8       r           sbet roll</span>
+<span class="sd">        9       p           sbet pitch</span>
+<span class="sd">        10      h           sbet heading</span>
+<span class="sd">        11      std_ang1    ang1 uncertainty</span>
+<span class="sd">        12      std_ang2    ang2 uncertainty</span>
+<span class="sd">        13      std_r       sbet roll uncertainty</span>
+<span class="sd">        14      std_p       sbet pitch uncertainty</span>
+<span class="sd">        15      std_h       sbet heading uncertainty</span>
+<span class="sd">        16      stdx_sbet   sbet x uncertainty</span>
+<span class="sd">        17      stdy_sbet   sbet y uncertainty</span>
+<span class="sd">        18      stdz_sbet   sbet z uncertainty</span>
+<span class="sd">        19      std_rho     ?</span>
+<span class="sd">        =====   =========   =======================</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_las</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_las</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_las</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_sbet</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_sbet</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_sbet</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r0</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p0</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h0</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_sbet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_sbet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_sbet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="mi">11</span><span class="p">:])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_las</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_rotation_matrix_airplane</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_rotation_matrix_scanning_sensor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fF_orig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">define_obseration_equation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fJ1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fJ2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fJ3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F3</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Subaerial.calcRMSE"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.calcRMSE">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">calcRMSE</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
@@ -480,46 +532,6 @@
                      <span class="s1">&#39;Y: </span><span class="si">{:.3f}</span><span class="se">\n</span><span class="s1">&#39;</span>
                      <span class="s1">&#39;Z: </span><span class="si">{:.3f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">AMDE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">AMDE</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">AMDE</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;RMSE: </span><span class="si">{:.3f}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RMSE</span><span class="p">))</span></div>
-
-<div class="viewcode-block" id="Subaerial.estimate_rho_a_b_w"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.estimate_rho_a_b_w">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_rho_a_b_w</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;calculates estimates for rho, alpha, and beta</span>
-
-<span class="sd">        This method calculates the estimated values for rho, alpha, and beta, which</span>
-<span class="sd">        are the lidar range, angle in the YZ plane, and angle in the XZ plane,</span>
-<span class="sd">        respectively (see the following image).</span>
-
-<span class="sd">        .. image:: ../images/rho_alpha_beta.png</span>
-
-<span class="sd">        Alpha and beta are used to model the scan pattern, as a substitute for the</span>
-<span class="sd">        actual, unknown, proprietary scan pattern model implemented by the</span>
-<span class="sd">        manufacturer.  Polynomial-surface error modeling is used to account for the</span>
-<span class="sd">        positional differences resulting from the difference between the cBLUE scan</span>
-<span class="sd">        model and the manufacturer scan model.</span>
-
-<span class="sd">        :return: (list[], list[], list[], list[])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">x_las</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_las</span>
-        <span class="n">y_las</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_las</span>
-        <span class="n">z_las</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_las</span>
-        <span class="n">x_sbet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_sbet</span>
-        <span class="n">y_sbet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_sbet</span>
-        <span class="n">z_sbet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_sbet</span>
-        <span class="n">dx</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;x_las - x_sbet&quot;</span><span class="p">)</span>
-        <span class="n">dy</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;y_las - y_sbet&quot;</span><span class="p">)</span>
-        <span class="n">dz</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;z_las - z_sbet&quot;</span><span class="p">)</span>
-
-        <span class="n">fR0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
-        <span class="n">fR3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">3</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
-        <span class="n">fR6</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">6</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
-        <span class="n">fR1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">)</span>
-        <span class="n">fR4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">4</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h0</span><span class="p">)</span>
-        <span class="n">fR7</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fR</span><span class="p">[</span><span class="mi">7</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0</span><span class="p">)</span>
-
-        <span class="n">rho_est</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;sqrt(dx**2 + dy**2 + dz**2)&quot;</span><span class="p">)</span>
-        <span class="n">b_est</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;arcsin(((fR0 * dx) + (fR3 * dy) + (fR6 * dz)) / (-rho_est))&quot;</span><span class="p">)</span>
-        <span class="n">a_est</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;arcsin(((fR1 * dx) + (fR4 * dy) + (fR7 * dz)) / (rho_est * cos(b_est)))&quot;</span><span class="p">)</span>
-        <span class="n">w_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_points</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">rho_est</span><span class="p">,</span> <span class="n">a_est</span><span class="p">,</span> <span class="n">b_est</span><span class="p">,</span> <span class="n">w_est</span></div>
 
 <div class="viewcode-block" id="Subaerial.calc_diff"><a class="viewcode-back" href="../Subaerial.html#Subaerial.Subaerial.calc_diff">[docs]</a>    <span class="k">def</span> <span class="nf">calc_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subaer_pos_pre</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;calculate the difference between the las position and the initial cBLUE position</span>
