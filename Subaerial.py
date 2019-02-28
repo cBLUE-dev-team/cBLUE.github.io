@@ -19,6 +19,18 @@ The module sympy ....  The module numexpr....
 """
 
 
+class SensorModel:
+
+    def __init__(self):
+        pass
+
+
+class Jacobian:
+
+    def __init(self):
+        pass
+
+
 class Subaerial:
 
     def __init__(self, D):
