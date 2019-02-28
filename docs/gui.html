@@ -1,0 +1,282 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GUI &#8212; cBLUE v1.2.0 documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Workflow" href="workflow.html" />
+    <link rel="prev" title="Installation" href="install.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow.html" title="Workflow"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">GUI</a><ul>
+<li><a class="reference internal" href="#menu-bar">Menu bar</a></li>
+<li><a class="reference internal" href="#data-directories">Data Directories</a></li>
+<li><a class="reference internal" href="#environmental-parameters">Environmental Parameters</a><ul>
+<li><a class="reference internal" href="#water-surface">Water Surface</a></li>
+<li><a class="reference internal" href="#turbidity">Turbidity</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vdatum-region">VDatum Region</a></li>
+<li><a class="reference internal" href="#process-buttons">Process Buttons</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="workflow.html"
+                        title="next chapter">Workflow</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gui.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="gui">
+<h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h1>
+<p>The cBLUE GUI consists on a single window, a simple menu bar and main section.</p>
+<img alt="_images/GUI.png" src="_images/GUI.png" />
+<div class="section" id="menu-bar">
+<h2>Menu bar<a class="headerlink" href="#menu-bar" title="Permalink to this headline">¶</a></h2>
+<p>The menu bar has the following categories.</p>
+<table border="1" class="colwidths-given docutils" id="id1">
+<caption><span class="caption-text">cBLUE File Menu Options</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="16%" />
+<col width="19%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Category</th>
+<th class="head">Options</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>File</td>
+<td>Save Settings</td>
+<td>Saves specified directories to a Json file</td>
+</tr>
+<tr class="row-odd"><td></td>
+<td>Exit</td>
+<td>Closes cBLUE</td>
+</tr>
+<tr class="row-even"><td>Help</td>
+<td>About</td>
+<td>Displays the cBLUE splash screen (need to add versioning and copyright info)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="data-directories">
+<h2>Data Directories<a class="headerlink" href="#data-directories" title="Permalink to this headline">¶</a></h2>
+<p>cBLUE requires three directories to be set:</p>
+<table border="1" class="colwidths-given docutils" id="id2">
+<caption><span class="caption-text">cBLUE File Menu Options</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="23%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Directory</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Trajectory</td>
+<td>contains the ASCII trajectory</td>
+</tr>
+<tr class="row-odd"><td>LAS</td>
+<td>contains the LAS files</td>
+</tr>
+<tr class="row-even"><td>Output</td>
+<td>where the output files will be created</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="environmental-parameters">
+<h2>Environmental Parameters<a class="headerlink" href="#environmental-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The subaqueous TPU calculations rely on characterizing two general environmental conditions:  water-surface wave conditions and turbidity.</p>
+<div class="section" id="water-surface">
+<h3>Water Surface<a class="headerlink" href="#water-surface" title="Permalink to this headline">¶</a></h3>
+<p>The user has two options to characterize the water-surface. Both options use pre-computed coefficient lookup tables generated using Monte Carlo simulations.</p>
+<ul>
+<li><dl class="first docutils">
+<dt><em>Riegl VQ-880-G</em></dt>
+<dd><p class="first last">This proof-of-concept option is currently limited in applicability. The lookup table used in this approach is generated from a water surface defined by a sampling of the first returns in a small area of the NOAA RSD Marcos Island project. Future development plans include deriving representative surface models for each flight line within each input tile.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>Model (ECKV spectrum)</em></dt>
+<dd><p class="first">The lookup table used in this option is generated using a version of the Elfouhaily et al. (ECKV) directional gravity-capillary wave spectrum model that characterizes the distribution of wave frequencies using estimates of wind speed.</p>
+<table border="1" class="colwidths-given last docutils" id="id3">
+<caption><span class="caption-text">ECKV Spectrum Options</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">options</th>
+<th class="head">wind speed range (kts)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Calm-light air</td>
+<td>0-2</td>
+</tr>
+<tr class="row-odd"><td>Light Breeze</td>
+<td>3-6</td>
+</tr>
+<tr class="row-even"><td>Gentle Breeze</td>
+<td>7-10</td>
+</tr>
+<tr class="row-odd"><td>Moderate Breeze</td>
+<td>11-15</td>
+</tr>
+<tr class="row-even"><td>Fresh Breeze</td>
+<td>16-20</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="turbidity">
+<h3>Turbidity<a class="headerlink" href="#turbidity" title="Permalink to this headline">¶</a></h3>
+<p>The user can chose among 5 turbidity classes.</p>
+<table border="1" class="colwidths-given docutils" id="id4">
+<caption><span class="caption-text">Turbidity (Kd_490) Classes</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">class</th>
+<th class="head">value range (<span class="math notranslate nohighlight">\(m^{-1}\)</span>)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Clear</td>
+<td>0.06-0.10</td>
+</tr>
+<tr class="row-odd"><td>Clear-Moderate</td>
+<td>0.11-0.17</td>
+</tr>
+<tr class="row-even"><td>Moderate</td>
+<td>0.18-0.25</td>
+</tr>
+<tr class="row-odd"><td>Moderate-High</td>
+<td>0.26-0.32</td>
+</tr>
+<tr class="row-even"><td>High</td>
+<td>0.33-0.36</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="vdatum-region">
+<h2>VDatum Region<a class="headerlink" href="#vdatum-region" title="Permalink to this headline">¶</a></h2>
+<p>The user has the option to select a VDatum region, to include the corresponding maximum cumulative uncertainty (<a class="reference external" href="https://vdatum.noaa.gov/docs/est_uncertainties.html">MCU</a>) in the final TPU calculations.</p>
+</div>
+<div class="section" id="process-buttons">
+<h2>Process Buttons<a class="headerlink" href="#process-buttons" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow.html" title="Workflow"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, NOAA, National Geodetic Survey, Remote Sensing Division.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

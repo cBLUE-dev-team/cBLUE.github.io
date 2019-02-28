@@ -104,3 +104,4 @@ print new_file.extra_bytes
 
 #for vlr in new_file.header.vlrs:
 #    print vlr.scale
+

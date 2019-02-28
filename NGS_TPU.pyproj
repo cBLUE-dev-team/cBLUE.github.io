@@ -36,6 +36,9 @@
     <Compile Include="extra_bytes_play.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="test_Las.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RadioFrame.py" />
     <Compile Include="Sbet.py" />
     <Compile Include="Subaerial.py" />

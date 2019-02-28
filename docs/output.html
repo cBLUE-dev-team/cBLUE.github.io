@@ -1,0 +1,178 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Output Files &#8212; cBLUE v1.2.0 documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Workflow" href="workflow.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow.html" title="Workflow"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Output Files</a><ul>
+<li><a class="reference internal" href="#las-file-las">LAS File (.las)</a></li>
+<li><a class="reference internal" href="#metadata-file-json">Metadata File (.json)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="workflow.html"
+                        title="previous chapter">Workflow</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/output.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="output-files">
+<h1>Output Files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h1>
+<p>cBLUE creates, in the specifeid Output directory, a new LAS file and metedata file for every LAS file contained in the specified LAS directory:</p>
+<div class="section" id="las-file-las">
+<h2>LAS File (.las)<a class="headerlink" href="#las-file-las" title="Permalink to this headline">¶</a></h2>
+<p>The output .las file contains the data described in the following table as VLR extra bytes, along with the contents of the original .las file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The scale associated with the VLR extra bytes is 0.001, which is NOT necessarily the same as the scale value specified in the las header (typically 0.01).  THIS IS NOT STANDARD IN THE LAS COMMUNITY.  The ASPRS Las Working Group has an active conversation regarding how to standardized the use of extra bytes for supplementary fields such as uncertainty (<a class="reference external" href="https://github.com/ASPRSorg/LAS/issues/37">https://github.com/ASPRSorg/LAS/issues/37</a>).</p>
+</div>
+<table border="1" class="colwidths-given docutils" id="id1">
+<caption><span class="caption-text">Output cBLUE Data</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="26%" />
+<col width="37%" />
+<col width="37%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">id</th>
+<th class="head">dtype</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>cblue_x</td>
+<td>unsigned long long (8 bytes)</td>
+<td>cBLUE-calculated x coordinate</td>
+</tr>
+<tr class="row-odd"><td>cblue_y</td>
+<td>unsigned long long (8 bytes)</td>
+<td>cBLUE-calculated y coordinate</td>
+</tr>
+<tr class="row-even"><td>cblue_z</td>
+<td>long (4 bytes)</td>
+<td>cBLUE-calculated z coordinate</td>
+</tr>
+<tr class="row-odd"><td>subaerial_thu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaerial total horizontal uncertainty</td>
+</tr>
+<tr class="row-even"><td>subaerial_tvu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaerial total vertical uncertainty</td>
+</tr>
+<tr class="row-odd"><td>subaqueous_thu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaqueous total horizontal uncertainty</td>
+</tr>
+<tr class="row-even"><td>subaqueous_tvu</td>
+<td>unsigned short (2 bytes)</td>
+<td>subaqueous total vertical uncertainty</td>
+</tr>
+<tr class="row-odd"><td>total_thu</td>
+<td>unsigned short (2 bytes)</td>
+<td>total horizontal uncertainty</td>
+</tr>
+<tr class="row-even"><td>total_tvu</td>
+<td>unsigned short (2 bytes)</td>
+<td>total vertical uncertainty</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="metadata-file-json">
+<h2>Metadata File (.json)<a class="headerlink" href="#metadata-file-json" title="Permalink to this headline">¶</a></h2>
+<p>The .json metadata file contains the following information:</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow.html" title="Workflow"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, NOAA, National Geodetic Survey, Remote Sensing Division.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

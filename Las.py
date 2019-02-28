@@ -1,8 +1,15 @@
 import logging
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 import numpy as np
 import numexpr as ne
 import laspy
+
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+
+
+"""
+This class provides the functionality to load las files into cBLUE.  One Las object 
+is created for each loaded las file.  
+"""
 
 
 class Las:
@@ -13,20 +20,34 @@ class Las:
         self.las_base_name = self.las_short_name.replace('.las', '')
         self.inFile = laspy.file.File(self.las, mode="r")
         self.num_file_points = self.inFile.__len__()
-        print('{} has {} points.'.format(self.las_short_name, self.num_file_points))
         self.points_to_process = self.inFile.points['point']
 
-        """get index list that would sort gps_time (to be used to
+        '''get index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
         file
-        """
+        '''
         logging.info('generating time-sorting indices...')
         self.time_sort_indices = np.argsort(self.points_to_process, order='gps_time')
 
     def get_flight_line_ids(self):
+        """generates a list of unique flight line ids
+
+        This method returns a list of unique flight line ids.
+
+        :return: ndarray
+        """
         return np.unique(self.points_to_process['pt_src_id'])
 
     def get_flight_line_txyz(self, fl):
+        """retrieves the x, y, z, and timestamp data from the las data points
+
+        The x, y, and z values in the las file are stored as integers.  The
+        scale and offset values in the las file header are used to convert
+        the integer values to decimal values with centimeter precision.
+
+        :param ? fl:
+        :return: np.array, np.array, np.array, np.array
+        """
         scale_x = np.asarray(self.inFile.header.scale[0])
         scale_y = np.asarray(self.inFile.header.scale[1])
         scale_z = np.asarray(self.inFile.header.scale[2])
@@ -49,8 +70,19 @@ class Las:
 
         return t, x, y, z
 
-    def get_average_depth(self):  # TODO: define better way to determine depth?
-        return 23
+    @staticmethod
+    def get_average_water_surface_ellip_height():
+        """returns the average ellipsoid height of the water surface returns
+
+        Currently, this method returns a visually-determined estimate of the average ellipsoid height
+        of the water surface returns in the survey area, which is used during tpu
+        calculation to calculate the depth of each data point.
+
+        # TODO: define better way to determine average ellipsoid height of surface
+
+        :return: float
+        """
+        return 23.0
 
 
 if __name__ == '__main__':

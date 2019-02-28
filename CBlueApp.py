@@ -9,21 +9,14 @@ import time
 import json
 
 # Import Gui helper classes
-from DirectorySelectButton import DirectorySelectButton
-from RadioFrame import RadioFrame
+from GuiSupport import DirectorySelectButton, RadioFrame
 
 from Sbet import Sbet
-from Subaerial import Subaerial
-from Subaqueous import Subaqueous
 from Datum import Datum
 from Tpu import Tpu
 
 import matplotlib
 matplotlib.use('Agg')
-# matplotlib.use('TkAgg')
-
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-import matplotlib.animation as animation
 from matplotlib import style
 from matplotlib import pyplot as plt
 
@@ -51,6 +44,7 @@ class CBlueApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
+        self.config_file = 'cblue_configuration.json'
         self.load_config()
 
         # show splash screen
@@ -67,20 +61,26 @@ class CBlueApp(tk.Tk):
 
         menubar = tk.Menu(container)
         filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label='Save settings', command=lambda: self.save_config())
+        filemenu.add_command(label='Save settings',
+                             command=lambda: self.save_config())
         filemenu.add_separator()
-        filemenu.add_command(label='exit', command=quit)
+        filemenu.add_command(label='Exit', command=quit)
         menubar.add_cascade(label='File', menu=filemenu)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Lidar System', command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Properties', command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Lidar System',
+                                   command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Properties',
+                                   command=lambda: self.popupmsg('not supported yet...'))
         # menubar.add_cascade(label='Edit', menu=exchangeChoice)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Map Window', command=lambda: self.build_map_panel)
-        exchangeChoice.add_command(label='Graph Window', command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Table Window', command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Map Window',
+                                   command=lambda: self.build_map_panel)
+        exchangeChoice.add_command(label='Graph Window',
+                                   command=lambda: self.popupmsg('not supported yet...'))
+        exchangeChoice.add_command(label='Table Window',
+                                   command=lambda: self.popupmsg('not supported yet...'))
         # menubar.add_cascade(label='Display', menu=exchangeChoice)
 
         exchangeChoice = tk.Menu(menubar, tearoff=0)
@@ -88,8 +88,6 @@ class CBlueApp(tk.Tk):
         menubar.add_cascade(label='Help', menu=exchangeChoice)
 
         tk.Tk.config(self, menu=menubar)
-
-        print(self.controller_configuration)
 
         self.frames = {}
         for F in (ControllerPanel,):  # makes it easy to add "pages" in future
@@ -105,12 +103,11 @@ class CBlueApp(tk.Tk):
         self.deiconify()
 
     def load_config(self):
-        self.config_file = 'cblue_configuration.json'
         if os.path.isfile(self.config_file):
             with open(self.config_file) as cf:
                 self.controller_configuration = json.load(cf)
         else:
-            self.controller_configuration = {'directories': {'sbet': '', 'las': '', 'tpu': ''}}
+            logging.info("configuration file doesn't exist")
 
     def save_config(self):
         config = 'cblue_configuration.json'
@@ -126,8 +123,8 @@ class CBlueApp(tk.Tk):
         splash_img = tk.PhotoImage(file='cBLUE_splash.gif')
         label = tk.Label(about, image=splash_img)
         label.pack()
-        B1 = ttk.Button(about, text='Ok', command=about.destroy)
-        B1.pack()
+        b1 = ttk.Button(about, text='Ok', command=about.destroy)
+        b1.pack()
         about.mainloop()
 
     @staticmethod
@@ -136,8 +133,8 @@ class CBlueApp(tk.Tk):
         popup.wm_title('!')
         label = ttk.Label(popup, text=msg, font=NORM_FONT)
         label.pack(side='top', fill='x', pady=10)
-        B1 = ttk.Button(popup, text='Ok', command=popup.destroy)
-        B1.pack()
+        b1 = ttk.Button(popup, text='Ok', command=popup.destroy)
+        b1.pack()
         popup.mainloop()
 
     def show_frame(self, cont):
@@ -165,16 +162,21 @@ class ControllerPanel(ttk.Frame):
         self.title = tk.Label(self, text="RIEGL VQ-880-G\n"
                                          "TOTAL PROPAGATED UNCERTAINTY (TPU) PROGRAM\n"
                                          "v2.0", background="green")
+
+        # TODO:  get from separate text file
         self.kd_vals = {0: ('Clear', range(6, 11)),
                         1: ('Clear-Moderate', range(11, 18)),
                         2: ('Moderate', range(18, 26)),
                         3: ('Moderate-High', range(26, 33)),
                         4: ('High', range(33, 37))}
+
+        # TODO:  get from separate text file
         self.wind_vals = {0: ('Calm-light air (0-2 kts)', [1]),
                           1: ('Light Breeze (3-6 kts)', [2, 3]),
                           2: ('Gentle Breeze (7-10 kts)', [4, 5]),
                           3: ('Moderate Breeze (11-15 kts)', [6, 7]),
                           4: ('Fresh Breeze (16-20 kts)', [8, 9, 10])}
+
         self.is_sbet_dir_set = False
         self.is_las_dir_set = False
         self.is_tpu_dir_set = False
@@ -202,22 +204,6 @@ class ControllerPanel(ttk.Frame):
         self.build_vdatum_input()
         self.build_process_buttons()
         self.update_button_enable()
-
-    def build_map_panel(self):
-        """not used yet; for future option of displaying loaded trajectory"""
-
-        self.map_panel = tk.Frame(self)
-        self.map_panel.grid(row=0, column=1, sticky=tk.NSEW)
-        self.map_panel.grid_rowconfigure(0, weight=1)
-        self.map_panel.grid_columnconfigure(0, weight=1)
-
-        canvas = FigureCanvasTkAgg(f, self.map_panel)
-        canvas.show()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        toolbar = NavigationToolbar2TkAgg(canvas, self.map_panel)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def build_directories_input(self):
         """Builds the directory selection input and processing Buttons for the subaerial portion."""
@@ -261,13 +247,10 @@ class ControllerPanel(ttk.Frame):
 
         subaqueous_method_tabs = ttk.Notebook(subaqueous_frame)
         subaqueous_method_tabs.grid(row=1, column=0)
-
         tab1 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab1, text='Water Surface')
-
         tab2 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab2, text='Turbidity')
-
         water_surface_subframe = tk.Frame(tab1)
         water_surface_subframe.grid(row=1, column=0)
 
@@ -331,8 +314,9 @@ class ControllerPanel(ttk.Frame):
         label.grid(row=0, columnspan=2, pady=(10, 0), sticky=tk.EW)
 
         self.sbet_btn_text = tk.StringVar(self)
-        self.sbet_btn_text.set("Load Trajectory Files")
-        self.sbetProcess = tk.Button(process_frame, textvariable=self.sbet_btn_text,
+        self.sbet_btn_text.set("Load Trajectory File(s)")
+        self.sbetProcess = tk.Button(process_frame,
+                                     textvariable=self.sbet_btn_text,
                                      width=self.control_panel_width,
                                      state=tk.DISABLED,
                                      command=self.sbet_process_callback)
@@ -393,16 +377,17 @@ class ControllerPanel(ttk.Frame):
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidity_options[kd_ind]
 
-        # set rotation matrices and Jacobian (need to do only once)
-        R, fR, M = Subaerial.set_rotation_matrices()
-        fJ1, fJ2, fJ3, fF = Subaerial.set_jacobian(R, M)
+        tpu = Tpu(surface_selection, surface_ind,
+                  wind_selection, self.wind_vals[wind_ind][1], kd_selection,
+                  self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
+                  self.tpuOutput.directoryName)
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
 
         def sbet_las_tiles_generator():
-            """generator is 2nd argument for the
+            """This generator is the 2nd argument for the
             run_tpu_multiprocessing method, to avoid
             passing entire sbet or list of tiled
             sbets to multiprocessing pool
@@ -419,19 +404,12 @@ class ControllerPanel(ttk.Frame):
                 south = ul_y - 2 * tile_size
 
                 logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
-                yield self.sbet.get_tile(north, south, east, west), las
+                yield self.sbet.get_tile_data(north, south, east, west), las
 
-        subaqueous_metadata = Subaqueous.get_subaqueous_meta_data('ECKV_look_up_fit_HG0995_1sig.csv')
-        tpu = Tpu(subaqueous_metadata, surface_selection, surface_ind,
-                  wind_selection, self.wind_vals[wind_ind][1], kd_selection,
-                  self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
-                  self.tpuOutput.directoryName, fR, fJ1, fJ2, fJ3, fF)
-        logging.info(1)
-        print(las_files)
         # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
-        tpu.run_tpu_singleprocessing(sbet_las_tiles_generator())
-        logging.info(2)
-        #self.tpu_btn_text.set(u'{} \u2713'.format(self.tpu_btn_text.get()))
+        tpu.run_tpu_singleprocess(sbet_las_tiles_generator())
+        self.tpu_btn_text.set('TPU Calculated')
+        self.tpuProcess.config(fg='darkgreen')
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""
