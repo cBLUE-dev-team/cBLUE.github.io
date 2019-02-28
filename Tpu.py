@@ -10,7 +10,7 @@ import pandas as pd
 from collections import OrderedDict
 from Las import Las
 from Merge import Merge
-from Subaerial import Subaerial
+from Subaerial import Subaerial, SensorModel, Jacobian
 from Subaqueous import Subaqueous
 
 
@@ -49,12 +49,18 @@ class Tpu:
         logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
         logging.info(las.get_flight_line_ids())
 
+        # FORM OBSERVATION EQUATIONS
+        obs_eq = SensorModel('Riegl-VQ-880-G')
+
+        # FORM JACOBIAN
+        J = Jacobian(obs_eq)
+
         for fl in las.get_flight_line_ids():
             logging.info('flight line {} {}'.format(fl, '-' * 30))
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
             logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            subaer, subaer_cols = Subaerial(D).calc_subaerial_tpu()
+            subaer, subaer_cols = Subaerial(D, J).calc_subaerial_tpu()
             depth = subaer[:, 2] + las.get_average_water_surface_ellip_height()
             subaer_thu = subaer[:, 3]
             subaer_tvu = subaer[:, 4]
