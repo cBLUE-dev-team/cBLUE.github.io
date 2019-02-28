@@ -92,8 +92,8 @@ class Tpu:
             self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
-        # self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
-        self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
+        self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
+        #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
     def output_tpu_to_pickle(self, las, data_to_output, output_columns):
         """output the calculated tpu to a Python "pickle" file
@@ -171,9 +171,9 @@ class Tpu:
         """
         output_df = pd.DataFrame(np.vstack(data_to_output), columns=output_columns)
         output_df = output_df.sort_values(by=['gps_time'])
-        decimals = pd.Series([3] * len(output_df.columns), index=output_columns)
-        output_df = output_df.round(decimals) * 1000
-        output_df = output_df.astype('int64')
+        decimals = pd.Series([2] * len(output_df.columns), index=output_columns)
+        output_df = output_df.round(decimals) * 100
+        output_df = output_df.astype('uint8')  # uint8 = numpy Unsigned integer (0 to 255)
 
         out_las_name = os.path.join(self.tpuOutput, las.las_base_name) + '_TPU.las'
         logging.info('logging las and tpu results to {}'.format(out_las_name))
@@ -182,18 +182,18 @@ class Tpu:
 
         xy_data_type = 7  # 7 = laspy unsigned long long (8 bytes)
         z_data_type = 6  # 6 = laspy long (4 bytes)
-        tpu_data_type = 3  # 3 = laspy unsigned short (2 bytes)
+        tpu_data_type = 2  # 2 = laspy char (1 byte)
 
         extra_byte_dimensions = OrderedDict([
-            ('cblue_x', ('calculated x', xy_data_type)),
-            ('cblue_y', ('calculated y', xy_data_type)),
-            ('cblue_z', ('calculated z', z_data_type)),
-            ('subaerial_thu', ('subaerial thu', tpu_data_type)),
-            ('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
-            ('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
-            ('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
-            ('total_thu', ('total thu', tpu_data_type)),
-            ('total_tvu', ('total tvu', tpu_data_type)),
+            #('cblue_x', ('calculated x', xy_data_type)),
+            #('cblue_y', ('calculated y', xy_data_type)),
+            #('cblue_z', ('calculated z', z_data_type)),
+            #('subaerial_thu', ('subaerial thu', tpu_data_type)),
+            #('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
+            #('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
+            #('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
+            ('total_thu', ('Horiz. coordinate uncertainty', tpu_data_type)),
+            ('total_tvu', ('Vert. coordinate uncertainty', tpu_data_type)),
             ])
 
         # define new extrabyte dimensions
@@ -204,26 +204,26 @@ class Tpu:
                 data_type=description[1], 
                 description=description[0])
 
-        logging.info('populating extra byte data for cblue_x...')
-        out_las.cblue_x = output_df['cblue_x']
+        #logging.info('populating extra byte data for cblue_x...')
+        #out_las.cblue_x = output_df['cblue_x']
 
-        logging.info('populating extra byte data for cblue_y...')
-        out_las.cblue_y = output_df['cblue_y']
+        #logging.info('populating extra byte data for cblue_y...')
+        #out_las.cblue_y = output_df['cblue_y']
         
-        logging.info('populating extra byte data for cblue_z...')
-        out_las.cblue_z = output_df['cblue_z']
+        #logging.info('populating extra byte data for cblue_z...')
+        #out_las.cblue_z = output_df['cblue_z']
         
-        logging.info('populating extra byte data for subaerial_thu...')
-        out_las.subaerial_thu = output_df['subaerial_thu']
+        #logging.info('populating extra byte data for subaerial_thu...')
+        #out_las.subaerial_thu = output_df['subaerial_thu']
         
-        logging.info('populating extra byte data for subaerial_tvu...')
-        out_las.subaerial_tvu = output_df['subaerial_tvu']
+        #logging.info('populating extra byte data for subaerial_tvu...')
+        #out_las.subaerial_tvu = output_df['subaerial_tvu']
         
-        logging.info('populating extra byte data for subaqueous_thu...')
-        out_las.subaqueous_thu = output_df['subaqueous_thu']
+        #logging.info('populating extra byte data for subaqueous_thu...')
+        #out_las.subaqueous_thu = output_df['subaqueous_thu']
         
-        logging.info('populating extra byte data for subaqueous_tvu...')
-        out_las.subaqueous_tvu = output_df['subaqueous_tvu']
+        #logging.info('populating extra byte data for subaqueous_tvu...')
+        #out_las.subaqueous_tvu = output_df['subaqueous_tvu']
         
         logging.info('populating extra byte data for total_thu...')
         out_las.total_thu = output_df['total_thu']
