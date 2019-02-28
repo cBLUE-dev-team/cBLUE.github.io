@@ -1,11 +1,1 @@
-{
-  "directories": {
-    "tpu": "",
-    "sbet": "",
-    "las": ""
-  },
-  "subaqueous_LUTs": {
-    "RIEGL": "Riegl_look_up_fit_HG0995_1sig.csv",
-    "ECKV": "ECKV_look_up_fit_HG0995_1sig.csv"
-  }
-}
+{"directories": {"tpu": "C:/QAQC_contract/marco_island/New folder", "sbet": "C:/QAQC_contract/marco_island", "las": "C:/QAQC_contract/marco_island"}, "subaqueous_LUTs": {"RIEGL": "Riegl_look_up_fit_HG0995_1sig.csv", "ECKV": "ECKV_look_up_fit_HG0995_1sig.csv"}}
