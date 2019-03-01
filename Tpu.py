@@ -50,17 +50,17 @@ class Tpu:
         logging.info(las.get_flight_line_ids())
 
         # FORM OBSERVATION EQUATIONS
-        obs_eq = SensorModel('Riegl-VQ-880-G')
+        S = SensorModel('Riegl-VQ-880-G')
 
-        # FORM JACOBIAN
-        J = Jacobian(obs_eq)
+        # GENERATE AND EVALUATE JACOBIAN
+        J = Jacobian(S)
 
         for fl in las.get_flight_line_ids():
             logging.info('flight line {} {}'.format(fl, '-' * 30))
             D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
             logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            subaer, subaer_cols = Subaerial(D, J).calc_subaerial_tpu()
+            subaer, subaer_cols = Subaerial(J, D).calc_subaerial_tpu()
             depth = subaer[:, 2] + las.get_average_water_surface_ellip_height()
             subaer_thu = subaer[:, 3]
             subaer_tvu = subaer[:, 4]
@@ -191,13 +191,13 @@ class Tpu:
         tpu_data_type = 3  # 3 = laspy unsigned short (2 bytes)
 
         extra_byte_dimensions = OrderedDict([
-            ('cblue_x', ('calculated x', xy_data_type)),
-            ('cblue_y', ('calculated y', xy_data_type)),
-            ('cblue_z', ('calculated z', z_data_type)),
-            ('subaerial_thu', ('subaerial thu', tpu_data_type)),
-            ('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
-            ('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
-            ('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
+            #('cblue_x', ('calculated x', xy_data_type)),
+            #('cblue_y', ('calculated y', xy_data_type)),
+            #('cblue_z', ('calculated z', z_data_type)),
+            #('subaerial_thu', ('subaerial thu', tpu_data_type)),
+            #('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
+            #('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
+            #('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
             ('total_thu', ('total thu', tpu_data_type)),
             ('total_tvu', ('total tvu', tpu_data_type)),
             ])
@@ -210,26 +210,26 @@ class Tpu:
                 data_type=description[1], 
                 description=description[0])
 
-        logging.info('populating extra byte data for cblue_x...')
-        out_las.cblue_x = output_df['cblue_x']
+        #logging.info('populating extra byte data for cblue_x...')
+        #out_las.cblue_x = output_df['cblue_x']
 
-        logging.info('populating extra byte data for cblue_y...')
-        out_las.cblue_y = output_df['cblue_y']
+        #logging.info('populating extra byte data for cblue_y...')
+        #out_las.cblue_y = output_df['cblue_y']
         
-        logging.info('populating extra byte data for cblue_z...')
-        out_las.cblue_z = output_df['cblue_z']
+        #logging.info('populating extra byte data for cblue_z...')
+        #out_las.cblue_z = output_df['cblue_z']
         
-        logging.info('populating extra byte data for subaerial_thu...')
-        out_las.subaerial_thu = output_df['subaerial_thu']
+        #logging.info('populating extra byte data for subaerial_thu...')
+        #out_las.subaerial_thu = output_df['subaerial_thu']
         
-        logging.info('populating extra byte data for subaerial_tvu...')
-        out_las.subaerial_tvu = output_df['subaerial_tvu']
+        #logging.info('populating extra byte data for subaerial_tvu...')
+        #out_las.subaerial_tvu = output_df['subaerial_tvu']
         
-        logging.info('populating extra byte data for subaqueous_thu...')
-        out_las.subaqueous_thu = output_df['subaqueous_thu']
+        #logging.info('populating extra byte data for subaqueous_thu...')
+        #out_las.subaqueous_thu = output_df['subaqueous_thu']
         
-        logging.info('populating extra byte data for subaqueous_tvu...')
-        out_las.subaqueous_tvu = output_df['subaqueous_tvu']
+        #logging.info('populating extra byte data for subaqueous_tvu...')
+        #out_las.subaqueous_tvu = output_df['subaqueous_tvu']
         
         logging.info('populating extra byte data for total_thu...')
         out_las.total_thu = output_df['total_thu']

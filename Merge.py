@@ -48,8 +48,8 @@ class Merge:
         8       r           sbet roll
         9       p           sbet pitch
         10      h           sbet heading
-        11      std_ang1    ang1 uncertainty
-        12      std_ang2    ang2 uncertainty
+        11      std_a       a uncertainty
+        12      std_b       b uncertainty
         13      std_r       sbet roll uncertainty
         14      std_p       sbet pitch uncertainty
         15      std_h       sbet heading uncertainty
@@ -90,8 +90,8 @@ class Merge:
                 np.radians(sbet_data[:, 6][idx][mask]),  # r
                 np.radians(sbet_data[:, 7][idx][mask]),  # p
                 np.radians(sbet_data[:, 8][idx][mask]),  # h
-                np.full(num_chunk_points, radians(a_std_dev)),  # std_ang1
-                np.full(num_chunk_points, radians(b_std_dev)),  # std_ang2
+                np.full(num_chunk_points, radians(a_std_dev)),  # std_a
+                np.full(num_chunk_points, radians(b_std_dev)),  # std_b
                 np.radians(sbet_data[:, 12][idx][mask]),  # std_r
                 np.radians(sbet_data[:, 13][idx][mask]),  # std_p
                 np.radians(sbet_data[:, 14][idx][mask]),  # std_h

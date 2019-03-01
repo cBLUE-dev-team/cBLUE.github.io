@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1337ee1b-81ab-489e-87a0-76022010827f}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>CBlueApp.py</StartupFile>
+    <StartupFile>Subaerial.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>

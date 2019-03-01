@@ -127,7 +127,7 @@ class SensorModel:
         F2 = y - rho * (self.R[3] * self.M[2] + self.R[4] * self.M[5] + self.R[5] * self.M[8])
         F3 = z - rho * (self.R[6] * self.M[2] + self.R[7] * self.M[5] + self.R[8] * self.M[8])
 
-        # converting symbolic to function (faster)
+        # converting symbolic to function (for faster computations)
         fF1 = lambdify((a, b, h, p, r, rho, w, x), F1, 'numexpr')
         fF2 = lambdify((a, b, h, p, r, rho, w, y), F2, 'numexpr')
         fF3 = lambdify((a, b, p, r, rho, w, z), F3, 'numexpr')
@@ -150,6 +150,280 @@ class SensorModel:
         F3 += polysurfcorr
         return (F1, F2, F3, fF_orig, )
 
+
+class Jacobian:
+
+    def __init(self, S):
+        self.OEx = S.obs_eq[0]  # S is SensorModel object
+        self.OEy = S.obs_eq[1]
+        self.OEz = S.obs_eq[2]
+        self.Jx, self.Jy, self.Jz  = form_jacobian()
+        self.lJx, self.lJy, self.lJz = self.lambdify_jacobian()
+
+    def form_jacobian(self):
+        """generate the jacobian of the specified geolocation equation
+
+        This method generates the Jacobian (i.e., the matrix of partial
+        derivatives with respect to component variables) of the specified
+        geoloation equation using the sympy symbolic math package.  Using
+        sympy to symbolically calculate the Jacobian simplifies the coding
+        of what would otherwise be very long equations.
+
+        :param F1:
+        :param F2:
+        :param F3:
+        :return: (function, function, function)
+        """
+
+        a, b, r, p, h, x, y, z, rho = symbols('a b r p h x y z rho')
+
+        v = Matrix([a, b, r, p, h, x, y, z, rho])  # vector of unknowns
+        Jx = Matrix([self.OEx]).jacobian(v)
+        Jy = Matrix([self.OEy]).jacobian(v)
+        Jz = Matrix([self.OEz]).jacobian(v)
+
+        return Jx, Jy, Jz
+
+    def lambdify_jacobian(self, eval_type='numexpr'):
+        """turn the symbolical Jacobian into a function for faster computation
+
+        This method "lambdifies" (or "functionizes") the Jacobian components, for
+        faster calculations. Part of this lambdify process includes simplifying
+        the numerous trigonometric calculations of the Jacobian by defining the
+        Jacobian functions to be functions of the sines and cosines of the various
+        parameters, instead of the parameters directly.
+
+        Reference:
+        https://docs.sympy.org/latest/modules/utilities/lambdify.html
+
+        :param Jx:
+        :param Jy:
+        :param Jz:
+        :param eval_type:
+        :return: (function, function, function)
+        """
+
+        # create variables for symbolic computations
+        a, b, w, r, p, h, rho, \
+        p00, p10, p01, p20, p11, p02, p21, p12, p03, \
+        sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, \
+        cos_a, cos_b, cos_w, cos_r, cos_p, cos_h \
+            = symbols('a b w r p h rho '
+                      'p00 p10 p01 p20 p11 p02 p21 p12 p03 '
+                      'sin_a sin_b sin_w sin_r sin_p sin_h '
+                      'cos_a cos_b cos_w cos_r cos_p cos_h')
+
+        '''functionize the trig terms of the Jacobian x component'''
+        Jxsub = []
+        for i, j in enumerate(self.Jx):
+            Jxsub.append(j.subs([
+                (sin(a), sin_a),
+                (sin(b), sin_b),
+                (sin(w), sin_w),
+                (sin(r), sin_r),
+                (sin(p), sin_p),
+                (sin(h), sin_h),
+                (cos(a), cos_a),
+                (cos(b), cos_b),
+                (cos(w), cos_w),
+                (cos(r), cos_r),
+                (cos(p), cos_p),
+                (cos(h), cos_h)]))
+
+        '''functionize the trig terms of the Jacobian y component'''
+        Jysub = []
+        for i, j in enumerate(self.Jy):
+            Jysub.append(j.subs([
+                (sin(a), sin_a),
+                (sin(b), sin_b),
+                (sin(w), sin_w),
+                (sin(r), sin_r),
+                (sin(p), sin_p),
+                (sin(h), sin_h),
+                (cos(a), cos_a),
+                (cos(b), cos_b),
+                (cos(w), cos_w),
+                (cos(r), cos_r),
+                (cos(p), cos_p),
+                (cos(h), cos_h)]))
+
+        '''functionize the trig terms of the Jacobian z component'''
+        Jzsub = []
+        for i, j in enumerate(self.Jz):
+            Jzsub.append(j.subs([
+                (sin(a), sin_a),
+                (sin(b), sin_b),
+                (sin(w), sin_w),
+                (sin(r), sin_r),
+                (sin(p), sin_p),
+                (sin(h), sin_h),
+                (cos(a), cos_a),
+                (cos(b), cos_b),
+                (cos(w), cos_w),
+                (cos(r), cos_r),
+                (cos(p), cos_p),
+                (cos(h), cos_h)]))
+
+        '''functionize the x component'''
+        Jxsub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
+                       sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        Jxsub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
+                       sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        Jxsub2_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_h)
+
+        Jxsub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        Jxsub4_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        Jxsub5_vars = ()
+        Jxsub6_vars = ()
+        Jxsub7_vars = ()
+
+        Jxsub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        fJxsub0 = lambdify(Jxsub0_vars, Jxsub[0], eval_type)
+        fJxsub1 = lambdify(Jxsub1_vars, Jxsub[1], eval_type)
+        fJxsub2 = lambdify(Jxsub2_vars, Jxsub[2], eval_type)
+        fJxsub3 = lambdify(Jxsub3_vars, Jxsub[3], eval_type)
+        fJxsub4 = lambdify(Jxsub4_vars, Jxsub[4], eval_type)
+        fJxsub5 = lambdify(Jxsub5_vars, Jxsub[5], eval_type)
+        fJxsub6 = lambdify(Jxsub6_vars, Jxsub[6], eval_type)
+        fJxsub7 = lambdify(Jxsub7_vars, Jxsub[7], eval_type)
+        fJxsub8 = lambdify(Jxsub8_vars, Jxsub[8], eval_type)
+
+        '''functionize the y component'''
+        Jysub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
+                       sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        Jysub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
+                       sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        Jysub2_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_h)
+
+        Jysub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        Jysub4_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        Jysub5_vars = ()
+        Jysub6_vars = ()
+        Jysub7_vars = ()
+
+        Jysub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
+                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
+
+        fJysub0 = lambdify(Jysub0_vars, Jysub[0], eval_type)
+        fJysub1 = lambdify(Jysub1_vars, Jysub[1], eval_type)
+        fJysub2 = lambdify(Jysub2_vars, Jysub[2], eval_type)
+        fJysub3 = lambdify(Jysub3_vars, Jysub[3], eval_type)
+        fJysub4 = lambdify(Jysub4_vars, Jysub[4], eval_type)
+        fJysub5 = lambdify(Jysub5_vars, Jysub[5], eval_type)
+        fJysub6 = lambdify(Jysub6_vars, Jysub[6], eval_type)
+        fJysub7 = lambdify(Jysub7_vars, Jysub[7], eval_type)
+        fJysub8 = lambdify(Jysub8_vars, Jysub[8], eval_type)
+
+        '''functionize the z component'''
+        Jzsub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
+                       sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        Jzsub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
+                       sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        Jzsub2_vars = (rho, sin_a, sin_b, sin_w, sin_r,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        Jzsub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        Jzsub4_vars = ()
+        Jzsub5_vars = ()
+        Jzsub6_vars = ()
+        Jzsub7_vars = ()
+
+        Jzsub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p,
+                       cos_a, cos_b, cos_w, cos_r, cos_p)
+
+        fJzsub0 = lambdify(Jzsub0_vars, Jzsub[0], eval_type)
+        fJzsub1 = lambdify(Jzsub1_vars, Jzsub[1], eval_type)
+        fJzsub2 = lambdify(Jzsub2_vars, Jzsub[2], eval_type)
+        fJzsub3 = lambdify(Jzsub3_vars, Jzsub[3], eval_type)
+        fJzsub4 = lambdify(Jzsub4_vars, Jzsub[4], eval_type)
+        fJzsub5 = lambdify(Jzsub5_vars, Jzsub[5], eval_type)
+        fJzsub6 = lambdify(Jzsub6_vars, Jzsub[6], eval_type)
+        fJzsub7 = lambdify(Jzsub7_vars, Jzsub[7], eval_type)
+        fJzsub8 = lambdify(Jzsub8_vars, Jzsub[8], eval_type)
+
+        '''group the functioned jacobian components'''
+        lJx = [fJxsub0, fJxsub1, fJxsub2, fJxsub3, fJxsub4, fJxsub5, fJxsub6, fJxsub7, fJxsub8]
+        lJy = [fJysub0, fJysub1, fJysub2, fJysub3, fJysub4, fJysub5, fJysub6, fJysub7, fJysub8]
+        lJz = [fJzsub0, fJzsub1, fJzsub2, fJzsub3, fJzsub4, fJzsub5, fJzsub6, fJzsub7, fJzsub8]
+
+        return lJx, lJy, lJz
+
+
+
+class Subaerial:
+
+    def __init__(self, S, J, D):
+        """
+        :param List[ndarray] D: the merged data
+
+        The following table lists the contents of D:
+
+        =====   =========   =======================
+        Index   ndarray     description
+        =====   =========   =======================
+        0       t_sbet      sbet timestamps
+        1       t_las       las timestamps
+        2       x_las       las x coordinates
+        3       y_las       las y coordinates
+        4       z_las       las z coordinates
+        5       x_sbet      sbet x coordinates
+        6       y_sbet      sbet y coordinates
+        7       z_sbet      sbet z coordinates
+        8       r           sbet roll
+        9       p           sbet pitch
+        10      h           sbet heading
+        11      std_ang1    ang1 uncertainty
+        12      std_ang2    ang2 uncertainty
+        13      std_r       sbet roll uncertainty
+        14      std_p       sbet pitch uncertainty
+        15      std_h       sbet heading uncertainty
+        16      stdx_sbet   sbet x uncertainty
+        17      stdy_sbet   sbet y uncertainty
+        18      stdz_sbet   sbet z uncertainty
+        19      std_rho     ?
+        =====   =========   =======================
+        """
+
+        self.J = J  # Jacobian object
+        self.x_las = D[2]
+        self.y_las = D[3]
+        self.z_las = D[4]
+        self.x_sbet = D[5]
+        self.y_sbet = D[6]
+        self.z_sbet = D[7]
+        self.r0 = D[8]
+        self.p0 = D[9]
+        self.h0 = D[10]
+        self.C = np.asarray(D[11:])
+        self.is_empty = not D
+        self.num_points = self.x_las.shape
+
     def estimate_rho_a_b_w(self):
         """calculates estimates for rho, alpha, and beta
 
@@ -167,6 +441,7 @@ class SensorModel:
 
         :return: (list[], list[], list[], list[])
         """
+
         x_las = self.x_las
         y_las = self.y_las
         z_las = self.z_las
@@ -230,226 +505,8 @@ class SensorModel:
         (coeffs_z, __, __, __) = np.linalg.lstsq(A, dz[::itv], rcond=None)  # rcond=None is FutureWarning
         return [coeffs_x, coeffs_y, coeffs_z]
 
-
-class Jacobian:
-
-    def __init(self):
-        pass
-
-    def form_jacobian(self, F1, F2, F3):
-        """generate the jacobian of the specified geolocation equation
-
-        This method generates the Jacobian (i.e., the matrix of partial
-        derivatives with respect to component variables) of the specified
-        geoloation equation using the sympy symbolic math package.  Using
-        sympy to symbolically calculate the Jacobian simplifies the coding
-        of what would otherwise be very long equations.
-
-        :param F1:
-        :param F2:
-        :param F3:
-        :return: (function, function, function)
-        """
-        a, b, r, p, h, x, y, z, rho = symbols('a b r p h x y z rho')
-
-        v = Matrix([a, b, r, p, h, x, y, z, rho])  # vector of unknowns
-        J1 = Matrix([F1]).jacobian(v)
-        J2 = Matrix([F2]).jacobian(v)
-        J3 = Matrix([F3]).jacobian(v)
-        return self.lambdify_jacobian(J1, J2, J3)
-
-    def lambdify_jacobian(self, J1, J2, J3, eval_type='numexpr'):
-        """turn the symbolical Jacobian into a function for faster computation
-
-        This method "lambdifies" (or "functionizes") the Jacobian components, for
-        faster calculations. Part of this lambdify process includes simplifying
-        the numerous trigonometric calculations of the Jacobian by defining the
-        Jacobian functions to be functions of the sines and cosines of the various
-        parameters, instead of the parameters directly.
-
-        Reference:
-        https://docs.sympy.org/latest/modules/utilities/lambdify.html
-
-        :param J1:
-        :param J2:
-        :param J3:
-        :param eval_type:
-        :return: (function, function, function)
-        """
-
-        # create variables for symbolic computations
-        a, b, w, r, p, h, rho, \
-        p00, p10, p01, p20, p11, p02, p21, p12, p03, \
-        sin_a, sin_b, sin_w, sin_r, sin_p, sin_h, \
-        cos_a, cos_b, cos_w, cos_r, cos_p, cos_h \
-            = symbols('a b w r p h rho '
-                      'p00 p10 p01 p20 p11 p02 p21 p12 p03 '
-                      'sin_a sin_b sin_w sin_r sin_p sin_h '
-                      'cos_a cos_b cos_w cos_r cos_p cos_h')
-
-        '''functionize the trig terms of the Jacobian x component'''
-        J1sub = []
-        for i, j in enumerate(J1):
-            J1sub.append(j.subs([
-                (sin(a), sin_a),
-                (sin(b), sin_b),
-                (sin(w), sin_w),
-                (sin(r), sin_r),
-                (sin(p), sin_p),
-                (sin(h), sin_h),
-                (cos(a), cos_a),
-                (cos(b), cos_b),
-                (cos(w), cos_w),
-                (cos(r), cos_r),
-                (cos(p), cos_p),
-                (cos(h), cos_h)]))
-
-        '''functionize the trig terms of the Jacobian y component'''
-        J2sub = []
-        for i, j in enumerate(J2):
-            J2sub.append(j.subs([
-                (sin(a), sin_a),
-                (sin(b), sin_b),
-                (sin(w), sin_w),
-                (sin(r), sin_r),
-                (sin(p), sin_p),
-                (sin(h), sin_h),
-                (cos(a), cos_a),
-                (cos(b), cos_b),
-                (cos(w), cos_w),
-                (cos(r), cos_r),
-                (cos(p), cos_p),
-                (cos(h), cos_h)]))
-
-        '''functionize the trig terms of the Jacobian z component'''
-        J3sub = []
-        for i, j in enumerate(J3):
-            J3sub.append(j.subs([
-                (sin(a), sin_a),
-                (sin(b), sin_b),
-                (sin(w), sin_w),
-                (sin(r), sin_r),
-                (sin(p), sin_p),
-                (sin(h), sin_h),
-                (cos(a), cos_a),
-                (cos(b), cos_b),
-                (cos(w), cos_w),
-                (cos(r), cos_r),
-                (cos(p), cos_p),
-                (cos(h), cos_h)]))
-
-        '''functionize the x component'''
-        J1sub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
-                       sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        J1sub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
-                       sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        J1sub2_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_h)
-
-        J1sub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        J1sub4_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        J1sub5_vars = ()
-        J1sub6_vars = ()
-        J1sub7_vars = ()
-
-        J1sub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        fJ1sub0 = lambdify(J1sub0_vars, J1sub[0], eval_type)
-        fJ1sub1 = lambdify(J1sub1_vars, J1sub[1], eval_type)
-        fJ1sub2 = lambdify(J1sub2_vars, J1sub[2], eval_type)
-        fJ1sub3 = lambdify(J1sub3_vars, J1sub[3], eval_type)
-        fJ1sub4 = lambdify(J1sub4_vars, J1sub[4], eval_type)
-        fJ1sub5 = lambdify(J1sub5_vars, J1sub[5], eval_type)
-        fJ1sub6 = lambdify(J1sub6_vars, J1sub[6], eval_type)
-        fJ1sub7 = lambdify(J1sub7_vars, J1sub[7], eval_type)
-        fJ1sub8 = lambdify(J1sub8_vars, J1sub[8], eval_type)
-
-        '''functionize the y component'''
-        J2sub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
-                       sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        J2sub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
-                       sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        J2sub2_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_h)
-
-        J2sub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p)
-
-        J2sub4_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        J2sub5_vars = ()
-        J2sub6_vars = ()
-        J2sub7_vars = ()
-
-        J2sub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_w, cos_r, cos_p, cos_h)
-
-        fJ2sub0 = lambdify(J2sub0_vars, J2sub[0], eval_type)
-        fJ2sub1 = lambdify(J2sub1_vars, J2sub[1], eval_type)
-        fJ2sub2 = lambdify(J2sub2_vars, J2sub[2], eval_type)
-        fJ2sub3 = lambdify(J2sub3_vars, J2sub[3], eval_type)
-        fJ2sub4 = lambdify(J2sub4_vars, J2sub[4], eval_type)
-        fJ2sub5 = lambdify(J2sub5_vars, J2sub[5], eval_type)
-        fJ2sub6 = lambdify(J2sub6_vars, J2sub[6], eval_type)
-        fJ2sub7 = lambdify(J2sub7_vars, J2sub[7], eval_type)
-        fJ2sub8 = lambdify(J2sub8_vars, J2sub[8], eval_type)
-
-        '''functionize the z component'''
-        J3sub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
-                       sin_a, sin_b, sin_w, sin_r, sin_p,
-                       cos_a, cos_b, cos_w, cos_r, cos_p)
-
-        J3sub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
-                       sin_b, sin_w, sin_r, sin_p,
-                       cos_a, cos_b, cos_w, cos_r, cos_p)
-
-        J3sub2_vars = (rho, sin_a, sin_b, sin_w, sin_r,
-                       cos_a, cos_b, cos_w, cos_r, cos_p)
-
-        J3sub3_vars = (rho, sin_a, sin_b, sin_w, sin_r, sin_p,
-                       cos_a, cos_b, cos_w, cos_r, cos_p)
-
-        J3sub4_vars = ()
-        J3sub5_vars = ()
-        J3sub6_vars = ()
-        J3sub7_vars = ()
-
-        J3sub8_vars = (sin_a, sin_b, sin_w, sin_r, sin_p,
-                       cos_a, cos_b, cos_w, cos_r, cos_p)
-
-        fJ3sub0 = lambdify(J3sub0_vars, J3sub[0], eval_type)
-        fJ3sub1 = lambdify(J3sub1_vars, J3sub[1], eval_type)
-        fJ3sub2 = lambdify(J3sub2_vars, J3sub[2], eval_type)
-        fJ3sub3 = lambdify(J3sub3_vars, J3sub[3], eval_type)
-        fJ3sub4 = lambdify(J3sub4_vars, J3sub[4], eval_type)
-        fJ3sub5 = lambdify(J3sub5_vars, J3sub[5], eval_type)
-        fJ3sub6 = lambdify(J3sub6_vars, J3sub[6], eval_type)
-        fJ3sub7 = lambdify(J3sub7_vars, J3sub[7], eval_type)
-        fJ3sub8 = lambdify(J3sub8_vars, J3sub[8], eval_type)
-
-        '''group the functioned jacobian components'''
-        fJ1 = [fJ1sub0, fJ1sub1, fJ1sub2, fJ1sub3, fJ1sub4, fJ1sub5, fJ1sub6, fJ1sub7, fJ1sub8]
-        fJ2 = [fJ2sub0, fJ2sub1, fJ2sub2, fJ2sub3, fJ2sub4, fJ2sub5, fJ2sub6, fJ2sub7, fJ2sub8]
-        fJ3 = [fJ3sub0, fJ3sub1, fJ3sub2, fJ3sub3, fJ3sub4, fJ3sub5, fJ3sub6, fJ3sub7, fJ3sub8]
-
-        return fJ1, fJ2, fJ3
-
-    def calc_trig_terms(self, a_est, b_est, r0, p0, h0, x0, y0, z0):
-        """evaluates the trigonometric terms in the Jocobian
+    def calc_trig_terms(self, a_est, b_est, r0, p0, h0):
+        """evaluates the trigonometric terms in the Jacobian
 
         This method aims to simplify evaluation of the Jacobian by pre-evaluating
         the trigonometic terms of the Jacobian.  The reasoning is that this speeds
@@ -461,9 +518,6 @@ class Jacobian:
         :param r0:
         :param p0:
         :param h0:
-        :param x0:
-        :param y0:
-        :param z0:
         :return:
         """
 
@@ -512,103 +566,48 @@ class Jacobian:
         """
 
         sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch \
-            = self.calc_trig_terms(a_est, b_est,
-                                   self.r0, self.p0, self.h0,
-                                   self.x0, self.y0, self.z0)
+            = self.calc_trig_terms(a_est, b_est, self.r0, self.p0, self.h0)
 
         p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs[0]
         p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
         p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs[2]
 
         '''evaluate the x component'''
-        pJ1 = np.vstack(
-            (self.fJ1[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
+        Jx = np.vstack(
+            (self.J.lJx[0](a_est, b_est, rho_est, p10x, p21x, p12x, p11x, p20x,
                          sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
-             self.fJ1[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
+             self.J.lJx[1](a_est, b_est, rho_est, p02x, p03x, p21x, p12x, p01x, p11x,
                          sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
-             self.fJ1[2](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, ch),
-             self.fJ1[3](rho_est, sa, sb, sw, sr, sp, ca, cb, cw, cr, cp, ch),
-             self.fJ1[4](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             self.J.lJx[2](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, ch),
+             self.J.lJx[3](rho_est, sa, sb, sw, sr, sp, ca, cb, cw, cr, cp, ch),
+             self.J.lJx[4](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
              np.ones(self.num_points),
-             self.fJ1[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
+             self.J.lJx[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
 
         '''evaluate the y component'''
-        pJ2 = np.vstack(
-            (self.fJ2[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
+        Jy = np.vstack(
+            (self.J.lJy[0](a_est, b_est, rho_est, p10y, p21y, p12y, p11y, p20y,
                          sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
-             self.fJ2[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
+             self.J.lJy[1](a_est, b_est, rho_est, p02y, p03y, p21y, p12y, p01y, p11y,
                          sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
-             self.fJ2[2](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, ch),
-             self.fJ2[3](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp),
-             self.fJ2[4](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
+             self.J.lJy[2](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, ch),
+             self.J.lJy[3](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp),
+             self.J.lJy[4](rho_est, sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch),
              np.ones(self.num_points),
-             self.fJ2[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
+             self.J.lJy[8](sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch)))
 
         '''evaluate the z component'''
-        pJ3 = np.vstack(
-            (self.fJ3[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
+        Jz = np.vstack(
+            (self.J.lJz[0](a_est, b_est, rho_est, p10z, p21z, p12z, p11z, p20z,
                          sa, sb, sw, sr, sp, ca, cb, cw, cr, cp),
-             self.fJ3[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
+             self.J.lJz[1](a_est, b_est, rho_est, p02z, p03z, p21z, p12z, p01z, p11z,
                          sb, sw, sr, sp, ca, cb, cw, cr, cp),
-             self.fJ3[2](rho_est, sa, sb, sw, sr, ca, cb, cw, cr, cp),
-             self.fJ3[3](rho_est, sa, sb, sw, sr, sp, ca, cb, cw, cr, cp),
+             self.J.lJz[2](rho_est, sa, sb, sw, sr, ca, cb, cw, cr, cp),
+             self.J.lJz[3](rho_est, sa, sb, sw, sr, sp, ca, cb, cw, cr, cp),
              np.ones(self.num_points),
-             self.fJ3[8](sa, sb, sw, sr, sp, ca, cb, cw, cr, cp)))
+             self.J.lJz[8](sa, sb, sw, sr, sp, ca, cb, cw, cr, cp)))
 
-        return pJ1, pJ2, pJ3
-
-
-class Subaerial:
-
-    def __init__(self, D, J):
-        """
-        :param List[ndarray] D: the merged data
-
-        The following table lists the contents of D:
-
-        =====   =========   =======================
-        Index   ndarray     description
-        =====   =========   =======================
-        0       t_sbet      sbet timestamps
-        1       t_las       las timestamps
-        2       x_las       las x coordinates
-        3       y_las       las y coordinates
-        4       z_las       las z coordinates
-        5       x_sbet      sbet x coordinates
-        6       y_sbet      sbet y coordinates
-        7       z_sbet      sbet z coordinates
-        8       r           sbet roll
-        9       p           sbet pitch
-        10      h           sbet heading
-        11      std_ang1    ang1 uncertainty
-        12      std_ang2    ang2 uncertainty
-        13      std_r       sbet roll uncertainty
-        14      std_p       sbet pitch uncertainty
-        15      std_h       sbet heading uncertainty
-        16      stdx_sbet   sbet x uncertainty
-        17      stdy_sbet   sbet y uncertainty
-        18      stdz_sbet   sbet z uncertainty
-        19      std_rho     ?
-        =====   =========   =======================
-        """
-        self.is_empty = not D
-        self.x_las = D[2]
-        self.y_las = D[3]
-        self.z_las = D[4]
-        self.x_sbet = D[5]
-        self.y_sbet = D[6]
-        self.z_sbet = D[7]
-        self.r0 = D[8]
-        self.p0 = D[9]
-        self.h0 = D[10]
-        self.x0 = self.x_sbet
-        self.y0 = self.y_sbet
-        self.z0 = self.z_sbet
-        self.C = np.asarray(D[11:])
-        self.num_points = self.x_las.shape
-        self.J = j
-        self.F1, self.F2, self.F3, self.fF_orig = self.define_obseration_equation()
-        self.fJ1, self.fJ2, self.fJ3 = self.form_jacobian(self.F1, self.F2, self.F3)
+        return (Jx, Jy, Jz, )
 
     @staticmethod
     def calcRMSE(data):
@@ -663,7 +662,7 @@ class Subaerial:
         """
         aer_x_pre = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
         aer_y_pre = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
-        aer_z_pre = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z0)
+        aer_z_pre = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z_sbet)
         return aer_x_pre, aer_y_pre, aer_z_pre
 
     def calc_aer_pos(self, coeffs, a_est, b_est, aer_pos_pre):
@@ -721,7 +720,7 @@ class Subaerial:
         aer_z_err = ne.evaluate('aer_z - z_las')
         return [aer_x_err, aer_y_err, aer_z_err]
 
-    def propogate_uncertainty(self, pJ1, pJ2, pJ3):
+    def propogate_uncertainty(self):
         """propogates the subaerial uncertatinty
 
         This method propogates the uncertainty of the component uncertainties
@@ -743,13 +742,17 @@ class Subaerial:
         Cy = np.delete(C, [5, 7], 0)
         Cz = np.delete(C, [4, 5, 6], 0)
 
-        sum_pJ1 = ne.evaluate("sum(pJ1 * pJ1 * Cx, axis=0)")
-        sum_pJ2 = ne.evaluate("sum(pJ2 * pJ2 * Cy, axis=0)")
-        sum_pJ3 = ne.evaluate("sum(pJ3 * pJ3 * Cz, axis=0)")
+        Jx = self.J[0]
+        Jy = self.J[1]
+        Jz = self.J[2]
 
-        sx = ne.evaluate("sqrt(sum_pJ1)")
-        sy = ne.evaluate("sqrt(sum_pJ2)")
-        aer_tvu = ne.evaluate("sqrt(sum_pJ3)")
+        sum_Jx = ne.evaluate("sum(Jx * Jx * Cx, axis=0)")
+        sum_Jy = ne.evaluate("sum(Jy * Jy * Cy, axis=0)")
+        sum_Jz = ne.evaluate("sum(Jz * Jz * Cz, axis=0)")
+
+        sx = ne.evaluate("sqrt(sum_Jx)")
+        sy = ne.evaluate("sqrt(sum_Jy)")
+        aer_tvu = ne.evaluate("sqrt(sum_Jz)")
         aer_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
 
         return aer_thu, aer_tvu, ['subaerial_thu', 'subaerial_tvu']
@@ -802,10 +805,10 @@ class Subaerial:
             aer_x, aer_y, aer_z = self.calc_aer_pos(coeffs, a_est, b_est, aer_pos_pre)
 
             '''3) Evaluate the Jacobian'''
-            pJ1, pJ2, pJ3 = self.eval_jacobian(rho_est, a_est, b_est, coeffs)
+            Jx, Jy, Jz = self.eval_jacobian(rho_est, a_est, b_est, coeffs)
 
             '''4) Propagate Uncertainty'''
-            aer_thu, aer_tvu, aer_cols = self.propogate_uncertainty(pJ1, pJ2, pJ3)
+            aer_thu, aer_tvu, aer_cols = self.propogate_uncertainty()
             column_headers = ['cblue_x', 'cblue_y', 'cblue_z'] + aer_cols
             aer_data = (aer_x, aer_y, aer_z, aer_thu, aer_tvu)
             return np.vstack(aer_data).T, column_headers
