@@ -57,7 +57,7 @@ class Tpu:
 
         for fl in las.get_flight_line_ids():
             logging.info('flight line {} {}'.format(fl, '-' * 30))
-            D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
+            D = Merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
             logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
             subaer, subaer_cols = Subaerial(J, D).calc_subaerial_tpu()

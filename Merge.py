@@ -5,13 +5,24 @@ from math import radians
 
 
 class Merge:
-    dt_threshold = 1  # seconds
 
-    def __init__(self):
-        pass
+    def __init__(self, las, fl, sbet_data, (las_t, las_x, las_y, las_z)):
+        self.las = las
+        self.fl = fl
+        self.sbet_data = sbet_data
+        self.las_t = las_t
+        self.las_x = las_x
+        self.las_y = las_y
+        self.las_z = las_z
 
-    @staticmethod
-    def merge(las, fl, sbet_data, (las_t, las_x, las_y, las_z)):
+        self.a_std_dev = 0.02  # degrees
+        self.b_std_dev = 0.02  # degrees
+        self.std_rho = 0.025
+        self.max_allowable_dt = 1.0
+
+        self.data = self.merge()
+
+    def merge(self):
         """returns sbet & las data merged based on timestamps
 
         The cBLUE TPU calculations require the sbet and las data to be in
@@ -60,45 +71,40 @@ class Merge:
         =====   =========   =======================
         """
 
-        a_std_dev = 0.02  # degrees
-        b_std_dev = 0.02  # degrees
-        std_rho = 0.025
-        max_allowable_dt = 1.0
-
         # match sbet and las dfs based on timestamps
-        sbet_t = sbet_data[:, 0]
-        num_chunk_points = las_t.shape
-        idx = np.searchsorted(sbet_t, las_t) - 1
+        sbet_t = self.sbet_data[:, 0]
+        num_chunk_points = self.las_t.shape
+        idx = np.searchsorted(self.sbet_t, self.las_t) - 1
         mask = ne.evaluate('idx >= 0')
 
-        dt = las_t[mask] - sbet_data[:, 0][idx][mask]
+        dt = self.las_t[mask] - self.sbet_data[:, 0][idx][mask]
         max_dt = np.max(dt)
         logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
 
-        if max_dt > max_allowable_dt:
+        if max_dt > self.max_allowable_dt:
             merged_data = []
         else:
             merged_data = [
-                sbet_data[:, 0][idx][mask],  # t_sbet
-                las_t[mask],  # t_las
-                las_x[mask],  # x_las
-                las_y[mask],  # y_las
-                las_z[mask],  # z_las
-                sbet_data[:, 3][idx][mask],  # x_sbet
-                sbet_data[:, 4][idx][mask],  # y_sbet
-                sbet_data[:, 5][idx][mask],  # z_sbet
+                self.sbet_data[:, 0][idx][mask],  # t_sbet
+                self.las_t[mask],  # t_las
+                self.las_x[mask],  # x_las
+                self.las_y[mask],  # y_las
+                self.las_z[mask],  # z_las
+                self.sbet_data[:, 3][idx][mask],  # x_sbet
+                self.sbet_data[:, 4][idx][mask],  # y_sbet
+                self.sbet_data[:, 5][idx][mask],  # z_sbet
                 np.radians(sbet_data[:, 6][idx][mask]),  # r
                 np.radians(sbet_data[:, 7][idx][mask]),  # p
                 np.radians(sbet_data[:, 8][idx][mask]),  # h
-                np.full(num_chunk_points, radians(a_std_dev)),  # std_a
-                np.full(num_chunk_points, radians(b_std_dev)),  # std_b
+                np.full(num_chunk_points, radians(self.a_std_dev)),  # std_a
+                np.full(num_chunk_points, radians(self.b_std_dev)),  # std_b
                 np.radians(sbet_data[:, 12][idx][mask]),  # std_r
                 np.radians(sbet_data[:, 13][idx][mask]),  # std_p
                 np.radians(sbet_data[:, 14][idx][mask]),  # std_h
-                sbet_data[:, 9][idx][mask],  # stdx_sbet
-                sbet_data[:, 10][idx][mask],  # stdy_sbet
-                sbet_data[:, 11][idx][mask],  # stdz_sbet
-                np.full(num_chunk_points, std_rho)]  # std_rho
+                self.sbet_data[:, 9][idx][mask],  # stdx_sbet
+                self.sbet_data[:, 10][idx][mask],  # stdy_sbet
+                self.sbet_data[:, 11][idx][mask],  # stdz_sbet
+                np.full(num_chunk_points, self.std_rho)]  # std_rho
 
         return merged_data
 
