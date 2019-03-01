@@ -52,7 +52,7 @@ class Tpu:
         # FORM OBSERVATION EQUATIONS
         S = SensorModel('Riegl-VQ-880-G')
 
-        # GENERATE AND EVALUATE JACOBIAN
+        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS (x, y, z)
         J = Jacobian(S)
 
         for fl in las.get_flight_line_ids():

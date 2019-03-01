@@ -84,29 +84,40 @@ class Merge:
         if max_dt > self.max_allowable_dt:
             merged_data = []
         else:
-            merged_data = [
-                self.sbet_data[:, 0][idx][mask],  # t_sbet
-                self.las_t[mask],  # t_las
-                self.las_x[mask],  # x_las
-                self.las_y[mask],  # y_las
-                self.las_z[mask],  # z_las
-                self.sbet_data[:, 3][idx][mask],  # x_sbet
-                self.sbet_data[:, 4][idx][mask],  # y_sbet
-                self.sbet_data[:, 5][idx][mask],  # z_sbet
-                np.radians(sbet_data[:, 6][idx][mask]),  # r
-                np.radians(sbet_data[:, 7][idx][mask]),  # p
-                np.radians(sbet_data[:, 8][idx][mask]),  # h
-                np.full(num_chunk_points, radians(self.a_std_dev)),  # std_a
-                np.full(num_chunk_points, radians(self.b_std_dev)),  # std_b
-                np.radians(sbet_data[:, 12][idx][mask]),  # std_r
-                np.radians(sbet_data[:, 13][idx][mask]),  # std_p
-                np.radians(sbet_data[:, 14][idx][mask]),  # std_h
-                self.sbet_data[:, 9][idx][mask],  # stdx_sbet
-                self.sbet_data[:, 10][idx][mask],  # stdy_sbet
-                self.sbet_data[:, 11][idx][mask],  # stdz_sbet
-                np.full(num_chunk_points, self.std_rho)]  # std_rho
+            merged_data = np.array([
+                self.sbet_data[:, 0][idx][mask],                        # [0] t_sbet
+                self.las_t[mask],                                       # [1] t_las
+                self.las_x[mask],                                       # [2] x_las
+                self.las_y[mask],                                       # [3] y_las
+                self.las_z[mask],                                       # [4] z_las
+                self.sbet_data[:, 3][idx][mask],                        # [5] x_sbet
+                self.sbet_data[:, 4][idx][mask],                        # [6] y_sbet
+                self.sbet_data[:, 5][idx][mask],                        # [7] z_sbet
+                np.radians(sbet_data[:, 6][idx][mask]),                 # [8] r
+                np.radians(sbet_data[:, 7][idx][mask]),                 # [9] p
+                np.radians(sbet_data[:, 8][idx][mask]),                 # [10] h
+                np.full(num_chunk_points, radians(self.a_std_dev)),     # [11] std_a
+                np.full(num_chunk_points, radians(self.b_std_dev)),     # [12] std_b
+                np.radians(sbet_data[:, 12][idx][mask]),                # [13] std_r
+                np.radians(sbet_data[:, 13][idx][mask]),                # [14] std_p
+                np.radians(sbet_data[:, 14][idx][mask]),                # [15] std_h
+                self.sbet_data[:, 9][idx][mask],                        # [16] stdx_sbet
+                self.sbet_data[:, 10][idx][mask],                       # [17] stdy_sbet
+                self.sbet_data[:, 11][idx][mask],                       # [18] stdz_sbet
+                np.full(num_chunk_points, self.std_rho)])               # [19] std_rho
 
-        return merged_data
+            names = 't_sbet, t_las, \
+            x_las, y_las, z_las, \
+            x_sbet, y_sbet, z_sbet, \
+            r, p, h, \
+            std_a, std_b, \
+            std_r, std_p, std_h, \
+            stdx_sbet, stdy_sbet, stdz_sbet, \
+            std_rho'
+
+            formats = ','.join(['f8'] * len(names))
+
+        return np.core.records.fromarrays(merged_data, names=names, formats=formats)
 
 
 if __name__ == '__main__':

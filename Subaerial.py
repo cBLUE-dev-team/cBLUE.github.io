@@ -26,6 +26,9 @@ class SensorModel:
         self.R, self.fR = self.set_rotation_matrix_airplane() 
         self.M = self.set_rotation_matrix_scanning_sensor()
         self.obs_eq = self.define_obseration_equation()
+        self.dx = None
+        self.dy = None 
+        self.dz = None
 
     @staticmethod
     def set_rotation_matrix_airplane():
@@ -175,9 +178,9 @@ class SensorModel:
         y_sbet = self.y_sbet
         z_sbet = self.z_sbet
 
-        dx = ne.evaluate("x_las - x_sbet")
-        dy = ne.evaluate("y_las - y_sbet")
-        dz = ne.evaluate("z_las - z_sbet")
+        rho_x = ne.evaluate("x_las - x_sbet")
+        rho_y = ne.evaluate("y_las - y_sbet")
+        rho_z = ne.evaluate("z_las - z_sbet")
 
         fR0 = self.fR[0](self.h0, self.p0)
         fR3 = self.fR[3](self.h0, self.p0)
@@ -186,14 +189,14 @@ class SensorModel:
         fR4 = self.fR[4](self.r0, self.p0, self.h0)
         fR7 = self.fR[7](self.r0, self.p0)
 
-        rho_est = ne.evaluate("sqrt(dx**2 + dy**2 + dz**2)")
-        b_est = ne.evaluate("arcsin(((fR0 * dx) + (fR3 * dy) + (fR6 * dz)) / (-rho_est))")
-        a_est = ne.evaluate("arcsin(((fR1 * dx) + (fR4 * dy) + (fR7 * dz)) / (rho_est * cos(b_est)))")
+        rho_est = ne.evaluate("sqrt(rho_x**2 + rho_y**2 + rho_z**2)")
+        b_est = ne.evaluate("arcsin(((fR0 * rho_x) + (fR3 * rho_y) + (fR6 * rho_z)) / (-rho_est))")
+        a_est = ne.evaluate("arcsin(((fR1 * rho_x) + (fR4 * rho_y) + (fR7 * rho_z)) / (rho_est * cos(b_est)))")
         w_est = np.zeros(self.num_points)
 
         return rho_est, a_est, b_est, w_est
 
-    def calc_poly_surf_coeffs(self, a_est, b_est, dx, dy, dz, itv=10):
+    def calc_poly_surf_coeffs(self, a_est, b_est, itv=10):
         """estimates error model using polynomial surface fitting
 
         This method calculates the coefficients of the polynomial-surface
@@ -228,9 +231,10 @@ class SensorModel:
             ne.evaluate('A0 * B0 ** 2'),
             ne.evaluate('B0 ** 3'))).T
 
-        (coeffs_x, __, __, __) = np.linalg.lstsq(A, dx[::itv], rcond=None)
-        (coeffs_y, __, __, __) = np.linalg.lstsq(A, dy[::itv], rcond=None)
-        (coeffs_z, __, __, __) = np.linalg.lstsq(A, dz[::itv], rcond=None)
+        (coeffs_x, __, __, __) = np.linalg.lstsq(A, self.dx[::itv], rcond=None)
+        (coeffs_y, __, __, __) = np.linalg.lstsq(A, self.dy[::itv], rcond=None)
+        (coeffs_z, __, __, __) = np.linalg.lstsq(A, self.dz[::itv], rcond=None)
+
         return (coeffs_x, coeffs_y, coeffs_z, )
 
     @staticmethod
@@ -259,17 +263,19 @@ class SensorModel:
         :param subaer_pos_pre:
         :return:
         """
+
         # calc diff between true and est las xyz (aer_pos = Laser Estimates)
         x_las = self.x_las
         y_las = self.y_las
         z_las = self.z_las
+
         aer_x_pre = subaer_pos_pre[0]
         aer_y_pre = subaer_pos_pre[1]
         aer_z_pre = subaer_pos_pre[2]
-        dx = ne.evaluate("x_las - aer_x_pre")
-        dy = ne.evaluate("y_las - aer_y_pre")
-        dz = ne.evaluate("z_las - aer_z_pre")
-        return dx, dy, dz
+
+        self.dx = ne.evaluate("x_las - aer_x_pre")
+        self.dy = ne.evaluate("y_las - aer_y_pre")
+        self.dz = ne.evaluate("z_las - aer_z_pre")
 
     def calc_aer_pos_pre(self, rho_est, a_est, b_est, w_est):
         """calculates the inital cBLUE aubaerial position
@@ -287,6 +293,7 @@ class SensorModel:
         aer_x_pre = self.fF_orig[0](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.x_sbet)
         aer_y_pre = self.fF_orig[1](a_est, b_est, self.h0, self.p0, self.r0, rho_est, w_est, self.y_sbet)
         aer_z_pre = self.fF_orig[2](a_est, b_est, self.p0, self.r0, rho_est, w_est, self.z_sbet)
+        
         return aer_x_pre, aer_y_pre, aer_z_pre
 
     def calc_aer_pos(self, coeffs, a_est, b_est, aer_pos_pre):
@@ -324,6 +331,7 @@ class SensorModel:
         aer_pos_x = ne.evaluate('aer_x_pre + err_x')
         aer_pos_y = ne.evaluate('aer_y_pre + err_y')
         aer_pos_z = ne.evaluate('aer_z_pre + err_z')
+
         return aer_pos_x, aer_pos_y, aer_pos_z
 
     def calc_aer_pos_err(self, aer_pos):
@@ -336,17 +344,21 @@ class SensorModel:
         :param aer_pos:
         :return:
         """
+
         aer_x = aer_pos[0]
         aer_y = aer_pos[1]
         aer_z = aer_pos[2]
+
         aer_x_err = ne.evaluate('aer_x - x_las')
         aer_y_err = ne.evaluate('aer_y - y_las')
         aer_z_err = ne.evaluate('aer_z - z_las')
+
         return [aer_x_err, aer_y_err, aer_z_err]
 
 class Jacobian:
 
     def __init(self, S):
+        self.S = S
         self.OEx = S.obs_eq[0]  # S is SensorModel object
         self.OEy = S.obs_eq[1]
         self.OEz = S.obs_eq[2]
@@ -568,7 +580,7 @@ class Jacobian:
         return lJx, lJy, lJz
 
     def calc_trig_terms(self, a_est, b_est, r0, p0, h0):
-        """evaluates the trigonometric terms in the Jacobian
+        """helper method to evaluate the trigonometric terms in the Jacobian
 
         This method aims to simplify evaluation of the Jacobian by pre-evaluating
         the trigonometic terms of the Jacobian.  The reasoning is that this speeds
@@ -595,10 +607,11 @@ class Jacobian:
         cos_r0 = ne.evaluate("cos(r0)")  # uses passed parameter
         cos_p0 = ne.evaluate("cos(p0)")  # uses passed parameter
         cos_h0 = ne.evaluate("cos(h0)")  # uses passed parameter
+
         return (sin_a0, sin_b0, sin_w0, sin_r0, sin_p0, sin_h0,
                 cos_a0, cos_b0, cos_w0, cos_r0, cos_p0, cos_h0)
 
-    def eval_jacobian(self, data):
+    def eval_jacobian(self):
         """evaluate the Jacobian of the modified laser geolocation equation
 
         This method evaluates the Jacobian by passing the relevant parameters
@@ -626,13 +639,15 @@ class Jacobian:
         :param coeffs:
         :return:
         """
+        
+        rho_est, a_est, b_est, __ = self.S.estimate_rho_a_b()
+        aer_pos_pre = self.S.calc_aer_pos_pre(rho_est, a_est, b_est, w_est)
+        dx, dy, dz = self.S.calc_diff(aer_pos_pre)
+
+        coeffs = self.S.calc_poly_surf_coeffs()
 
         sa, sb, sw, sr, sp, sh, ca, cb, cw, cr, cp, ch \
-            = self.calc_trig_terms(a_est, b_est, self.r0, self.p0, self.h0)
-
-        rho_est, a_est, b_est, __ = self.S.estimate_rho_a_b()
-
-        coeffs = self.calc_poly_surf_coeffs()
+            = self.calc_trig_terms(a_est, b_est, self.r0, self.p0, self.h0) 
 
         p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs[0]
         p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
@@ -678,7 +693,7 @@ class Jacobian:
 
 class Subaerial:
 
-    def __init__(self, S, J, D):
+    def __init__(self, J, D):
         """
         :param List[ndarray] D: the merged data
 
@@ -710,8 +725,8 @@ class Subaerial:
         =====   =========   =======================
         """
 
-        self.S = S  # SensorModel object
         self.J = J  # Jacobian object
+        self.D = D  # 2D merged data np.array
         self.x_las = D[2]
         self.y_las = D[3]
         self.z_las = D[4]
@@ -722,8 +737,7 @@ class Subaerial:
         self.p0 = D[9]
         self.h0 = D[10]
         self.C = np.asarray(D[11:])
-        self.is_empty = not D
-        self.num_points = self.x_las.shape
+        self.num_points = self.D.size
         self.aer_cols = None
 
     def propogate_uncertainty(self, J_eval):
@@ -795,22 +809,16 @@ class Subaerial:
 
         :return:
         """
-        if self.is_empty:  # i.e., if D is empty (las and sbet not merged)
+        if self.num_points == 0:  # i.e., las and sbet not merged
             logging.warning('SBET and LAS not merged because max delta '
                             'time exceeded acceptable threshold of {} '
                             'sec(s).'.format(Merge.dt_threshold))
         else:
 
-            '''1) Evaluate the preliminary geolocation equation'''
-            rho_est, a_est, b_est, w_est = self.estimate_rho_a_b()
-            aer_pos_pre = self.calc_aer_pos_pre(rho_est, a_est, b_est, w_est)
-            dx, dy, dz = self.calc_diff(aer_pos_pre)
+            # EVALUATE JACOBIAN
+            J_eval = self.J.eval_jacobian(values)
 
-
-            '''3) Evaluate the Jacobian'''
-            J_eval = self.J.eval_jacobian()
-
-            '''4) Propagate Uncertainty'''
+            # PROPAGATE UNCERTAINTY
             aer_thu, aer_tvu, self.aer_cols = self.propogate_uncertainty(J_eval)
 
             return np.vstack((aer_thu, aer_tvu)).T, self.aer_cols
