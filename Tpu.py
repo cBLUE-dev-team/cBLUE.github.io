@@ -45,9 +45,6 @@ class Tpu:
         data_to_pickle = []
         output_columns = []
 
-        las = Las(las)
-        logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
-        logging.info(las.get_flight_line_ids())
 
         # FORM OBSERVATION EQUATIONS
         S = SensorModel('Riegl-VQ-880-G')
@@ -55,15 +52,21 @@ class Tpu:
         # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS (x, y, z)
         J = Jacobian(S)
 
+        las = Las(las)
+        logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
+        logging.info(las.get_flight_line_ids())
+
         for fl in las.get_flight_line_ids():
             logging.info('flight line {} {}'.format(fl, '-' * 30))
-            D = Merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
+
+            # CREATE MERGED-DATA OBJECT M
+            merged_data = Merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
             logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            subaer, subaer_cols = Subaerial(J, D).calc_subaerial_tpu()
-            depth = subaer[:, 2] + las.get_average_water_surface_ellip_height()
-            subaer_thu = subaer[:, 3]
-            subaer_tvu = subaer[:, 4]
+            subaer, subaer_cols = Subaerial(J, merged_data).calc_subaerial_tpu()
+            depth = merged_data.z_las + las.get_average_water_surface_ellip_height()
+            subaer_thu = subaer[:, 0]
+            subaer_tvu = subaer[:, 1]
 
             logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
             subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
@@ -78,7 +81,7 @@ class Tpu:
             total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
             num_points = total_tvu.shape[0]
             output = np.hstack((
-                np.expand_dims(D[1], axis=1),  # las time
+                np.expand_dims(merged_data.t_las, axis=1),
                 np.round_(subaer, decimals=5),
                 np.round_(np.expand_dims(subaqu_thu, axis=1), decimals=5),
                 np.round_(np.expand_dims(subaqu_tvu, axis=1), decimals=5),
@@ -98,8 +101,8 @@ class Tpu:
             self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
         self.write_metadata(las)  # TODO: include as VLR?
-        # self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
-        self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
+        self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
+        #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
     def output_tpu_to_pickle(self, las, data_to_output, output_columns):
         """output the calculated tpu to a Python "pickle" file
