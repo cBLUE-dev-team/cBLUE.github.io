@@ -1,5 +1,8 @@
 import laspy
 from collections import OrderedDict
+import numexpr as ne
+import numpy as np
+import datetime
 
 #xy_data_type = 7 # 10 = laspy unsigned long long (8 bytes)
 #z_data_type = 5 # 5 = laspy unsigned long (4 bytes)
@@ -18,7 +21,7 @@ from collections import OrderedDict
 #    ])
 
 # Set up our input and output files.
-inFile = laspy.file.File(r"C:\QAQC_contract\marco_island\New folder\2016_429500e_2870000n_TPU.las", mode = "r")
+inFile = laspy.file.File(r"C:\QAQC_contract\marco_island\2016_429500e_2870000n.las", mode = "r")
 
 headerformat = inFile.header.header_format
 for spec in headerformat:
@@ -34,6 +37,48 @@ for dim in inFile.reader.point_format:
 
 for vlr in inFile.header.vlrs:
     print vlr.parsed_body
+
+print(inFile.__len__())
+
+points_to_process = inFile.points['point']
+
+#points_to_process.sort()  # order='gps_time'
+#print(points_to_process)
+
+
+#sorted_ind = np.argsort(inFile.points['point']['gps_time'])
+#print(sorted_ind)
+
+#print(points_to_process[sorted_ind])
+#points_to_process = points_to_process[sorted_ind]
+
+
+tic = datetime.datetime.now()
+
+scale_x = np.asarray(inFile.header.scale[0])
+scale_y = np.asarray(inFile.header.scale[1])
+scale_z = np.asarray(inFile.header.scale[2])
+
+offset_x = np.asarray(inFile.header.offset[0])
+offset_y = np.asarray(inFile.header.offset[1])
+offset_z = np.asarray(inFile.header.offset[2])
+    
+t = points_to_process['gps_time']
+X = points_to_process['X']
+Y = points_to_process['Y']
+Z = points_to_process['Z']
+
+x = ne.evaluate("X * scale_x + offset_x")
+y = ne.evaluate("Y * scale_y + offset_y")
+z = ne.evaluate("Z * scale_z + offset_z")
+
+xyzt = np.vstack([x, y, z, t]).T
+print(xyzt)
+print()
+xyzt = xyzt[xyzt[:,3].argsort()]
+print(xyzt)
+
+print(datetime.datetime.now() - tic)
 
 
 #import laspy

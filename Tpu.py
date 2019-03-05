@@ -12,6 +12,7 @@ from Las import Las
 from Merge import Merge
 from Subaerial import Subaerial, SensorModel, Jacobian
 from Subaqueous import Subaqueous
+import datetime
 
 
 class Tpu:
@@ -53,20 +54,40 @@ class Tpu:
         J = Jacobian(S)
 
         las = Las(las)
-        logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
+        logging.info('{} {} ({:,} points)'.format(las.las_short_name, '#' * 30, las.num_file_points))
         logging.info(las.get_flight_line_ids())
+        sorted_las_xyzt = las.get_flight_line_txyz()
+
+        M = Merge()
+        #0       t_sbet
+        #1       t_las 
+        #2       x_las 
+        #3       y_las 
+        #4       z_las 
+        #5       x_sbet
+        #6       y_sbet
+        #7       z_sbet
+        #8       r     
+        #9       p     
+        #10      h     
 
         for fl in las.get_flight_line_ids():
-            logging.info('flight line {} {}'.format(fl, '-' * 30))
+            logging.info('flight line {} {}'.format(fl, '-' * 50))
+
+            flight_line_indx = self.points_to_process['pt_src_id'] == fl
+            fl_sorted_las_txyz = sorted_las_txyz[flight_line_indx]
 
             # CREATE MERGED-DATA OBJECT M
-            merged_data = Merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
+            tic = datetime.datetime.now()
+            logging.info('({}) merging trajectory and las data...'.format(las.las_short_name))
+            merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_txyz)
+            toc = datetime.datetime.now()
+            print(toc - tic)
 
             logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            subaer, subaer_cols = Subaerial(J, merged_data).calc_subaerial_tpu()
-            depth = merged_data.z_las + las.get_average_water_surface_ellip_height()
-            subaer_thu = subaer[:, 0]
-            subaer_tvu = subaer[:, 1]
+            subaer_obj = Subaerial(J, merged_data, stddev)
+            subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
+            depth = merged_data[4] + las.get_average_water_surface_ellip_height()
 
             logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
             subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
@@ -80,14 +101,15 @@ class Tpu:
             logging.info('({}) calculating total TVU...'.format(las.las_short_name))
             total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
             num_points = total_tvu.shape[0]
-            output = np.hstack((
-                np.expand_dims(merged_data.t_las, axis=1),
-                np.round_(subaer, decimals=5),
-                np.round_(np.expand_dims(subaqu_thu, axis=1), decimals=5),
-                np.round_(np.expand_dims(subaqu_tvu, axis=1), decimals=5),
-                np.round_(np.expand_dims(total_thu, axis=1), decimals=5),
-                np.round_(np.expand_dims(total_tvu, axis=1), decimals=5),
-                ))
+            output = np.vstack((
+                np.expand_dims(merged_data[1], axis=0),  # las_t
+                np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
+                np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
+                np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
+                np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
+                np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
+                np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
+                )).T
 
             sigma_columns = ['total_thu', 'total_tvu']
 
@@ -110,7 +132,7 @@ class Tpu:
         This method outputs the calculated tpu to a Python "pickle" file, with the
         following fields:
 
-        .. csv-table:: Frozen Delights!
+        .. csv-table:: Data Pickle...mmmm
             :header: index, ndarray, description
             :widths: 14, 20, 20
 

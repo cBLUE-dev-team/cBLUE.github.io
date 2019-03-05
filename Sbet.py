@@ -3,6 +3,7 @@ import time
 import pandas as pd
 from datetime import datetime
 import logging
+import numexpr as ne
 
 
 """
@@ -61,6 +62,7 @@ class Sbet:
         SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
         SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
         GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
+        GPS_ADJUSTED_OFFSET = 1e9
 
         year = gps_date[0]
         month = gps_date[1]
@@ -70,7 +72,7 @@ class Sbet:
         dt = sbet_date - GPS_EPOCH
         gps_wk = int((dt.days * SECS_PER_DAY + dt.seconds) / SECS_PER_GPS_WK)
         gps_time = gps_wk * SECS_PER_GPS_WK + gps_wk_sec
-        gps_time_adj = gps_time - 1e9
+        gps_time_adj = gps_time - GPS_ADJUSTED_OFFSET
         return gps_time_adj
 
     def build_sbets_data(self):

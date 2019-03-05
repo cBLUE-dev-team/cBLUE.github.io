@@ -38,7 +38,7 @@ class Las:
         """
         return np.unique(self.points_to_process['pt_src_id'])
 
-    def get_flight_line_txyz(self, fl):
+    def get_flight_line_txyz(self):
         """retrieves the x, y, z, and timestamp data from the las data points
 
         The x, y, and z values in the las file are stored as integers.  The
@@ -51,24 +51,32 @@ class Las:
         scale_x = np.asarray(self.inFile.header.scale[0])
         scale_y = np.asarray(self.inFile.header.scale[1])
         scale_z = np.asarray(self.inFile.header.scale[2])
+
         offset_x = np.asarray(self.inFile.header.offset[0])
         offset_y = np.asarray(self.inFile.header.offset[1])
         offset_z = np.asarray(self.inFile.header.offset[2])
 
-        flight_line_indx = self.points_to_process['pt_src_id'] == fl
-        flight_line_points = self.points_to_process[flight_line_indx]
-        flight_line_points_sorted = np.sort(flight_line_points, order='gps_time')
+        #flight_line_indx = self.points_to_process['pt_src_id'] == fl
+        #flight_line_points = self.points_to_process[flight_line_indx]
+        #sorted_ind = np.argsort(points_to_process['gps_time'])
+        #sorted_las_points = self.points_to_process[sorted_ind]
 
-        t = flight_line_points_sorted['gps_time']
-        X = flight_line_points_sorted['X']
-        Y = flight_line_points_sorted['Y']
-        Z = flight_line_points_sorted['Z']
+        #flight_line_points_sorted = np.sort(flight_line_points, order='gps_time')
+        #sorted_ind = np.argsort(flight_line_points['gps_time'])
+
+        t = self.points_to_process['gps_time']
+        X = self.points_to_process['X']
+        Y = self.points_to_process['Y']
+        Z = self.points_to_process['Z']
 
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
         z = ne.evaluate("Z * scale_z + offset_z")
 
-        return t, x, y, z
+        xyzt = np.vstack([x, y, z, t]).T
+        xyzt = xyzt[xyzt[:,3].argsort()]
+
+        return xyzt
 
     @staticmethod
     def get_average_water_surface_ellip_height():

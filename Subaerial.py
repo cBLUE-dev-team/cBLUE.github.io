@@ -168,23 +168,37 @@ class SensorModel:
         :return: (list[], list[], list[], list[])
         """
 
-        x_las = data.x_las  # data.x_las
-        y_las = data.y_las
-        z_las = data.z_las
-        x_sbet = data.x_sbet
-        y_sbet = data.y_sbet
-        z_sbet = data.z_sbet
+        #0       t_sbet
+        #1       t_las 
+        #2       x_las 
+        #3       y_las 
+        #4       z_las 
+        #5       x_sbet
+        #6       y_sbet
+        #7       z_sbet
+        #8       r     
+        #9       p     
+        #10      h   
+
+        # TODO: only pass needed columns
+
+        x_las = data[2]  #.x_las
+        y_las = data[3]  #.y_las
+        z_las = data[4]  #.z_las
+        x_sbet = data[5]  #.x_sbet
+        y_sbet = data[6]  #.y_sbet
+        z_sbet = data[7]  #.z_sbet
 
         rho_x = ne.evaluate("x_las - x_sbet")
         rho_y = ne.evaluate("y_las - y_sbet")
         rho_z = ne.evaluate("z_las - z_sbet")
 
-        fR0 = self.fR[0](data.h, data.p)
-        fR3 = self.fR[3](data.h, data.p)
-        fR6 = self.fR[6](data.p)
-        fR1 = self.fR[1](data.r, data.p, data.h)
-        fR4 = self.fR[4](data.r, data.p, data.h)
-        fR7 = self.fR[7](data.r, data.p)
+        fR0 = self.fR[0](data[10], data[9])
+        fR3 = self.fR[3](data[10], data[9])
+        fR6 = self.fR[6](data[9])
+        fR1 = self.fR[1](data[8], data[9], data[10])
+        fR4 = self.fR[4](data[8], data[9], data[10])
+        fR7 = self.fR[7](data[8], data[9])
 
         rho_est = ne.evaluate("sqrt(rho_x**2 + rho_y**2 + rho_z**2)")
         b_est = ne.evaluate("arcsin(((fR0 * rho_x) + (fR3 * rho_y) + (fR6 * rho_z)) / (-rho_est))")
@@ -283,9 +297,22 @@ class SensorModel:
         :param b_est:
         :return:
         """
-        aer_x_pre_poly = self.obs_eq_pre_poly[0](a_est, b_est, data.h, data.p, data.r, rho_est, data.x_sbet)
-        aer_y_pre_poly = self.obs_eq_pre_poly[1](a_est, b_est, data.h, data.p, data.r, rho_est, data.y_sbet)
-        aer_z_pre_poly = self.obs_eq_pre_poly[2](a_est, b_est, data.p, data.r, rho_est, data.z_sbet)
+
+        #0       t_sbet
+        #1       t_las 
+        #2       x_las 
+        #3       y_las 
+        #4       z_las 
+        #5       x_sbet
+        #6       y_sbet
+        #7       z_sbet
+        #8       r     
+        #9       p     
+        #10      h  
+
+        aer_x_pre_poly = self.obs_eq_pre_poly[0](a_est, b_est, data[10], data[9], data[8], rho_est, data[5])
+        aer_y_pre_poly = self.obs_eq_pre_poly[1](a_est, b_est, data[10], data[9], data[8], rho_est, data[6])
+        aer_z_pre_poly = self.obs_eq_pre_poly[2](a_est, b_est, data[9], data[8], rho_est, data[7])
         
         return aer_x_pre_poly, aer_y_pre_poly, aer_z_pre_poly
 
@@ -342,9 +369,9 @@ class SensorModel:
         aer_y = aer_pos[1]
         aer_z = aer_pos[2]
 
-        x_las = data.x_las
-        y_las = data.y_las
-        z_las = data.z_las
+        x_las = data[2]
+        y_las = data[3]
+        z_las = data[4]
 
         aer_x_err = ne.evaluate('aer_x - x_las')
         aer_y_err = ne.evaluate('aer_y - y_las')
@@ -602,7 +629,7 @@ class Jacobian:
         return (sin_a, sin_b, sin_r, sin_p, sin_h,
                 cos_a, cos_b, cos_r, cos_p, cos_h)
 
-    def eval_jacobian(self, Data):
+    def eval_jacobian(self, data):
         """evaluate the Jacobian of the modified laser geolocation equation
 
         This method evaluates the Jacobian by passing the relevant parameters
@@ -622,6 +649,18 @@ class Jacobian:
         cp = cos(p)
         ch = cos(h)
 
+        #0       t_sbet
+        #1       t_las 
+        #2       x_las 
+        #3       y_las 
+        #4       z_las 
+        #5       x_sbet
+        #6       y_sbet
+        #7       z_sbet
+        #8       r     
+        #9       p     
+        #10      h  
+
         :param rho_est:
         :param a_est:
         :param b_est:
@@ -629,13 +668,13 @@ class Jacobian:
         :return:
         """
 
-        rho_est, a_est, b_est = self.S.estimate_rho_a_b(Data)
-        aer_pos_pre = self.S.calc_aer_pos_pre(rho_est, a_est, b_est, Data)
-        dx, dy, dz = self.S.calc_diff(aer_pos_pre, Data.x_las, Data.y_las, Data.z_las)
+        rho_est, a_est, b_est = self.S.estimate_rho_a_b(data)
+        aer_pos_pre = self.S.calc_aer_pos_pre(rho_est, a_est, b_est, data)
+        dx, dy, dz = self.S.calc_diff(aer_pos_pre, data[2], data[3], data[4])
         coeffs = self.S.calc_poly_surf_coeffs(a_est, b_est, dx, dy, dz)
 
         sa, sb, sr, sp, sh, ca, cb, cr, cp, ch \
-            = self.calc_trig_terms(a_est, b_est, Data.r, Data.p, Data.h) 
+            = self.calc_trig_terms(a_est, b_est, data[8], data[9], data[10]) 
 
         p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs[0]
         p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
@@ -650,7 +689,7 @@ class Jacobian:
              self.lJx[2](rho_est, sa, sb, sr, sp, sh, ca, cb, cr, ch),
              self.lJx[3](rho_est, sa, sb, sr, sp, ca, cb, cr, cp, ch),
              self.lJx[4](rho_est, sa, sb, sr, sp, sh, ca, cb, cr, cp, ch),
-             np.ones(Data.num_points),
+             np.ones(data[0].size),
              self.lJx[8](sa, sb, sr, sp, sh, ca, cb, cr, cp, ch)))
 
         '''evaluate the y component'''
@@ -662,7 +701,7 @@ class Jacobian:
              self.lJy[2](rho_est, sa, sb, sr, sp, sh, ca, cb, cr, ch),
              self.lJy[3](rho_est, sa, sb, sr, sp, sh, ca, cb, cr, cp),
              self.lJy[4](rho_est, sa, sb, sr, sp, sh, ca, cb, cr, cp, ch),
-             np.ones(Data.num_points),
+             np.ones(data[0].size),
              self.lJy[8](sa, sb, sr, sp, sh, ca, cb, cr, cp, ch)))
 
         '''evaluate the z component'''
@@ -673,7 +712,7 @@ class Jacobian:
                          sb, sr, sp, ca, cb, cr, cp),
              self.lJz[2](rho_est, sa, sb, sr, ca, cb, cr, cp),
              self.lJz[3](rho_est, sa, sb, sr, sp, ca, cb, cr, cp),
-             np.ones(Data.num_points),
+             np.ones(data[0].size),
              self.lJz[8](sa, sb, sr, sp, ca, cb, cr, cp)))
 
         return (Jx, Jy, Jz, )
@@ -681,7 +720,7 @@ class Jacobian:
 
 class Subaerial:
 
-    def __init__(self, J, merged_data):
+    def __init__(self, J, merged_data, stddev):
         """
         :param List[ndarray] D: the merged data
 
@@ -714,7 +753,8 @@ class Subaerial:
         """
 
         self.J = J  # Jacobian object
-        self.merged_data = merged_data  # merged-data object
+        self.merged_data = merged_data  # merged-data ndarray
+        self.stddev = stddev  # nparray of standard deviations
 
     def propogate_uncertainty(self, J_eval):
         """propogates the subaerial uncertatinty
@@ -730,10 +770,22 @@ class Subaerial:
         :return: (ndarray, ndarray, list[str])
         """
 
-        stddev = self.merged_data.stddev
+        stddev = self.stddev
         V = ne.evaluate("stddev * stddev")  # variance = stddev**2
 
         # delete the rows corresponding to the Jacobian functions that equal 0
+
+        # 0 
+        # 1
+        # 2
+        # 3
+        # 4
+        # 5
+        # 6
+        # 7
+        # 8
+
+
         Vx = np.delete(V, [6, 7], 0)
         Vy = np.delete(V, [5, 7], 0)
         Vz = np.delete(V, [4, 5, 6], 0)
@@ -785,10 +837,10 @@ class Subaerial:
 
         :return:
         """
-        if self.merged_data.num_points == 0:  # i.e., las and sbet not merged
+        if self.merged_data is False:  # i.e., las and sbet not merged
             logging.warning('SBET and LAS not merged because max delta '
                             'time exceeded acceptable threshold of {} '
-                            'sec(s).'.format(Merge.dt_threshold))
+                            'sec(s).'.format(Merge.max_allowable_dt))
         else:
 
             # EVALUATE JACOBIAN
@@ -797,7 +849,7 @@ class Subaerial:
             # PROPAGATE UNCERTAINTY
             aer_thu, aer_tvu, aer_cols = self.propogate_uncertainty(J_eval)
 
-            return np.vstack((aer_thu, aer_tvu)).T, aer_cols
+            return aer_thu, aer_tvu, aer_cols
 
 
 if __name__ == '__main__':
