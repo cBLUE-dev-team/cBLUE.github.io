@@ -432,6 +432,18 @@ class Jacobian:
         :return: (function, function, function)
         """
 
+        print(self.Jx)
+        for i in self.Jx:
+            print i
+
+        print(self.Jy)
+        for i in self.Jy:
+            print i
+
+        print(self.Jz)
+        for i in self.Jz:
+            print i
+
         # create variables for symbolic computations
         a, b, r, p, h, rho, \
         p00, p10, p01, p20, p11, p02, p21, p12, p03, \
@@ -442,85 +454,71 @@ class Jacobian:
                       'sin_a sin_b sin_r sin_p sin_h '
                       'cos_a cos_b cos_r cos_p cos_h')
 
-        '''functionize the trig terms of the Jacobian x component'''
-        Jxsub = []
-        for i, j in enumerate(self.Jx):
-            Jxsub.append(j.subs([
-                (sin(a), sin_a),
-                (sin(b), sin_b),
-                (sin(r), sin_r),
-                (sin(p), sin_p),
-                (sin(h), sin_h),
-                (cos(a), cos_a),
-                (cos(b), cos_b),
-                (cos(r), cos_r),
-                (cos(p), cos_p),
-                (cos(h), cos_h)]))
+        substitutions = [
+            (sin(a), sin_a),
+            (sin(b), sin_b),
+            (sin(r), sin_r),
+            (sin(p), sin_p),
+            (sin(h), sin_h),
+            (cos(a), cos_a),
+            (cos(b), cos_b),
+            (cos(r), cos_r),
+            (cos(p), cos_p),
+            (cos(h), cos_h)]
 
-        '''functionize the trig terms of the Jacobian y component'''
-        Jysub = []
-        for i, j in enumerate(self.Jy):
-            Jysub.append(j.subs([
-                (sin(a), sin_a),
-                (sin(b), sin_b),
-                (sin(r), sin_r),
-                (sin(p), sin_p),
-                (sin(h), sin_h),
-                (cos(a), cos_a),
-                (cos(b), cos_b),
-                (cos(r), cos_r),
-                (cos(p), cos_p),
-                (cos(h), cos_h)]))
+        # functionize the trig terms of the Jacobian components
+        Jxsub = [j.subs(substitutions) for j in self.Jx]
+        Jysub = [j.subs(substitutions) for j in self.Jy]
+        Jzsub = [j.subs(substitutions) for j in self.Jz]
 
-        '''functionize the trig terms of the Jacobian z component'''
-        Jzsub = []
-        for i, j in enumerate(self.Jz):
-            Jzsub.append(j.subs([
-                (sin(a), sin_a),
-                (sin(b), sin_b),
-                (sin(r), sin_r),
-                (sin(p), sin_p),
-                (sin(h), sin_h),
-                (cos(a), cos_a),
-                (cos(b), cos_b),
-                (cos(r), cos_r),
-                (cos(p), cos_p),
-                (cos(h), cos_h)]))
+        #Jxsub0_vars =  
+        #print(Jxsub0_vars)
 
-        '''functionize the x component'''
-        Jxsub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
-                       sin_a, sin_b, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_r, cos_p, cos_h)
+        #'''functionize the x component'''
+        #Jxsub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
+        #               sin_a, sin_b, sin_r, sin_p, sin_h,
+        #               cos_a, cos_b, cos_r, cos_p, cos_h)
 
-        Jxsub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
-                       sin_b, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_r, cos_p, cos_h)
+        #Jxsub1_vars = (a, b, rho, p02, p03, p21, p12, p01, p11,
+        #               sin_b, sin_r, sin_p, sin_h,
+        #               cos_a, cos_b, cos_r, cos_p, cos_h)
 
-        Jxsub2_vars = (rho, sin_a, sin_b, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_r, cos_h)
+        #Jxsub2_vars = (rho, sin_a, sin_b, sin_r, sin_p, sin_h,
+        #               cos_a, cos_b, cos_r, cos_h)
 
-        Jxsub3_vars = (rho, sin_a, sin_b, sin_r, sin_p,
-                       cos_a, cos_b, cos_r, cos_p, cos_h)
+        #Jxsub3_vars = (rho, sin_a, sin_b, sin_r, sin_p,
+        #               cos_a, cos_b, cos_r, cos_p, cos_h)
 
-        Jxsub4_vars = (rho, sin_a, sin_b, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_r, cos_p, cos_h)
+        #Jxsub4_vars = (rho, sin_a, sin_b, sin_r, sin_p, sin_h,
+        #               cos_a, cos_b, cos_r, cos_p, cos_h)
 
-        Jxsub5_vars = ()
-        Jxsub6_vars = ()
-        Jxsub7_vars = ()
+        #Jxsub5_vars = ()
+        #Jxsub6_vars = ()
+        #Jxsub7_vars = ()
 
-        Jxsub8_vars = (sin_a, sin_b, sin_r, sin_p, sin_h,
-                       cos_a, cos_b, cos_r, cos_p, cos_h)
+        #Jxsub8_vars = (sin_a, sin_b, sin_r, sin_p, sin_h,
+        #               cos_a, cos_b, cos_r, cos_p, cos_h)
+        
+        # TODO: make into a loop with 9 iterations
+        fJxsub0 = lambdify(Jxsub[0].free_symbols, Jxsub[0], eval_type)
+        fJxsub1 = lambdify(Jxsub[1].free_symbols, Jxsub[1], eval_type)
+        fJxsub2 = lambdify(Jxsub[2].free_symbols, Jxsub[2], eval_type)
+        fJxsub3 = lambdify(Jxsub[3].free_symbols, Jxsub[3], eval_type)
+        fJxsub4 = lambdify(Jxsub[4].free_symbols, Jxsub[4], eval_type)
+        fJxsub5 = lambdify(Jxsub[5].free_symbols, Jxsub[5], eval_type)
+        fJxsub6 = lambdify(Jxsub[6].free_symbols, Jxsub[6], eval_type)
+        fJxsub7 = lambdify(Jxsub[7].free_symbols, Jxsub[7], eval_type)
+        fJxsub8 = lambdify(Jxsub[8].free_symbols, Jxsub[8], eval_type)
 
-        fJxsub0 = lambdify(Jxsub0_vars, Jxsub[0], eval_type)
-        fJxsub1 = lambdify(Jxsub1_vars, Jxsub[1], eval_type)
-        fJxsub2 = lambdify(Jxsub2_vars, Jxsub[2], eval_type)
-        fJxsub3 = lambdify(Jxsub3_vars, Jxsub[3], eval_type)
-        fJxsub4 = lambdify(Jxsub4_vars, Jxsub[4], eval_type)
-        fJxsub5 = lambdify(Jxsub5_vars, Jxsub[5], eval_type)
-        fJxsub6 = lambdify(Jxsub6_vars, Jxsub[6], eval_type)
-        fJxsub7 = lambdify(Jxsub7_vars, Jxsub[7], eval_type)
-        fJxsub8 = lambdify(Jxsub8_vars, Jxsub[8], eval_type)
+        #fJxsub0 = lambdify(Jxsub0_vars, Jxsub[0], eval_type)
+        #fJxsub1 = lambdify(Jxsub1_vars, Jxsub[1], eval_type)
+        #fJxsub2 = lambdify(Jxsub2_vars, Jxsub[2], eval_type)
+        #fJxsub3 = lambdify(Jxsub3_vars, Jxsub[3], eval_type)
+        #fJxsub4 = lambdify(Jxsub4_vars, Jxsub[4], eval_type)
+        #fJxsub5 = lambdify(Jxsub5_vars, Jxsub[5], eval_type)
+        #fJxsub6 = lambdify(Jxsub6_vars, Jxsub[6], eval_type)
+        #fJxsub7 = lambdify(Jxsub7_vars, Jxsub[7], eval_type)
+        #fJxsub8 = lambdify(Jxsub8_vars, Jxsub[8], eval_type)
 
         '''functionize the y component'''
         Jysub0_vars = (a, b, rho, p10, p21, p12, p11, p20,
@@ -679,6 +677,9 @@ class Jacobian:
         p00x, p10x, p01x, p20x, p11x, p02x, p21x, p12x, p03x = coeffs[0]
         p00y, p10y, p01y, p20y, p11y, p02y, p21y, p12y, p03y = coeffs[1]
         p00z, p10z, p01z, p20z, p11z, p02z, p21z, p12z, p03z = coeffs[2]
+
+        '''to simplify the Jacobian evaluation, only the non-zero terms are kept
+        (the rows of the '''
 
         '''evaluate the x component'''
         Jx = np.vstack(

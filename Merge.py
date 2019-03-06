@@ -65,8 +65,6 @@ class Merge:
 
         num_sbet_pts = sbet_data.size
 
-        tic = datetime.datetime.now()
-
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
 
@@ -79,10 +77,6 @@ class Merge:
         dt = ne.evaluate('t_sbet_masked - t_las_masked')
         max_dt = np.max(dt)
         #logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
-
-        print(datetime.datetime.now() - tic)
-    
-        tic = datetime.datetime.now()
 
         if max_dt > self.max_allowable_dt:
             data = False
@@ -115,8 +109,6 @@ class Merge:
                 sbet_data[:, 11][idx[mask]],                    # stdz_sbet
                 np.full(num_points, self.std_rho)               # std_rho
             ])
-
-        print(datetime.datetime.now() - tic)
 
         return data, stddev
 
