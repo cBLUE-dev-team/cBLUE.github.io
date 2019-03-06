@@ -61,20 +61,20 @@ class Merge:
         =====   =========   ========================    =======
         """
 
-    def merge(self, las, fl, sbet_data, (las_t, las_x, las_y, las_z)):
+    def merge(self, las, fl, sbet_data, las_data):
 
         num_sbet_pts = sbet_data.size
 
         tic = datetime.datetime.now()
 
         # match sbet and las dfs based on timestamps
-        idx = np.searchsorted(sbet_data[:, 0], las_t)
+        idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
 
         # don't use las points outside range of sbet points
         mask = ne.evaluate('0 < idx') & ne.evaluate('idx < num_sbet_pts')
 
         t_sbet_masked = sbet_data[:, 0][idx[mask]]
-        t_las_masked = las_t[mask]
+        t_las_masked = las_data[:, 3][mask]
 
         dt = ne.evaluate('t_sbet_masked - t_las_masked')
         max_dt = np.max(dt)
@@ -90,10 +90,10 @@ class Merge:
         else:
             data = np.asarray([
                 sbet_data[:, 0][idx[mask]],
-                las_t[mask],
-                las_x[mask],
-                las_y[mask],
-                las_z[mask],
+                las_data[:, 3][mask],   # t
+                las_data[:, 0][mask],   # x
+                las_data[:, 1][mask],   # y
+                las_data[:, 2][mask],   # z
                 sbet_data[:, 3][idx[mask]],
                 sbet_data[:, 4][idx[mask]],
                 sbet_data[:, 5][idx[mask]],

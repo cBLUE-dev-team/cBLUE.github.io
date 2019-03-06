@@ -5,7 +5,6 @@ import laspy
 
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 
-
 """
 This class provides the functionality to load las files into cBLUE.  One Las object 
 is created for each loaded las file.  
@@ -22,12 +21,11 @@ class Las:
         self.num_file_points = self.inFile.__len__()
         self.points_to_process = self.inFile.points['point']
 
-        '''get index list that would sort gps_time (to be used to
+        '''index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
         file
         '''
-        logging.info('generating time-sorting indices...')
-        self.time_sort_indices = np.argsort(self.points_to_process, order='gps_time')
+        self.time_sort_indices = None
 
     def get_flight_line_ids(self):
         """generates a list of unique flight line ids
@@ -56,14 +54,6 @@ class Las:
         offset_y = np.asarray(self.inFile.header.offset[1])
         offset_z = np.asarray(self.inFile.header.offset[2])
 
-        #flight_line_indx = self.points_to_process['pt_src_id'] == fl
-        #flight_line_points = self.points_to_process[flight_line_indx]
-        #sorted_ind = np.argsort(points_to_process['gps_time'])
-        #sorted_las_points = self.points_to_process[sorted_ind]
-
-        #flight_line_points_sorted = np.sort(flight_line_points, order='gps_time')
-        #sorted_ind = np.argsort(flight_line_points['gps_time'])
-
         t = self.points_to_process['gps_time']
         X = self.points_to_process['X']
         Y = self.points_to_process['Y']
@@ -74,9 +64,11 @@ class Las:
         z = ne.evaluate("Z * scale_z + offset_z")
 
         xyzt = np.vstack([x, y, z, t]).T
-        xyzt = xyzt[xyzt[:,3].argsort()]
+        self.time_sort_indices = xyzt[:,3].argsort()
 
-        return xyzt
+        flight_lines = self.points_to_process['pt_src_id']
+
+        return xyzt, self.time_sort_indices, flight_lines
 
     @staticmethod
     def get_average_water_surface_ellip_height():

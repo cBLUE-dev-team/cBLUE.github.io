@@ -50,13 +50,13 @@ class Tpu:
         # FORM OBSERVATION EQUATIONS
         S = SensorModel('Riegl-VQ-880-G')
 
-        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS (x, y, z)
+        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
         J = Jacobian(S)
 
         las = Las(las)
         logging.info('{} {} ({:,} points)'.format(las.las_short_name, '#' * 30, las.num_file_points))
         logging.info(las.get_flight_line_ids())
-        sorted_las_xyzt = las.get_flight_line_txyz()
+        las_xyzt, t_sort_indx, flight_lines = las.get_flight_line_txyz()
 
         M = Merge()
         #0       t_sbet
@@ -74,13 +74,14 @@ class Tpu:
         for fl in las.get_flight_line_ids():
             logging.info('flight line {} {}'.format(fl, '-' * 50))
 
-            flight_line_indx = self.points_to_process['pt_src_id'] == fl
-            fl_sorted_las_txyz = sorted_las_txyz[flight_line_indx]
+            # las_xyzt has the same order as self.points_to_process
+            flight_line_indx = flight_lines == fl
+            fl_sorted_las_xyzt = las_xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
 
             # CREATE MERGED-DATA OBJECT M
             tic = datetime.datetime.now()
             logging.info('({}) merging trajectory and las data...'.format(las.las_short_name))
-            merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_txyz)
+            merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
             toc = datetime.datetime.now()
             print(toc - tic)
 

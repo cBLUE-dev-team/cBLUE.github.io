@@ -53,7 +53,6 @@ points_to_process = inFile.points['point']
 #points_to_process = points_to_process[sorted_ind]
 
 
-tic = datetime.datetime.now()
 
 scale_x = np.asarray(inFile.header.scale[0])
 scale_y = np.asarray(inFile.header.scale[1])
@@ -74,12 +73,35 @@ z = ne.evaluate("Z * scale_z + offset_z")
 
 xyzt = np.vstack([x, y, z, t]).T
 print(xyzt)
-print()
-xyzt = xyzt[xyzt[:,3].argsort()]
-print(xyzt)
+#print()
 
+tic = datetime.datetime.now()
+t_sort_indx = xyzt[:,3].argsort()
+print(t_sort_indx)
+print(xyzt[t_sort_indx])
 print(datetime.datetime.now() - tic)
 
+#tic = datetime.datetime.now()
+#t_sort_indx = np.argsort(points_to_process, order=('pt_src_id', 'gps_time'))
+#print(t_sort_indx)
+#print(xyzt[t_sort_indx])
+#print(datetime.datetime.now() - tic)
+
+fls = np.unique(points_to_process['pt_src_id'])
+print(fls)
+
+for fl in fls:
+    flight_line_indx = points_to_process['pt_src_id'] == fl
+    way1 = xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
+    way2 = points_to_process[t_sort_indx][flight_line_indx[t_sort_indx]]
+    print('{} {}'.format(fl, '-' * 30))
+    print(way1)
+    print(way2)
+    print(np.all(way1[:,3] == way2['gps_time']))
+    print(np.all(np.diff(way1[:, 3]) >= 0))
+    print(np.all(np.diff(way2['gps_time']) >= 0))
+    
+    
 
 #import laspy
 #import copy

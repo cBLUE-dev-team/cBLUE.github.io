@@ -3,7 +3,6 @@ import time
 import pandas as pd
 from datetime import datetime
 import logging
-import numexpr as ne
 
 
 """
@@ -27,6 +26,10 @@ class Sbet:
         self.sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
                                   if f.endswith('.txt')])
         self.data = None
+        self.SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
+        self.SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
+        self.GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
+        self.GPS_ADJUSTED_OFFSET = 1e9
 
     @staticmethod
     def get_sbet_date(sbet):
@@ -43,8 +46,7 @@ class Sbet:
         sbet_date = [year, month, day]
         return sbet_date
 
-    @staticmethod
-    def gps_sow_to_gps_adj(gps_date, gps_wk_sec):
+    def gps_sow_to_gps_adj(self, gps_date, gps_wk_sec):
         """converts GPS seconds-of-week timestamp to GPS adjusted standard time
 
         In the case that the timestamps in the sbet files are GPS week seconds,
@@ -59,21 +61,25 @@ class Sbet:
         """
         
         logging.info('converting GPS week seconds to GPS adjusted standard time...'),
-        SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
-        SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
-        GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
-        GPS_ADJUSTED_OFFSET = 1e9
 
         year = gps_date[0]
         month = gps_date[1]
         day = gps_date[2]
 
         sbet_date = datetime(year, month, day)
-        dt = sbet_date - GPS_EPOCH
-        gps_wk = int((dt.days * SECS_PER_DAY + dt.seconds) / SECS_PER_GPS_WK)
-        gps_time = gps_wk * SECS_PER_GPS_WK + gps_wk_sec
-        gps_time_adj = gps_time - GPS_ADJUSTED_OFFSET
+        dt = sbet_date - self.GPS_EPOCH
+        gps_wk = int((dt.days * self.SECS_PER_DAY + dt.seconds) / self.SECS_PER_GPS_WK)
+        gps_time = gps_wk * self.SECS_PER_GPS_WK + gps_wk_sec
+        gps_time_adj = gps_time - self.GPS_ADJUSTED_OFFSET
+
         return gps_time_adj
+
+    def check_if_sow(self, time):
+        logging.info('checking if timestamps are SOW...')
+        if time <= self.SECS_PER_GPS_WK:
+            return True
+        else:
+            return False
 
     def build_sbets_data(self):
         """builds 1 pandas dataframe from all ASCII sbet files
@@ -119,10 +125,16 @@ class Sbet:
                 index_col=False)
             logging.info('({} trajectory points)'.format(sbet_df.shape[0]))
             sbet_date = self.get_sbet_date(sbet)
-            gps_time_adj = self.gps_sow_to_gps_adj(sbet_date, sbet_df['time'])
-            sbet_df['time'] = gps_time_adj
+
+            is_sow = self.check_if_sow(sbet_df['time'][0])
+            if is_sow:
+                gps_time_adj = self.gps_sow_to_gps_adj(sbet_date, sbet_df['time'])
+                sbet_df['time'] = gps_time_adj
+
             sbets_df = sbets_df.append(sbet_df, ignore_index=True)
+
         sbets_data = sbets_df.sort_values(['time'], ascending=[1])
+
         return sbets_data
 
     def set_data(self):
@@ -151,10 +163,12 @@ class Sbet:
         """
         data = self.data[(self.data.Y >= south) & (self.data.Y <= north) &
                          (self.data.X >= west) & (self.data.X <= east)]
+
         return data
 
 
 if __name__ == '__main__':
-    pass
-    # sbet = Sbet('I:\NGS_TPU\DATA\FL1604-TB-N\sbet\New folder')
-    # print sbet.data
+    logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+    sbet = Sbet(r'C:\QAQC_contract\marco_island')
+    sbet_df = sbet.build_sbets_data()
+    print(sbet_df)
