@@ -112,9 +112,9 @@ class Sbet:
         sbets_df = pd.DataFrame()
         header_sbet = ['time', 'lon', 'lat', 'X', 'Y', 'Z', 'roll', 'pitch', 'heading',
                        'stdX', 'stdY', 'stdZ', 'stdroll', 'stdpitch', 'stdheading']
-        logging.info('getting sbet data from: ')
         for sbet in sorted(self.sbet_files):
-            logging.info('{}...'.format(sbet))
+            logging.info('-' * 50)
+            logging.info('getting trajectory data from {}...'.format(sbet))
             sbet_df = pd.read_table(
                 sbet,
                 skip_blank_lines=True,
@@ -146,7 +146,7 @@ class Sbet:
         sbet_tic = time.clock()
         self.data = self.build_sbets_data()  # df
         sbet_toc = time.clock()
-        logging.info('It took {:.1f} mins to load sbets.'.format((sbet_toc - sbet_tic) / 60))
+        logging.info('It took {:.1f} mins to load the trajectory data.'.format((sbet_toc - sbet_tic) / 60))
 
     def get_tile_data(self, north, south, east, west):
         """queries the sbet data points that lie within the given las tile bounding coordinates

@@ -79,11 +79,9 @@ class Tpu:
             fl_sorted_las_xyzt = las_xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
 
             # CREATE MERGED-DATA OBJECT M
-            tic = datetime.datetime.now()
             logging.info('({}) merging trajectory and las data...'.format(las.las_short_name))
             merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
             toc = datetime.datetime.now()
-            print(toc - tic)
 
             logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
             subaer_obj = Subaerial(J, merged_data, stddev)
@@ -123,7 +121,7 @@ class Tpu:
             df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
             self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
-        self.write_metadata(las)  # TODO: include as VLR?
+        self.write_metadata(las, str(S))  # TODO: include as VLR?
         self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
         #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
@@ -269,7 +267,7 @@ class Tpu:
             dat = in_las.reader.get_dimension(field.name)
             out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
 
-    def write_metadata(self, las):
+    def write_metadata(self, las, sensor_model):
         """creates a json file with summary statistics and metedata
 
         This method creates a json file containing summary statistics for each
@@ -281,6 +279,9 @@ class Tpu:
         :param las:
         :return: n/a
         """
+
+        print(sensor_model)
+
         logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
         self.metadata.update({
             'subaqueous lookup params': self.subaqu_lookup_params,

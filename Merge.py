@@ -1,7 +1,5 @@
-import datetime
 import numpy as np
 import numexpr as ne
-import logging
 from math import radians
 
 
