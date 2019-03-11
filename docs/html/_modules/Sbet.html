@@ -88,6 +88,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">sbet_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">\</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sbet_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">sbet_dir</span><span class="p">)</span>
                                   <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">)])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SECS_PER_GPS_WK</span> <span class="o">=</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span>  <span class="c1"># 604800 sec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SECS_PER_DAY</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span>  <span class="c1"># 86400 sec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">GPS_EPOCH</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1980</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">GPS_ADJUSTED_OFFSET</span> <span class="o">=</span> <span class="mf">1e9</span>
 
 <div class="viewcode-block" id="Sbet.get_sbet_date"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.get_sbet_date">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_sbet_date</span><span class="p">(</span><span class="n">sbet</span><span class="p">):</span>
@@ -104,8 +108,7 @@
         <span class="n">sbet_date</span> <span class="o">=</span> <span class="p">[</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">sbet_date</span></div>
 
-<div class="viewcode-block" id="Sbet.gps_sow_to_gps_adj"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.gps_sow_to_gps_adj">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">gps_sow_to_gps_adj</span><span class="p">(</span><span class="n">gps_date</span><span class="p">,</span> <span class="n">gps_wk_sec</span><span class="p">):</span>
+<div class="viewcode-block" id="Sbet.gps_sow_to_gps_adj"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.gps_sow_to_gps_adj">[docs]</a>    <span class="k">def</span> <span class="nf">gps_sow_to_gps_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gps_date</span><span class="p">,</span> <span class="n">gps_wk_sec</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;converts GPS seconds-of-week timestamp to GPS adjusted standard time</span>
 
 <span class="sd">        In the case that the timestamps in the sbet files are GPS week seconds,</span>
@@ -120,20 +123,25 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;converting GPS week seconds to GPS adjusted standard time...&#39;</span><span class="p">),</span>
-        <span class="n">SECS_PER_GPS_WK</span> <span class="o">=</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span>  <span class="c1"># 604800 sec</span>
-        <span class="n">SECS_PER_DAY</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span>  <span class="c1"># 86400 sec</span>
-        <span class="n">GPS_EPOCH</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1980</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
         <span class="n">year</span> <span class="o">=</span> <span class="n">gps_date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">month</span> <span class="o">=</span> <span class="n">gps_date</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">day</span> <span class="o">=</span> <span class="n">gps_date</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
         <span class="n">sbet_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
-        <span class="n">dt</span> <span class="o">=</span> <span class="n">sbet_date</span> <span class="o">-</span> <span class="n">GPS_EPOCH</span>
-        <span class="n">gps_wk</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">dt</span><span class="o">.</span><span class="n">days</span> <span class="o">*</span> <span class="n">SECS_PER_DAY</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span> <span class="o">/</span> <span class="n">SECS_PER_GPS_WK</span><span class="p">)</span>
-        <span class="n">gps_time</span> <span class="o">=</span> <span class="n">gps_wk</span> <span class="o">*</span> <span class="n">SECS_PER_GPS_WK</span> <span class="o">+</span> <span class="n">gps_wk_sec</span>
-        <span class="n">gps_time_adj</span> <span class="o">=</span> <span class="n">gps_time</span> <span class="o">-</span> <span class="mf">1e9</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">sbet_date</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">GPS_EPOCH</span>
+        <span class="n">gps_wk</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">dt</span><span class="o">.</span><span class="n">days</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">SECS_PER_DAY</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">SECS_PER_GPS_WK</span><span class="p">)</span>
+        <span class="n">gps_time</span> <span class="o">=</span> <span class="n">gps_wk</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">SECS_PER_GPS_WK</span> <span class="o">+</span> <span class="n">gps_wk_sec</span>
+        <span class="n">gps_time_adj</span> <span class="o">=</span> <span class="n">gps_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">GPS_ADJUSTED_OFFSET</span>
+
         <span class="k">return</span> <span class="n">gps_time_adj</span></div>
+
+<div class="viewcode-block" id="Sbet.check_if_sow"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.check_if_sow">[docs]</a>    <span class="k">def</span> <span class="nf">check_if_sow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;checking if timestamps are SOW...&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">time</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SECS_PER_GPS_WK</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="Sbet.build_sbets_data"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.build_sbets_data">[docs]</a>    <span class="k">def</span> <span class="nf">build_sbets_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;builds 1 pandas dataframe from all ASCII sbet files</span>
@@ -166,9 +174,9 @@
         <span class="n">sbets_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="n">header_sbet</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="s1">&#39;roll&#39;</span><span class="p">,</span> <span class="s1">&#39;pitch&#39;</span><span class="p">,</span> <span class="s1">&#39;heading&#39;</span><span class="p">,</span>
                        <span class="s1">&#39;stdX&#39;</span><span class="p">,</span> <span class="s1">&#39;stdY&#39;</span><span class="p">,</span> <span class="s1">&#39;stdZ&#39;</span><span class="p">,</span> <span class="s1">&#39;stdroll&#39;</span><span class="p">,</span> <span class="s1">&#39;stdpitch&#39;</span><span class="p">,</span> <span class="s1">&#39;stdheading&#39;</span><span class="p">]</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;getting sbet data from: &#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">sbet</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sbet_files</span><span class="p">):</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sbet</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;getting trajectory data from </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sbet</span><span class="p">))</span>
             <span class="n">sbet_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span>
                 <span class="n">sbet</span><span class="p">,</span>
                 <span class="n">skip_blank_lines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -179,10 +187,16 @@
                 <span class="n">index_col</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> trajectory points)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sbet_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
             <span class="n">sbet_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sbet_date</span><span class="p">(</span><span class="n">sbet</span><span class="p">)</span>
-            <span class="n">gps_time_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gps_sow_to_gps_adj</span><span class="p">(</span><span class="n">sbet_date</span><span class="p">,</span> <span class="n">sbet_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>
-            <span class="n">sbet_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gps_time_adj</span>
+
+            <span class="n">is_sow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_if_sow</span><span class="p">(</span><span class="n">sbet_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">is_sow</span><span class="p">:</span>
+                <span class="n">gps_time_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gps_sow_to_gps_adj</span><span class="p">(</span><span class="n">sbet_date</span><span class="p">,</span> <span class="n">sbet_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>
+                <span class="n">sbet_df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gps_time_adj</span>
+
             <span class="n">sbets_df</span> <span class="o">=</span> <span class="n">sbets_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sbet_df</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="n">sbets_data</span> <span class="o">=</span> <span class="n">sbets_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
         <span class="k">return</span> <span class="n">sbets_data</span></div>
 
 <div class="viewcode-block" id="Sbet.set_data"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -194,7 +208,7 @@
         <span class="n">sbet_tic</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_sbets_data</span><span class="p">()</span>  <span class="c1"># df</span>
         <span class="n">sbet_toc</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;It took </span><span class="si">{:.1f}</span><span class="s1"> mins to load sbets.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">sbet_toc</span> <span class="o">-</span> <span class="n">sbet_tic</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">))</span></div>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;It took </span><span class="si">{:.1f}</span><span class="s1"> mins to load the trajectory data.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">sbet_toc</span> <span class="o">-</span> <span class="n">sbet_tic</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Sbet.get_tile_data"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.get_tile_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_tile_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">north</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">west</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;queries the sbet data points that lie within the given las tile bounding coordinates</span>
@@ -211,13 +225,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Y</span> <span class="o">&gt;=</span> <span class="n">south</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Y</span> <span class="o">&lt;=</span> <span class="n">north</span><span class="p">)</span> <span class="o">&amp;</span>
                          <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span> <span class="o">&gt;=</span> <span class="n">west</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span> <span class="o">&lt;=</span> <span class="n">east</span><span class="p">)]</span>
+
         <span class="k">return</span> <span class="n">data</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="k">pass</span>
-    <span class="c1"># sbet = Sbet(&#39;I:\NGS_TPU\DATA\FL1604-TB-N\sbet\New folder&#39;)</span>
-    <span class="c1"># print sbet.data</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">sbet</span> <span class="o">=</span> <span class="n">Sbet</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;C:\QAQC_contract\marco_island&#39;</span><span class="p">)</span>
+    <span class="n">sbet_df</span> <span class="o">=</span> <span class="n">sbet</span><span class="o">.</span><span class="n">build_sbets_data</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sbet_df</span><span class="p">)</span>
 </pre></div>
 
           </div>

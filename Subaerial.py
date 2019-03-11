@@ -6,21 +6,17 @@ import numpy as np
 import numexpr as ne
 
 
-"""
-This class provides the functionality to calculate the aerial
-portion of the total propagated uncertainty (TPU).
-
-Two key modules that are used throughout are sympy and numexpr.  
-The module sympy ....  The module numexpr....  
-        # assign variables because numexpr variables don't handle indexing
-
-        for example...
-         x_las = self.x_las
-         x_ = ne.evaluate("x_las - x_sbet")
-"""
-
-
 class SensorModel:
+    """This class is used to define and access the sensor model of a particular 
+    lidar sensor, including the laser geolocation equation and any
+    supporting information or parameters.  Currently, only a single 
+    sensor, the Riegl VQ-880-G, is supported, but development plans
+    include extending support to the Chiroptera II (or III or IV).
+
+    TODO:  move the a, b uncertainty values here
+
+    """
+
 
     eval_type = 'numexpr'
 
@@ -43,6 +39,15 @@ class SensorModel:
         describing the assumed scan pattern, which is an approximation of the
         manufacturer's proprietary scan pattern.
 
+        .. math::
+
+            \\begin{align*}
+            R1 &= \\left[\\begin{matrix}1 & 0 & 0\\\\0 & \\cos{\\left (r \\right )} & - \\sin{\\left (r \\right )}\\\\0 & \\sin{\\left (r \\right )} & \\cos{\\left (r \\right )}\\end{matrix}\\right] \\\\
+            R2 &= \\left[\\begin{matrix}\\cos{\\left (p \\right )} & 0 & \\sin{\\left (p \\right )}\\\\0 & 1 & 0\\\\- \\sin{\\left (p \\right )} & 0 & \\cos{\\left (p \\right )}\\end{matrix}\\right] \\\\
+            R3 &= \\left[\\begin{matrix}\\cos{\\left (h \\right )} & - \\sin{\\left (h \\right )} & 0\\\\\\sin{\\left (h \\right )} & \\cos{\\left (h \\right )} & 0\\\\0 & 0 & 1\\end{matrix}\\right] \\\\
+            R &= R3*R2*R1 = \\left[\\begin{matrix}\\cos{\\left (h \\right )} \\cos{\\left (p \\right )} & - \\sin{\\left (h \\right )} \\cos{\\left (r \\right )} + \\sin{\\left (p \\right )} \\sin{\\left (r \\right )} \\cos{\\left (h \\right )} & \\sin{\\left (h \\right )} \\sin{\\left (r \\right )} + \\sin{\\left (p \\right )} \\cos{\\left (h \\right )} \\cos{\\left (r \\right )}\\\\\\sin{\\left (h \\right )} \\cos{\\left (p \\right )} & \\sin{\\left (h \\right )} \\sin{\\left (p \\right )} \\sin{\\left (r \\right )} + \\cos{\\left (h \\right )} \\cos{\\left (r \\right )} & \\sin{\\left (h \\right )} \\sin{\\left (p \\right )} \\cos{\\left (r \\right )} - \\sin{\\left (r \\right )} \\cos{\\left (h \\right )}\\\\- \\sin{\\left (p \\right )} & \\sin{\\left (r \\right )} \\cos{\\left (p \\right )} & \\cos{\\left (p \\right )} \\cos{\\left (r \\right )}\\end{matrix}\\right]
+            \\end{align*}
+
         :return: Matrix
         :return: List[lambdify functions]
         """
@@ -61,6 +66,15 @@ class SensorModel:
                      [0, 0, 1]])
 
         R = R3 * R2 * R1
+
+        print('R1')
+        print(latex(R1))
+        print('R2')
+        print(latex(R2))
+        print('R3')
+        print(latex(R3))
+        print('R')
+        print(latex(R))
 
         # "functionize" the necessary R components for a and b estimation
         # (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
@@ -88,6 +102,14 @@ class SensorModel:
         a: the rotation in the YZ plane
         b: the rotation in the XZ plane
 
+        .. math::
+
+            \\begin{align*}
+            M1 &= \\left[\\begin{matrix}1 & 0 & 0\\\\0 & \\cos{\\left (a \\right )} & - \\sin{\\left (a \\right )}\\\\0 & \\sin{\\left (a \\right )} & \\cos{\\left (a \\right )}\\end{matrix}\\right] \\\\
+            M2 &= \\left[\\begin{matrix}\\cos{\\left (b \\right )} & 0 & \\sin{\\left (b \\right )}\\\\0 & 1 & 0\\\\- \\sin{\\left (b \\right )} & 0 & \\cos{\\left (b \\right )}\\end{matrix}\\right] \\\\
+            M &= M2*M1 = \\left[\\begin{matrix}\\cos{\\left (b \\right )} & \\sin{\\left (a \\right )} \\sin{\\left (b \\right )} & \\sin{\\left (b \\right )} \\cos{\\left (a \\right )}\\\\0 & \\cos{\\left (a \\right )} & - \\sin{\\left (a \\right )}\\\\- \\sin{\\left (b \\right )} & \\sin{\\left (a \\right )} \\cos{\\left (b \\right )} & \\cos{\\left (a \\right )} \\cos{\\left (b \\right )}\\end{matrix}\\right]
+            \\end{align*}
+
         :return Matrix M: the scanning sensor rotation matrix
         """
         a, b = symbols('a b')
@@ -101,14 +123,29 @@ class SensorModel:
 
         M = M2 * M1
         
+        print('M1')
+        print(latex(M1))
+        print('M2')
+        print(latex(M2))
+        print('M')
+        print(latex(M))
+
         return M
 
     def define_obseration_equation(self):
         """define the lidar geolocation observation equation
 
-        The lidar geolocation equation used by cBLUE is shown below:
+        The inital observation equation is defined as follows:
 
-        TODO: add latex
+        .. image:: ../images/eq_OriginalObsEq.png
+
+        However, to account for the differences between the assumed sensor 
+        model and the proprietary sensor model, the initial observation equation 
+        is modified to include terms derived from polynomial surface fitting of 
+        differences in the X, Y, and Z components of the LAS positions and the
+        positions calculated from the intial cBLUE observation equation.
+
+        .. image:: ../images/eq_ModifiedObsEq.png
 
         :return: (sympy object, sympy object, sympy object, function)
         """
@@ -146,6 +183,8 @@ class SensorModel:
         F1 += polysurfcorr
         F2 += polysurfcorr
         F3 += polysurfcorr
+
+        print(latex(F1))
         
         return (F1, F2, F3,),  fF_orig
 
@@ -218,7 +257,8 @@ class SensorModel:
         with terms for a, b, a^2, ab, b^2, a^2b, ab^2, and b^3.
 
         Only every itv-th point is used to calculate the polynomial surface
-        coefficients, for small speed gains.
+        coefficients, for small speed gains in the calculations of the 
+        coefficients.
 
         :param a_est:
         :param b_est:
@@ -294,23 +334,30 @@ class SensorModel:
         'lambdified' geolocation equation (without the polynomial-surface
         error terms).
 
+        The data parameter contains the following ndarrays:
+
+        =====   =========   =======================
+        Index   ndarray     description
+        =====   =========   =======================
+        0       t_sbet      sbet timestamps
+        1       t_las       las timestamps
+        2       x_las       las x coordinates
+        3       y_las       las y coordinates
+        4       z_las       las z coordinates
+        5       x_sbet      sbet x coordinates
+        6       y_sbet      sbet y coordinates
+        7       z_sbet      sbet z coordinates
+        8       r           sbet roll
+        9       p           sbet pitch
+        10      h           sbet heading
+        =====   =========   =======================
+
         :param rho_est:
         :param a_est:
         :param b_est:
         :return:
         """
 
-        #0       t_sbet
-        #1       t_las 
-        #2       x_las 
-        #3       y_las 
-        #4       z_las 
-        #5       x_sbet
-        #6       y_sbet
-        #7       z_sbet
-        #8       r     
-        #9       p     
-        #10      h  
 
         aer_x_pre_poly = self.obs_eq_pre_poly[0](a_est, b_est, data[10], data[9], data[8], rho_est, data[5])
         aer_y_pre_poly = self.obs_eq_pre_poly[1](a_est, b_est, data[10], data[9], data[8], rho_est, data[6])
@@ -363,6 +410,24 @@ class SensorModel:
         components of the final cBLUE positions and the corresponding
         las file positions.
 
+        The data parameter contains the following ndarrays:
+
+        =====   =========   =======================
+        Index   ndarray     description
+        =====   =========   =======================
+        0       t_sbet      sbet timestamps
+        1       t_las       las timestamps
+        2       x_las       las x coordinates
+        3       y_las       las y coordinates
+        4       z_las       las z coordinates
+        5       x_sbet      sbet x coordinates
+        6       y_sbet      sbet y coordinates
+        7       z_sbet      sbet z coordinates
+        8       r           sbet roll
+        9       p           sbet pitch
+        10      h           sbet heading
+        =====   =========   =======================
+
         :param aer_pos:
         :return:
         """
@@ -382,10 +447,37 @@ class SensorModel:
         return [aer_x_err, aer_y_err, aer_z_err]
 
 class Jacobian:
+    """This class is used to calculate and evaluate the Jacobian of a
+    sensor model's laser geolocation equation.  The class Jacobian attempts
+    to decouple a Jacobian and the data used to evaluate it.  For example, 
+    the inputs to the lambdified Jacobian components are not hard-coded in 
+    the function call, but are determined from accessing the 
+    .func_code.co_varnames attribute of the Jacobian component and then 
+    looking up the corresponding values in a dict.  Although this somewhat
+    decouples the Jacobian from the data used to evaluate it, the dict 
+    containing the corresponding values is manually created, separate from
+    the sensor model.  Development plans for future versions include
+    decoupling the Jacobian and the data to evaluate it even more, by 
+    creating the dict based on the sensor model.
+
+    Two key modules that are used throughout are sympy and numexpr:
+
+    The module sympy is used to symbolically define the laser geolocation
+    equation and the corresponding Jacobian and to numerically evalulate
+    the Jacobian.  
+    
+    The module numexpr is used to accelerate calculations using large 
+    numpy arrays (https://github.com/pydata/numexpr).  One characteristic 
+    of numexpr is that numexpr expressions do not allow indexing of 
+    variables, so what might normally be coded as, for example,
+    *var = data[1] * 3* would require something like *data1 = data[1]* 
+    before executing the numexpr expression *"var = data1 * 3"*.
+   
+    """
 
     def __init__(self, S):
         self.S = S
-        self.OEx = S.obs_eq[0]  # S is SensorModel object
+        self.OEx = S.obs_eq[0]
         self.OEy = S.obs_eq[1]
         self.OEz = S.obs_eq[2]
         self.Jx, self.Jy, self.Jz  = self.form_jacobian()
@@ -400,10 +492,9 @@ class Jacobian:
         sympy to symbolically calculate the Jacobian simplifies the coding
         of what would otherwise be very long equations.
 
-        :param F1:
-        :param F2:
-        :param F3:
-        :return: (function, function, function)
+        .. image:: ../images/eq_Jacobian.png
+
+        :return (Matrix, Matrix, Matrix): sympy matrices for x, y, and z Jacobian components
         """
 
         a, b, r, p, h, x, y, z, rho = symbols('a b r p h x y z rho')
@@ -417,7 +508,7 @@ class Jacobian:
         return Jx, Jy, Jz
 
     def lambdify_jacobian(self, eval_type='numexpr'):
-        """turn the symbolical Jacobian into a function for faster computation
+        """turn the symbolic Jacobian into a function for faster computation
 
         This method "lambdifies" (or "functionizes") the Jacobian components, for
         faster calculations. Part of this lambdify process includes simplifying
@@ -428,11 +519,8 @@ class Jacobian:
         Reference:
         https://docs.sympy.org/latest/modules/utilities/lambdify.html
 
-        :param Jx:
-        :param Jy:
-        :param Jz:
-        :param eval_type:
-        :return: (function, function, function)
+        :param str eval_type: the eval type for sympy lambdification
+        :return (function, function, function): lambdified x, y, and z Jacobian components
         """
 
         # create variables for symbolic computations
@@ -462,9 +550,8 @@ class Jacobian:
         Jysub = [j.subs(trig_substitutions) for j in self.Jy]
         Jzsub = [j.subs(trig_substitutions) for j in self.Jz]
 
-        '''functionize the Jacobian x, y, and z components'''
-
-        # 9 terms in each Jacobian component
+        # functionize the Jacobian x, y, and z components
+        # (9 terms in each Jacobian component correspond to the a, b, r, p, h, x, y, z, and rho 
         lJx = [lambdify(Jxsub[i].free_symbols, Jxsub[i], eval_type) for i in range(9)]  
         lJy = [lambdify(Jysub[i].free_symbols, Jysub[i], eval_type) for i in range(9)]
         lJz = [lambdify(Jzsub[i].free_symbols, Jzsub[i], eval_type) for i in range(9)]
@@ -479,12 +566,12 @@ class Jacobian:
         up the computations because the trigonometric terms are only evaluated
         once, instead of every time they show up in the Jacobian.
 
-        :param a_est:
-        :param b_est:
-        :param r:
-        :param p:
-        :param h:
-        :return:
+        :param a_est: a calculated from the data
+        :param b_est: b calculated from the data
+        :param r: roll data
+        :param p: pitch data
+        :param h: heave data
+        :return tupe(ndarray): the evaluated trigonometric terms
         """
 
         sin_a = ne.evaluate("sin(a_est)")
@@ -505,8 +592,43 @@ class Jacobian:
                 cos_a, cos_b, cos_r, cos_p, cos_h, )
 
     def get_calc_vals_for_J_eval(self, data):
+        """calculatse and assembles the values needed to evaluate the Jacobian
 
-        # estimate rho, a, and be from data
+        This methods calculates and assembles the values needed to evaluate the Jacobian.  
+
+        1. estimate rho, a, and b from data
+        2. use rho, a, and b estimates to calculate initial X, Y, and Z
+        3. calculate difference betwween inital X, Y, and Z and LAS X, Y, and Z (dX, dY, and dZ)
+        4. calculate polynomial surfae coefficients to account for dX, dY, and dZ
+        5. precalculate sine and cosine of attitude data to simplify evaluation of Jacobian
+
+        The returned dictionary contains the following data:
+
+        =========   ========================
+        data        description
+        =========   ========================
+        a           calculated a values
+        b           calculated b values
+        rho         calculated rho values
+        p_coeffs    {'x':{coeff:value,...},'y':{coeff:value,...},'z':{coeff:value,...}}
+        sin_a       calculated sin(a) values
+        sin_b       calculated sin(b) values
+        sin_r       calculated sin(r) values
+        sin_p       calculated sin(p) values
+        sin_h       calculated sin(h) values
+        cos_a       calculated cos(a) values
+        cos_b       calculated cos(b) values
+        cos_r       calculated cos(r) values
+        cos_p       calculated cos(p) values
+        cos_h       calculated cos(h) values
+        =========   ========================
+
+        :param data
+        :return dict: calcualted values used to evaluate Jacobian
+        
+        """
+
+        # estimate rho, a, and b from data
         rho_est, a_est, b_est = self.S.estimate_rho_a_b(data)
         
         # use rho, a, and b estimates to calculate initial estimate of X, Y, Z
@@ -547,7 +669,19 @@ class Jacobian:
 
         return J_params
 
-    def get_J_term_values(self, J_comp, J_term, values_for_J_eval):        
+    def get_J_term_values(self, J_comp, J_term, values_for_J_eval): 
+        """gets the calculated values needed to evaluate the specified Jacobian component
+
+        This method retrieves from the passed 'values_for_J_eval parameter the
+        calculated values needed to evaluate the specified Jacobian component (i.e., 
+        the x, y, or z component).
+
+        :param J_comp:
+        :param J_term:
+        :param values_for_J_eval:
+        :return vals:
+        
+        """
         vals = []
         term_vars = J_term.func_code.co_varnames
         for var in term_vars:
@@ -565,17 +699,15 @@ class Jacobian:
         to the lambdified functions representing the x, y, and z components
         of the Jacobian.
 
-        to simplify the Jacobian evaluation, only the non-zero terms are kept
-        TODO (the corresponding rows of the ...
+        To simplify the Jacobian evaluation, only the non-zero terms are kept.  
+        Accordingly, the rows of variance/covariance matrix corresponding to the
+        Jacobian zero terms are deleted.  Additionally, the Jacobian evaluation
+        is simplied further by not calling get_J_term_values() for Jacobian
+        terms equal to 1; rather, the corresponding row in the evaluated Jacobian
+        array is set to all 1s.
 
-        To simplify the computations, the trigonometric terms are pre-evaluated and
-        are represented by the following variables:
-
-        :param rho_est:
-        :param a_est:
-        :param b_est:
-        :param coeffs:
-        :return:
+        :param data:
+        :return (ndarray, ndarray, ndarray): x, y, and z evaluated Jacobian components
         """
 
         J_param_values = self.get_calc_vals_for_J_eval(data)
@@ -610,38 +742,55 @@ class Jacobian:
 
 
 class Subaerial:
+    """
+    This class provides the functionality to calculate the subaerial
+    portion of the total propagated uncertainty (TPU), given the Jacobian 
+    of a laser geolocation equation, merged lidar/trajectory 
+    data, and the standard deviations of the provided data.  
+    
+    The following table lists the contents of merged lidar/trajectory
+    data array:
+
+    =====   =========   =======================
+    Index   ndarray     description
+    =====   =========   =======================
+    0       t_sbet      sbet timestamps
+    1       t_las       las timestamps
+    2       x_las       las x coordinates
+    3       y_las       las y coordinates
+    4       z_las       las z coordinates
+    5       x_sbet      sbet x coordinates
+    6       y_sbet      sbet y coordinates
+    7       z_sbet      sbet z coordinates
+    8       r           sbet roll
+    9       p           sbet pitch
+    10      h           sbet heading
+    =====   =========   =======================
+        
+    The following table lists the contents of the array of standard
+    deviations corresponding to the variables of the merged data
+    array:
+
+    =====   =========   =======================
+    Index   ndarray     description
+    =====   =========   =======================
+    0       std_ang1    ang1 uncertainty
+    1       std_ang2    ang2 uncertainty
+    2       std_r       sbet roll uncertainty
+    3       std_p       sbet pitch uncertainty
+    4       std_h       sbet heading uncertainty
+    5       stdx_sbet   sbet x uncertainty
+    6       stdy_sbet   sbet y uncertainty
+    7       stdz_sbet   sbet z uncertainty
+    8       std_rho     ?
+    =====   =========   =======================
+
+    :param Jacobian J: Jacobian object
+    :param ndarray: merged Lidar/Trajectory data
+    :param ndarray: standard deviations of component variables
+    """
 
     def __init__(self, J, merged_data, stddev):
-        """
-        :param List[ndarray] D: the merged data
-
-        The following table lists the contents of D:
-
-        =====   =========   =======================
-        Index   ndarray     description
-        =====   =========   =======================
-        0       t_sbet      sbet timestamps
-        1       t_las       las timestamps
-        2       x_las       las x coordinates
-        3       y_las       las y coordinates
-        4       z_las       las z coordinates
-        5       x_sbet      sbet x coordinates
-        6       y_sbet      sbet y coordinates
-        7       z_sbet      sbet z coordinates
-        8       r           sbet roll
-        9       p           sbet pitch
-        10      h           sbet heading
-        11      std_ang1    ang1 uncertainty
-        12      std_ang2    ang2 uncertainty
-        13      std_r       sbet roll uncertainty
-        14      std_p       sbet pitch uncertainty
-        15      std_h       sbet heading uncertainty
-        16      stdx_sbet   sbet x uncertainty
-        17      stdy_sbet   sbet y uncertainty
-        18      stdz_sbet   sbet z uncertainty
-        19      std_rho     ?
-        =====   =========   =======================
-        """
 
         self.J = J  # Jacobian object
         self.merged_data = merged_data  # merged-data ndarray
@@ -653,30 +802,36 @@ class Subaerial:
         This method propogates the uncertainty of the component uncertainties
         using the following equation:
 
-        TODO: insert latex
+        .. image:: ../images/eq_PropogateError.png
 
-        :param pJ1:
-        :param pJ2:
-        :param pJ3:
-        :return: (ndarray, ndarray, list[str])
+        Because only the non-zero terms of the Jacobian are kept (to
+        simplify Jacobian evaluation), the rows in the variance/covariance
+        matrix corresponding to the zero terms of the Jacobian are
+        deleted.  The table below summarizes which terms of the Jacobian
+        are zero (and one).
+
+        =====   ========    ==  ==  ==
+        index   variable    Jx  Jy  Jz
+        =====   ========    ==  ==  ==
+        0       a           .   .   .
+        1       b           .   .   .
+        2       r           .   .   .
+        3       p           .   .   .
+        4       h           .   .   0
+        5       x           1   0   0       
+        6       y           0   1   0 
+        7       z           0   0   1
+        8       rho         .   .   .   
+        =====   ========    ==  ==  ==
+
+        :param tuple(ndarray) J_eval:  evaluated Jacobian values for X, Y, and Z components
+        :return (ndarray, ndarray, list[str]): subaerial THU, subaerial TVU, THU and TVU column headers
         """
 
         stddev = self.stddev
         V = ne.evaluate("stddev * stddev")  # variance = stddev**2
 
-        # delete the rows corresponding to the Jacobian functions that equal 0
-
-        # 0 
-        # 1
-        # 2
-        # 3
-        # 4
-        # 5
-        # 6
-        # 7
-        # 8
-
-
+        # delete the rows corresponding to the Jacobian terms that equal 0
         Vx = np.delete(V, [6, 7], 0)
         Vy = np.delete(V, [5, 7], 0)
         Vz = np.delete(V, [4, 5, 6], 0)
@@ -699,34 +854,26 @@ class Subaerial:
     def calc_subaerial_tpu(self):
         """calculates the subaerial uncertainty
 
-        This method calculates the subaerial uncertainty through four major
+        This method calculates the subaerial uncertainty through two major
         steps:
 
-        1) Evaluate the preliminary geolocation equation
-            First, a preliminary position for each data point is calculated
-            using the preliminary geolocation equation (i.e., the one
-            without the polynomial-surface error terms).  The preliminary
-            positions are not expected to match the corresponding positions
-            in the las file because the sensor model implemented in cBLUE
-            is only an approximation of the unknown, proprietary
-            manufacturer sensor model.
+        1. EVALUATE JACOBIAN
 
-        2) Calculate and apply the polynomial-surface error coefficients
-            Second, the position errors resulting from the differences
-            between the sensor model implemented in cBLUE and the unknown,
-            proprietary manufacturer sensor model are accounted for with
-            polynomial-surface error modeling.  The coefficients of the
-            error model are calculated using a least squares calculation
-            intended to be equivalent to Matlab's fit(poly23) function,
-            which was used in the original Matlab research code.
+            The eval_jacobian() method of the Jacobian object evaluates the
+            Jacobian with the merged lidar/trajectory data passed to it.  Although
+            the Jacobian is first calculated symbolically, it's evaluated as a
+            collection of lambda functions, which are "used to calculate numerical
+            values very fast." (https://docs.sympy.org/latest/modules/utilities/lambdify.html)
 
-        3) Evaluate the Jacobian
-            Third, the Jacobian of the modified laser geolocation equation,
-            (i.e., the one with the polynomial-surface error terms)
+        2. PROPAGATE UNCERTAINTY
 
-        4) Propagate Uncertainty
+            Once the Jacobian is evaluated, uncertainty is progagated by multiplying the
+            square of the Jacobian with the squares of the standard deviations defined in the
+            stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is 
+            technically different than the shown propagation equation because the covariances are 
+            assumed to be 0.
 
-        :return:
+        :return: (ndarray, ndarray, list[str])
         """
         if self.merged_data is False:  # i.e., las and sbet not merged
             logging.warning('SBET and LAS not merged because max delta '

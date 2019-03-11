@@ -67,7 +67,6 @@
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
-
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This class provides the functionality to load las files into cBLUE.  One Las object </span>
 <span class="sd">is created for each loaded las file.  </span>
@@ -84,12 +83,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">num_file_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;point&#39;</span><span class="p">]</span>
 
-        <span class="sd">&#39;&#39;&#39;get index list that would sort gps_time (to be used to</span>
+        <span class="sd">&#39;&#39;&#39;index list that would sort gps_time (to be used to</span>
 <span class="sd">        later when exporting las data and calculated tpu to a las</span>
 <span class="sd">        file</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;generating time-sorting indices...&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time_sort_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;gps_time&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_sort_indices</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Las.get_flight_line_ids"><a class="viewcode-back" href="../Las.html#Las.Las.get_flight_line_ids">[docs]</a>    <span class="k">def</span> <span class="nf">get_flight_line_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;generates a list of unique flight line ids</span>
@@ -100,7 +98,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;pt_src_id&#39;</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Las.get_flight_line_txyz"><a class="viewcode-back" href="../Las.html#Las.Las.get_flight_line_txyz">[docs]</a>    <span class="k">def</span> <span class="nf">get_flight_line_txyz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fl</span><span class="p">):</span>
+<div class="viewcode-block" id="Las.get_flight_line_txyz"><a class="viewcode-back" href="../Las.html#Las.Las.get_flight_line_txyz">[docs]</a>    <span class="k">def</span> <span class="nf">get_flight_line_txyz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;retrieves the x, y, z, and timestamp data from the las data points</span>
 
 <span class="sd">        The x, y, and z values in the las file are stored as integers.  The</span>
@@ -113,24 +111,26 @@
         <span class="n">scale_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">scale_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">scale</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">scale_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">scale</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
         <span class="n">offset_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">offset_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">offset_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">offset</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
-        <span class="n">flight_line_indx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;pt_src_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">fl</span>
-        <span class="n">flight_line_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="n">flight_line_indx</span><span class="p">]</span>
-        <span class="n">flight_line_points_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">flight_line_points</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;gps_time&#39;</span><span class="p">)</span>
-
-        <span class="n">t</span> <span class="o">=</span> <span class="n">flight_line_points_sorted</span><span class="p">[</span><span class="s1">&#39;gps_time&#39;</span><span class="p">]</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">flight_line_points_sorted</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">flight_line_points_sorted</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
-        <span class="n">Z</span> <span class="o">=</span> <span class="n">flight_line_points_sorted</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;gps_time&#39;</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;X * scale_x + offset_x&quot;</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;Y * scale_y + offset_y&quot;</span><span class="p">)</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;Z * scale_z + offset_z&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span></div>
+        <span class="n">xyzt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_sort_indices</span> <span class="o">=</span> <span class="n">xyzt</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+
+        <span class="n">flight_lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;pt_src_id&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">xyzt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_sort_indices</span><span class="p">,</span> <span class="n">flight_lines</span></div>
 
 <div class="viewcode-block" id="Las.get_average_water_surface_ellip_height"><a class="viewcode-back" href="../Las.html#Las.Las.get_average_water_surface_ellip_height">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_average_water_surface_ellip_height</span><span class="p">():</span>

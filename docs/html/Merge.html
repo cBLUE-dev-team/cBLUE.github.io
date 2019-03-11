@@ -71,13 +71,8 @@
 <dt id="Merge.Merge">
 <em class="property">class </em><code class="descclassname">Merge.</code><code class="descname">Merge</code><a class="reference internal" href="_modules/Merge.html#Merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Merge.Merge" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
-<dt id="Merge.Merge.dt_threshold">
-<code class="descname">dt_threshold</code><em class="property"> = 1</em><a class="headerlink" href="#Merge.Merge.dt_threshold" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="staticmethod">
-<dt id="Merge.Merge.merge">
-<em class="property">static </em><code class="descname">merge</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Merge.html#Merge.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Merge.Merge.merge" title="Permalink to this definition">¶</a></dt>
+<dt id="Merge.Merge.max_allowable_dt">
+<code class="descname">max_allowable_dt</code><em class="property"> = None</em><a class="headerlink" href="#Merge.Merge.max_allowable_dt" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns sbet &amp; las data merged based on timestamps</p>
 <p>The cBLUE TPU calculations require the sbet and las data to be in
 a single array, so the sbet and lidar data, which are contained in
@@ -109,100 +104,127 @@ maximum dt, the entire line is ignored.</p>
 <p>The following table lists the contents of the returned list of ndarrays:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="13%" />
-<col width="24%" />
-<col width="63%" />
+<col width="11%" />
+<col width="20%" />
+<col width="53%" />
+<col width="16%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Index</th>
 <th class="head">ndarray</th>
 <th class="head">description</th>
+<th class="head">units</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>0</td>
 <td>t_sbet</td>
 <td>sbet timestamps</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>1</td>
 <td>t_las</td>
 <td>las timestamps</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>2</td>
 <td>x_las</td>
 <td>las x coordinates</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>3</td>
 <td>y_las</td>
 <td>las y coordinates</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>4</td>
 <td>z_las</td>
 <td>las z coordinates</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>5</td>
 <td>x_sbet</td>
 <td>sbet x coordinates</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>6</td>
 <td>y_sbet</td>
 <td>sbet y coordinates</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>7</td>
 <td>z_sbet</td>
 <td>sbet z coordinates</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>8</td>
 <td>r</td>
 <td>sbet roll</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>9</td>
 <td>p</td>
 <td>sbet pitch</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>10</td>
 <td>h</td>
 <td>sbet heading</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>11</td>
-<td>std_ang1</td>
-<td>ang1 uncertainty</td>
+<td>std_a</td>
+<td>a uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>12</td>
-<td>std_ang2</td>
-<td>ang2 uncertainty</td>
+<td>std_b</td>
+<td>b uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>13</td>
 <td>std_r</td>
 <td>sbet roll uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>14</td>
 <td>std_p</td>
 <td>sbet pitch uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>15</td>
 <td>std_h</td>
 <td>sbet heading uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>16</td>
 <td>stdx_sbet</td>
 <td>sbet x uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>17</td>
 <td>stdy_sbet</td>
 <td>sbet y uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-even"><td>18</td>
 <td>stdz_sbet</td>
 <td>sbet z uncertainty</td>
+<td>&#160;</td>
 </tr>
 <tr class="row-odd"><td>19</td>
 <td>std_rho</td>
 <td>?</td>
+<td>&#160;</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="method">
+<dt id="Merge.Merge.merge">
+<code class="descname">merge</code><span class="sig-paren">(</span><em>las</em>, <em>fl</em>, <em>sbet_data</em>, <em>las_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Merge.html#Merge.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Merge.Merge.merge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

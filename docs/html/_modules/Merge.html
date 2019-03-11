@@ -62,18 +62,17 @@
   <h1>Source code for Merge</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">radians</span>
 
 
 <div class="viewcode-block" id="Merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge">[docs]</a><span class="k">class</span> <span class="nc">Merge</span><span class="p">:</span>
-    <span class="n">dt_threshold</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># seconds</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std_rho</span> <span class="o">=</span> <span class="mf">0.025</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_allowable_dt</span> <span class="o">=</span> <span class="mf">1.0</span>
 
-<div class="viewcode-block" id="Merge.merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge.merge">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet_data</span><span class="p">,</span> <span class="p">(</span><span class="n">las_t</span><span class="p">,</span> <span class="n">las_x</span><span class="p">,</span> <span class="n">las_y</span><span class="p">,</span> <span class="n">las_z</span><span class="p">)):</span>
         <span class="sd">&quot;&quot;&quot;returns sbet &amp; las data merged based on timestamps</span>
 
 <span class="sd">        The cBLUE TPU calculations require the sbet and las data to be in</span>
@@ -96,9 +95,9 @@
 
 <span class="sd">        The following table lists the contents of the returned list of ndarrays:</span>
 
-<span class="sd">        =====   =========   =======================</span>
-<span class="sd">        Index   ndarray     description</span>
-<span class="sd">        =====   =========   =======================</span>
+<span class="sd">        =====   =========   ========================    =======</span>
+<span class="sd">        Index   ndarray     description                 units</span>
+<span class="sd">        =====   =========   ========================    =======</span>
 <span class="sd">        0       t_sbet      sbet timestamps</span>
 <span class="sd">        1       t_las       las timestamps</span>
 <span class="sd">        2       x_las       las x coordinates</span>
@@ -110,8 +109,8 @@
 <span class="sd">        8       r           sbet roll</span>
 <span class="sd">        9       p           sbet pitch</span>
 <span class="sd">        10      h           sbet heading</span>
-<span class="sd">        11      std_ang1    ang1 uncertainty</span>
-<span class="sd">        12      std_ang2    ang2 uncertainty</span>
+<span class="sd">        11      std_a       a uncertainty</span>
+<span class="sd">        12      std_b       b uncertainty</span>
 <span class="sd">        13      std_r       sbet roll uncertainty</span>
 <span class="sd">        14      std_p       sbet pitch uncertainty</span>
 <span class="sd">        15      std_h       sbet heading uncertainty</span>
@@ -119,50 +118,59 @@
 <span class="sd">        17      stdy_sbet   sbet y uncertainty</span>
 <span class="sd">        18      stdz_sbet   sbet z uncertainty</span>
 <span class="sd">        19      std_rho     ?</span>
-<span class="sd">        =====   =========   =======================</span>
+<span class="sd">        =====   =========   ========================    =======</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">a_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
-        <span class="n">b_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
-        <span class="n">std_rho</span> <span class="o">=</span> <span class="mf">0.025</span>
-        <span class="n">max_allowable_dt</span> <span class="o">=</span> <span class="mf">1.0</span>
+<div class="viewcode-block" id="Merge.merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet_data</span><span class="p">,</span> <span class="n">las_data</span><span class="p">):</span>
+
+        <span class="n">num_sbet_pts</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="o">.</span><span class="n">size</span>
 
         <span class="c1"># match sbet and las dfs based on timestamps</span>
-        <span class="n">sbet_t</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="n">num_chunk_points</span> <span class="o">=</span> <span class="n">las_t</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">sbet_t</span><span class="p">,</span> <span class="n">las_t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;idx &gt;= 0&#39;</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
 
-        <span class="n">dt</span> <span class="o">=</span> <span class="n">las_t</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span>
+        <span class="c1"># don&#39;t use las points outside range of sbet points</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;0 &lt; idx&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;idx &lt; num_sbet_pts&#39;</span><span class="p">)</span>
+
+        <span class="n">t_sbet_masked</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]</span>
+        <span class="n">t_las_masked</span> <span class="o">=</span> <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;t_sbet_masked - t_las_masked&#39;</span><span class="p">)</span>
         <span class="n">max_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> FL </span><span class="si">{}</span><span class="s1">) max_dt: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">max_dt</span><span class="p">))</span>
+        <span class="c1">#logging.info(&#39;({} FL {}) max_dt: {}&#39;.format(las, fl, max_dt))</span>
 
-        <span class="k">if</span> <span class="n">max_dt</span> <span class="o">&gt;</span> <span class="n">max_allowable_dt</span><span class="p">:</span>
-            <span class="n">merged_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">max_dt</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_allowable_dt</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">stddev</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">merged_data</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># t_sbet</span>
-                <span class="n">las_t</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># t_las</span>
-                <span class="n">las_x</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># x_las</span>
-                <span class="n">las_y</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># y_las</span>
-                <span class="n">las_z</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># z_las</span>
-                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># x_sbet</span>
-                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># y_sbet</span>
-                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># z_sbet</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">]),</span>  <span class="c1"># r</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">]),</span>  <span class="c1"># p</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">]),</span>  <span class="c1"># h</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_chunk_points</span><span class="p">,</span> <span class="n">radians</span><span class="p">(</span><span class="n">a_std_dev</span><span class="p">)),</span>  <span class="c1"># std_ang1</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_chunk_points</span><span class="p">,</span> <span class="n">radians</span><span class="p">(</span><span class="n">b_std_dev</span><span class="p">)),</span>  <span class="c1"># std_ang2</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">12</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">]),</span>  <span class="c1"># std_r</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">13</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">]),</span>  <span class="c1"># std_p</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">14</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">]),</span>  <span class="c1"># std_h</span>
-                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">9</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># stdx_sbet</span>
-                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">10</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># stdy_sbet</span>
-                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">11</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>  <span class="c1"># stdz_sbet</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_chunk_points</span><span class="p">,</span> <span class="n">std_rho</span><span class="p">)]</span>  <span class="c1"># std_rho</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># t</span>
+                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># x</span>
+                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># y</span>
+                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># z</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]])</span>
+            <span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">merged_data</span></div></div>
+            <span class="n">num_points</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="n">stddev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_std_dev</span><span class="p">)),</span>   <span class="c1"># std_a</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_std_dev</span><span class="p">)),</span>   <span class="c1"># std_b</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">12</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>        <span class="c1"># std_r</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">13</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>        <span class="c1"># std_p</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">14</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>        <span class="c1"># std_h</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">9</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>                     <span class="c1"># stdx_sbet</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">10</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>                    <span class="c1"># stdy_sbet</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">11</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>                    <span class="c1"># stdz_sbet</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_rho</span><span class="p">)</span>               <span class="c1"># std_rho</span>
+            <span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">stddev</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

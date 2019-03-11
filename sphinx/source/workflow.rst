@@ -1,7 +1,7 @@
 Workflow
 ========
 
-The recommended workflow consists of 5 steps:
+The recommended workflow consists of 4 steps:
 
 1. Specify directories
 2. Specify parameters
