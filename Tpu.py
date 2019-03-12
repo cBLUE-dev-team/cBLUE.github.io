@@ -342,7 +342,7 @@ class Tpu:
             self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
             with open(os.path.join(self.tpuOutput, '{}.json'.format(las.las_base_name)), 'w') as outfile:
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
-        except Exception, e:
+        except Exception as e:
             print(e)
 
     def run_tpu_multiprocess(self, sbet_las_generator):

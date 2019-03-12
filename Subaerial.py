@@ -67,15 +67,6 @@ class SensorModel:
 
         R = R3 * R2 * R1
 
-        print('R1')
-        print(latex(R1))
-        print('R2')
-        print(latex(R2))
-        print('R3')
-        print(latex(R3))
-        print('R')
-        print(latex(R))
-
         # "functionize" the necessary R components for a and b estimation
         # (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
         r00 = lambdify((h, p), R[0], self.eval_type)
@@ -123,13 +114,6 @@ class SensorModel:
 
         M = M2 * M1
         
-        print('M1')
-        print(latex(M1))
-        print('M2')
-        print(latex(M2))
-        print('M')
-        print(latex(M))
-
         return M
 
     def define_obseration_equation(self):
@@ -870,7 +854,7 @@ class Subaerial:
             Once the Jacobian is evaluated, uncertainty is progagated by multiplying the
             square of the Jacobian with the squares of the standard deviations defined in the
             stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is 
-            technically different than the shown propagation equation because the covariances are 
+            implemented differently than shown by the propagation equation because the covariances are 
             assumed to be 0.
 
         :return: (ndarray, ndarray, list[str])

@@ -67,25 +67,22 @@ class CBlueApp(tk.Tk):
         filemenu.add_command(label='Exit', command=quit)
         menubar.add_cascade(label='File', menu=filemenu)
 
-        exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Lidar System',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Properties',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        # menubar.add_cascade(label='Edit', menu=exchangeChoice)
+        sensor_model_msg = '''
+        Currently, this is only a dummy menu option.  The senor model
+        configuration for the Reigl VQ-880-G is hard-coded into cBLUE.
+        Development plans include refactoring the code to read sensor 
+        model information from a separate file and extending support 
+        to other lidar systems, including Leica Chiroptera 4X.
+        '''
 
-        exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Map Window',
-                                   command=lambda: self.build_map_panel)
-        exchangeChoice.add_command(label='Graph Window',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Table Window',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        # menubar.add_cascade(label='Display', menu=exchangeChoice)
+        sensor_model_choice = tk.Menu(menubar, tearoff=0)
+        sensor_model_choice.add_command(label=u'Reigl VQ-880-G'.format(u'\u2713'),
+                                   command=lambda: self.popupmsg(sensor_model_msg))
+        menubar.add_cascade(label='Sensor Model', menu=sensor_model_choice)
 
-        exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='About', command=self.show_about)
-        menubar.add_cascade(label='Help', menu=exchangeChoice)
+        about_menu = tk.Menu(menubar, tearoff=0)
+        about_menu.add_command(label='About', command=self.show_about)
+        menubar.add_cascade(label='Help', menu=about_menu)
 
         tk.Tk.config(self, menu=menubar)
 
