@@ -17,7 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 Contact:
-????
+
 
 """
 
@@ -39,11 +39,34 @@ import datetime
 
 
 class Tpu:
+    """
+    This class coordinates the TPU workflow.  Beginning when the user 
+    hits *Compute TPU*, the general workflow is summarized below:
+
+    1. Form observation equation (SensorModel class)
+    2. Generate Jacobian (Jacobian class)
+    3. for each flight line within Las
+
+        * Merge the Las data and trajectory data (Merge class)
+        * Calculate subaerial THU and TVU (Subaerial class)
+        * Calculate subaqueous THU and TVU (Subaqueous class)
+        * Combine subaerial and subaqueous TPU
+        * Export TPU (either as Python "pickle' or as Las extra bytes)
+    
+    Currently, the following options are hard coded, but development 
+    plans include adding user-configurable options in a settings menu
+    within the GUI:
+
+    * Whether the TPU is exported as a Python binary pickle file or as TPU extra bytes within a Las file
+    * Whether step three is run as either single- or multi-processing    
+    """
 
     def __init__(self, surface_select, surface_ind,
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
                  vdatum_region_mcu, tpu_output):
+
+        # TODO: refactor to pass the GUI object, not individual variables
         self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
@@ -68,7 +91,6 @@ class Tpu:
 
         data_to_pickle = []
         output_columns = []
-
 
         # FORM OBSERVATION EQUATIONS
         S = SensorModel('Riegl-VQ-880-G')

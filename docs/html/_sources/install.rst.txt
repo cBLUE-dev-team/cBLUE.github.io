@@ -46,8 +46,8 @@ The major dependencies are summarized in the table below:
 package		comment
 =======		=============================================================================
 numpy		most of the matrix calculations are based on numpy arrays
-numexpr		used to speed up numpy-array calculations of large arrays
-sympy		used to symbolically form geolocation equation and evaluate Jacobian
+numexpr		used to accelerate numpy-array calculations of large arrays
+sympy		used to symbolically form geolocation equation and form/evaluate Jacobian
 pandas		certain operations are based on Pandas dataframes
 pathos		multiprocess framework (if user specifies multiprocessing)
 laspy		used to read LAS files
@@ -62,4 +62,4 @@ NOTE: If there are multiple Python installations on the computer running the GUI
 
 	(command line)> C:\\Python27\\64-bit\\python.exe Gui.py
 
-The GUI can also be initiated by running the Gui.py file from a Python IDE, such as IDLE or PyCharm.
+The GUI can also be initiated by running the Gui.py file from a Python IDE, such as IDLE, PyCharm, or Visual Studio.

@@ -92,7 +92,7 @@
             
   <div class="section" id="workflow">
 <h1>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h1>
-<p>The recommended workflow consists of 5 steps:</p>
+<p>The recommended workflow consists of 4 steps:</p>
 <ol class="arabic simple">
 <li>Specify directories</li>
 <li>Specify parameters</li>
@@ -114,7 +114,26 @@
 </div>
 <div class="section" id="process-tpu">
 <h2>4. Process TPU<a class="headerlink" href="#process-tpu" title="Permalink to this headline">¶</a></h2>
-<p>Click the <em>Process TPU button</em> to calculate the TPU of all data points contained in LAS file(s) contained in the specified LAS Directory.</p>
+<p>Click the <em>Process TPU button</em> to calculate the TPU of all data points contained in LAS file(s) contained in the specified LAS Directory.  The general workflow is listed below:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">Form observation equation (SensorModel class)</p>
+</li>
+<li><p class="first">Generate Jacobian (Jacobian class)</p>
+</li>
+<li><p class="first">for each flight line within each Las tile:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Merge the Las data and trajectory data (Merge class)</li>
+<li>Calculate subaerial THU and TVU (Subaerial class)</li>
+<li>Calculate subaqueous THU and TVU (Subaqueous class)</li>
+<li>Combine subaerial and subaqueous TPU</li>
+<li>Export TPU (either as Python “pickle’ or as Las extra bytes)</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div></blockquote>
 </div>
 </div>
 
