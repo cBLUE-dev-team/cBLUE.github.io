@@ -2,12 +2,8 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/NGS_TPU.sln
-/.vs/NGS_TPU/v14/.suo
-/.vs/NGS_TPU/v15/.suo
 *.pyc
 *.pyproj
 *.sln
 extra_bytes_play.py
 test_Las.py
-.vs
