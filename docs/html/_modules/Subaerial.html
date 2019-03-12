@@ -129,15 +129,6 @@
 
         <span class="n">R</span> <span class="o">=</span> <span class="n">R3</span> <span class="o">*</span> <span class="n">R2</span> <span class="o">*</span> <span class="n">R1</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R1&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">R1</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R2&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">R2</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R3&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">R3</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">R</span><span class="p">))</span>
-
         <span class="c1"># &quot;functionize&quot; the necessary R components for a and b estimation</span>
         <span class="c1"># (http://docs.sympy.org/latest/modules/utilities/lambdify.html)</span>
         <span class="n">r00</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">((</span><span class="n">h</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span> <span class="n">R</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_type</span><span class="p">)</span>
@@ -185,13 +176,6 @@
 
         <span class="n">M</span> <span class="o">=</span> <span class="n">M2</span> <span class="o">*</span> <span class="n">M1</span>
         
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;M1&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">M1</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;M2&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">M2</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">M</span><span class="p">))</span>
-
         <span class="k">return</span> <span class="n">M</span></div>
 
 <div class="viewcode-block" id="SensorModel.define_obseration_equation"><a class="viewcode-back" href="../Subaerial.html#Subaerial.SensorModel.define_obseration_equation">[docs]</a>    <span class="k">def</span> <span class="nf">define_obseration_equation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -932,7 +916,7 @@
 <span class="sd">            Once the Jacobian is evaluated, uncertainty is progagated by multiplying the</span>
 <span class="sd">            square of the Jacobian with the squares of the standard deviations defined in the</span>
 <span class="sd">            stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is </span>
-<span class="sd">            technically different than the shown propagation equation because the covariances are </span>
+<span class="sd">            implemented differently than shown by the propagation equation because the covariances are </span>
 <span class="sd">            assumed to be 0.</span>
 
 <span class="sd">        :return: (ndarray, ndarray, list[str])</span>

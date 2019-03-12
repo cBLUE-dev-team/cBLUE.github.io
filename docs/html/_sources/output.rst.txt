@@ -9,7 +9,7 @@ The output .las file contains the data described in the following table as VLR e
 
 .. note::
 
-	The scale associated with the VLR extra bytes is 0.001, which is NOT necessarily the same as the scale value specified in the las header (typically 0.01).  THIS IS NOT STANDARD IN THE LAS COMMUNITY.  The ASPRS Las Working Group has an active conversation regarding how to standardized the use of extra bytes for supplementary fields such as uncertainty (https://github.com/ASPRSorg/LAS/issues/37).
+	The scale associated with the VLR extra bytes is 0.01.  The ASPRS Las Working Group has an active conversation regarding how to standardized the use of extra bytes for supplementary fields such as uncertainty (https://github.com/ASPRSorg/LAS/issues/37).
 
 .. csv-table:: Output cBLUE Data
 	:header: id, dtype, description
