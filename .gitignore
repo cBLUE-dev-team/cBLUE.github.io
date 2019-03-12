@@ -6,3 +6,8 @@
 /.vs/NGS_TPU/v14/.suo
 /.vs/NGS_TPU/v15/.suo
 *.pyc
+*.pyproj
+*.sln
+.idea
+.vs
+Backup
