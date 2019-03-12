@@ -3,7 +3,7 @@ Installation
 
 The latest release of cBLUE can be found at https://github.com/forkozi/cBLUE/releases.
 
-cBLUE is designed to run on 64-bit Python 2.7.  Rigorous performance testing was not conducted during tool development, but memory errors were encountered when not using a 64-bit installation of Python to process the Marcos Island test dataset.  Support for Python 3 is deferred to future versions.  
+cBLUE is designed to run on 64-bit Python 2.7.  Support for Python 3 is deferred to future versions.  
 
 The cBLUE source code is available in a private GitHub repository (https://github.com/forkozi/cBLUE).
 
@@ -20,10 +20,12 @@ The following table lists the major files comprising cBLUE:
 	:widths: 14, 30, 10
 
 	CBlueApp.py, initiates the GUI
-	Sbet.py, loads the ASCII trajector files (or sbets), ./
+	Sbet.py, loads the ASCII trajectory files (or "sbets"), ./
 	Las.py, loads the las files, ./
 	Merge.py, merges the trajectory and las data based on timestamps, ./
-	Tpu.py, calculates the TPU (combined subaerial and subaqueous), ./
+	SensorModel.py, defines and allows access to lidar sensor model, ./
+	Jacobian.py, forms and evaluates the Jacobian of a sensor model's laser geolocation equation, ./
+	Tpu.py, coordinates the TPU workflow, ./
 	Subaerial.py, calculates the subaerial TPU, ./
 	Subaqueous.py, calculates the subaqueous TPU, ./
 	Datum.py, loads the zone-specific VDatum zone MCU, ./
@@ -38,7 +40,7 @@ The recommended way to ensure that all of the necessary dependencies are loaded 
 
 	conda env create --file <evn file name>
 	
-where <env file name> is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.  If you don't have access to the private cBLUE repository, please send a request to nick.forfinski@gmail.com, with your GitHub username.
+where <env file name> is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.
 
 The major dependencies are summarized in the table below:
 
@@ -56,10 +58,10 @@ Tkinter		used to create GUI
 
 Starting the GUI
 ----------------
-The GUI can be initiated from the command line with the following command (specify the full path of Gui.py if the current directory is not the location of Gui.py):
+The GUI can be initiated from the command line with the following command (specify the full path of CBlueApp.py if the current directory is not the location of CBlueApp.py):
 
 NOTE: If there are multiple Python installations on the computer running the GUI, ensure the desired installation is specified in the path environment variables or explicitly specify the full path of the relevant python executable in the command. For example:
 
-	(command line)> C:\\Python27\\64-bit\\python.exe Gui.py
+	(command line)> C:\\Python27\\64-bit\\python.exe CBlueApp.py
 
-The GUI can also be initiated by running the Gui.py file from a Python IDE, such as IDLE, PyCharm, or Visual Studio.
+The GUI can also be initiated by running the CBlueApp.py file from a Python IDE, such as IDLE, PyCharm, or Microsoft Visual Studio.
