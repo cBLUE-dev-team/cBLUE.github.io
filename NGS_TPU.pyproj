@@ -24,7 +24,6 @@
     <Content Include="cBLUE_icon.ico" />
     <Content Include="cBLUE_splash.gif" />
     <Content Include="LICENSE.txt" />
-    <Content Include="V_Datum_MCU_Values.txt" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CBlueApp.py" />
@@ -34,9 +33,6 @@
     <Compile Include="get_las_tile_data.py" />
     <Compile Include="Las.py" />
     <Compile Include="Merge.py" />
-    <Compile Include="extra_bytes_play.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="test_Las.py">
       <SubType>Code</SubType>
     </Compile>
@@ -44,7 +40,6 @@
     <Compile Include="Sbet.py" />
     <Compile Include="Subaerial.py" />
     <Compile Include="Subaqueous.py" />
-    <Compile Include="Subaqueous_frt.py" />
     <Compile Include="Tpu.py" />
   </ItemGroup>
   <ItemGroup>
