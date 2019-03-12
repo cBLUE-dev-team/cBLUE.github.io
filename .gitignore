@@ -8,6 +8,6 @@
 *.pyc
 *.pyproj
 *.sln
-.idea
-.vs
-Backup
+/.idea
+/.vs
+/Backup
