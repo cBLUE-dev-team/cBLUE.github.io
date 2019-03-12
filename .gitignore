@@ -8,3 +8,6 @@
 *.pyc
 *.pyproj
 *.sln
+extra_bytes_play.py
+test_Las.py
+.vs
