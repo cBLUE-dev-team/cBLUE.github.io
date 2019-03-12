@@ -42,7 +42,7 @@ The recommended way to ensure that all of the necessary dependencies are loaded 
 	
 where <env file name> is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.
 
-The major dependencies are summarized in the table below:
+Major dependencies are summarized in the table below:
 
 =======		=============================================================================
 package		comment

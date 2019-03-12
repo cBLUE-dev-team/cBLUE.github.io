@@ -22,6 +22,10 @@ Subaqueous Component
 ********************
 The subaqueous component stochastically computes the TPU of the laser pulse on the seafloor using Monte Carlo ray tracing based on surface modeling and estimates of scattering and absorption (see the figure below).  To minimize the computational complexity of performing Monte Carlo simmulations for large numbers of data points (> 1 billion), the algorithm relies on pre-computed coefficient lookup tables.  
 
+Please refer to the _cBLUE Monte Carlo Manual_ for detailed information about the subaqueous Monte Carlo simulations and corresponding lookup tables.
+
+.. _`cBLUE Monte Carlo Manual`: ../MonteCarloManual/Monte Carlo manual.docx
+
 .. image:: ../images/SubaqueousMonteCarlo.gif
 
 Image Credit: Firat Eren
