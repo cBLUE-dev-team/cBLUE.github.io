@@ -204,14 +204,41 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CBlueApp.show_about"><a class="viewcode-back" href="../CBlueApp.html#CBlueApp.CBlueApp.show_about">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">show_about</span><span class="p">():</span>
+<div class="viewcode-block" id="CBlueApp.show_about"><a class="viewcode-back" href="../CBlueApp.html#CBlueApp.CBlueApp.show_about">[docs]</a>    <span class="k">def</span> <span class="nf">show_about</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">about</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Toplevel</span><span class="p">()</span>
+        <span class="n">about</span><span class="o">.</span><span class="n">resizable</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="n">tk</span><span class="o">.</span><span class="n">Toplevel</span><span class="o">.</span><span class="n">iconbitmap</span><span class="p">(</span><span class="n">about</span><span class="p">,</span> <span class="s1">&#39;cBLUE_icon.ico&#39;</span><span class="p">)</span>
         <span class="n">about</span><span class="o">.</span><span class="n">wm_title</span><span class="p">(</span><span class="s1">&#39;About cBLUE&#39;</span><span class="p">)</span>
-        <span class="n">splash_img</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;cBLUE_splash.gif&#39;</span><span class="p">)</span>
-        <span class="n">label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">about</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">splash_img</span><span class="p">)</span>
-        <span class="n">label</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+
+        <span class="n">canvas</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Canvas</span><span class="p">(</span><span class="n">about</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">615</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">371</span><span class="p">)</span>
+        <span class="n">splash_img</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;cBLUE_splash.gif&#39;</span><span class="p">,</span> <span class="n">master</span><span class="o">=</span><span class="n">canvas</span><span class="p">)</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="s1">&#39;yes&#39;</span><span class="p">)</span>
+
+        <span class="n">license_msg</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">        cBLUE </span><span class="si">{}</span><span class="s1"></span>
+<span class="s1">        Copyright (C) 2019 </span>
+<span class="s1">        Oregon State University (OSU)</span>
+<span class="s1">        Joint Hydrographic Center/Center for Coast and Ocean Mapping, University of New Hampshire (JHC/CCOM, UNH)</span>
+<span class="s1">        NOAA Remote Sensing Division (NOAA RSD)</span>
+
+<span class="s1">        This library is free software; you can redistribute it and/or</span>
+<span class="s1">        modify it under the terms of the GNU Lesser General Public</span>
+<span class="s1">        License as published by the Free Software Foundation; either</span>
+<span class="s1">        version 2.1 of the License, or (at your option) any later version.</span>
+
+<span class="s1">        This library is distributed in the hope that it will be useful,</span>
+<span class="s1">        but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="s1">        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span>
+<span class="s1">        Lesser General Public License for more details.</span>
+<span class="s1">        &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+
+        <span class="n">canvas</span><span class="o">.</span><span class="n">create_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">splash_img</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NW</span><span class="p">)</span>
+        <span class="n">canvas_id</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">create_text</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;nw&quot;</span><span class="p">)</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">itemconfig</span><span class="p">(</span><span class="n">canvas_id</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">license_msg</span><span class="p">)</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">itemconfig</span><span class="p">(</span><span class="n">canvas_id</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;arial&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+        <span class="c1">#label = tk.Label(about, image=splash_img, text=license_msg, compound=tk.CENTER)</span>
+        <span class="c1">#label.pack()</span>
         <span class="n">b1</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">about</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Ok&#39;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">about</span><span class="o">.</span><span class="n">destroy</span><span class="p">)</span>
         <span class="n">b1</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
         <span class="n">about</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span></div>

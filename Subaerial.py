@@ -196,8 +196,6 @@ class SensorModel:
         F1 += polysurfcorr
         F2 += polysurfcorr
         F3 += polysurfcorr
-
-        print(latex(F1))
         
         return (F1, F2, F3,),  fF_orig
 

@@ -1,7 +1,7 @@
 GUI
 =================
 
-The cBLUE GUI consists on a single window, a simple menu bar and main section.
+The cBLUE GUI consists of a single window with a menu bar.
 
 .. image:: ../images/GUI.png
 

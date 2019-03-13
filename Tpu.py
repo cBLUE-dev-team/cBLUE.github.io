@@ -74,7 +74,7 @@ class Tpu:
 
         # TODO: refactor to pass the GUI object, not individual variables
         self.cblue_version = 'v2.0.1 (pre-release)'  # TODO: get from CBlueApp 
-        sensor_model = 'Riegl-VQ-880-G'  # TODO: get from CBlueApp 
+        self.sensor_model = 'Riegl-VQ-880-G'  # TODO: get from CBlueApp 
         self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
@@ -332,8 +332,6 @@ class Tpu:
         :param las:
         :return: n/a
         """
-
-        print(sensor_model)
 
         logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
         self.metadata.update({

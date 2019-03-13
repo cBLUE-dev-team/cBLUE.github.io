@@ -142,14 +142,41 @@ class CBlueApp(tk.Tk):
         with open(config, 'w') as fp:
             json.dump(self.controller_configuration, fp)
 
-    @staticmethod
-    def show_about():
+    def show_about(self):
         about = tk.Toplevel()
+        about.resizable(False, False)
         tk.Toplevel.iconbitmap(about, 'cBLUE_icon.ico')
         about.wm_title('About cBLUE')
-        splash_img = tk.PhotoImage(file='cBLUE_splash.gif')
-        label = tk.Label(about, image=splash_img)
-        label.pack()
+
+        canvas = tk.Canvas(about, width=615, height=371)
+        splash_img = tk.PhotoImage(file='cBLUE_splash.gif', master=canvas)
+        canvas.pack(fill='both', expand='yes')
+
+        license_msg = r'''
+        cBLUE {}
+        Copyright (C) 2019 
+        Oregon State University (OSU)
+        Joint Hydrographic Center/Center for Coast and Ocean Mapping, University of New Hampshire (JHC/CCOM, UNH)
+        NOAA Remote Sensing Division (NOAA RSD)
+
+        This library is free software; you can redistribute it and/or
+        modify it under the terms of the GNU Lesser General Public
+        License as published by the Free Software Foundation; either
+        version 2.1 of the License, or (at your option) any later version.
+
+        This library is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+        Lesser General Public License for more details.
+        '''.format(self.version)
+
+        canvas.create_image(0, 0, image=splash_img, anchor=tk.NW)
+        canvas_id = canvas.create_text(10, 10, anchor="nw")
+        canvas.itemconfig(canvas_id, text=license_msg)
+        canvas.itemconfig(canvas_id, font=('arial', 8))
+
+        #label = tk.Label(about, image=splash_img, text=license_msg, compound=tk.CENTER)
+        #label.pack()
         b1 = ttk.Button(about, text='Ok', command=about.destroy)
         b1.pack()
         about.mainloop()

@@ -136,7 +136,7 @@
 
         <span class="c1"># TODO: refactor to pass the GUI object, not individual variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span> <span class="o">=</span> <span class="s1">&#39;v2.0.1 (pre-release)&#39;</span>  <span class="c1"># TODO: get from CBlueApp </span>
-        <span class="n">sensor_model</span> <span class="o">=</span> <span class="s1">&#39;Riegl-VQ-880-G&#39;</span>  <span class="c1"># TODO: get from CBlueApp </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span> <span class="o">=</span> <span class="s1">&#39;Riegl-VQ-880-G&#39;</span>  <span class="c1"># TODO: get from CBlueApp </span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subaqu_lookup_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_select</span> <span class="o">=</span> <span class="n">surface_select</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_ind</span> <span class="o">=</span> <span class="n">surface_ind</span>
@@ -394,8 +394,6 @@
 <span class="sd">        :param las:</span>
 <span class="sd">        :return: n/a</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="n">sensor_model</span><span class="p">)</span>
 
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) creating TPU meta data file...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>

@@ -1,3 +1,7 @@
+.. note::
+
+	This documentation is under construction.
+	
 comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)
 =============================================================
 
@@ -12,10 +16,6 @@ cBLUE is a collaboration among the `Remote Sensing Division`_ within `NOAA's Nat
 .. _`Parrish Research Group`: http://research.engr.oregonstate.edu/parrish/
 
 .. _`CCOM/JHC`: http://ccom.unh.edu/about-ccomjhc
-
-.. note::
-
-	This documentation is under construction.
 
 .. sidebar:: cBLUE GUI
 
