@@ -14,6 +14,7 @@ cBLUE is a collaboration among the `Remote Sensing Division`_ within `NOAA's Nat
 .. _`CCOM/JHC`: http://ccom.unh.edu/about-ccomjhc
 
 **References**
+
 F. Eren, Jung, J., Parrish, C. E., Forfinski-Sarkozi, N., and Calder, B. R., “Total Vertical Uncertainty (TVU) modeling for topo-bathymetric lidar systems”, American Society for Photogrammetry and Remote Sensing (ASPRS). In Press.
 
 Installation
