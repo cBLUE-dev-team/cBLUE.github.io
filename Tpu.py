@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 NOAA Remote Sensing Division
+Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,13 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 Contact:
-
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+christopher.parrish@oregonstate.edu
 
 """
 
@@ -67,6 +73,8 @@ class Tpu:
                  vdatum_region_mcu, tpu_output):
 
         # TODO: refactor to pass the GUI object, not individual variables
+        self.cblue_version = 'v2.0.1 (pre-release)'  # TODO: get from CBlueApp 
+        sensor_model = 'Riegl-VQ-880-G'  # TODO: get from CBlueApp 
         self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
@@ -93,7 +101,7 @@ class Tpu:
         output_columns = []
 
         # FORM OBSERVATION EQUATIONS
-        S = SensorModel('Riegl-VQ-880-G')
+        S = SensorModel(self.sensor_model)
 
         # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
         J = Jacobian(S)
@@ -166,7 +174,7 @@ class Tpu:
             df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
             self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
-        self.write_metadata(las, str(S))  # TODO: include as VLR?
+        self.write_metadata(las, self.sensor_model, self.cblue_version)  # TODO: include as VLR?
         self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
         #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
@@ -312,7 +320,7 @@ class Tpu:
             dat = in_las.reader.get_dimension(field.name)
             out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
 
-    def write_metadata(self, las, sensor_model):
+    def write_metadata(self, las, sensor_model, cblue_version):
         """creates a json file with summary statistics and metedata
 
         This method creates a json file containing summary statistics for each
@@ -335,7 +343,9 @@ class Tpu:
             'kd': self.kd_selection,
             'VDatum region': self.vdatum_region,
             'VDatum region MCU': self.vdatum_region_mcu,
-            'flight line stats': {}
+            'flight line stats': {},
+            'sensor model': sensor_model,
+            'cBLUE version': cblue_version,
         })
 
         try:

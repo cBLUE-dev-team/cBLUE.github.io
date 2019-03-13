@@ -26,7 +26,7 @@ author = u'Nick Forfinski-Sarkozi'
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'v1.2.0'
+release = u'v2.0.1 (pre-release)'
 
 
 # -- General configuration ---------------------------------------------------

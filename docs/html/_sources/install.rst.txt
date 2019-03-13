@@ -5,34 +5,28 @@ The latest release of cBLUE can be found at https://github.com/forkozi/cBLUE/rel
 
 cBLUE is designed to run on 64-bit Python 2.7.  Support for Python 3 is deferred to future versions.  
 
-The cBLUE source code is available in a private GitHub repository (https://github.com/forkozi/cBLUE).
-
 cBLUE is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
 
 
 cBLUE Files
 -----------
 
-The following table lists the major files comprising cBLUE:
+The following table lists the main classes comprising cBLUE:
 
-.. csv-table:: cBLUE files
-	:header: file, description, relative location
-	:widths: 14, 30, 10
+.. csv-table:: Main cBLUE classes
+	:header: file, description
+	:widths: 14, 30
 
-	CBlueApp.py, initiates the GUI
-	Sbet.py, loads the ASCII trajectory files (or "sbets"), ./
-	Las.py, loads the las files, ./
-	Merge.py, merges the trajectory and las data based on timestamps, ./
-	SensorModel.py, defines and allows access to lidar sensor model, ./
-	Jacobian.py, forms and evaluates the Jacobian of a sensor model's laser geolocation equation, ./
-	Tpu.py, coordinates the TPU workflow, ./
-	Subaerial.py, calculates the subaerial TPU, ./
-	Subaqueous.py, calculates the subaqueous TPU, ./
-	Datum.py, loads the zone-specific VDatum zone MCU, ./
-	ECKV_LUT_HG0995_1sig.csv, Model coefficient look-up table for subaqueous TPU, ./lookup_tables/
-	THU.csv, Riegl coefficient look-up table for subaqueous TPU, ./lookup_tables/
-	V_Datum_MCU_Values.txt, contains the MCU for each VDatum zone, ./lookup_tables/
-
+	CBlueApp.py, defines and initiates the GUI
+	Sbet.py, loads the ASCII trajectory files (or "sbets")
+	Las.py, loads the las files
+	Merge.py, merges the trajectory and las data based on timestamps
+	SensorModel.py, defines and allows access to lidar sensor model
+	Jacobian.py, forms and evaluates the Jacobian of a sensor model's laser geolocation equation
+	Tpu.py, coordinates the TPU workflow
+	Subaerial.py, calculates the subaerial TPU
+	Subaqueous.py, calculates the subaqueous TPU
+	Datum.py, loads the zone-specific VDatum zone MCU
 
 Dependencies
 ------------
@@ -44,17 +38,17 @@ where <env file name> is the path to cBLUE_install.txt, which is included in the
 
 Major dependencies are summarized in the table below:
 
-=======		=============================================================================
-package		comment
-=======		=============================================================================
-numpy		most of the matrix calculations are based on numpy arrays
-numexpr		used to accelerate numpy-array calculations of large arrays
-sympy		used to symbolically form geolocation equation and form/evaluate Jacobian
-pandas		certain operations are based on Pandas dataframes
-pathos		multiprocess framework (if user specifies multiprocessing)
-laspy		used to read LAS files
-Tkinter		used to create GUI
-=======		=============================================================================
+.. csv-table:: Main Dependencies
+	:header: package, comment
+	:widths: 10, 30
+
+	numpy, most of the matrix calculations are based on numpy arrays
+	numexpr, used to accelerate numpy-array calculations of large arrays
+	sympy, used to symbolically form geolocation equation and form/evaluate Jacobian
+	pandas, certain operations are based on Pandas dataframes
+	pathos, multiprocess framework (if user specifies multiprocessing)
+	laspy, used to read LAS files
+	Tkinter, used to create GUI
 
 Starting the GUI
 ----------------

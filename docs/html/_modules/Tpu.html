@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Tpu &#8212; cBLUE v1.2.0 documentation</title>
+    <title>Tpu &#8212; cBLUE v2.0.1 (pre-release) documentation</title>
     <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v1.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -62,7 +62,7 @@
   <h1>Source code for Tpu</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)</span>
-<span class="sd">Copyright (C) 2019 NOAA Remote Sensing Division</span>
+<span class="sd">Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)</span>
 
 <span class="sd">This library is free software; you can redistribute it and/or</span>
 <span class="sd">modify it under the terms of the GNU Lesser General Public</span>
@@ -79,7 +79,13 @@
 <span class="sd">Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA</span>
 
 <span class="sd">Contact:</span>
-
+<span class="sd">Christopher Parrish, PhD</span>
+<span class="sd">School of Construction and Civil Engineering</span>
+<span class="sd">101 Kearney Hall</span>
+<span class="sd">Oregon State University</span>
+<span class="sd">Corvallis, OR  97331</span>
+<span class="sd">(541) 737-5688</span>
+<span class="sd">christopher.parrish@oregonstate.edu</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -129,6 +135,8 @@
                  <span class="n">vdatum_region_mcu</span><span class="p">,</span> <span class="n">tpu_output</span><span class="p">):</span>
 
         <span class="c1"># TODO: refactor to pass the GUI object, not individual variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span> <span class="o">=</span> <span class="s1">&#39;v2.0.1 (pre-release)&#39;</span>  <span class="c1"># TODO: get from CBlueApp </span>
+        <span class="n">sensor_model</span> <span class="o">=</span> <span class="s1">&#39;Riegl-VQ-880-G&#39;</span>  <span class="c1"># TODO: get from CBlueApp </span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subaqu_lookup_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_select</span> <span class="o">=</span> <span class="n">surface_select</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_ind</span> <span class="o">=</span> <span class="n">surface_ind</span>
@@ -155,7 +163,7 @@
         <span class="n">output_columns</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># FORM OBSERVATION EQUATIONS</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="n">SensorModel</span><span class="p">(</span><span class="s1">&#39;Riegl-VQ-880-G&#39;</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">SensorModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span><span class="p">)</span>
 
         <span class="c1"># GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS</span>
         <span class="n">J</span> <span class="o">=</span> <span class="n">Jacobian</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
@@ -228,7 +236,7 @@
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">output_columns</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">stats</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">flight_line_stats</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">fl</span><span class="p">)]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">write_metadata</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>  <span class="c1"># TODO: include as VLR?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_metadata</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span><span class="p">)</span>  <span class="c1"># TODO: include as VLR?</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_tpu_to_las_extra_bytes</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">data_to_pickle</span><span class="p">,</span> <span class="n">output_columns</span><span class="p">)</span></div>
         <span class="c1">#self.output_tpu_to_pickle(las, data_to_pickle, output_columns)</span>
 
@@ -374,7 +382,7 @@
             <span class="n">dat</span> <span class="o">=</span> <span class="n">in_las</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_dimension</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">out_las</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dat</span><span class="p">[</span><span class="n">las</span><span class="o">.</span><span class="n">time_sort_indices</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Tpu.write_metadata"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.write_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">write_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">):</span>
+<div class="viewcode-block" id="Tpu.write_metadata"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.write_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">write_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">cblue_version</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;creates a json file with summary statistics and metedata</span>
 
 <span class="sd">        This method creates a json file containing summary statistics for each</span>
@@ -397,7 +405,9 @@
             <span class="s1">&#39;kd&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kd_selection</span><span class="p">,</span>
             <span class="s1">&#39;VDatum region&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region</span><span class="p">,</span>
             <span class="s1">&#39;VDatum region MCU&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region_mcu</span><span class="p">,</span>
-            <span class="s1">&#39;flight line stats&#39;</span><span class="p">:</span> <span class="p">{}</span>
+            <span class="s1">&#39;flight line stats&#39;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s1">&#39;sensor model&#39;</span><span class="p">:</span> <span class="n">sensor_model</span><span class="p">,</span>
+            <span class="s1">&#39;cBLUE version&#39;</span><span class="p">:</span> <span class="n">cblue_version</span><span class="p">,</span>
         <span class="p">})</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -460,7 +470,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v1.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>

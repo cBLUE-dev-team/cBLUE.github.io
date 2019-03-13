@@ -1,3 +1,32 @@
+"""
+cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
+Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact:
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+christopher.parrish@oregonstate.edu
+
+"""
+
 # -*- coding: utf-8 -*-
 import logging
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
@@ -44,6 +73,7 @@ class CBlueApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
+        self.version = r'v2.0.1 (pre-release)'
         self.config_file = 'cblue_configuration.json'
         self.load_config()
 
@@ -77,7 +107,7 @@ class CBlueApp(tk.Tk):
 
         sensor_model_choice = tk.Menu(menubar, tearoff=0)
         sensor_model_choice.add_command(label=u'Reigl VQ-880-G'.format(u'\u2713'),
-                                   command=lambda: self.popupmsg(sensor_model_msg))
+                                        command=lambda: self.popupmsg(sensor_model_msg))
         menubar.add_cascade(label='Sensor Model', menu=sensor_model_choice)
 
         about_menu = tk.Menu(menubar, tearoff=0)

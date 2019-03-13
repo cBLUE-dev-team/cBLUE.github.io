@@ -14,7 +14,7 @@ Subaerial Component
 *******************
 The subaerial component analytically computes the TPU of the laser pulse at the water surface using the equations shown below.  The calculations include polynomial surface fitting to model the differences between the proprietary scan pattern and the implemented scan pattern.  
 
-The figure below summarizes the subaerial TPU calculations.  First, the laser geolocation equation is formed, where R is the airplane rotation matrix and M is the scanning sensor rotation matrix.  Second, the Jacobian of the laser geolocation equation is calculated and evaluated using data from the Las files and the corresponding trajectory.  Third, the uncertainty of each data point is propagated using the variance/covariance matrix (covariances are assumed to be zero) formed from the uncertainties of the component variables.  
+The figure below summarizes the subaerial TPU workflow.  First, the laser geolocation equation is formed, where R is the airplane rotation matrix and M is the scanning sensor rotation matrix.  To account for the differences between the assumed and actual, proprietary sensor models, the laser geolocation equation includes an error model based on polynomial suface fitting.  Second, the Jacobian of the laser geolocation equation is calculated and evaluated using data from the Las files and the corresponding trajectory.  Third, the uncertainty of each data point is propagated using the variance/covariance matrix (covariances are assumed to be zero) formed from the uncertainties of the component variables.  
 
 .. image:: ../images/SubaerialLaserGeolocationEquation.png
 
@@ -24,7 +24,7 @@ Subaqueous Component
 ********************
 The subaqueous component stochastically computes the TPU of the laser pulse on the seafloor using Monte Carlo ray tracing based on surface modeling and estimates of scattering and absorption (see the figure below).  To minimize the computational complexity of performing Monte Carlo simmulations for large numbers of data points (> 1 billion), the algorithm relies on pre-computed coefficient lookup tables.  
 
-The figure below illustrates the general concept of the subacqueous TPU calculations.  Given assumed sea state (and turbidity) conditions, large numbers of light rays are propagated, or traced, through the water column.  The spread of the resulting distribution of depths is an indication of uncertainty.
+The figure below illustrates the general concept of the subaqueous TPU calculations.  Given assumed sea state (and turbidity) conditions, large numbers of light rays are propagated, or traced, through the water column.  The spread of the resulting distribution of depths provides an estimate of uncertainty.
 
 Please refer to the `cBLUE Monte Carlo Manual`_ for detailed information about the subaqueous Monte Carlo simulations and corresponding lookup tables.
 

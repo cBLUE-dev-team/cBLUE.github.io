@@ -9,7 +9,7 @@ The output .las file contains the data described in the following table as VLR e
 
 .. note::
 
-	The scale associated with the VLR extra bytes is 0.01.  The ASPRS Las Working Group has an active conversation regarding how to standardized the use of extra bytes for supplementary fields such as uncertainty (https://github.com/ASPRSorg/LAS/issues/37).
+	The scale associated with the VLR extra bytes is 0.01.  The ASPRS Las Working Group has an active conversation regarding standardized the use of extra bytes for supplementary fields such as uncertainty (https://github.com/ASPRSorg/LAS/issues/37).
 
 .. csv-table:: Output cBLUE Data
 	:header: id, dtype, description
@@ -29,3 +29,8 @@ Metadata File (.json)
 *********************
 The .json metadata file contains the following information:
 
+* cBLUE version
+* Sensor model
+* per flight line summary statistics of component an total THU and TVU
+* VDatum region and corresponding region MCU
+* Environmental parameters (including subaqueous lookup parameters)

@@ -36,6 +36,6 @@ $(window).resize(function(){
         $("li.nav-item-0 a").text("Top");
     }
     else {
-        $("li.nav-item-0 a").text("cBLUE v1.2.0 documentation");
+        $("li.nav-item-0 a").text("cBLUE v2.0.1 (pre-release) documentation");
     }
 });
