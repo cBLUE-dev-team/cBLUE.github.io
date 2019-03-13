@@ -1,6 +1,9 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+Copyright (C) 2019 
+Oregon State University (OSU)
+Joint Hydrographic Center/Center for Coast and Ocean Mapping, University of New Hampshire (JHC/CCOM - UNH)
+NOAA Remote Sensing Division (NOAA RSD)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
