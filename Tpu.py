@@ -69,11 +69,12 @@ class Tpu:
     def __init__(self, surface_select, surface_ind,
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output):
+                 vdatum_region_mcu, tpu_output, cblue_version, 
+                 sensor_model):
 
-        # TODO: refactor to pass the GUI object, not individual variables
-        self.cblue_version = 'v2.0.1 (pre-release)'  # TODO: get from CBlueApp 
-        self.sensor_model = 'Riegl-VQ-880-G'  # TODO: get from CBlueApp 
+        # TODO: refactor to pass the GUI object, not individual variables (with controller?)
+        self.cblue_version = cblue_version
+        self.sensor_model = sensor_model
         self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
@@ -134,7 +135,7 @@ class Tpu:
             merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
             toc = datetime.datetime.now()
 
-            if merged_data:
+            if merged_data is not False:  # i.e., las and sbet is merged
 
                 logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
                 subaer_obj = Subaerial(J, merged_data, stddev)
@@ -173,6 +174,11 @@ class Tpu:
                 decimals = pd.Series([15] + [3] * (len(output_columns) - 1), index=output_columns)
                 df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
                 self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
+
+            else:
+                logging.warning('SBET and LAS not merged because max delta '
+                                'time exceeded acceptable threshold of {} '
+                                'sec(s).'.format(Merge.max_allowable_dt))
 
         self.write_metadata(las, self.sensor_model, self.cblue_version)  # TODO: include as VLR?
         self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)

@@ -109,10 +109,6 @@ class Merge:
         dt = ne.evaluate('t_sbet_masked - t_las_masked')
         max_dt = np.max(dt)
 
-        fig, axs = plt.subplots(2, 1)
-        axs[0].plot(dt)
-        plt.show()
-
         if max_dt > self.max_allowable_dt:
             data = False
             stddev = False
@@ -126,7 +122,7 @@ class Merge:
                            np.min(las_data[:, 1]), 
                            np.max(las_data[:, 1]))
 
-            logging.info('trajector and las data NOT MERGED')
+            logging.info('trajectory and LAS data NOT MERGED')
             logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
             logging.info('trajctory extents: {}'.format(traj_extents))
             logging.info('las extents: {}'.format(las_extents))

@@ -196,7 +196,7 @@ class Sbet:
         :return: pandas dataframe
         """
 
-        buff = 250  # meters
+        buff = 500  # meters
 
         data = self.data[(self.data.Y >= south - buff) & (self.data.Y <= north + buff) &
                          (self.data.X >= west - buff) & (self.data.X <= east + buff)]

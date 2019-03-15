@@ -886,19 +886,14 @@ class Subaerial:
 
         :return: (ndarray, ndarray, list[str])
         """
-        if self.merged_data is False:  # i.e., las and sbet not merged
-            logging.warning('SBET and LAS not merged because max delta '
-                            'time exceeded acceptable threshold of {} '
-                            'sec(s).'.format(Merge.max_allowable_dt))
-        else:
 
-            # EVALUATE JACOBIAN
-            J_eval = self.J.eval_jacobian(self.merged_data)
+        # EVALUATE JACOBIAN
+        J_eval = self.J.eval_jacobian(self.merged_data)
 
-            # PROPAGATE UNCERTAINTY
-            aer_thu, aer_tvu, aer_cols = self.propogate_uncertainty(J_eval)
+        # PROPAGATE UNCERTAINTY
+        aer_thu, aer_tvu, aer_cols = self.propogate_uncertainty(J_eval)
 
-            return aer_thu, aer_tvu, aer_cols
+        return aer_thu, aer_tvu, aer_cols
 
 
 if __name__ == '__main__':

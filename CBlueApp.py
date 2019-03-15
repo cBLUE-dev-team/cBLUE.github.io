@@ -77,12 +77,12 @@ class CBlueApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
-
         with open('cBLUE_ASCII.txt', 'r') as f:
             message = f.readlines()
             print(''.join(message))
 
-        self.version = r'v2.0.2 (pre-release)'
+        self.cblue_version = r'v2.0.2 (pre-release)'
+        self.sensor_model = 'Riegl VQ-880-G'
         self.config_file = 'cblue_configuration.json'
         self.load_config()
 
@@ -177,7 +177,7 @@ class CBlueApp(tk.Tk):
         but WITHOUT ANY WARRANTY; without even the implied warranty of
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
         Lesser General Public License for more details.
-        '''.format(self.version)
+        '''.format(self.cblue_version)
 
         canvas.create_image(0, 0, image=splash_img, anchor=tk.NW)
         canvas_id = canvas.create_text(10, 10, anchor="nw")
@@ -443,7 +443,8 @@ class ControllerPanel(ttk.Frame):
         tpu = Tpu(surface_selection, surface_ind,
                   wind_selection, self.wind_vals[wind_ind][1], kd_selection,
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
-                  self.tpuOutput.directoryName)
+                  self.tpuOutput.directoryName, self.controller.cblue_version, 
+                  self.controller.sensor_model)
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
@@ -462,20 +463,10 @@ class ControllerPanel(ttk.Frame):
                 las = Las(las)
                 las_header = las.inFile.header
 
-                #las_base = las.split('\\')[-1]
-                #ul_x = float(las_base[5:11])
-                #ul_y = float(las_base[13:20])
-                #west = ul_x - tile_size
-                #east = ul_x + 2 * tile_size
-                #north = ul_y + tile_size
-                #south = ul_y - 2 * tile_size
-
                 west = las_header.reader.get_header_property('x_min')
                 east = las_header.reader.get_header_property('x_max')
                 north = las_header.reader.get_header_property('y_max')
                 south = las_header.reader.get_header_property('y_min')
-
-                print(west, east, north, south)
 
                 logging.info('({}) generating SBET tile...'.format(las.las_short_name))
                 yield self.sbet.get_tile_data(north, south, east, west), las
