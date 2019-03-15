@@ -37,7 +37,6 @@ import numpy as np
 import numexpr as ne
 import pandas as pd
 from collections import OrderedDict
-from Las import Las
 from Merge import Merge
 from Subaerial import Subaerial, SensorModel, Jacobian
 from Subaqueous import Subaqueous
@@ -91,7 +90,7 @@ class Tpu:
     def calc_tpu(self, sbet_las_files):
         """
 
-        :param sbet_las_tile:
+        :param sbet_las_tile: generator yielding sbet data and las tile name for each las tile
         :return:
         """
 
@@ -106,7 +105,6 @@ class Tpu:
         # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
         J = Jacobian(S)
 
-        las = Las(las)
         logging.info('{} {} ({:,} points)'.format(las.las_short_name, '#' * 30, las.num_file_points))
         logging.info(las.get_flight_line_ids())
         las_xyzt, t_sort_indx, flight_lines = las.get_flight_line_txyz()
@@ -136,43 +134,45 @@ class Tpu:
             merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
             toc = datetime.datetime.now()
 
-            logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            subaer_obj = Subaerial(J, merged_data, stddev)
-            subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
-            depth = merged_data[4] + las.get_average_water_surface_ellip_height()
+            if merged_data:
 
-            logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
-            subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
-            subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
-            self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
-            vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
+                logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
+                subaer_obj = Subaerial(J, merged_data, stddev)
+                subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
+                depth = merged_data[4] + las.get_average_water_surface_ellip_height()
 
-            logging.info('({}) calculating total THU...'.format(las.las_short_name))
-            total_thu = ne.evaluate('sqrt(subaer_thu**2 + subaqu_thu**2)')
+                logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
+                subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
+                subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
+                self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
+                vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
-            logging.info('({}) calculating total TVU...'.format(las.las_short_name))
-            total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
-            num_points = total_tvu.shape[0]
-            output = np.vstack((
-                np.expand_dims(merged_data[1], axis=0),  # las_t
-                np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
-                np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
-                np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
-                np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
-                np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
-                np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
-                )).T
+                logging.info('({}) calculating total THU...'.format(las.las_short_name))
+                total_thu = ne.evaluate('sqrt(subaer_thu**2 + subaqu_thu**2)')
 
-            sigma_columns = ['total_thu', 'total_tvu']
+                logging.info('({}) calculating total TVU...'.format(las.las_short_name))
+                total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
+                num_points = total_tvu.shape[0]
+                output = np.vstack((
+                    np.expand_dims(merged_data[1], axis=0),  # las_t
+                    np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
+                    )).T
 
-            # TODO: doesn't need to happen every iteration
-            output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
+                sigma_columns = ['total_thu', 'total_tvu']
 
-            data_to_pickle.append(output)
-            stats = ['min', 'max', 'mean', 'std']
-            decimals = pd.Series([15] + [3] * (len(output_columns) - 1), index=output_columns)
-            df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
-            self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
+                # TODO: doesn't need to happen every iteration
+                output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
+
+                data_to_pickle.append(output)
+                stats = ['min', 'max', 'mean', 'std']
+                decimals = pd.Series([15] + [3] * (len(output_columns) - 1), index=output_columns)
+                df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
+                self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
         self.write_metadata(las, self.sensor_model, self.cblue_version)  # TODO: include as VLR?
         self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)

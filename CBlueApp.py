@@ -45,6 +45,7 @@ from GuiSupport import DirectorySelectButton, RadioFrame
 
 from Sbet import Sbet
 from Datum import Datum
+from Las import Las
 from Tpu import Tpu
 
 import matplotlib
@@ -76,7 +77,12 @@ class CBlueApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
-        self.version = r'v2.0.1 (pre-release)'
+
+        with open('cBLUE_ASCII.txt', 'r') as f:
+            message = f.readlines()
+            print(''.join(message))
+
+        self.version = r'v2.0.2 (pre-release)'
         self.config_file = 'cblue_configuration.json'
         self.load_config()
 
@@ -447,20 +453,31 @@ class ControllerPanel(ttk.Frame):
             """This generator is the 2nd argument for the
             run_tpu_multiprocessing method, to avoid
             passing entire sbet or list of tiled
-            sbets to multiprocessing pool
+            sbets to the calc_tpu() method
             """
 
             tile_size = 500  # meters
             for las in las_files:  # 2016_422000e_2873500n.las
-                las_base = las.split('\\')[-1]
-                ul_x = float(las_base[5:11])
-                ul_y = float(las_base[13:20])
-                west = ul_x - tile_size
-                east = ul_x + 2 * tile_size
-                north = ul_y + tile_size
-                south = ul_y - 2 * tile_size
 
-                logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
+                las = Las(las)
+                las_header = las.inFile.header
+
+                #las_base = las.split('\\')[-1]
+                #ul_x = float(las_base[5:11])
+                #ul_y = float(las_base[13:20])
+                #west = ul_x - tile_size
+                #east = ul_x + 2 * tile_size
+                #north = ul_y + tile_size
+                #south = ul_y - 2 * tile_size
+
+                west = las_header.reader.get_header_property('x_min')
+                east = las_header.reader.get_header_property('x_max')
+                north = las_header.reader.get_header_property('y_max')
+                south = las_header.reader.get_header_property('y_min')
+
+                print(west, east, north, south)
+
+                logging.info('({}) generating SBET tile...'.format(las.las_short_name))
                 yield self.sbet.get_tile_data(north, south, east, west), las
 
         # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())

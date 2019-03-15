@@ -30,15 +30,20 @@ christopher.parrish@oregonstate.edu
 import numpy as np
 import numexpr as ne
 from math import radians
+import logging
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+
+import matplotlib.pyplot as plt
 
 
 class Merge:
+
+    max_allowable_dt = 1.0  # second
 
     def __init__(self):
         self.a_std_dev = 0.02  # degrees
         self.b_std_dev = 0.02  # degrees
         self.std_rho = 0.025
-        self.max_allowable_dt = 1.0
 
         """returns sbet & las data merged based on timestamps
 
@@ -90,7 +95,7 @@ class Merge:
 
     def merge(self, las, fl, sbet_data, las_data):
 
-        num_sbet_pts = sbet_data.size
+        num_sbet_pts = sbet_data.shape[0]
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
@@ -103,11 +108,28 @@ class Merge:
 
         dt = ne.evaluate('t_sbet_masked - t_las_masked')
         max_dt = np.max(dt)
-        #logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
+
+        fig, axs = plt.subplots(2, 1)
+        axs[0].plot(dt)
+        plt.show()
 
         if max_dt > self.max_allowable_dt:
             data = False
             stddev = False
+            traj_extents = (np.min(sbet_data[:, 3]), 
+                            np.max(sbet_data[:, 3]), 
+                            np.min(sbet_data[:, 4]), 
+                            np.max(sbet_data[:, 4]))
+
+            las_extents = (np.min(las_data[:, 0]), 
+                           np.max(las_data[:, 0]), 
+                           np.min(las_data[:, 1]), 
+                           np.max(las_data[:, 1]))
+
+            logging.info('trajector and las data NOT MERGED')
+            logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
+            logging.info('trajctory extents: {}'.format(traj_extents))
+            logging.info('las extents: {}'.format(las_extents))
         else:
             data = np.asarray([
                 sbet_data[:, 0][idx[mask]],
@@ -142,3 +164,4 @@ class Merge:
 
 if __name__ == '__main__':
     pass
+

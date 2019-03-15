@@ -104,7 +104,7 @@ class Sbet:
         return gps_time_adj
 
     def check_if_sow(self, time):
-        logging.info('checking if timestamps are SOW...')
+        logging.info('checking if timestamps are GPS week seconds...')
         if time <= self.SECS_PER_GPS_WK:
             return True
         else:
@@ -184,14 +184,22 @@ class Sbet:
         but as each las tile is processed, only the sbet data located within the
         las tile limits are sent to the calc_tpu() method.
 
+        To account for las tiles that contain data points from a las flight line
+        whose corresponding trajectory data falls outside of the las tile extents,
+        a buffer is added to the bounds of the tile when retreiving the
+        trajectory data.
+
         :param float north: northern limit of las tile
         :param float south: southern limit of las tile
         :param float east: eastern limit of las tile
         :param float west: western limit of las tile
         :return: pandas dataframe
         """
-        data = self.data[(self.data.Y >= south) & (self.data.Y <= north) &
-                         (self.data.X >= west) & (self.data.X <= east)]
+
+        buff = 250  # meters
+
+        data = self.data[(self.data.Y >= south - buff) & (self.data.Y <= north + buff) &
+                         (self.data.X >= west - buff) & (self.data.X <= east + buff)]
 
         return data
 
