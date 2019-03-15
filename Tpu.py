@@ -1,3 +1,32 @@
+"""
+cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
+Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact:
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+christopher.parrish@oregonstate.edu
+
+"""
+
 import logging
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 import pathos.pools as pp
@@ -8,18 +37,44 @@ import numpy as np
 import numexpr as ne
 import pandas as pd
 from collections import OrderedDict
-from Las import Las
 from Merge import Merge
-from Subaerial import Subaerial
+from Subaerial import Subaerial, SensorModel, Jacobian
 from Subaqueous import Subaqueous
+import datetime
 
 
 class Tpu:
+    """
+    This class coordinates the TPU workflow.  Beginning when the user 
+    hits *Compute TPU*, the general workflow is summarized below:
+
+    1. Form observation equation (SensorModel class)
+    2. Generate Jacobian (Jacobian class)
+    3. for each flight line within Las
+
+        * Merge the Las data and trajectory data (Merge class)
+        * Calculate subaerial THU and TVU (Subaerial class)
+        * Calculate subaqueous THU and TVU (Subaqueous class)
+        * Combine subaerial and subaqueous TPU
+        * Export TPU (either as Python "pickle' or as Las extra bytes)
+    
+    Currently, the following options are hard coded, but development 
+    plans include adding user-configurable options in a settings menu
+    within the GUI:
+
+    * Whether the TPU is exported as a Python binary pickle file or as TPU extra bytes within a Las file
+    * Whether step three is run as either single- or multi-processing    
+    """
 
     def __init__(self, surface_select, surface_ind,
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output):
+                 vdatum_region_mcu, tpu_output, cblue_version, 
+                 sensor_model):
+
+        # TODO: refactor to pass the GUI object, not individual variables (with controller?)
+        self.cblue_version = cblue_version
+        self.sensor_model = sensor_model
         self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
@@ -36,7 +91,7 @@ class Tpu:
     def calc_tpu(self, sbet_las_files):
         """
 
-        :param sbet_las_tile:
+        :param sbet_las_tile: generator yielding sbet data and las tile name for each las tile
         :return:
         """
 
@@ -45,53 +100,88 @@ class Tpu:
         data_to_pickle = []
         output_columns = []
 
-        las = Las(las)
-        logging.info('{}\n{}'.format('#' * 30, las.las_short_name))
+        # FORM OBSERVATION EQUATIONS
+        S = SensorModel(self.sensor_model)
+
+        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
+        J = Jacobian(S)
+
+        logging.info('{} {} ({:,} points)'.format(las.las_short_name, '#' * 30, las.num_file_points))
         logging.info(las.get_flight_line_ids())
+        las_xyzt, t_sort_indx, flight_lines = las.get_flight_line_txyz()
+
+        M = Merge()
+        #0       t_sbet
+        #1       t_las 
+        #2       x_las 
+        #3       y_las 
+        #4       z_las 
+        #5       x_sbet
+        #6       y_sbet
+        #7       z_sbet
+        #8       r     
+        #9       p     
+        #10      h     
 
         for fl in las.get_flight_line_ids():
-            logging.info('flight line {} {}'.format(fl, '-' * 30))
-            D = Merge.merge(las.las_short_name, fl, sbet.values, las.get_flight_line_txyz(fl))
 
-            logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            subaer, subaer_cols = Subaerial(D).calc_subaerial_tpu()
-            depth = subaer[:, 2] + las.get_average_water_surface_ellip_height()
-            subaer_thu = subaer[:, 3]
-            subaer_tvu = subaer[:, 4]
+            logging.info('flight line {} {}'.format(fl, '-' * 50))
 
-            logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
-            subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
-            subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
-            self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
-            vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
+            # las_xyzt has the same order as self.points_to_process
+            flight_line_indx = flight_lines == fl
+            fl_sorted_las_xyzt = las_xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
 
-            logging.info('({}) calculating total THU...'.format(las.las_short_name))
-            total_thu = ne.evaluate('sqrt(subaer_thu**2 + subaqu_thu**2)')
+            # CREATE MERGED-DATA OBJECT M
+            logging.info('({}) merging trajectory and las data...'.format(las.las_short_name))
+            merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
+            toc = datetime.datetime.now()
 
-            logging.info('({}) calculating total TVU...'.format(las.las_short_name))
-            total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
-            num_points = total_tvu.shape[0]
-            output = np.hstack((
-                np.expand_dims(D[1], axis=1),  # las time
-                np.round_(subaer, decimals=5),
-                np.round_(np.expand_dims(subaqu_thu, axis=1), decimals=5),
-                np.round_(np.expand_dims(subaqu_tvu, axis=1), decimals=5),
-                np.round_(np.expand_dims(total_thu, axis=1), decimals=5),
-                np.round_(np.expand_dims(total_tvu, axis=1), decimals=5),
-                ))
+            if merged_data is not False:  # i.e., las and sbet is merged
 
-            sigma_columns = ['total_thu', 'total_tvu']
+                logging.info('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
+                subaer_obj = Subaerial(J, merged_data, stddev)
+                subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
+                depth = merged_data[4] + las.get_average_water_surface_ellip_height()
 
-            # TODO: doesn't need to happen every iteration
-            output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
+                logging.info('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
+                subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
+                subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
+                self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
+                vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
-            data_to_pickle.append(output)
-            stats = ['min', 'max', 'mean', 'std']
-            decimals = pd.Series([15] + [3] * (len(output_columns) - 1), index=output_columns)
-            df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
-            self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
+                logging.info('({}) calculating total THU...'.format(las.las_short_name))
+                total_thu = ne.evaluate('sqrt(subaer_thu**2 + subaqu_thu**2)')
 
-        self.write_metadata(las)  # TODO: include as VLR?
+                logging.info('({}) calculating total TVU...'.format(las.las_short_name))
+                total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
+                num_points = total_tvu.shape[0]
+                output = np.vstack((
+                    np.expand_dims(merged_data[1], axis=0),  # las_t
+                    np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
+                    np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
+                    )).T
+
+                sigma_columns = ['total_thu', 'total_tvu']
+
+                # TODO: doesn't need to happen every iteration
+                output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
+
+                data_to_pickle.append(output)
+                stats = ['min', 'max', 'mean', 'std']
+                decimals = pd.Series([15] + [3] * (len(output_columns) - 1), index=output_columns)
+                df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
+                self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
+
+            else:
+                logging.warning('SBET and LAS not merged because max delta '
+                                'time exceeded acceptable threshold of {} '
+                                'sec(s).'.format(Merge.max_allowable_dt))
+
+        self.write_metadata(las, self.sensor_model, self.cblue_version)  # TODO: include as VLR?
         self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
         #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
@@ -101,7 +191,7 @@ class Tpu:
         This method outputs the calculated tpu to a Python "pickle" file, with the
         following fields:
 
-        .. csv-table:: Frozen Delights!
+        .. csv-table:: Data Pickle...mmmm
             :header: index, ndarray, description
             :widths: 14, 20, 20
 
@@ -192,8 +282,8 @@ class Tpu:
             #('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
             #('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
             #('subaqueous_tvu', ('subaqueous tvu', tpu_data_type)),
-            ('total_thu', ('Horiz. coordinate uncertainty', tpu_data_type)),
-            ('total_tvu', ('Vert. coordinate uncertainty', tpu_data_type)),
+            ('total_thu', ('total thu', tpu_data_type)),
+            ('total_tvu', ('total tvu', tpu_data_type)),
             ])
 
         # define new extrabyte dimensions
@@ -237,7 +327,7 @@ class Tpu:
             dat = in_las.reader.get_dimension(field.name)
             out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
 
-    def write_metadata(self, las):
+    def write_metadata(self, las, sensor_model, cblue_version):
         """creates a json file with summary statistics and metedata
 
         This method creates a json file containing summary statistics for each
@@ -249,6 +339,7 @@ class Tpu:
         :param las:
         :return: n/a
         """
+
         logging.info('({}) creating TPU meta data file...'.format(las.las_short_name))
         self.metadata.update({
             'subaqueous lookup params': self.subaqu_lookup_params,
@@ -257,14 +348,16 @@ class Tpu:
             'kd': self.kd_selection,
             'VDatum region': self.vdatum_region,
             'VDatum region MCU': self.vdatum_region_mcu,
-            'flight line stats': {}
+            'flight line stats': {},
+            'sensor model': sensor_model,
+            'cBLUE version': cblue_version,
         })
 
         try:
             self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
             with open(os.path.join(self.tpuOutput, '{}.json'.format(las.las_base_name)), 'w') as outfile:
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
-        except Exception, e:
+        except Exception as e:
             print(e)
 
     def run_tpu_multiprocess(self, sbet_las_generator):

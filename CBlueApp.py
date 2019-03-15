@@ -1,3 +1,35 @@
+"""
+cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
+Copyright (C) 2019 
+Oregon State University (OSU)
+Joint Hydrographic Center/Center for Coast and Ocean Mapping, University of New Hampshire (JHC/CCOM - UNH)
+NOAA Remote Sensing Division (NOAA RSD)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact:
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+christopher.parrish@oregonstate.edu
+
+"""
+
 # -*- coding: utf-8 -*-
 import logging
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
@@ -13,6 +45,7 @@ from GuiSupport import DirectorySelectButton, RadioFrame
 
 from Sbet import Sbet
 from Datum import Datum
+from Las import Las
 from Tpu import Tpu
 
 import matplotlib
@@ -44,6 +77,12 @@ class CBlueApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
+        with open('cBLUE_ASCII.txt', 'r') as f:
+            message = f.readlines()
+            print(''.join(message))
+
+        self.cblue_version = r'v2.0.2 (pre-release)'
+        self.sensor_model = 'Riegl VQ-880-G'
         self.config_file = 'cblue_configuration.json'
         self.load_config()
 
@@ -67,25 +106,22 @@ class CBlueApp(tk.Tk):
         filemenu.add_command(label='Exit', command=quit)
         menubar.add_cascade(label='File', menu=filemenu)
 
-        exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Lidar System',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Properties',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        # menubar.add_cascade(label='Edit', menu=exchangeChoice)
+        sensor_model_msg = '''
+        Currently, this is only a dummy menu option.  The senor model
+        configuration for the Reigl VQ-880-G is hard-coded into cBLUE.
+        Development plans include refactoring the code to read sensor 
+        model information from a separate file and extending support 
+        to other lidar systems, including Leica Chiroptera 4X.
+        '''
 
-        exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='Map Window',
-                                   command=lambda: self.build_map_panel)
-        exchangeChoice.add_command(label='Graph Window',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        exchangeChoice.add_command(label='Table Window',
-                                   command=lambda: self.popupmsg('not supported yet...'))
-        # menubar.add_cascade(label='Display', menu=exchangeChoice)
+        sensor_model_choice = tk.Menu(menubar, tearoff=0)
+        sensor_model_choice.add_command(label=u'Reigl VQ-880-G'.format(u'\u2713'),
+                                        command=lambda: self.popupmsg(sensor_model_msg))
+        menubar.add_cascade(label='Sensor Model', menu=sensor_model_choice)
 
-        exchangeChoice = tk.Menu(menubar, tearoff=0)
-        exchangeChoice.add_command(label='About', command=self.show_about)
-        menubar.add_cascade(label='Help', menu=exchangeChoice)
+        about_menu = tk.Menu(menubar, tearoff=0)
+        about_menu.add_command(label='About', command=self.show_about)
+        menubar.add_cascade(label='Help', menu=about_menu)
 
         tk.Tk.config(self, menu=menubar)
 
@@ -115,14 +151,41 @@ class CBlueApp(tk.Tk):
         with open(config, 'w') as fp:
             json.dump(self.controller_configuration, fp)
 
-    @staticmethod
-    def show_about():
+    def show_about(self):
         about = tk.Toplevel()
+        about.resizable(False, False)
         tk.Toplevel.iconbitmap(about, 'cBLUE_icon.ico')
         about.wm_title('About cBLUE')
-        splash_img = tk.PhotoImage(file='cBLUE_splash.gif')
-        label = tk.Label(about, image=splash_img)
-        label.pack()
+
+        canvas = tk.Canvas(about, width=615, height=371)
+        splash_img = tk.PhotoImage(file='cBLUE_splash.gif', master=canvas)
+        canvas.pack(fill='both', expand='yes')
+
+        license_msg = r'''
+        cBLUE {}
+        Copyright (C) 2019 
+        Oregon State University (OSU)
+        Joint Hydrographic Center/Center for Coast and Ocean Mapping, University of New Hampshire (JHC/CCOM, UNH)
+        NOAA Remote Sensing Division (NOAA RSD)
+
+        This library is free software; you can redistribute it and/or
+        modify it under the terms of the GNU Lesser General Public
+        License as published by the Free Software Foundation; either
+        version 2.1 of the License, or (at your option) any later version.
+
+        This library is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+        Lesser General Public License for more details.
+        '''.format(self.cblue_version)
+
+        canvas.create_image(0, 0, image=splash_img, anchor=tk.NW)
+        canvas_id = canvas.create_text(10, 10, anchor="nw")
+        canvas.itemconfig(canvas_id, text=license_msg)
+        canvas.itemconfig(canvas_id, font=('arial', 8))
+
+        #label = tk.Label(about, image=splash_img, text=license_msg, compound=tk.CENTER)
+        #label.pack()
         b1 = ttk.Button(about, text='Ok', command=about.destroy)
         b1.pack()
         about.mainloop()
@@ -380,7 +443,8 @@ class ControllerPanel(ttk.Frame):
         tpu = Tpu(surface_selection, surface_ind,
                   wind_selection, self.wind_vals[wind_ind][1], kd_selection,
                   self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
-                  self.tpuOutput.directoryName)
+                  self.tpuOutput.directoryName, self.controller.cblue_version, 
+                  self.controller.sensor_model)
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
@@ -390,20 +454,21 @@ class ControllerPanel(ttk.Frame):
             """This generator is the 2nd argument for the
             run_tpu_multiprocessing method, to avoid
             passing entire sbet or list of tiled
-            sbets to multiprocessing pool
+            sbets to the calc_tpu() method
             """
 
             tile_size = 500  # meters
             for las in las_files:  # 2016_422000e_2873500n.las
-                las_base = las.split('\\')[-1]
-                ul_x = float(las_base[5:11])
-                ul_y = float(las_base[13:20])
-                west = ul_x - tile_size
-                east = ul_x + 2 * tile_size
-                north = ul_y + tile_size
-                south = ul_y - 2 * tile_size
 
-                logging.info('({}) generating SBET tile...'.format(las.split('\\')[-1]))
+                las = Las(las)
+                las_header = las.inFile.header
+
+                west = las_header.reader.get_header_property('x_min')
+                east = las_header.reader.get_header_property('x_max')
+                north = las_header.reader.get_header_property('y_max')
+                south = las_header.reader.get_header_property('y_min')
+
+                logging.info('({}) generating SBET tile...'.format(las.las_short_name))
                 yield self.sbet.get_tile_data(north, south, east, west), las
 
         # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())

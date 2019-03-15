@@ -1,0 +1,983 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Subaerial module &#8212; cBLUE v2.0.1 (pre-release) documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Subaerial.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-Subaerial">
+<span id="subaerial-module"></span><h1>Subaerial module<a class="headerlink" href="#module-Subaerial" title="Permalink to this headline">¶</a></h1>
+<p>cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
+Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)</p>
+<p>This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.</p>
+<p>This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA</p>
+<p>Contact:
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+<a class="reference external" href="mailto:christopher&#46;parrish&#37;&#52;&#48;oregonstate&#46;edu">christopher<span>&#46;</span>parrish<span>&#64;</span>oregonstate<span>&#46;</span>edu</a></p>
+<dl class="class">
+<dt id="Subaerial.Jacobian">
+<em class="property">class </em><code class="descclassname">Subaerial.</code><code class="descname">Jacobian</code><span class="sig-paren">(</span><em>S</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is used to calculate and evaluate the Jacobian of a
+sensor model’s laser geolocation equation.  The class Jacobian attempts
+to decouple a Jacobian and the data used to evaluate it.  For example, 
+the inputs to the lambdified Jacobian components are not hard-coded in 
+the function call, but are determined from accessing the 
+.func_code.co_varnames attribute of the Jacobian component and then 
+looking up the corresponding values in a dict.  Although this somewhat
+decouples the Jacobian from the data used to evaluate it, the dict 
+containing the corresponding values is manually created, separate from
+the sensor model.  Development plans for future versions include
+decoupling the Jacobian and the data to evaluate it even more, by 
+creating the dict based on the sensor model.</p>
+<p>Two key modules that are used throughout are sympy and numexpr:</p>
+<p>The module sympy is used to symbolically define the laser geolocation
+equation and the corresponding Jacobian and to numerically evalulate
+the Jacobian.</p>
+<p>The module numexpr is used to accelerate calculations using large 
+numpy arrays (<a class="reference external" href="https://github.com/pydata/numexpr">https://github.com/pydata/numexpr</a>).  One characteristic 
+of numexpr is that numexpr expressions do not allow indexing of 
+variables, so what might normally be coded as, for example,
+<em>var = data[1] * 3</em> would require something like <em>data1 = data[1]</em> 
+before executing the numexpr expression <em>“var = data1 * 3”</em>.</p>
+<dl class="method">
+<dt id="Subaerial.Jacobian.calc_trig_terms">
+<code class="descname">calc_trig_terms</code><span class="sig-paren">(</span><em>a_est</em>, <em>b_est</em>, <em>r</em>, <em>p</em>, <em>h</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian.calc_trig_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian.calc_trig_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper method to evaluate the trigonometric terms in the Jacobian</p>
+<p>This method aims to simplify evaluation of the Jacobian by pre-evaluating
+the trigonometic terms of the Jacobian.  The reasoning is that this speeds
+up the computations because the trigonometric terms are only evaluated
+once, instead of every time they show up in the Jacobian.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a_est</strong> – a calculated from the data</li>
+<li><strong>b_est</strong> – b calculated from the data</li>
+<li><strong>r</strong> – roll data</li>
+<li><strong>p</strong> – pitch data</li>
+<li><strong>h</strong> – heave data</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return tupe(ndarray):</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first last">the evaluated trigonometric terms</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.Jacobian.eval_jacobian">
+<code class="descname">eval_jacobian</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian.eval_jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian.eval_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the Jacobian of the modified laser geolocation equation</p>
+<p>This method evaluates the Jacobian by passing the relevant parameters
+to the lambdified functions representing the x, y, and z components
+of the Jacobian.</p>
+<p>To simplify the Jacobian evaluation, only the non-zero terms are kept.  
+Accordingly, the rows of variance/covariance matrix corresponding to the
+Jacobian zero terms are deleted.  Additionally, the Jacobian evaluation
+is simplied further by not calling get_J_term_values() for Jacobian
+terms equal to 1; rather, the corresponding row in the evaluated Jacobian
+array is set to all 1s.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return (ndarray, ndarray, ndarray):</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">x, y, and z evaluated Jacobian components</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.Jacobian.form_jacobian">
+<code class="descname">form_jacobian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian.form_jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian.form_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate the jacobian of the specified geolocation equation</p>
+<p>This method generates the Jacobian (i.e., the matrix of partial
+derivatives with respect to component variables) of the specified
+geoloation equation using the sympy symbolic math package.  Using
+sympy to symbolically calculate the Jacobian simplifies the coding
+of what would otherwise be very long equations.</p>
+<img alt="_images/eq_Jacobian.png" src="_images/eq_Jacobian.png" />
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Return (Matrix, Matrix, Matrix):</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">sympy matrices for x, y, and z Jacobian components</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.Jacobian.get_J_term_values">
+<code class="descname">get_J_term_values</code><span class="sig-paren">(</span><em>J_comp</em>, <em>J_term</em>, <em>values_for_J_eval</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian.get_J_term_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian.get_J_term_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the calculated values needed to evaluate the specified Jacobian component</p>
+<p>This method retrieves from the passed ‘values_for_J_eval parameter the
+calculated values needed to evaluate the specified Jacobian component (i.e., 
+the x, y, or z component).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>J_comp</strong> – </li>
+<li><strong>J_term</strong> – </li>
+<li><strong>values_for_J_eval</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return vals:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.Jacobian.get_calc_vals_for_J_eval">
+<code class="descname">get_calc_vals_for_J_eval</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian.get_calc_vals_for_J_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian.get_calc_vals_for_J_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculatse and assembles the values needed to evaluate the Jacobian</p>
+<p>This methods calculates and assembles the values needed to evaluate the Jacobian.</p>
+<ol class="arabic simple">
+<li>estimate rho, a, and b from data</li>
+<li>use rho, a, and b estimates to calculate initial X, Y, and Z</li>
+<li>calculate difference betwween inital X, Y, and Z and LAS X, Y, and Z (dX, dY, and dZ)</li>
+<li>calculate polynomial surfae coefficients to account for dX, dY, and dZ</li>
+<li>precalculate sine and cosine of attitude data to simplify evaluation of Jacobian</li>
+</ol>
+<p>The returned dictionary contains the following data:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="88%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">data</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>a</td>
+<td>calculated a values</td>
+</tr>
+<tr class="row-odd"><td>b</td>
+<td>calculated b values</td>
+</tr>
+<tr class="row-even"><td>rho</td>
+<td>calculated rho values</td>
+</tr>
+<tr class="row-odd"><td>p_coeffs</td>
+<td>{‘x’:{coeff:value,…},’y’:{coeff:value,…},’z’:{coeff:value,…}}</td>
+</tr>
+<tr class="row-even"><td>sin_a</td>
+<td>calculated sin(a) values</td>
+</tr>
+<tr class="row-odd"><td>sin_b</td>
+<td>calculated sin(b) values</td>
+</tr>
+<tr class="row-even"><td>sin_r</td>
+<td>calculated sin(r) values</td>
+</tr>
+<tr class="row-odd"><td>sin_p</td>
+<td>calculated sin(p) values</td>
+</tr>
+<tr class="row-even"><td>sin_h</td>
+<td>calculated sin(h) values</td>
+</tr>
+<tr class="row-odd"><td>cos_a</td>
+<td>calculated cos(a) values</td>
+</tr>
+<tr class="row-even"><td>cos_b</td>
+<td>calculated cos(b) values</td>
+</tr>
+<tr class="row-odd"><td>cos_r</td>
+<td>calculated cos(r) values</td>
+</tr>
+<tr class="row-even"><td>cos_p</td>
+<td>calculated cos(p) values</td>
+</tr>
+<tr class="row-odd"><td>cos_h</td>
+<td>calculated cos(h) values</td>
+</tr>
+</tbody>
+</table>
+<p>:param data
+:return dict: calcualted values used to evaluate Jacobian</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.Jacobian.lambdify_jacobian">
+<code class="descname">lambdify_jacobian</code><span class="sig-paren">(</span><em>eval_type='numexpr'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian.lambdify_jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian.lambdify_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>turn the symbolic Jacobian into a function for faster computation</p>
+<p>This method “lambdifies” (or “functionizes”) the Jacobian components, for
+faster calculations. Part of this lambdify process includes simplifying
+the numerous trigonometric calculations of the Jacobian by defining the
+Jacobian functions to be functions of the sines and cosines of the various
+parameters, instead of the parameters directly.</p>
+<p>Reference:
+<a class="reference external" href="https://docs.sympy.org/latest/modules/utilities/lambdify.html">https://docs.sympy.org/latest/modules/utilities/lambdify.html</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>eval_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – the eval type for sympy lambdification</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return (function, function, function):</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">lambdified x, y, and z Jacobian components</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Subaerial.SensorModel">
+<em class="property">class </em><code class="descclassname">Subaerial.</code><code class="descname">SensorModel</code><span class="sig-paren">(</span><em>sensor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is used to define and access the sensor model of a particular 
+lidar sensor, including the laser geolocation equation and any
+supporting information or parameters.  Currently, only a single 
+sensor, the Riegl VQ-880-G, is supported, but development plans
+include extending support to the Chiroptera II (or III or IV).</p>
+<p>TODO:  move the a, b uncertainty values here</p>
+<dl class="staticmethod">
+<dt id="Subaerial.SensorModel.calcRMSE">
+<em class="property">static </em><code class="descname">calcRMSE</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.calcRMSE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.calcRMSE" title="Permalink to this definition">¶</a></dt>
+<dd><p>calc root mean square error for input data  NOT CURRENTLY USED</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.calc_aer_pos">
+<code class="descname">calc_aer_pos</code><span class="sig-paren">(</span><em>coeffs</em>, <em>a_est</em>, <em>b_est</em>, <em>aer_pos_pre</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.calc_aer_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.calc_aer_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates the final cBLUE subearial position</p>
+<p>This method calculates the final cBLUE subaerial position by adding
+a polynomial-surface modelled error term</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>coeffs</strong> – </li>
+<li><strong>a_est</strong> – </li>
+<li><strong>b_est</strong> – </li>
+<li><strong>aer_pos_pre</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.calc_aer_pos_err">
+<code class="descname">calc_aer_pos_err</code><span class="sig-paren">(</span><em>aer_pos</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.calc_aer_pos_err"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.calc_aer_pos_err" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates the difference between the las and cBLUE positions</p>
+<p>This method calculates the differences between the x, y, and z
+components of the final cBLUE positions and the corresponding
+las file positions.</p>
+<p>The data parameter contains the following ndarrays:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="24%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">ndarray</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>t_sbet</td>
+<td>sbet timestamps</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>t_las</td>
+<td>las timestamps</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>x_las</td>
+<td>las x coordinates</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>y_las</td>
+<td>las y coordinates</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>z_las</td>
+<td>las z coordinates</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>x_sbet</td>
+<td>sbet x coordinates</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>y_sbet</td>
+<td>sbet y coordinates</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>z_sbet</td>
+<td>sbet z coordinates</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>r</td>
+<td>sbet roll</td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>p</td>
+<td>sbet pitch</td>
+</tr>
+<tr class="row-even"><td>10</td>
+<td>h</td>
+<td>sbet heading</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>aer_pos</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.calc_aer_pos_pre">
+<code class="descname">calc_aer_pos_pre</code><span class="sig-paren">(</span><em>rho_est</em>, <em>a_est</em>, <em>b_est</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.calc_aer_pos_pre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.calc_aer_pos_pre" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates the inital cBLUE aubaerial position</p>
+<p>This method calculates the inital cBLUE subaerial position using the
+‘lambdified’ geolocation equation (without the polynomial-surface
+error terms).</p>
+<p>The data parameter contains the following ndarrays:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="24%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">ndarray</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>t_sbet</td>
+<td>sbet timestamps</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>t_las</td>
+<td>las timestamps</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>x_las</td>
+<td>las x coordinates</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>y_las</td>
+<td>las y coordinates</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>z_las</td>
+<td>las z coordinates</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>x_sbet</td>
+<td>sbet x coordinates</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>y_sbet</td>
+<td>sbet y coordinates</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>z_sbet</td>
+<td>sbet z coordinates</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>r</td>
+<td>sbet roll</td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>p</td>
+<td>sbet pitch</td>
+</tr>
+<tr class="row-even"><td>10</td>
+<td>h</td>
+<td>sbet heading</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rho_est</strong> – </li>
+<li><strong>a_est</strong> – </li>
+<li><strong>b_est</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.calc_diff">
+<code class="descname">calc_diff</code><span class="sig-paren">(</span><em>subaer_pos_pre</em>, <em>x_las</em>, <em>y_las</em>, <em>z_las</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.calc_diff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.calc_diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the difference between the las position and the initial cBLUE position</p>
+<p>This method calculates the difference between the x, y, and z components of the
+positions in the las file and the respective cBLUE-calculated position components.
+Ideally, a cBLUE-calculated position would identically match the corresponding
+position in the las file, but due to differences between the proprietary manufacturer
+sensor model and the sensor model used by cBLUE, the positions are not identical.
+The differences calculated by this method are used in the polynomial-surface error
+modeling process to correct for the errors caused by the sensor model discrepancies.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>subaer_pos_pre</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.calc_poly_surf_coeffs">
+<code class="descname">calc_poly_surf_coeffs</code><span class="sig-paren">(</span><em>a_est</em>, <em>b_est</em>, <em>dx</em>, <em>dy</em>, <em>dz</em>, <em>itv=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.calc_poly_surf_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.calc_poly_surf_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>estimates error model using polynomial surface fitting</p>
+<p>This method calculates the coefficients of the polynomial-surface
+error model intended to account for the positional errors resulting
+from differences between the sensor model implemented in cBLUE and
+the unknown, proprietary manufacturer sensor model.</p>
+<p>The original Matlab research code used a ‘fit’ function with a
+‘poly23’ option, which is emulated here by using np.linalg.lstsq
+with terms for a, b, a^2, ab, b^2, a^2b, ab^2, and b^3.</p>
+<p>Only every itv-th point is used to calculate the polynomial surface
+coefficients, for small speed gains in the calculations of the 
+coefficients.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a_est</strong> – </li>
+<li><strong>b_est</strong> – </li>
+<li><strong>dx</strong> – </li>
+<li><strong>dy</strong> – </li>
+<li><strong>dz</strong> – </li>
+<li><strong>itv</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list[tuple, tuple, tuple] TODO: verify</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.define_obseration_equation">
+<code class="descname">define_obseration_equation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.define_obseration_equation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.define_obseration_equation" title="Permalink to this definition">¶</a></dt>
+<dd><p>define the lidar geolocation observation equation</p>
+<p>The inital observation equation is defined as follows:</p>
+<img alt="_images/eq_OriginalObsEq.png" src="_images/eq_OriginalObsEq.png" />
+<p>However, to account for the differences between the assumed sensor 
+model and the proprietary sensor model, the initial observation equation 
+is modified to include terms derived from polynomial surface fitting of 
+differences in the X, Y, and Z components of the LAS positions and the
+positions calculated from the intial cBLUE observation equation.</p>
+<img alt="_images/eq_ModifiedObsEq.png" src="_images/eq_ModifiedObsEq.png" />
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(sympy object, sympy object, sympy object, function)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.estimate_rho_a_b">
+<code class="descname">estimate_rho_a_b</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.estimate_rho_a_b"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.estimate_rho_a_b" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates estimates for rho, alpha, and beta</p>
+<p>This method calculates the estimated values for rho, alpha, and beta, which
+are the lidar range, angle in the YZ plane, and angle in the XZ plane,
+respectively (see the following image).</p>
+<img alt="_images/rho_alpha_beta.png" src="_images/rho_alpha_beta.png" />
+<p>Alpha and beta are used to model the scan pattern, as a substitute for the
+actual, unknown, proprietary scan pattern model implemented by the
+manufacturer.  Polynomial-surface error modeling is used to account for the
+positional differences resulting from the difference between the cBLUE scan
+model and the manufacturer scan model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(list[], list[], list[], list[])</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Subaerial.SensorModel.eval_type">
+<code class="descname">eval_type</code><em class="property"> = 'numexpr'</em><a class="headerlink" href="#Subaerial.SensorModel.eval_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.SensorModel.set_rotation_matrix_airplane">
+<code class="descname">set_rotation_matrix_airplane</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.set_rotation_matrix_airplane"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.set_rotation_matrix_airplane" title="Permalink to this definition">¶</a></dt>
+<dd><p>define rotation matrix for airplane</p>
+<p>This method first generates the airplane rotation matrix, R, using
+symbolic calculations.  The symbolic components of the matrix R are
+then “functionized”, or “lambdified”, for faster processing (because
+symbolic calculations are relatively slow).  The components of R are
+functionized separately from the general observation equation, which
+includes R, M (the sensor rotation matrix), and polynomial-surface-
+correction terms, because R is later used to estimate parameters
+describing the assumed scan pattern, which is an approximation of the
+manufacturer’s proprietary scan pattern.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+R1 &amp;= \left[\begin{matrix}1 &amp; 0 &amp; 0\\0 &amp; \cos{\left (r \right )} &amp; - \sin{\left (r \right )}\\0 &amp; \sin{\left (r \right )} &amp; \cos{\left (r \right )}\end{matrix}\right] \\
+R2 &amp;= \left[\begin{matrix}\cos{\left (p \right )} &amp; 0 &amp; \sin{\left (p \right )}\\0 &amp; 1 &amp; 0\\- \sin{\left (p \right )} &amp; 0 &amp; \cos{\left (p \right )}\end{matrix}\right] \\
+R3 &amp;= \left[\begin{matrix}\cos{\left (h \right )} &amp; - \sin{\left (h \right )} &amp; 0\\\sin{\left (h \right )} &amp; \cos{\left (h \right )} &amp; 0\\0 &amp; 0 &amp; 1\end{matrix}\right] \\
+R &amp;= R3*R2*R1 = \left[\begin{matrix}\cos{\left (h \right )} \cos{\left (p \right )} &amp; - \sin{\left (h \right )} \cos{\left (r \right )} + \sin{\left (p \right )} \sin{\left (r \right )} \cos{\left (h \right )} &amp; \sin{\left (h \right )} \sin{\left (r \right )} + \sin{\left (p \right )} \cos{\left (h \right )} \cos{\left (r \right )}\\\sin{\left (h \right )} \cos{\left (p \right )} &amp; \sin{\left (h \right )} \sin{\left (p \right )} \sin{\left (r \right )} + \cos{\left (h \right )} \cos{\left (r \right )} &amp; \sin{\left (h \right )} \sin{\left (p \right )} \cos{\left (r \right )} - \sin{\left (r \right )} \cos{\left (h \right )}\\- \sin{\left (p \right )} &amp; \sin{\left (r \right )} \cos{\left (p \right )} &amp; \cos{\left (p \right )} \cos{\left (r \right )}\end{matrix}\right]
+\end{align*}\end{split}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Matrix</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List[lambdify functions]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="Subaerial.SensorModel.set_rotation_matrix_scanning_sensor">
+<em class="property">static </em><code class="descname">set_rotation_matrix_scanning_sensor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel.set_rotation_matrix_scanning_sensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel.set_rotation_matrix_scanning_sensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>define the lidar sensor rotation matrix</p>
+<p>This method generates the rotation matrix associated with the
+scanning sensor.  The variables a, b, and w describe the assumed
+scan pattern, which is an approximation of the manufacturer’s
+proprietary scan pattern.</p>
+<p>a: the rotation in the YZ plane
+b: the rotation in the XZ plane</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+M1 &amp;= \left[\begin{matrix}1 &amp; 0 &amp; 0\\0 &amp; \cos{\left (a \right )} &amp; - \sin{\left (a \right )}\\0 &amp; \sin{\left (a \right )} &amp; \cos{\left (a \right )}\end{matrix}\right] \\
+M2 &amp;= \left[\begin{matrix}\cos{\left (b \right )} &amp; 0 &amp; \sin{\left (b \right )}\\0 &amp; 1 &amp; 0\\- \sin{\left (b \right )} &amp; 0 &amp; \cos{\left (b \right )}\end{matrix}\right] \\
+M &amp;= M2*M1 = \left[\begin{matrix}\cos{\left (b \right )} &amp; \sin{\left (a \right )} \sin{\left (b \right )} &amp; \sin{\left (b \right )} \cos{\left (a \right )}\\0 &amp; \cos{\left (a \right )} &amp; - \sin{\left (a \right )}\\- \sin{\left (b \right )} &amp; \sin{\left (a \right )} \cos{\left (b \right )} &amp; \cos{\left (a \right )} \cos{\left (b \right )}\end{matrix}\right]
+\end{align*}\end{split}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Return Matrix M:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">the scanning sensor rotation matrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Subaerial.Subaerial">
+<em class="property">class </em><code class="descclassname">Subaerial.</code><code class="descname">Subaerial</code><span class="sig-paren">(</span><em>J</em>, <em>merged_data</em>, <em>stddev</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Subaerial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Subaerial" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class provides the functionality to calculate the subaerial
+portion of the total propagated uncertainty (TPU), given the Jacobian 
+of a laser geolocation equation, merged lidar/trajectory 
+data, and the standard deviations of the provided data.</p>
+<p>The following table lists the contents of merged lidar/trajectory
+data array:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="24%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">ndarray</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>t_sbet</td>
+<td>sbet timestamps</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>t_las</td>
+<td>las timestamps</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>x_las</td>
+<td>las x coordinates</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>y_las</td>
+<td>las y coordinates</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>z_las</td>
+<td>las z coordinates</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>x_sbet</td>
+<td>sbet x coordinates</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>y_sbet</td>
+<td>sbet y coordinates</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>z_sbet</td>
+<td>sbet z coordinates</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>r</td>
+<td>sbet roll</td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>p</td>
+<td>sbet pitch</td>
+</tr>
+<tr class="row-even"><td>10</td>
+<td>h</td>
+<td>sbet heading</td>
+</tr>
+</tbody>
+</table>
+<p>The following table lists the contents of the array of standard
+deviations corresponding to the variables of the merged data
+array:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="24%" />
+<col width="63%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">ndarray</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>std_ang1</td>
+<td>ang1 uncertainty</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>std_ang2</td>
+<td>ang2 uncertainty</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>std_r</td>
+<td>sbet roll uncertainty</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>std_p</td>
+<td>sbet pitch uncertainty</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>std_h</td>
+<td>sbet heading uncertainty</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>stdx_sbet</td>
+<td>sbet x uncertainty</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>stdy_sbet</td>
+<td>sbet y uncertainty</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>stdz_sbet</td>
+<td>sbet z uncertainty</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>std_rho</td>
+<td>?</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>J</strong> (<a class="reference internal" href="#Subaerial.Jacobian" title="Subaerial.Jacobian"><em>Jacobian</em></a>) – Jacobian object</li>
+<li><strong>ndarray</strong> – merged Lidar/Trajectory data</li>
+<li><strong>ndarray</strong> – standard deviations of component variables</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="Subaerial.Subaerial.calc_subaerial_tpu">
+<code class="descname">calc_subaerial_tpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Subaerial.calc_subaerial_tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Subaerial.calc_subaerial_tpu" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates the subaerial uncertainty</p>
+<p>This method calculates the subaerial uncertainty through two major
+steps:</p>
+<ol class="arabic">
+<li><p class="first">EVALUATE JACOBIAN</p>
+<blockquote>
+<div><p>The eval_jacobian() method of the Jacobian object evaluates the
+Jacobian with the merged lidar/trajectory data passed to it.  Although
+the Jacobian is first calculated symbolically, it’s evaluated as a
+collection of lambda functions, which are “used to calculate numerical
+values very fast.” (<a class="reference external" href="https://docs.sympy.org/latest/modules/utilities/lambdify.html">https://docs.sympy.org/latest/modules/utilities/lambdify.html</a>)</p>
+</div></blockquote>
+</li>
+<li><p class="first">PROPAGATE UNCERTAINTY</p>
+<blockquote>
+<div><p>Once the Jacobian is evaluated, uncertainty is progagated by multiplying the
+square of the Jacobian with the squares of the standard deviations defined in the
+stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is 
+implemented differently than shown by the propagation equation because the covariances are 
+assumed to be 0.</p>
+</div></blockquote>
+</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(ndarray, ndarray, list[str])</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Subaerial.Subaerial.propogate_uncertainty">
+<code class="descname">propogate_uncertainty</code><span class="sig-paren">(</span><em>J_eval</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Subaerial.propogate_uncertainty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Subaerial.propogate_uncertainty" title="Permalink to this definition">¶</a></dt>
+<dd><p>propogates the subaerial uncertatinty</p>
+<p>This method propogates the uncertainty of the component uncertainties
+using the following equation:</p>
+<img alt="_images/eq_PropogateError.png" src="_images/eq_PropogateError.png" />
+<p>Because only the non-zero terms of the Jacobian are kept (to
+simplify Jacobian evaluation), the rows in the variance/covariance
+matrix corresponding to the zero terms of the Jacobian are
+deleted.  The table below summarizes which terms of the Jacobian
+are zero (and one).</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="42%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">index</th>
+<th class="head">variable</th>
+<th class="head">Jx</th>
+<th class="head">Jy</th>
+<th class="head">Jz</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>a</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>b</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>r</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>p</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>h</td>
+<td>.</td>
+<td>.</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>x</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>y</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>z</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>rho</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>J_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>(</em><em>ndarray</em><em>)</em>) – evaluated Jacobian values for X, Y, and Z components</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return (ndarray, ndarray, list[str]):</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">subaerial THU, subaerial TVU, THU and TVU column headers</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, NOAA, National Geodetic Survey, Remote Sensing Division.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>
