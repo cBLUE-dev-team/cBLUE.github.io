@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" filepath="$PROJECT_DIR$/.idea/NGS_TPU_TOOL.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../../NOAA/RSD_QAQC_GITHUB/.idea/RSD_QAQC_GITHUB.iml" filepath="$PROJECT_DIR$/../../../NOAA/RSD_QAQC_GITHUB/.idea/RSD_QAQC_GITHUB.iml" />
-    </modules>
-  </component>
-</project>

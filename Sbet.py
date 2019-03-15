@@ -1,3 +1,32 @@
+"""
+cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
+Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact:
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+christopher.parrish@oregonstate.edu
+
+"""
+
 import os
 import time
 import pandas as pd
@@ -26,6 +55,10 @@ class Sbet:
         self.sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
                                   if f.endswith('.txt')])
         self.data = None
+        self.SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
+        self.SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
+        self.GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
+        self.GPS_ADJUSTED_OFFSET = 1e9
 
     @staticmethod
     def get_sbet_date(sbet):
@@ -42,8 +75,7 @@ class Sbet:
         sbet_date = [year, month, day]
         return sbet_date
 
-    @staticmethod
-    def gps_sow_to_gps_adj(gps_date, gps_wk_sec):
+    def gps_sow_to_gps_adj(self, gps_date, gps_wk_sec):
         """converts GPS seconds-of-week timestamp to GPS adjusted standard time
 
         In the case that the timestamps in the sbet files are GPS week seconds,
@@ -58,20 +90,25 @@ class Sbet:
         """
         
         logging.info('converting GPS week seconds to GPS adjusted standard time...'),
-        SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
-        SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
-        GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
 
         year = gps_date[0]
         month = gps_date[1]
         day = gps_date[2]
 
         sbet_date = datetime(year, month, day)
-        dt = sbet_date - GPS_EPOCH
-        gps_wk = int((dt.days * SECS_PER_DAY + dt.seconds) / SECS_PER_GPS_WK)
-        gps_time = gps_wk * SECS_PER_GPS_WK + gps_wk_sec
-        gps_time_adj = gps_time - 1e9
+        dt = sbet_date - self.GPS_EPOCH
+        gps_wk = int((dt.days * self.SECS_PER_DAY + dt.seconds) / self.SECS_PER_GPS_WK)
+        gps_time = gps_wk * self.SECS_PER_GPS_WK + gps_wk_sec
+        gps_time_adj = gps_time - self.GPS_ADJUSTED_OFFSET
+
         return gps_time_adj
+
+    def check_if_sow(self, time):
+        logging.info('checking if timestamps are GPS week seconds...')
+        if time <= self.SECS_PER_GPS_WK:
+            return True
+        else:
+            return False
 
     def build_sbets_data(self):
         """builds 1 pandas dataframe from all ASCII sbet files
@@ -104,9 +141,9 @@ class Sbet:
         sbets_df = pd.DataFrame()
         header_sbet = ['time', 'lon', 'lat', 'X', 'Y', 'Z', 'roll', 'pitch', 'heading',
                        'stdX', 'stdY', 'stdZ', 'stdroll', 'stdpitch', 'stdheading']
-        logging.info('getting sbet data from: ')
         for sbet in sorted(self.sbet_files):
-            logging.info('{}...'.format(sbet))
+            logging.info('-' * 50)
+            logging.info('getting trajectory data from {}...'.format(sbet))
             sbet_df = pd.read_table(
                 sbet,
                 skip_blank_lines=True,
@@ -117,10 +154,16 @@ class Sbet:
                 index_col=False)
             logging.info('({} trajectory points)'.format(sbet_df.shape[0]))
             sbet_date = self.get_sbet_date(sbet)
-            gps_time_adj = self.gps_sow_to_gps_adj(sbet_date, sbet_df['time'])
-            sbet_df['time'] = gps_time_adj
+
+            is_sow = self.check_if_sow(sbet_df['time'][0])
+            if is_sow:
+                gps_time_adj = self.gps_sow_to_gps_adj(sbet_date, sbet_df['time'])
+                sbet_df['time'] = gps_time_adj
+
             sbets_df = sbets_df.append(sbet_df, ignore_index=True)
+
         sbets_data = sbets_df.sort_values(['time'], ascending=[1])
+
         return sbets_data
 
     def set_data(self):
@@ -132,7 +175,7 @@ class Sbet:
         sbet_tic = time.clock()
         self.data = self.build_sbets_data()  # df
         sbet_toc = time.clock()
-        logging.info('It took {:.1f} mins to load sbets.'.format((sbet_toc - sbet_tic) / 60))
+        logging.info('It took {:.1f} mins to load the trajectory data.'.format((sbet_toc - sbet_tic) / 60))
 
     def get_tile_data(self, north, south, east, west):
         """queries the sbet data points that lie within the given las tile bounding coordinates
@@ -141,18 +184,28 @@ class Sbet:
         but as each las tile is processed, only the sbet data located within the
         las tile limits are sent to the calc_tpu() method.
 
+        To account for las tiles that contain data points from a las flight line
+        whose corresponding trajectory data falls outside of the las tile extents,
+        a buffer is added to the bounds of the tile when retreiving the
+        trajectory data.
+
         :param float north: northern limit of las tile
         :param float south: southern limit of las tile
         :param float east: eastern limit of las tile
         :param float west: western limit of las tile
         :return: pandas dataframe
         """
-        data = self.data[(self.data.Y >= south) & (self.data.Y <= north) &
-                         (self.data.X >= west) & (self.data.X <= east)]
+
+        buff = 500  # meters
+
+        data = self.data[(self.data.Y >= south - buff) & (self.data.Y <= north + buff) &
+                         (self.data.X >= west - buff) & (self.data.X <= east + buff)]
+
         return data
 
 
 if __name__ == '__main__':
-    pass
-    # sbet = Sbet('I:\NGS_TPU\DATA\FL1604-TB-N\sbet\New folder')
-    # print sbet.data
+    logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+    sbet = Sbet(r'C:\QAQC_contract\marco_island')
+    sbet_df = sbet.build_sbets_data()
+    print(sbet_df)

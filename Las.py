@@ -1,10 +1,38 @@
+"""
+cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
+Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact:
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+christopher.parrish@oregonstate.edu
+
+"""
+
 import logging
 import numpy as np
 import numexpr as ne
 import laspy
 
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
-
 
 """
 This class provides the functionality to load las files into cBLUE.  One Las object 
@@ -22,12 +50,11 @@ class Las:
         self.num_file_points = self.inFile.__len__()
         self.points_to_process = self.inFile.points['point']
 
-        '''get index list that would sort gps_time (to be used to
+        '''index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
         file
         '''
-        logging.info('generating time-sorting indices...')
-        self.time_sort_indices = np.argsort(self.points_to_process, order='gps_time')
+        self.time_sort_indices = None
 
     def get_flight_line_ids(self):
         """generates a list of unique flight line ids
@@ -38,7 +65,7 @@ class Las:
         """
         return np.unique(self.points_to_process['pt_src_id'])
 
-    def get_flight_line_txyz(self, fl):
+    def get_flight_line_txyz(self):
         """retrieves the x, y, z, and timestamp data from the las data points
 
         The x, y, and z values in the las file are stored as integers.  The
@@ -51,24 +78,26 @@ class Las:
         scale_x = np.asarray(self.inFile.header.scale[0])
         scale_y = np.asarray(self.inFile.header.scale[1])
         scale_z = np.asarray(self.inFile.header.scale[2])
+
         offset_x = np.asarray(self.inFile.header.offset[0])
         offset_y = np.asarray(self.inFile.header.offset[1])
         offset_z = np.asarray(self.inFile.header.offset[2])
 
-        flight_line_indx = self.points_to_process['pt_src_id'] == fl
-        flight_line_points = self.points_to_process[flight_line_indx]
-        flight_line_points_sorted = np.sort(flight_line_points, order='gps_time')
-
-        t = flight_line_points_sorted['gps_time']
-        X = flight_line_points_sorted['X']
-        Y = flight_line_points_sorted['Y']
-        Z = flight_line_points_sorted['Z']
+        t = self.points_to_process['gps_time']
+        X = self.points_to_process['X']
+        Y = self.points_to_process['Y']
+        Z = self.points_to_process['Z']
 
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
         z = ne.evaluate("Z * scale_z + offset_z")
 
-        return t, x, y, z
+        xyzt = np.vstack([x, y, z, t]).T
+        self.time_sort_indices = xyzt[:,3].argsort()
+
+        flight_lines = self.points_to_process['pt_src_id']
+
+        return xyzt, self.time_sort_indices, flight_lines
 
     @staticmethod
     def get_average_water_surface_ellip_height():

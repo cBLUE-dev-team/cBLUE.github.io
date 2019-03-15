@@ -1,17 +1,50 @@
+"""
+cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
+Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+Contact:
+Christopher Parrish, PhD
+School of Construction and Civil Engineering
+101 Kearney Hall
+Oregon State University
+Corvallis, OR  97331
+(541) 737-5688
+christopher.parrish@oregonstate.edu
+
+"""
+
 import numpy as np
 import numexpr as ne
-import logging
 from math import radians
+import logging
+logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
+
+import matplotlib.pyplot as plt
 
 
 class Merge:
-    dt_threshold = 1  # seconds
+
+    max_allowable_dt = 1.0  # second
 
     def __init__(self):
-        pass
+        self.a_std_dev = 0.02  # degrees
+        self.b_std_dev = 0.02  # degrees
+        self.std_rho = 0.025
 
-    @staticmethod
-    def merge(las, fl, sbet_data, (las_t, las_x, las_y, las_z)):
         """returns sbet & las data merged based on timestamps
 
         The cBLUE TPU calculations require the sbet and las data to be in
@@ -34,9 +67,9 @@ class Merge:
 
         The following table lists the contents of the returned list of ndarrays:
 
-        =====   =========   =======================
-        Index   ndarray     description
-        =====   =========   =======================
+        =====   =========   ========================    =======
+        Index   ndarray     description                 units
+        =====   =========   ========================    =======
         0       t_sbet      sbet timestamps
         1       t_las       las timestamps
         2       x_las       las x coordinates
@@ -48,8 +81,8 @@ class Merge:
         8       r           sbet roll
         9       p           sbet pitch
         10      h           sbet heading
-        11      std_ang1    ang1 uncertainty
-        12      std_ang2    ang2 uncertainty
+        11      std_a       a uncertainty
+        12      std_b       b uncertainty
         13      std_r       sbet roll uncertainty
         14      std_p       sbet pitch uncertainty
         15      std_h       sbet heading uncertainty
@@ -57,51 +90,74 @@ class Merge:
         17      stdy_sbet   sbet y uncertainty
         18      stdz_sbet   sbet z uncertainty
         19      std_rho     ?
-        =====   =========   =======================
+        =====   =========   ========================    =======
         """
 
-        a_std_dev = 0.02  # degrees
-        b_std_dev = 0.02  # degrees
-        std_rho = 0.025
-        max_allowable_dt = 1.0
+    def merge(self, las, fl, sbet_data, las_data):
+
+        num_sbet_pts = sbet_data.shape[0]
 
         # match sbet and las dfs based on timestamps
-        sbet_t = sbet_data[:, 0]
-        num_chunk_points = las_t.shape
-        idx = np.searchsorted(sbet_t, las_t) - 1
-        mask = ne.evaluate('idx >= 0')
+        idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
 
-        dt = las_t[mask] - sbet_data[:, 0][idx][mask]
+        # don't use las points outside range of sbet points
+        mask = ne.evaluate('0 < idx') & ne.evaluate('idx < num_sbet_pts')
+
+        t_sbet_masked = sbet_data[:, 0][idx[mask]]
+        t_las_masked = las_data[:, 3][mask]
+
+        dt = ne.evaluate('t_sbet_masked - t_las_masked')
         max_dt = np.max(dt)
-        logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
 
-        if max_dt > max_allowable_dt:
-            merged_data = []
+        if max_dt > self.max_allowable_dt:
+            data = False
+            stddev = False
+            traj_extents = (np.min(sbet_data[:, 3]), 
+                            np.max(sbet_data[:, 3]), 
+                            np.min(sbet_data[:, 4]), 
+                            np.max(sbet_data[:, 4]))
+
+            las_extents = (np.min(las_data[:, 0]), 
+                           np.max(las_data[:, 0]), 
+                           np.min(las_data[:, 1]), 
+                           np.max(las_data[:, 1]))
+
+            logging.info('trajectory and LAS data NOT MERGED')
+            logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
+            logging.info('trajctory extents: {}'.format(traj_extents))
+            logging.info('las extents: {}'.format(las_extents))
         else:
-            merged_data = [
-                sbet_data[:, 0][idx][mask],  # t_sbet
-                las_t[mask],  # t_las
-                las_x[mask],  # x_las
-                las_y[mask],  # y_las
-                las_z[mask],  # z_las
-                sbet_data[:, 3][idx][mask],  # x_sbet
-                sbet_data[:, 4][idx][mask],  # y_sbet
-                sbet_data[:, 5][idx][mask],  # z_sbet
-                np.radians(sbet_data[:, 6][idx][mask]),  # r
-                np.radians(sbet_data[:, 7][idx][mask]),  # p
-                np.radians(sbet_data[:, 8][idx][mask]),  # h
-                np.full(num_chunk_points, radians(a_std_dev)),  # std_ang1
-                np.full(num_chunk_points, radians(b_std_dev)),  # std_ang2
-                np.radians(sbet_data[:, 12][idx][mask]),  # std_r
-                np.radians(sbet_data[:, 13][idx][mask]),  # std_p
-                np.radians(sbet_data[:, 14][idx][mask]),  # std_h
-                sbet_data[:, 9][idx][mask],  # stdx_sbet
-                sbet_data[:, 10][idx][mask],  # stdy_sbet
-                sbet_data[:, 11][idx][mask],  # stdz_sbet
-                np.full(num_chunk_points, std_rho)]  # std_rho
+            data = np.asarray([
+                sbet_data[:, 0][idx[mask]],
+                las_data[:, 3][mask],   # t
+                las_data[:, 0][mask],   # x
+                las_data[:, 1][mask],   # y
+                las_data[:, 2][mask],   # z
+                sbet_data[:, 3][idx[mask]],
+                sbet_data[:, 4][idx[mask]],
+                sbet_data[:, 5][idx[mask]],
+                np.radians(sbet_data[:, 6][idx[mask]]),
+                np.radians(sbet_data[:, 7][idx[mask]]),
+                np.radians(sbet_data[:, 8][idx[mask]])
+            ])
 
-        return merged_data
+            num_points = data[0].shape
+
+            stddev = np.vstack([
+                np.full(num_points, radians(self.a_std_dev)),   # std_a
+                np.full(num_points, radians(self.b_std_dev)),   # std_b
+                np.radians(sbet_data[:, 12][idx[mask]]),        # std_r
+                np.radians(sbet_data[:, 13][idx[mask]]),        # std_p
+                np.radians(sbet_data[:, 14][idx[mask]]),        # std_h
+                sbet_data[:, 9][idx[mask]],                     # stdx_sbet
+                sbet_data[:, 10][idx[mask]],                    # stdy_sbet
+                sbet_data[:, 11][idx[mask]],                    # stdz_sbet
+                np.full(num_points, self.std_rho)               # std_rho
+            ])
+
+        return data, stddev
 
 
 if __name__ == '__main__':
     pass
+
