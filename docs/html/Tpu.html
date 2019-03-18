@@ -68,7 +68,10 @@
   <div class="section" id="module-Tpu">
 <span id="tpu-module"></span><h1>Tpu module<a class="headerlink" href="#module-Tpu" title="Permalink to this headline">¶</a></h1>
 <p>cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)</p>
+Copyright (C) 2019 
+Oregon State University (OSU)
+Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
+NOAA Remote Sensing Division (NOAA RSD)</p>
 <p>This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -301,7 +304,7 @@ following fields:</p>
 
 <dl class="method">
 <dt id="Tpu.Tpu.run_tpu_multiprocess">
-<code class="descname">run_tpu_multiprocess</code><span class="sig-paren">(</span><em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_multiprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_multiprocess" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run_tpu_multiprocess</code><span class="sig-paren">(</span><em>num_las</em>, <em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_multiprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_multiprocess" title="Permalink to this definition">¶</a></dt>
 <dd><p>runs the tpu calculations using multiprocessing</p>
 <p>This methods initiates the tpu calculations using the pathos multiprocessing
 framework (<a class="reference external" href="https://pypi.org/project/pathos/">https://pypi.org/project/pathos/</a>).  Whether the tpu calculations
@@ -323,7 +326,7 @@ processing or multiprocessing is deferred to future versions.</p>
 
 <dl class="method">
 <dt id="Tpu.Tpu.run_tpu_singleprocess">
-<code class="descname">run_tpu_singleprocess</code><span class="sig-paren">(</span><em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_singleprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_singleprocess" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run_tpu_singleprocess</code><span class="sig-paren">(</span><em>num_las</em>, <em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_singleprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_singleprocess" title="Permalink to this definition">¶</a></dt>
 <dd><p>runs the tpu calculations using a single processing</p>
 <p>This methods initiates the tpu calculations using single processing.
 Whether the tpu calculations are done with multiprocessing or not is

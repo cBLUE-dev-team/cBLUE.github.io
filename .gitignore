@@ -5,5 +5,6 @@
 *.pyc
 *.pyproj
 *.sln
+*.log
 extra_bytes_play.py
 test_Las.py

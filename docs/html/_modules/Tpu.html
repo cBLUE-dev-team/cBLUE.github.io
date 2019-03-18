@@ -62,7 +62,10 @@
   <h1>Source code for Tpu</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)</span>
-<span class="sd">Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)</span>
+<span class="sd">Copyright (C) 2019 </span>
+<span class="sd">Oregon State University (OSU)</span>
+<span class="sd">Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)</span>
+<span class="sd">NOAA Remote Sensing Division (NOAA RSD)</span>
 
 <span class="sd">This library is free software; you can redistribute it and/or</span>
 <span class="sd">modify it under the terms of the GNU Lesser General Public</span>
@@ -98,6 +101,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">progressbar</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">Merge</span> <span class="k">import</span> <span class="n">Merge</span>
 <span class="kn">from</span> <span class="nn">Subaerial</span> <span class="k">import</span> <span class="n">Subaerial</span><span class="p">,</span> <span class="n">SensorModel</span><span class="p">,</span> <span class="n">Jacobian</span>
@@ -422,7 +426,7 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Tpu.run_tpu_multiprocess"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.run_tpu_multiprocess">[docs]</a>    <span class="k">def</span> <span class="nf">run_tpu_multiprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">):</span>
+<div class="viewcode-block" id="Tpu.run_tpu_multiprocess"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.run_tpu_multiprocess">[docs]</a>    <span class="k">def</span> <span class="nf">run_tpu_multiprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;runs the tpu calculations using multiprocessing</span>
 
 <span class="sd">        This methods initiates the tpu calculations using the pathos multiprocessing</span>
@@ -436,11 +440,13 @@
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">ProcessPool</span><span class="p">()</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">)</span>
+    
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">enumerage</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">)):</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">done </span><span class="si">{0:%}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="n">num_las</span><span class="p">))</span>
         <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Tpu.run_tpu_singleprocess"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.run_tpu_singleprocess">[docs]</a>    <span class="k">def</span> <span class="nf">run_tpu_singleprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">):</span>
+<div class="viewcode-block" id="Tpu.run_tpu_singleprocess"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.run_tpu_singleprocess">[docs]</a>    <span class="k">def</span> <span class="nf">run_tpu_singleprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;runs the tpu calculations using a single processing</span>
 
 <span class="sd">        This methods initiates the tpu calculations using single processing.</span>
@@ -453,8 +459,11 @@
 <span class="sd">        :param sbet_las_generator:</span>
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">sbet_las</span> <span class="ow">in</span> <span class="n">sbet_las_generator</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">(</span><span class="n">sbet_las</span><span class="p">)</span></div></div>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating TPU...&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">progressbar</span><span class="o">.</span><span class="n">ProgressBar</span><span class="p">(</span><span class="n">max_value</span><span class="o">=</span><span class="n">num_las</span><span class="p">)</span> <span class="k">as</span> <span class="n">bar</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sbet_las</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sbet_las_generator</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">(</span><span class="n">sbet_las</span><span class="p">)</span>
+                <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

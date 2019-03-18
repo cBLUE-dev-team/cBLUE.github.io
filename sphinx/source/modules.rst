@@ -1,5 +1,5 @@
-NGS_TPU
-=======
+cBLUE_GITHUB
+============
 
 .. toctree::
    :maxdepth: 4

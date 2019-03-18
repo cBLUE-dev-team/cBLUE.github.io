@@ -32,14 +32,26 @@ christopher.parrish@oregonstate.edu
 
 # -*- coding: utf-8 -*-
 import logging
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 
 import Tkinter as tk
 import ttk
 import os
 import time
+import datetime
 import json
 import webbrowser
+
+now = datetime.datetime.now()
+log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year, 
+                                            str(now.month).zfill(2), 
+                                            str(now.day).zfill(2),
+                                            str(now.hour).zfill(2),
+                                            str(now.minute).zfill(2),
+                                            str(now.second).zfill(2))
+
+logging.basicConfig(filename=log_file,
+                    format='%(asctime)s:%(message)s', 
+                    level=logging.INFO)
 
 # Import Gui helper classes
 from GuiSupport import DirectorySelectButton, RadioFrame
@@ -148,7 +160,7 @@ class CBlueApp(tk.Tk):
 
     def save_config(self):
         config = 'cblue_configuration.json'
-        print('saving {}...\n{}'.format(config, self.controller_configuration))
+        logging.info('saving {}...\n{}'.format(config, self.controller_configuration))
         with open(config, 'w') as fp:
             json.dump(self.controller_configuration, fp)
 
@@ -454,6 +466,8 @@ class ControllerPanel(ttk.Frame):
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
 
+        num_las = len(las_files)
+
         def sbet_las_tiles_generator():
             """This generator is the 2nd argument for the
             run_tpu_multiprocessing method, to avoid
@@ -475,8 +489,8 @@ class ControllerPanel(ttk.Frame):
                 logging.info('({}) generating SBET tile...'.format(las.las_short_name))
                 yield self.sbet.get_tile_data(north, south, east, west), las
 
-        # tpu.run_tpu_multiprocessing(sbet_las_tiles_generator())
-        tpu.run_tpu_singleprocess(sbet_las_tiles_generator())
+        tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
+        #tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
         self.tpu_btn_text.set('TPU Calculated')
         self.tpuProcess.config(fg='darkgreen')
 

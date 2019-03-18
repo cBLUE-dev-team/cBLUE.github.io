@@ -1,6 +1,9 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+Copyright (C) 2019 
+Oregon State University (OSU)
+Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
+NOAA Remote Sensing Division (NOAA RSD)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -36,6 +39,7 @@ import laspy
 import numpy as np
 import numexpr as ne
 import pandas as pd
+import progressbar
 from collections import OrderedDict
 from Merge import Merge
 from Subaerial import Subaerial, SensorModel, Jacobian
@@ -360,7 +364,7 @@ class Tpu:
         except Exception as e:
             print(e)
 
-    def run_tpu_multiprocess(self, sbet_las_generator):
+    def run_tpu_multiprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using multiprocessing
 
         This methods initiates the tpu calculations using the pathos multiprocessing
@@ -374,11 +378,13 @@ class Tpu:
         :return:
         """
         p = pp.ProcessPool()
-        p.map(self.calc_tpu, sbet_las_generator)
+    
+        for i, _ in enumerage(p.map(self.calc_tpu, sbet_las_generator)):
+            sys.stderr.write('\rdone {0:%}'.format(i / num_las))
         p.close()
         p.join()
 
-    def run_tpu_singleprocess(self, sbet_las_generator):
+    def run_tpu_singleprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using a single processing
 
         This methods initiates the tpu calculations using single processing.
@@ -391,8 +397,11 @@ class Tpu:
         :param sbet_las_generator:
         :return:
         """
-        for sbet_las in sbet_las_generator:
-            self.calc_tpu(sbet_las)
+        print('Calculating TPU...')
+        with progressbar.ProgressBar(max_value=num_las) as bar:
+            for i, sbet_las in enumerate(sbet_las_generator, 1):
+                self.calc_tpu(sbet_las)
+                bar.update(i)
 
 
 if __name__ == '__main__':

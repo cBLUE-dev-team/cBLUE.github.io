@@ -1,6 +1,9 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 Oregon State University (OSU), Joint Hydrographic Center/Center for Coast and Ocean Mapping - University of New Hampshire (JHC/CCOM - UNH), NOAA Remote Sensing Division (NOAA RSD)
+Copyright (C) 2019 
+Oregon State University (OSU)
+Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
+NOAA Remote Sensing Division (NOAA RSD)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -31,6 +34,7 @@ import os
 import time
 import pandas as pd
 from datetime import datetime
+import progressbar
 import logging
 
 
@@ -141,7 +145,8 @@ class Sbet:
         sbets_df = pd.DataFrame()
         header_sbet = ['time', 'lon', 'lat', 'X', 'Y', 'Z', 'roll', 'pitch', 'heading',
                        'stdX', 'stdY', 'stdZ', 'stdroll', 'stdpitch', 'stdheading']
-        for sbet in sorted(self.sbet_files):
+        print(r'Loading trajectory files...')
+        for sbet in progressbar.progressbar(sorted(self.sbet_files), redirect_stdout=True):
             logging.info('-' * 50)
             logging.info('getting trajectory data from {}...'.format(sbet))
             sbet_df = pd.read_table(
