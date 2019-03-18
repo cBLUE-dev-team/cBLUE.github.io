@@ -377,9 +377,10 @@ class Tpu:
         :param sbet_las_generator:
         :return:
         """
-        p = pp.ProcessPool()
+        p = pp.ProcessPool(4)
     
-        for i, _ in enumerage(p.map(self.calc_tpu, sbet_las_generator)):
+        print('Calculating TPU...')
+        for i, _ in enumerate(p.map(self.calc_tpu, sbet_las_generator)):
             sys.stderr.write('\rdone {0:%}'.format(i / num_las))
         p.close()
         p.join()
