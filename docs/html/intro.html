@@ -19,7 +19,7 @@
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="install.html" />
+    <link rel="next" title="Subaerial Component" href="subaer.html" />
     <link rel="prev" title="comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)" href="index.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
@@ -36,7 +36,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="subaer.html" title="Subaerial Component"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)"
@@ -49,8 +49,7 @@
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Overview</a><ul>
-<li><a class="reference internal" href="#subaerial-component">Subaerial Component</a></li>
-<li><a class="reference internal" href="#subaqueous-component">Subaqueous Component</a></li>
+<li><a class="reference internal" href="#algorithm-workflow">Algorithm Workflow</a></li>
 </ul>
 </li>
 </ul>
@@ -59,8 +58,8 @@
   <p class="topless"><a href="index.html"
                         title="previous chapter">comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="install.html"
-                        title="next chapter">Installation</a></p>
+  <p class="topless"><a href="subaer.html"
+                        title="next chapter">Subaerial Component</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -93,22 +92,41 @@
 <div class="toctree-wrapper compound">
 </div>
 <p>This tool computes the vertical total propagated uncertainty (TPU) of bathymetry acquired with a Riegl VQ-880-G topobathymetric lidar (other lidar systems will be included in future versions).  The algorithm consists of subaerial and subaqueous components (see the figure below).  Each component lends itself to a different approach to uncertainty propagation because of the relative complexity of the factors influencing the laser pulse travel path.  Whereas the subaerial portion is a well-defined geometric problem that can be addressed using standard geomatics techniques, the subaqueous portion uses a Monte Carlo approach  to model the complex interactions of light with water that are difficult to model analytically.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="subaer.html">Subaerial Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subaque.html">Subaqueous Component</a></li>
+</ul>
+</div>
 <img alt="_images/GeneralApproach.png" src="_images/GeneralApproach.png" />
 <p>Image Credit: Chris Parrish</p>
-<div class="section" id="subaerial-component">
-<h2>Subaerial Component<a class="headerlink" href="#subaerial-component" title="Permalink to this headline">¶</a></h2>
-<p>The subaerial component analytically computes the TPU of the laser pulse at the water surface using the equations shown below.  The calculations include polynomial surface fitting to model the differences between the proprietary scan pattern and the implemented scan pattern.</p>
-<p>The figure below summarizes the subaerial TPU workflow.  First, the laser geolocation equation is formed, where R is the airplane rotation matrix and M is the scanning sensor rotation matrix.  To account for the differences between the assumed and actual, proprietary sensor models, the laser geolocation equation includes an error model based on polynomial suface fitting.  Second, the Jacobian of the laser geolocation equation is calculated and evaluated using data from the Las files and the corresponding trajectory.  Third, the uncertainty of each data point is propagated using the variance/covariance matrix (covariances are assumed to be zero) formed from the uncertainties of the component variables.  (The covariances are assumed to be zero.)</p>
-<img alt="_images/SubaerialLaserGeolocationEquation.png" src="_images/SubaerialLaserGeolocationEquation.png" />
-<p>Image Credit: Jaehoon Jung</p>
-</div>
-<div class="section" id="subaqueous-component">
-<h2>Subaqueous Component<a class="headerlink" href="#subaqueous-component" title="Permalink to this headline">¶</a></h2>
-<p>The subaqueous component stochastically computes the TPU of the laser pulse on the seafloor using Monte Carlo ray tracing based on surface modeling and estimates of scattering and absorption (see the figure below).  To minimize the computational complexity of performing Monte Carlo simmulations for large numbers of data points (&gt; 1 billion), the algorithm relies on pre-computed coefficient lookup tables.</p>
-<p>The figure below illustrates the general concept of the subaqueous TPU calculations.  Given assumed sea state (and turbidity) conditions, large numbers of light rays are propagated, or traced, through the water column.  The spread of the resulting distribution of depths provides an estimate of uncertainty.</p>
-<p>Please refer to the <a class="reference external" href="../html/_static/MonteCarlomanual.pdf">cBLUE Monte Carlo Manual</a> for detailed information about the subaqueous Monte Carlo simulations and corresponding lookup tables.</p>
-<img alt="_images/SubaqueousMonteCarlo.gif" src="_images/SubaqueousMonteCarlo.gif" />
-<p>Image Credit: Firat Eren</p>
+<div class="section" id="algorithm-workflow">
+<h2>Algorithm Workflow<a class="headerlink" href="#algorithm-workflow" title="Permalink to this headline">¶</a></h2>
+<p>cBLUE calculates a horizontal and vertical total propagated uncertainty (THU and TVU, respectively) for each data point using standard SLOPOV (Special Law of Propagation of Variance) techniques.  The algorithm workflow consists of three main steps:</p>
+<ol class="arabic">
+<li><p class="first">Form Sensor Model Observation Equation</p>
+<blockquote>
+<div><p>A laser geolocation equation is formed based on characteristics of the specified lidar sensor model.  The symbolic math library <em>SymPy</em> (<a class="reference external" href="https://www.sympy.org/en/index.html">https://www.sympy.org/en/index.html</a>) is used to construct the laser geolocation equation from specified laser and airplane rotation matrices.</p>
+</div></blockquote>
+</li>
+<li><p class="first">Generate Jacobian</p>
+<blockquote>
+<div><p>The general equation of the Jacobian, or the matrix of partial derivatives, of the laser geolocation equation is calculated using SymPy.</p>
+</div></blockquote>
+</li>
+<li><p class="first">Propagate Uncertainty</p>
+<blockquote>
+<div><p>Once the general equation of the Jacobian is calculated, the uncertainties of the component variables are propagated for each data point, per flight line, per Las tile, using the following steps:</p>
+<ul class="simple">
+<li>Merge the Las data and trajectory data (Merge class)</li>
+<li>Calculate subaerial THU and TVU (Subaerial class)</li>
+<li>Calculate subaqueous THU and TVU (Subaqueous class)</li>
+<li>Combine subaerial and subaqueous TPU (Tpu class)</li>
+<li>Export TPU as Las extra bytes (Tpu Class)</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
 </div>
 </div>
 
@@ -128,7 +146,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="subaer.html" title="Subaerial Component"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)"

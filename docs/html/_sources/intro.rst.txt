@@ -6,32 +6,35 @@ Overview
 
 This tool computes the vertical total propagated uncertainty (TPU) of bathymetry acquired with a Riegl VQ-880-G topobathymetric lidar (other lidar systems will be included in future versions).  The algorithm consists of subaerial and subaqueous components (see the figure below).  Each component lends itself to a different approach to uncertainty propagation because of the relative complexity of the factors influencing the laser pulse travel path.  Whereas the subaerial portion is a well-defined geometric problem that can be addressed using standard geomatics techniques, the subaqueous portion uses a Monte Carlo approach  to model the complex interactions of light with water that are difficult to model analytically. 
 
+.. toctree::
+
+	subaer
+	subaque
+
 .. image:: ../images/GeneralApproach.png
 
 Image Credit: Chris Parrish
 
-Subaerial Component
-*******************
-The subaerial component analytically computes the TPU of the laser pulse at the water surface using the equations shown below.  The calculations include polynomial surface fitting to model the differences between the proprietary scan pattern and the implemented scan pattern.  
+Algorithm Workflow
+------------------
 
-The figure below summarizes the subaerial TPU workflow.  First, the laser geolocation equation is formed, where R is the airplane rotation matrix and M is the scanning sensor rotation matrix.  To account for the differences between the assumed and actual, proprietary sensor models, the laser geolocation equation includes an error model based on polynomial suface fitting.  Second, the Jacobian of the laser geolocation equation is calculated and evaluated using data from the Las files and the corresponding trajectory.  Third, the uncertainty of each data point is propagated using the variance/covariance matrix (covariances are assumed to be zero) formed from the uncertainties of the component variables.  (The covariances are assumed to be zero.)
+cBLUE calculates a horizontal and vertical total propagated uncertainty (THU and TVU, respectively) for each data point using standard SLOPOV (Special Law of Propagation of Variance) techniques.  The algorithm workflow consists of three main steps:
 
-.. image:: ../images/SubaerialLaserGeolocationEquation.png
+1. Form Sensor Model Observation Equation
 
-Image Credit: Jaehoon Jung
+	A laser geolocation equation is formed based on characteristics of the specified lidar sensor model.  The symbolic math library *SymPy* (https://www.sympy.org/en/index.html) is used to construct the laser geolocation equation from specified laser and airplane rotation matrices.
 
-Subaqueous Component
-********************
-The subaqueous component stochastically computes the TPU of the laser pulse on the seafloor using Monte Carlo ray tracing based on surface modeling and estimates of scattering and absorption (see the figure below).  To minimize the computational complexity of performing Monte Carlo simmulations for large numbers of data points (> 1 billion), the algorithm relies on pre-computed coefficient lookup tables.  
+2. Generate Jacobian
 
-The figure below illustrates the general concept of the subaqueous TPU calculations.  Given assumed sea state (and turbidity) conditions, large numbers of light rays are propagated, or traced, through the water column.  The spread of the resulting distribution of depths provides an estimate of uncertainty.
+	The general equation of the Jacobian, or the matrix of partial derivatives, of the laser geolocation equation is calculated using SymPy.
 
-Please refer to the `cBLUE Monte Carlo Manual`_ for detailed information about the subaqueous Monte Carlo simulations and corresponding lookup tables.
+3. Propagate Uncertainty
 
-.. _`cBLUE Monte Carlo Manual`: ../html/_static/MonteCarlomanual.pdf
+	Once the general equation of the Jacobian is calculated, the uncertainties of the component variables are propagated for each data point, per flight line, per Las tile, using the following steps:
 
-.. image:: ../images/SubaqueousMonteCarlo.gif
-
-Image Credit: Firat Eren
-   
-
+	* Merge the Las data and trajectory data (Merge class)
+	* Calculate subaerial THU and TVU (Subaerial class)
+	* Calculate subaqueous THU and TVU (Subaqueous class)
+	* Combine subaerial and subaqueous TPU (Tpu class)
+	* Export TPU as Las extra bytes (Tpu Class)
+		

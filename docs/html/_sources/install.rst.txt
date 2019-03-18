@@ -7,7 +7,6 @@ cBLUE is designed to run on 64-bit Python 2.7.  Support for Python 3 is deferred
 
 cBLUE is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
 
-
 cBLUE Files
 -----------
 
@@ -21,7 +20,7 @@ The following table lists the main classes comprising cBLUE:
 	Sbet.py, loads the ASCII trajectory files (or "sbets")
 	Las.py, loads the las files
 	Merge.py, merges the trajectory and las data based on timestamps
-	SensorModel.py, defines and allows access to lidar sensor model
+	SensorModel.py, defines and gives access to lidar sensor model
 	Jacobian.py, forms and evaluates the Jacobian of a sensor model's laser geolocation equation
 	Tpu.py, coordinates the TPU workflow
 	Subaerial.py, calculates the subaerial TPU

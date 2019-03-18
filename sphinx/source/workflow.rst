@@ -1,5 +1,5 @@
-Workflow
-========
+Operational Workflow
+====================
 
 The recommended workflow consists of 4 steps:
 
@@ -25,14 +25,4 @@ Click the *Load Trajectory File(s)* button, which loads the trajectory data from
 
 4. Process TPU
 ##############
-Click the *Process TPU button* to calculate the TPU of all data points contained in LAS file(s) contained in the specified LAS Directory.  The general workflow is listed below:
-
-    1. Form observation equation (SensorModel class)
-    2. Generate Jacobian (Jacobian class)
-    3. for each flight line within each Las tile:
-
-        * Merge the Las data and trajectory data (Merge class)
-        * Calculate subaerial THU and TVU (Subaerial class)
-        * Calculate subaqueous THU and TVU (Subaqueous class)
-        * Combine subaerial and subaqueous TPU
-        * Export TPU (either as Python "pickle' or as Las extra bytes)
+Click the *Process TPU button* to calculate the TPU of all data points contained in LAS file(s) contained in the specified LAS Directory.

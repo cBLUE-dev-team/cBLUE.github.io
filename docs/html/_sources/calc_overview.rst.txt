@@ -1,0 +1,16 @@
+TPU Calculations Overview
+=========================
+
+The general workflow is listed below:
+
+    1. Form observation equation (SensorModel class)
+    2. Generate Jacobian (Jacobian class)
+    3. for each flight line within each Las tile:
+
+        * Merge the Las data and trajectory data (Merge class)
+        * Calculate subaerial THU and TVU (Subaerial class)
+        * Calculate subaqueous THU and TVU (Subaqueous class)
+        * Combine subaerial and subaqueous TPU
+        * Export TPU (either as Python "pickle' or as Las extra bytes)
+		
+Detailed documentation on classes d
