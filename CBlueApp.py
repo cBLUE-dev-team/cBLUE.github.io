@@ -489,8 +489,8 @@ class ControllerPanel(ttk.Frame):
                 logging.info('({}) generating SBET tile...'.format(las.las_short_name))
                 yield self.sbet.get_tile_data(north, south, east, west), las
 
-        #tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator)
-        tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
+        tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator)
+        #tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
         self.tpu_btn_text.set('TPU Calculated')
         self.tpuProcess.config(fg='darkgreen')
 

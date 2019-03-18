@@ -378,10 +378,7 @@ class Tpu:
         :return:
         """
         p = pp.ProcessPool(4)
-    
-        print('Calculating TPU...')
-        for i, _ in enumerate(p.map(self.calc_tpu, sbet_las_generator)):
-            sys.stderr.write('\rdone {0:%}'.format(i / num_las))
+        p.map(self.calc_tpu, sbet_las_generator)
         p.close()
         p.join()
 
