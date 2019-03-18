@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = u'cBLUE'
-copyright = u'2019, NOAA, National Geodetic Survey, Remote Sensing Division'
+copyright = u'2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division'
 author = u'Nick Forfinski-Sarkozi'
 
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'v2.0.1 (pre-release)'
+release = u'v2.0.3 (pre-release)'
 
 
 # -- General configuration ---------------------------------------------------
@@ -94,7 +94,7 @@ html_theme = 'bizstyle'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['_static', '../assets']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

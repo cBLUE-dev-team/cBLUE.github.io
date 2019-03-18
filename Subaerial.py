@@ -68,6 +68,8 @@ class SensorModel:
         describing the assumed scan pattern, which is an approximation of the
         manufacturer's proprietary scan pattern.
 
+        Reference: (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
+
         .. math::
 
             \\begin{align*}
@@ -97,13 +99,13 @@ class SensorModel:
         R = R3 * R2 * R1
 
         # "functionize" the necessary R components for a and b estimation
-        # (http://docs.sympy.org/latest/modules/utilities/lambdify.html)
         r00 = lambdify((h, p), R[0], self.eval_type)
         r01 = lambdify((r, p, h), R[1], self.eval_type)
         r10 = lambdify((h, p), R[3], self.eval_type)
         r11 = lambdify((r, p, h), R[4], self.eval_type)
         r20 = lambdify(p, R[6], self.eval_type)
         r21 = lambdify((r, p), R[7], self.eval_type)
+
         fR = [r00, r01, None,
               r10, r11, None,
               r20, r21, None]
@@ -562,7 +564,7 @@ class Jacobian:
         Jzsub = [j.subs(trig_substitutions) for j in self.Jz]
 
         # functionize the Jacobian x, y, and z components
-        # (9 terms in each Jacobian component correspond to the a, b, r, p, h, x, y, z, and rho 
+        # (9 terms in each Jacobian component correspond to a, b, r, p, h, x, y, z, and rho 
         lJx = [lambdify(Jxsub[i].free_symbols, Jxsub[i], eval_type) for i in range(9)]  
         lJy = [lambdify(Jysub[i].free_symbols, Jysub[i], eval_type) for i in range(9)]
         lJz = [lambdify(Jzsub[i].free_symbols, Jzsub[i], eval_type) for i in range(9)]

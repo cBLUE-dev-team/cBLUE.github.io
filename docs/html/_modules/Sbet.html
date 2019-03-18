@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Sbet &#8212; cBLUE v2.0.1 (pre-release) documentation</title>
+    <title>Sbet &#8212; cBLUE v2.0.3 (pre-release) documentation</title>
     <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.3 (pre-release) documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -166,7 +166,7 @@
         <span class="k">return</span> <span class="n">gps_time_adj</span></div>
 
 <div class="viewcode-block" id="Sbet.check_if_sow"><a class="viewcode-back" href="../Sbet.html#Sbet.Sbet.check_if_sow">[docs]</a>    <span class="k">def</span> <span class="nf">check_if_sow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;checking if timestamps are SOW...&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;checking if timestamps are GPS week seconds...&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">time</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SECS_PER_GPS_WK</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
@@ -246,14 +246,22 @@
 <span class="sd">        but as each las tile is processed, only the sbet data located within the</span>
 <span class="sd">        las tile limits are sent to the calc_tpu() method.</span>
 
+<span class="sd">        To account for las tiles that contain data points from a las flight line</span>
+<span class="sd">        whose corresponding trajectory data falls outside of the las tile extents,</span>
+<span class="sd">        a buffer is added to the bounds of the tile when retreiving the</span>
+<span class="sd">        trajectory data.</span>
+
 <span class="sd">        :param float north: northern limit of las tile</span>
 <span class="sd">        :param float south: southern limit of las tile</span>
 <span class="sd">        :param float east: eastern limit of las tile</span>
 <span class="sd">        :param float west: western limit of las tile</span>
 <span class="sd">        :return: pandas dataframe</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Y</span> <span class="o">&gt;=</span> <span class="n">south</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Y</span> <span class="o">&lt;=</span> <span class="n">north</span><span class="p">)</span> <span class="o">&amp;</span>
-                         <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span> <span class="o">&gt;=</span> <span class="n">west</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span> <span class="o">&lt;=</span> <span class="n">east</span><span class="p">)]</span>
+
+        <span class="n">buff</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># meters</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Y</span> <span class="o">&gt;=</span> <span class="n">south</span> <span class="o">-</span> <span class="n">buff</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Y</span> <span class="o">&lt;=</span> <span class="n">north</span> <span class="o">+</span> <span class="n">buff</span><span class="p">)</span> <span class="o">&amp;</span>
+                         <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span> <span class="o">&gt;=</span> <span class="n">west</span> <span class="o">-</span> <span class="n">buff</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span> <span class="o">&lt;=</span> <span class="n">east</span> <span class="o">+</span> <span class="n">buff</span><span class="p">)]</span>
 
         <span class="k">return</span> <span class="n">data</span></div></div>
 
@@ -279,12 +287,12 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.3 (pre-release) documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, NOAA, National Geodetic Survey, Remote Sensing Division.
+        &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>

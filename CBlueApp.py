@@ -39,6 +39,7 @@ import ttk
 import os
 import time
 import json
+import webbrowser
 
 # Import Gui helper classes
 from GuiSupport import DirectorySelectButton, RadioFrame
@@ -49,7 +50,6 @@ from Las import Las
 from Tpu import Tpu
 
 import matplotlib
-matplotlib.use('Agg')
 from matplotlib import style
 from matplotlib import pyplot as plt
 
@@ -81,7 +81,7 @@ class CBlueApp(tk.Tk):
             message = f.readlines()
             print(''.join(message))
 
-        self.cblue_version = r'v2.0.2 (pre-release)'
+        self.cblue_version = r'v2.0.3 (pre-release)'
         self.sensor_model = 'Riegl VQ-880-G'
         self.config_file = 'cblue_configuration.json'
         self.load_config()
@@ -120,6 +120,7 @@ class CBlueApp(tk.Tk):
         menubar.add_cascade(label='Sensor Model', menu=sensor_model_choice)
 
         about_menu = tk.Menu(menubar, tearoff=0)
+        about_menu.add_command(label='Documentation', command=self.show_docs)
         about_menu.add_command(label='About', command=self.show_about)
         menubar.add_cascade(label='Help', menu=about_menu)
 
@@ -150,6 +151,9 @@ class CBlueApp(tk.Tk):
         print('saving {}...\n{}'.format(config, self.controller_configuration))
         with open(config, 'w') as fp:
             json.dump(self.controller_configuration, fp)
+
+    def show_docs(self):
+        webbrowser.open(r'file://' + os.path.realpath('docs/html/index.html'), new=True)
 
     def show_about(self):
         about = tk.Toplevel()

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Merge &#8212; cBLUE v2.0.1 (pre-release) documentation</title>
+    <title>Merge &#8212; cBLUE v2.0.3 (pre-release) documentation</title>
     <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.3 (pre-release) documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>
@@ -92,15 +92,20 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">radians</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 
 <div class="viewcode-block" id="Merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge">[docs]</a><span class="k">class</span> <span class="nc">Merge</span><span class="p">:</span>
+
+    <span class="n">max_allowable_dt</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># second</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">a_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">b_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">std_rho</span> <span class="o">=</span> <span class="mf">0.025</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_allowable_dt</span> <span class="o">=</span> <span class="mf">1.0</span>
 
         <span class="sd">&quot;&quot;&quot;returns sbet &amp; las data merged based on timestamps</span>
 
@@ -152,7 +157,7 @@
 
 <div class="viewcode-block" id="Merge.merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet_data</span><span class="p">,</span> <span class="n">las_data</span><span class="p">):</span>
 
-        <span class="n">num_sbet_pts</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">num_sbet_pts</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># match sbet and las dfs based on timestamps</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
@@ -165,11 +170,24 @@
 
         <span class="n">dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;t_sbet_masked - t_las_masked&#39;</span><span class="p">)</span>
         <span class="n">max_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
-        <span class="c1">#logging.info(&#39;({} FL {}) max_dt: {}&#39;.format(las, fl, max_dt))</span>
 
         <span class="k">if</span> <span class="n">max_dt</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_allowable_dt</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">stddev</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">traj_extents</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]),</span> 
+                            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]),</span> 
+                            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]),</span> 
+                            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]))</span>
+
+            <span class="n">las_extents</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> 
+                           <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> 
+                           <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> 
+                           <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;trajectory and LAS data NOT MERGED&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> FL </span><span class="si">{}</span><span class="s1">) max_dt: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">max_dt</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;trajctory extents: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">traj_extents</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;las extents: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las_extents</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span>
                 <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
@@ -204,6 +222,7 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="k">pass</span>
+
 </pre></div>
 
           </div>
@@ -220,12 +239,12 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.1 (pre-release) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cBLUE v2.0.3 (pre-release) documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, NOAA, National Geodetic Survey, Remote Sensing Division.
+        &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
