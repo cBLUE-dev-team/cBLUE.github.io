@@ -40,6 +40,7 @@ import numpy as np
 import numexpr as ne
 import pandas as pd
 import progressbar
+import p_tqdm
 from collections import OrderedDict
 from Merge import Merge
 from Subaerial import Subaerial, SensorModel, Jacobian
@@ -377,10 +378,12 @@ class Tpu:
         :param sbet_las_generator:
         :return:
         """
-        p = pp.ProcessPool(4)
-        p.map(self.calc_tpu, sbet_las_generator)
-        p.close()
-        p.join()
+        #p = pp.ProcessPool(4)
+        #p.map(self.calc_tpu, sbet_las_generator)
+        #p.close()
+        #p.join()
+
+        p_map(self.calc_tpu, sbet_las_generator)
 
     def run_tpu_singleprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using a single processing
