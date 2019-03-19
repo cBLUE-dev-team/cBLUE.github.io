@@ -149,7 +149,7 @@ class Sbet:
         for sbet in progressbar.progressbar(sorted(self.sbet_files), redirect_stdout=True):
             logging.info('-' * 50)
             logging.info('getting trajectory data from {}...'.format(sbet))
-            sbet_df = pd.read_table(
+            sbet_df = pd.read_csv(
                 sbet,
                 skip_blank_lines=True,
                 engine='c',

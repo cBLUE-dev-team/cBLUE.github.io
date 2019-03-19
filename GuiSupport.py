@@ -31,8 +31,7 @@ christopher.parrish@oregonstate.edu
 """
 
 # -*- coding: utf-8 -*-
-import tkFileDialog
-from Tkinter import Button, IntVar, Radiobutton, Frame, Label, W
+from tkinter import filedialog, Button, IntVar, Radiobutton, Frame, Label, W
 
 
 class DirectorySelectButton(object):
@@ -75,11 +74,11 @@ class DirectorySelectButton(object):
     def callback(self):
         """Callback for the button.
 
-        Gets the directoryName from user with tkFileDialog.
+        Gets the directoryName from user with filedialog.
         Updates the display to reflect directory choice.
         """
 
-        directoryName = tkFileDialog.askdirectory(
+        directoryName = filedialog.askdirectory(
             initialdir=self.master.lastFileLoc,
             title="Select {} File".format(self.directType))
 

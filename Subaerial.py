@@ -33,7 +33,7 @@ christopher.parrish@oregonstate.edu
 import logging
 logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 from Merge import Merge
-from sympy import *
+from sympy import lambdify, symbols, Matrix, cos, sin
 import numpy as np
 import numexpr as ne
 
@@ -468,7 +468,7 @@ class Jacobian:
     to decouple a Jacobian and the data used to evaluate it.  For example, 
     the inputs to the lambdified Jacobian components are not hard-coded in 
     the function call, but are determined from accessing the 
-    .func_code.co_varnames attribute of the Jacobian component and then 
+    .__code__.co_varnames attribute of the Jacobian component and then 
     looking up the corresponding values in a dict.  Although this somewhat
     decouples the Jacobian from the data used to evaluate it, the dict 
     containing the corresponding values is manually created, separate from
@@ -698,8 +698,9 @@ class Jacobian:
         :return vals:
         
         """
+
         vals = []
-        term_vars = J_term.func_code.co_varnames
+        term_vars = J_term.__code__.co_varnames
         for var in term_vars:
             if var[0] == 'p':
                 vals.append(values_for_J_eval['p_coeffs'][J_comp][var])

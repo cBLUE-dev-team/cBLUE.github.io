@@ -35,16 +35,18 @@ logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 import pathos.pools as pp
 import json
 import os
+import sys
 import laspy
 import numpy as np
 import numexpr as ne
 import pandas as pd
 import progressbar
-import p_tqdm
+from tqdm import tqdm
 from collections import OrderedDict
 from Merge import Merge
 from Subaerial import Subaerial, SensorModel, Jacobian
 from Subaqueous import Subaqueous
+from Las import Las
 import datetime
 
 
@@ -100,7 +102,7 @@ class Tpu:
         :return:
         """
 
-        sbet, las = sbet_las_files
+        sbet, las_file = sbet_las_files
 
         data_to_pickle = []
         output_columns = []
@@ -111,23 +113,13 @@ class Tpu:
         # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
         J = Jacobian(S)
 
+        las = Las(las_file)
+        M = Merge()
+
         logging.info('{} {} ({:,} points)'.format(las.las_short_name, '#' * 30, las.num_file_points))
         logging.info(las.get_flight_line_ids())
         las_xyzt, t_sort_indx, flight_lines = las.get_flight_line_txyz()
-
-        M = Merge()
-        #0       t_sbet
-        #1       t_las 
-        #2       x_las 
-        #3       y_las 
-        #4       z_las 
-        #5       x_sbet
-        #6       y_sbet
-        #7       z_sbet
-        #8       r     
-        #9       p     
-        #10      h     
-
+        
         for fl in las.get_flight_line_ids():
 
             logging.info('flight line {} {}'.format(fl, '-' * 50))
@@ -292,12 +284,17 @@ class Tpu:
             ])
 
         # define new extrabyte dimensions
-        for dimension, description in extra_byte_dimensions.iteritems():
+        for dimension, description in extra_byte_dimensions.items():
             logging.info('creating extra byte dimension for {}...'.format(dimension))
             out_las.define_new_dimension(
                 name=dimension, 
                 data_type=description[1], 
                 description=description[0])
+
+        '''
+        using eval to do following with a loop, versus explicityly
+        defining each one, takes to long because lists are made
+        '''
 
         #logging.info('populating extra byte data for cblue_x...')
         #out_las.cblue_x = output_df['cblue_x']
@@ -372,18 +369,24 @@ class Tpu:
         framework (https://pypi.org/project/pathos/).  Whether the tpu calculations
         are done with multiprocessing or not is currently determined by which
         "run_tpu_*" method is manually specified in the tpu_process_callback()
-        method of the CBlueApp class.  Including a user option to select single
-        processing or multiprocessing is deferred to future versions.
+        method of the CBlueApp class.  TODO: Include
+        a user option to select single processing or multiprocessing
 
         :param sbet_las_generator:
         :return:
         """
-        #p = pp.ProcessPool(4)
-        #p.map(self.calc_tpu, sbet_las_generator)
-        #p.close()
-        #p.join()
 
-        p_map(self.calc_tpu, sbet_las_generator)
+        print('Calculating TPU...')
+        print('(progress bar may take awhile to initialize)')
+        p = pp.ProcessPool(4)
+
+        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True, desc='(approximate)'):
+            pass
+
+        p.close()
+        p.join()
+        #p.map(self.calc_tpu, sbet_las_generator)
+
 
     def run_tpu_singleprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using a single processing
@@ -391,18 +394,17 @@ class Tpu:
         This methods initiates the tpu calculations using single processing.
         Whether the tpu calculations are done with multiprocessing or not is
         currently determined by which "run_tpu_*" method is manually specified
-        the tpu_process_callback() method of the CBlueApp class.  Including
-        a user option to select single processing or multiprocessing is
-        deferred to a future version.
+        the tpu_process_callback() method of the CBlueApp class.  TODO: Include
+        a user option to select single processing or multiprocessing
 
         :param sbet_las_generator:
         :return:
         """
         print('Calculating TPU...')
         with progressbar.ProgressBar(max_value=num_las) as bar:
-            for i, sbet_las in enumerate(sbet_las_generator, 1):
-                self.calc_tpu(sbet_las)
+            for i, sbet_las in enumerate(sbet_las_generator):
                 bar.update(i)
+                self.calc_tpu(sbet_las)
 
 
 if __name__ == '__main__':

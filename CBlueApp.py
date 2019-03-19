@@ -33,13 +33,14 @@ christopher.parrish@oregonstate.edu
 # -*- coding: utf-8 -*-
 import logging
 
-import Tkinter as tk
-import ttk
+import tkinter as tk
+from tkinter import ttk
 import os
 import time
 import datetime
 import json
 import webbrowser
+import laspy
 
 now = datetime.datetime.now()
 log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year, 
@@ -53,6 +54,9 @@ logging.basicConfig(filename=log_file,
                     format='%(asctime)s:%(message)s', 
                     level=logging.INFO)
 
+#logging.basicConfig(format='%(asctime)s:%(message)s', 
+#                    level=logging.INFO)
+
 # Import Gui helper classes
 from GuiSupport import DirectorySelectButton, RadioFrame
 
@@ -61,9 +65,7 @@ from Datum import Datum
 from Las import Las
 from Tpu import Tpu
 
-import matplotlib
 from matplotlib import style
-from matplotlib import pyplot as plt
 
 
 LARGE_FONT = ('Verdanna', 12)
@@ -72,8 +74,6 @@ NORM_FONT_BOLD = ('Verdanna', 10, 'bold')
 SMALL_FONT = ('Verdanna', 8)
 
 style.use('ggplot')  # 'dark_background'
-
-f = plt.figure()
 
 
 class CBlueApp(tk.Tk):
@@ -475,21 +475,20 @@ class ControllerPanel(ttk.Frame):
             sbets to the calc_tpu() method
             """
 
-            tile_size = 500  # meters
-            for las in las_files:  # 2016_422000e_2873500n.las
+            for las_file in las_files:
+                logging.info('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
 
-                las = Las(las)
-                las_header = las.inFile.header
+                inFile = laspy.file.File(las_file, mode="r")
+                las_header = inFile.header
 
                 west = las_header.reader.get_header_property('x_min')
                 east = las_header.reader.get_header_property('x_max')
                 north = las_header.reader.get_header_property('y_max')
                 south = las_header.reader.get_header_property('y_min')
 
-                logging.info('({}) generating SBET tile...'.format(las.las_short_name))
-                yield self.sbet.get_tile_data(north, south, east, west), las
+                yield self.sbet.get_tile_data(north, south, east, west), las_file
 
-        tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator)
+        tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
         #tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
         self.tpu_btn_text.set('TPU Calculated')
         self.tpuProcess.config(fg='darkgreen')
