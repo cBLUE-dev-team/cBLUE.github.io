@@ -18,7 +18,7 @@ Image Credit: Chris Parrish
 Algorithm Workflow
 ------------------
 
-cBLUE calculates a horizontal and vertical total propagated uncertainty (THU and TVU, respectively) for each data point using standard SLOPOV (Special Law of Propagation of Variance) techniques.  The algorithm workflow consists of three main steps:
+The cBLUE algorithm workflow consists of three main steps:
 
 1. Form Sensor Model Observation Equation
 
