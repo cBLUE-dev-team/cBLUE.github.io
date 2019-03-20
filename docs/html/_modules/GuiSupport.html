@@ -93,8 +93,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="kn">import</span> <span class="nn">tkFileDialog</span>
-<span class="kn">from</span> <span class="nn">Tkinter</span> <span class="k">import</span> <span class="n">Button</span><span class="p">,</span> <span class="n">IntVar</span><span class="p">,</span> <span class="n">Radiobutton</span><span class="p">,</span> <span class="n">Frame</span><span class="p">,</span> <span class="n">Label</span><span class="p">,</span> <span class="n">W</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="k">import</span> <span class="n">filedialog</span><span class="p">,</span> <span class="n">Button</span><span class="p">,</span> <span class="n">IntVar</span><span class="p">,</span> <span class="n">Radiobutton</span><span class="p">,</span> <span class="n">Frame</span><span class="p">,</span> <span class="n">Label</span><span class="p">,</span> <span class="n">W</span>
 
 
 <div class="viewcode-block" id="DirectorySelectButton"><a class="viewcode-back" href="../GuiSupport.html#GuiSupport.DirectorySelectButton">[docs]</a><span class="k">class</span> <span class="nc">DirectorySelectButton</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -137,11 +136,11 @@
 <div class="viewcode-block" id="DirectorySelectButton.callback"><a class="viewcode-back" href="../GuiSupport.html#GuiSupport.DirectorySelectButton.callback">[docs]</a>    <span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Callback for the button.</span>
 
-<span class="sd">        Gets the directoryName from user with tkFileDialog.</span>
+<span class="sd">        Gets the directoryName from user with filedialog.</span>
 <span class="sd">        Updates the display to reflect directory choice.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">directoryName</span> <span class="o">=</span> <span class="n">tkFileDialog</span><span class="o">.</span><span class="n">askdirectory</span><span class="p">(</span>
+        <span class="n">directoryName</span> <span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askdirectory</span><span class="p">(</span>
             <span class="n">initialdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">lastFileLoc</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Select </span><span class="si">{}</span><span class="s2"> File&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directType</span><span class="p">))</span>
 
@@ -241,7 +240,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

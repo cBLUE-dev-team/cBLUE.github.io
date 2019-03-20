@@ -92,7 +92,7 @@ class CBlueApp(tk.Tk):
             print(''.join(message))
 
         self.config_file = 'cblue_configuration.json'
-        self.load_config()
+        self.load_config()  # sets controller_configuration variables
 
         # show splash screen
         self.withdraw()
@@ -452,12 +452,11 @@ class ControllerPanel(ttk.Frame):
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidity_options[kd_ind]
 
-        multiprocess = False  # singleprocess by default
+        multiprocess = self.controller.controller_configuration['multiprocess']
 
-        if self.controller.controller_configuration['multiprocess'] == True:
+        if multiprocess:
             num_cores = self.controller.controller_configuration['number_cores']
             cpu_process_info = ('multiprocess', num_cores)
-            multiprocess = True
         else:
             cpu_process_info = ('singleprocess', )
 
@@ -518,5 +517,5 @@ class ControllerPanel(ttk.Frame):
 if __name__ == "__main__":
     app = CBlueApp()
     app.geometry('225x515')
-    app.mainloop()  # tk functionality
+    app.mainloop()
 

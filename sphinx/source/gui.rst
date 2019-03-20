@@ -1,4 +1,4 @@
-GUI
+GUI Components
 =================
 
 The cBLUE GUI consists of a single window with a menu bar.

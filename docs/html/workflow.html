@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Output Files" href="output.html" />
-    <link rel="prev" title="GUI" href="gui.html" />
+    <link rel="prev" title="GUI Components" href="gui.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -33,10 +33,13 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="output.html" title="Output Files"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="gui.html" title="GUI"
+          <a href="gui.html" title="GUI Components"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.3 (pre-release) documentation</a> &#187;</li> 
       </ul>
@@ -46,17 +49,22 @@
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Operational Workflow</a><ul>
-<li><a class="reference internal" href="#specify-directories">1. Specify Directories</a></li>
-<li><a class="reference internal" href="#specify-parameters">2. Specify Parameters</a></li>
-<li><a class="reference internal" href="#load-trajectory-file-s">3. Load Trajectory File(s)</a></li>
-<li><a class="reference internal" href="#process-tpu">4. Process TPU</a></li>
+<li><a class="reference internal" href="#specify-settings">1. Specify Settings</a><ul>
+<li><a class="reference internal" href="#data-directories">Data Directories</a></li>
+<li><a class="reference internal" href="#environmental-parameters">Environmental Parameters</a></li>
+<li><a class="reference internal" href="#vdatum-region">VDatum Region</a></li>
+<li><a class="reference internal" href="#configuration-file-settings">Configuration File Settings</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#load-trajectory-file-s">2. Load Trajectory File(s)</a></li>
+<li><a class="reference internal" href="#process-tpu">3. Process TPU</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="gui.html"
-                        title="previous chapter">GUI</a></p>
+                        title="previous chapter">GUI Components</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="output.html"
                         title="next chapter">Output Files</a></p>
@@ -89,28 +97,56 @@
             
   <div class="section" id="operational-workflow">
 <h1>Operational Workflow<a class="headerlink" href="#operational-workflow" title="Permalink to this headline">¶</a></h1>
-<p>The recommended workflow consists of 4 steps:</p>
+<p>The cBLUE workflow consists of 3 general steps:</p>
 <ol class="arabic simple">
-<li>Specify directories</li>
-<li>Specify parameters</li>
+<li>Specify Settings</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>Data Directories</li>
+<li>Environmental Parameters</li>
+<li>VDatum Region</li>
+<li>Configuration File Settings</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
 <li>Load trajectory file(s)</li>
 <li>Process TPU</li>
 </ol>
-<p>Many of the processes within the TPU tool have status messages that are visible in either the DOS window or the IDE output window, depending on how the GUI was run. Although not always useful in production mode, these status messages may be useful when monitoring long processes or troubleshooting unintended behavior.</p>
-<div class="section" id="specify-directories">
-<h2>1. Specify Directories<a class="headerlink" href="#specify-directories" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="specify-settings">
+<h2>1. Specify Settings<a class="headerlink" href="#specify-settings" title="Permalink to this headline">¶</a></h2>
+<p>Currently, user-specified settings are located in the GUI and a json configuration file located in the root directory of the repository (cblue_configuration.json).  cBLUE development plans include standardizing how a user specifies settings.</p>
+<div class="section" id="data-directories">
+<h3>Data Directories<a class="headerlink" href="#data-directories" title="Permalink to this headline">¶</a></h3>
 <p>The data directories can be specified in any order. Once a directory is specified, any corresponding process button will become enabled. For example, once the SBET Directory is specified, the Load SBET Files button will become enabled.</p>
 </div>
-<div class="section" id="specify-parameters">
-<h2>2. Specify Parameters<a class="headerlink" href="#specify-parameters" title="Permalink to this headline">¶</a></h2>
-<p>The user is required to characterize two environmental conditions - the water surface and turdity.  The user may also specify a VDatum region to include that region’s maximum cumulative uncertainty (MCU) in the TPU calculation.</p>
+<div class="section" id="environmental-parameters">
+<h3>Environmental Parameters<a class="headerlink" href="#environmental-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The user is required to characterize two environmental conditions - the water surface and turbidity.</p>
+</div>
+<div class="section" id="vdatum-region">
+<h3>VDatum Region<a class="headerlink" href="#vdatum-region" title="Permalink to this headline">¶</a></h3>
+<p>The user may also specify a VDatum region to include that region’s maximum cumulative uncertainty (MCU) in the TPU calculation.  Currently, cBLUE assumes that all of the data points lie within one region.  cBLUE development plans include accommodating multiple regions.</p>
+</div>
+<div class="section" id="configuration-file-settings">
+<h3>Configuration File Settings<a class="headerlink" href="#configuration-file-settings" title="Permalink to this headline">¶</a></h3>
+<p>In addition to logging the previously saved directory settings and selected sensor model, the configuration file contains the following settings:</p>
+<blockquote>
+<div><ul class="simple">
+<li>CPU processing mode (single- or multi-processing)</li>
+<li>number of cores to use (if multi-processing specified)</li>
+<li>cBLUE version (to be moved to a separate configuration file)</li>
+<li>paths to subaqueous look up tables (LUTs)</li>
+</ul>
+</div></blockquote>
+</div>
 </div>
 <div class="section" id="load-trajectory-file-s">
-<h2>3. Load Trajectory File(s)<a class="headerlink" href="#load-trajectory-file-s" title="Permalink to this headline">¶</a></h2>
+<h2>2. Load Trajectory File(s)<a class="headerlink" href="#load-trajectory-file-s" title="Permalink to this headline">¶</a></h2>
 <p>Click the <em>Load Trajectory File(s)</em> button, which loads the trajectory data from the ASCII SBET files in the specified SBET directory.</p>
 </div>
 <div class="section" id="process-tpu">
-<h2>4. Process TPU<a class="headerlink" href="#process-tpu" title="Permalink to this headline">¶</a></h2>
+<h2>3. Process TPU<a class="headerlink" href="#process-tpu" title="Permalink to this headline">¶</a></h2>
 <p>Click the <em>Process TPU button</em> to calculate the TPU of all data points contained in LAS file(s) contained in the specified LAS Directory.</p>
 </div>
 </div>
@@ -128,17 +164,20 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="output.html" title="Output Files"
              >next</a> |</li>
         <li class="right" >
-          <a href="gui.html" title="GUI"
+          <a href="gui.html" title="GUI Components"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cBLUE v2.0.3 (pre-release) documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

@@ -236,12 +236,12 @@ class SensorModel:
 
         # TODO: only pass needed columns
 
-        x_las = data[2]  #.x_las
-        y_las = data[3]  #.y_las
-        z_las = data[4]  #.z_las
-        x_sbet = data[5]  #.x_sbet
-        y_sbet = data[6]  #.y_sbet
-        z_sbet = data[7]  #.z_sbet
+        x_las = data[2]  # x_las
+        y_las = data[3]  # y_las
+        z_las = data[4]  # z_las
+        x_sbet = data[5]  # x_sbet
+        y_sbet = data[6]  # y_sbet
+        z_sbet = data[7]  # z_sbet
 
         rho_x = ne.evaluate("x_las - x_sbet")
         rho_y = ne.evaluate("y_las - y_sbet")

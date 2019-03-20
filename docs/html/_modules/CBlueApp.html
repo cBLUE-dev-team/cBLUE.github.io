@@ -95,13 +95,15 @@
 <span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">import</span> <span class="nn">Tkinter</span> <span class="k">as</span> <span class="nn">tk</span>
-<span class="kn">import</span> <span class="nn">ttk</span>
+<span class="kn">import</span> <span class="nn">tkinter</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="k">import</span> <span class="n">ttk</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">webbrowser</span>
+<span class="kn">import</span> <span class="nn">laspy</span>
+<span class="kn">import</span> <span class="nn">cProfile</span>
 
 <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 <span class="n">log_file</span> <span class="o">=</span> <span class="s1">&#39;cBLUE_</span><span class="si">{}{}{}</span><span class="s1">_</span><span class="si">{}{}{}</span><span class="s1">.log&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">now</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> 
@@ -113,7 +115,7 @@
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">log_file</span><span class="p">,</span>
                     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> 
-                    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+                    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
 
 <span class="c1"># Import Gui helper classes</span>
 <span class="kn">from</span> <span class="nn">GuiSupport</span> <span class="k">import</span> <span class="n">DirectorySelectButton</span><span class="p">,</span> <span class="n">RadioFrame</span>
@@ -123,9 +125,7 @@
 <span class="kn">from</span> <span class="nn">Las</span> <span class="k">import</span> <span class="n">Las</span>
 <span class="kn">from</span> <span class="nn">Tpu</span> <span class="k">import</span> <span class="n">Tpu</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">style</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 
 <span class="n">LARGE_FONT</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Verdanna&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
@@ -134,8 +134,6 @@
 <span class="n">SMALL_FONT</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Verdanna&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
 
 <span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;ggplot&#39;</span><span class="p">)</span>  <span class="c1"># &#39;dark_background&#39;</span>
-
-<span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="CBlueApp"><a class="viewcode-back" href="../CBlueApp.html#CBlueApp.CBlueApp">[docs]</a><span class="k">class</span> <span class="nc">CBlueApp</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">):</span>
@@ -155,10 +153,8 @@
             <span class="n">message</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;v2.0.3 (pre-release)&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span> <span class="o">=</span> <span class="s1">&#39;Riegl VQ-880-G&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config_file</span> <span class="o">=</span> <span class="s1">&#39;cblue_configuration.json&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_config</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_config</span><span class="p">()</span>  <span class="c1"># sets controller_configuration variables</span>
 
         <span class="c1"># show splash screen</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">withdraw</span><span class="p">()</span>
@@ -255,7 +251,7 @@
 <span class="s1">        but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
 <span class="s1">        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span>
 <span class="s1">        Lesser General Public License for more details.</span>
-<span class="s1">        &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span><span class="p">)</span>
+<span class="s1">        &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;cBLUE_version&#39;</span><span class="p">])</span>
 
         <span class="n">canvas</span><span class="o">.</span><span class="n">create_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">splash_img</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NW</span><span class="p">)</span>
         <span class="n">canvas_id</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">create_text</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;nw&quot;</span><span class="p">)</span>
@@ -518,11 +514,25 @@
         <span class="n">kd_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbidityRadio</span><span class="o">.</span><span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="n">kd_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbidity_options</span><span class="p">[</span><span class="n">kd_ind</span><span class="p">]</span>
 
+        <span class="n">multiprocess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;multiprocess&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">multiprocess</span><span class="p">:</span>
+            <span class="n">num_cores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;number_cores&#39;</span><span class="p">]</span>
+            <span class="n">cpu_process_info</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;multiprocess&#39;</span><span class="p">,</span> <span class="n">num_cores</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cpu_process_info</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;singleprocess&#39;</span><span class="p">,</span> <span class="p">)</span>
+
         <span class="n">tpu</span> <span class="o">=</span> <span class="n">Tpu</span><span class="p">(</span><span class="n">surface_selection</span><span class="p">,</span> <span class="n">surface_ind</span><span class="p">,</span>
-                  <span class="n">wind_selection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_vals</span><span class="p">[</span><span class="n">wind_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">kd_selection</span><span class="p">,</span>
-                  <span class="bp">self</span><span class="o">.</span><span class="n">kd_vals</span><span class="p">[</span><span class="n">kd_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcu</span><span class="p">,</span>
-                  <span class="bp">self</span><span class="o">.</span><span class="n">tpuOutput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">cblue_version</span><span class="p">,</span> 
-                  <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">sensor_model</span><span class="p">)</span>
+                  <span class="n">wind_selection</span><span class="p">,</span> 
+                  <span class="bp">self</span><span class="o">.</span><span class="n">wind_vals</span><span class="p">[</span><span class="n">wind_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> 
+                  <span class="n">kd_selection</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">kd_vals</span><span class="p">[</span><span class="n">kd_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> 
+                  <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> 
+                  <span class="bp">self</span><span class="o">.</span><span class="n">mcu</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">tpuOutput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">,</span> 
+                  <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;cBLUE_version&#39;</span><span class="p">],</span> 
+                  <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;sensor_model&#39;</span><span class="p">],</span>
+                  <span class="n">cpu_process_info</span><span class="p">)</span>
 
         <span class="n">las_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lasInput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
                      <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lasInput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">)</span>
@@ -537,22 +547,24 @@
 <span class="sd">            sbets to the calc_tpu() method</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
-            <span class="n">tile_size</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># meters</span>
-            <span class="k">for</span> <span class="n">las</span> <span class="ow">in</span> <span class="n">las_files</span><span class="p">:</span>  <span class="c1"># 2016_422000e_2873500n.las</span>
+            <span class="k">for</span> <span class="n">las_file</span> <span class="ow">in</span> <span class="n">las_files</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) generating SBET tile...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
 
-                <span class="n">las</span> <span class="o">=</span> <span class="n">Las</span><span class="p">(</span><span class="n">las</span><span class="p">)</span>
-                <span class="n">las_header</span> <span class="o">=</span> <span class="n">las</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">header</span>
+                <span class="n">inFile</span> <span class="o">=</span> <span class="n">laspy</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">las_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+                <span class="n">las_header</span> <span class="o">=</span> <span class="n">inFile</span><span class="o">.</span><span class="n">header</span>
 
                 <span class="n">west</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;x_min&#39;</span><span class="p">)</span>
                 <span class="n">east</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;x_max&#39;</span><span class="p">)</span>
                 <span class="n">north</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;y_max&#39;</span><span class="p">)</span>
                 <span class="n">south</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;y_min&#39;</span><span class="p">)</span>
 
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) generating SBET tile...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
-                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">sbet</span><span class="o">.</span><span class="n">get_tile_data</span><span class="p">(</span><span class="n">north</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">west</span><span class="p">),</span> <span class="n">las</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">sbet</span><span class="o">.</span><span class="n">get_tile_data</span><span class="p">(</span><span class="n">north</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">west</span><span class="p">),</span> <span class="n">las_file</span>
 
-        <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_multiprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
-        <span class="c1">#tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())</span>
+        <span class="k">if</span> <span class="n">multiprocess</span><span class="p">:</span>
+            <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_multiprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_singleprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">tpu_btn_text</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;TPU Calculated&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tpuProcess</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">fg</span><span class="o">=</span><span class="s1">&#39;darkgreen&#39;</span><span class="p">)</span></div>
 
@@ -567,7 +579,7 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">app</span> <span class="o">=</span> <span class="n">CBlueApp</span><span class="p">()</span>
     <span class="n">app</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="s1">&#39;225x515&#39;</span><span class="p">)</span>
-    <span class="n">app</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>  <span class="c1"># tk functionality</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
 
 </pre></div>
 
@@ -591,7 +603,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

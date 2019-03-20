@@ -37,4 +37,3 @@ cBLUE calculates a horizontal and vertical total propagated uncertainty (THU and
 	* Calculate subaqueous THU and TVU (Subaqueous class)
 	* Combine subaerial and subaqueous TPU (Tpu class)
 	* Export TPU as Las extra bytes (Tpu Class)
-		

@@ -101,6 +101,7 @@
     <span class="sd">&quot;&quot;&quot;Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.</span>
 <span class="sd">    To be used in conjunction with the associated Gui.py.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> <span class="n">wind_par</span><span class="p">,</span> <span class="n">kd_par</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="n">surface</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wind_par</span> <span class="o">=</span> <span class="n">wind_par</span>
@@ -113,6 +114,7 @@
 <div class="viewcode-block" id="Subaqueous.fit_lut"><a class="viewcode-back" href="../Subaqueous.html#Subaqueous.Subaqueous.fit_lut">[docs]</a>    <span class="k">def</span> <span class="nf">fit_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Called to begin the SubAqueous processing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut_files</span><span class="p">[</span><span class="s1">&#39;Reigl&#39;</span><span class="p">]</span>
             <span class="n">fit_tvu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">riegl_process</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span><span class="p">)</span>
@@ -140,6 +142,8 @@
         <span class="n">look_up_thu_data</span> <span class="o">=</span> <span class="n">look_up_thu</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
         <span class="n">look_up_thu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="n">fit_thu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+        <span class="c1"># TODO:  what are &#39;31&#39; and &#39;6&#39; in following equations?</span>
 
         <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_par</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kd_par</span><span class="p">:</span>
@@ -205,7 +209,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

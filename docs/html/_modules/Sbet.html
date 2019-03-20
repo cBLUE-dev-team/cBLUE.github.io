@@ -117,6 +117,7 @@
 <span class="sd">        the user clicks the &#39;Load Sbet Data&#39; button.</span>
 <span class="sd">        :param str sbet_dir: directory contained trajectory files</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">sbet_dir</span> <span class="o">=</span> <span class="n">sbet_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sbet_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">\</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sbet_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">sbet_dir</span><span class="p">)</span>
                                   <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">)])</span>
@@ -133,6 +134,7 @@
 <span class="sd">        :param str sbet: ASCII sbet filename</span>
 <span class="sd">        :return: List[int]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">sbet_parts</span> <span class="o">=</span> <span class="n">sbet</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">sbet_name</span> <span class="o">=</span> <span class="n">sbet_parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sbet_name</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
@@ -211,7 +213,7 @@
         <span class="k">for</span> <span class="n">sbet</span> <span class="ow">in</span> <span class="n">progressbar</span><span class="o">.</span><span class="n">progressbar</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sbet_files</span><span class="p">),</span> <span class="n">redirect_stdout</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;getting trajectory data from </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sbet</span><span class="p">))</span>
-            <span class="n">sbet_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span>
+            <span class="n">sbet_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="n">sbet</span><span class="p">,</span>
                 <span class="n">skip_blank_lines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">,</span>
@@ -239,6 +241,7 @@
 
 <span class="sd">        :return: n/a</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">sbet_tic</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_sbets_data</span><span class="p">()</span>  <span class="c1"># df</span>
         <span class="n">sbet_toc</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
@@ -298,7 +301,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

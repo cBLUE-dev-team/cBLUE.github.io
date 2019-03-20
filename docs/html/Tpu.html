@@ -93,8 +93,9 @@ Corvallis, OR  97331
 <a class="reference external" href="mailto:christopher&#46;parrish&#37;&#52;&#48;oregonstate&#46;edu">christopher<span>&#46;</span>parrish<span>&#64;</span>oregonstate<span>&#46;</span>edu</a></p>
 <dl class="class">
 <dt id="Tpu.Tpu">
-<em class="property">class </em><code class="descclassname">Tpu.</code><code class="descname">Tpu</code><span class="sig-paren">(</span><em>surface_select</em>, <em>surface_ind</em>, <em>wind_selection</em>, <em>wind_val</em>, <em>kd_selection</em>, <em>kd_val</em>, <em>vdatum_region</em>, <em>vdatum_region_mcu</em>, <em>tpu_output</em>, <em>cblue_version</em>, <em>sensor_model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class coordinates the TPU workflow.  Beginning when the user 
+<em class="property">class </em><code class="descclassname">Tpu.</code><code class="descname">Tpu</code><span class="sig-paren">(</span><em>surface_select</em>, <em>surface_ind</em>, <em>wind_selection</em>, <em>wind_val</em>, <em>kd_selection</em>, <em>kd_val</em>, <em>vdatum_region</em>, <em>vdatum_region_mcu</em>, <em>tpu_output</em>, <em>cblue_version</em>, <em>sensor_model</em>, <em>cpu_process_info</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class coordinates the TPU workflow.  Beginning when the user 
 hits <em>Compute TPU</em>, the general workflow is summarized below:</p>
 <ol class="arabic">
 <li><p class="first">Form observation equation (SensorModel class)</p>
@@ -310,8 +311,8 @@ following fields:</p>
 framework (<a class="reference external" href="https://pypi.org/project/pathos/">https://pypi.org/project/pathos/</a>).  Whether the tpu calculations
 are done with multiprocessing or not is currently determined by which
 “run_tpu_*” method is manually specified in the tpu_process_callback()
-method of the CBlueApp class.  Including a user option to select single
-processing or multiprocessing is deferred to future versions.</p>
+method of the CBlueApp class.  TODO: Include
+a user option to select single processing or multiprocessing</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -331,9 +332,8 @@ processing or multiprocessing is deferred to future versions.</p>
 <p>This methods initiates the tpu calculations using single processing.
 Whether the tpu calculations are done with multiprocessing or not is
 currently determined by which “run_tpu_*” method is manually specified
-the tpu_process_callback() method of the CBlueApp class.  Including
-a user option to select single processing or multiprocessing is
-deferred to a future version.</p>
+the tpu_process_callback() method of the CBlueApp class.  TODO: Include
+a user option to select single processing or multiprocessing</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -348,7 +348,7 @@ deferred to a future version.</p>
 
 <dl class="method">
 <dt id="Tpu.Tpu.write_metadata">
-<code class="descname">write_metadata</code><span class="sig-paren">(</span><em>las</em>, <em>sensor_model</em>, <em>cblue_version</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.write_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.write_metadata" title="Permalink to this definition">¶</a></dt>
+<code class="descname">write_metadata</code><span class="sig-paren">(</span><em>las</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.write_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.write_metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>creates a json file with summary statistics and metedata</p>
 <p>This method creates a json file containing summary statistics for each
 tpu field, per flight line, and a record of the environmental and VDatum
@@ -391,7 +391,7 @@ the lookup tables used in the subaqueous portion of the tpu calculations.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>
