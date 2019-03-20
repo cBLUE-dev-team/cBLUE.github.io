@@ -39,6 +39,7 @@ class Subaqueous:
     """Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
     To be used in conjunction with the associated Gui.py.
     """
+
     def __init__(self, surface, wind_par, kd_par, depth):
         self.surface = surface
         self.wind_par = wind_par
@@ -51,6 +52,7 @@ class Subaqueous:
     def fit_lut(self):
         """Called to begin the SubAqueous processing.
         """
+
         if self.surface == 0:
             self.curr_lut = self.lut_files['Reigl']
             fit_tvu = self.riegl_process(self.curr_lut)
@@ -78,6 +80,8 @@ class Subaqueous:
         look_up_thu_data = look_up_thu.readlines()
         look_up_thu.close()
         fit_thu = np.asarray([0.0, 0.0, 0.0])
+
+        # TODO:  what are '31' and '6' in following equations?
 
         for w in self.wind_par:
             for k in self.kd_par:

@@ -41,6 +41,7 @@ import datetime
 import json
 import webbrowser
 import laspy
+import cProfile
 
 now = datetime.datetime.now()
 log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year, 
@@ -52,10 +53,7 @@ log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year,
 
 logging.basicConfig(filename=log_file,
                     format='%(asctime)s:%(message)s', 
-                    level=logging.INFO)
-
-#logging.basicConfig(format='%(asctime)s:%(message)s', 
-#                    level=logging.INFO)
+                    level=logging.WARNING)
 
 # Import Gui helper classes
 from GuiSupport import DirectorySelectButton, RadioFrame
@@ -93,8 +91,6 @@ class CBlueApp(tk.Tk):
             message = f.readlines()
             print(''.join(message))
 
-        self.cblue_version = r'v2.0.3 (pre-release)'
-        self.sensor_model = 'Riegl VQ-880-G'
         self.config_file = 'cblue_configuration.json'
         self.load_config()
 
@@ -193,7 +189,7 @@ class CBlueApp(tk.Tk):
         but WITHOUT ANY WARRANTY; without even the implied warranty of
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
         Lesser General Public License for more details.
-        '''.format(self.cblue_version)
+        '''.format(self.controller_configuration['cBLUE_version'])
 
         canvas.create_image(0, 0, image=splash_img, anchor=tk.NW)
         canvas_id = canvas.create_text(10, 10, anchor="nw")
@@ -456,11 +452,26 @@ class ControllerPanel(ttk.Frame):
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidity_options[kd_ind]
 
+        multiprocess = False  # singleprocess by default
+
+        if self.controller.controller_configuration['multiprocess'] == True:
+            num_cores = self.controller.controller_configuration['number_cores']
+            cpu_process_info = ('multiprocess', num_cores)
+            multiprocess = True
+        else:
+            cpu_process_info = ('singleprocess', )
+
         tpu = Tpu(surface_selection, surface_ind,
-                  wind_selection, self.wind_vals[wind_ind][1], kd_selection,
-                  self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
-                  self.tpuOutput.directoryName, self.controller.cblue_version, 
-                  self.controller.sensor_model)
+                  wind_selection, 
+                  self.wind_vals[wind_ind][1], 
+                  kd_selection,
+                  self.kd_vals[kd_ind][1], 
+                  self.vdatum_region.get(), 
+                  self.mcu,
+                  self.tpuOutput.directoryName, 
+                  self.controller.controller_configuration['cBLUE_version'], 
+                  self.controller.controller_configuration['sensor_model'],
+                  cpu_process_info)
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
@@ -488,8 +499,11 @@ class ControllerPanel(ttk.Frame):
 
                 yield self.sbet.get_tile_data(north, south, east, west), las_file
 
-        tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
-        #tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
+        if multiprocess:
+            tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
+        else:
+            tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
+        
         self.tpu_btn_text.set('TPU Calculated')
         self.tpuProcess.config(fg='darkgreen')
 

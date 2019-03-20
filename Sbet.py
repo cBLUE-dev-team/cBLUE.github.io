@@ -55,6 +55,7 @@ class Sbet:
         the user clicks the 'Load Sbet Data' button.
         :param str sbet_dir: directory contained trajectory files
         """
+
         self.sbet_dir = sbet_dir
         self.sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
                                   if f.endswith('.txt')])
@@ -71,6 +72,7 @@ class Sbet:
         :param str sbet: ASCII sbet filename
         :return: List[int]
         """
+
         sbet_parts = sbet.split('\\')
         sbet_name = sbet_parts[-1]
         year = int(sbet_name[0:4])
@@ -177,6 +179,7 @@ class Sbet:
 
         :return: n/a
         """
+
         sbet_tic = time.clock()
         self.data = self.build_sbets_data()  # df
         sbet_toc = time.clock()

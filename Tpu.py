@@ -48,6 +48,7 @@ from Subaerial import Subaerial, SensorModel, Jacobian
 from Subaqueous import Subaqueous
 from Las import Las
 import datetime
+import cProfile
 
 
 class Tpu:
@@ -77,11 +78,12 @@ class Tpu:
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
                  vdatum_region_mcu, tpu_output, cblue_version, 
-                 sensor_model):
+                 sensor_model, cpu_process_info):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
         self.cblue_version = cblue_version
         self.sensor_model = sensor_model
+        self.cpu_process_info = cpu_process_info
         self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
@@ -113,7 +115,10 @@ class Tpu:
         # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
         J = Jacobian(S)
 
+        # FORM LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
+
+        # FORM OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
         M = Merge()
 
         logging.info('{} {} ({:,} points)'.format(las.las_short_name, '#' * 30, las.num_file_points))
@@ -154,10 +159,10 @@ class Tpu:
                 num_points = total_tvu.shape[0]
                 output = np.vstack((
                     np.expand_dims(merged_data[1], axis=0),  # las_t
-                    np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
-                    np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
-                    np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
-                    np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
+                    #np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
+                    #np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
+                    #np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
+                    #np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
                     np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
                     np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
                     )).T
@@ -165,11 +170,12 @@ class Tpu:
                 sigma_columns = ['total_thu', 'total_tvu']
 
                 # TODO: doesn't need to happen every iteration
-                output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
+                #output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
+                output_columns = ['gps_time'] + sigma_columns
 
                 data_to_pickle.append(output)
                 stats = ['min', 'max', 'mean', 'std']
-                decimals = pd.Series([15] + [3] * (len(output_columns) - 1), index=output_columns)
+                decimals = pd.Series([15] + [3] * len(sigma_columns), index=output_columns)
                 df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
                 self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
@@ -178,7 +184,7 @@ class Tpu:
                                 'time exceeded acceptable threshold of {} '
                                 'sec(s).'.format(Merge.max_allowable_dt))
 
-        self.write_metadata(las, self.sensor_model, self.cblue_version)  # TODO: include as VLR?
+        self.write_metadata(las)  # TODO: include as VLR?
         self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
         #self.output_tpu_to_pickle(las, data_to_pickle, output_columns)
 
@@ -208,6 +214,7 @@ class Tpu:
         :param output_columns:
         :return: n/a
         """
+
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
         output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
         output_df = pd.DataFrame(np.vstack(data_to_output), columns=output_columns)
@@ -293,7 +300,7 @@ class Tpu:
 
         '''
         using eval to do following with a loop, versus explicityly
-        defining each one, takes to long because lists are made
+        defining each one, takes too long because lists are made
         '''
 
         #logging.info('populating extra byte data for cblue_x...')
@@ -329,7 +336,7 @@ class Tpu:
             dat = in_las.reader.get_dimension(field.name)
             out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
 
-    def write_metadata(self, las, sensor_model, cblue_version):
+    def write_metadata(self, las):
         """creates a json file with summary statistics and metedata
 
         This method creates a json file containing summary statistics for each
@@ -351,8 +358,9 @@ class Tpu:
             'VDatum region': self.vdatum_region,
             'VDatum region MCU': self.vdatum_region_mcu,
             'flight line stats': {},
-            'sensor model': sensor_model,
-            'cBLUE version': cblue_version,
+            'sensor model': self.sensor_model,
+            'cBLUE version': self.cblue_version,
+            'cpu_processing_info': self.cpu_process_info, 
         })
 
         try:
@@ -360,6 +368,7 @@ class Tpu:
             with open(os.path.join(self.tpuOutput, '{}.json'.format(las.las_base_name)), 'w') as outfile:
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
         except Exception as e:
+            logging.error(e)
             print(e)
 
     def run_tpu_multiprocess(self, num_las, sbet_las_generator):
@@ -377,15 +386,13 @@ class Tpu:
         """
 
         print('Calculating TPU...')
-        print('(progress bar may take awhile to initialize)')
         p = pp.ProcessPool(4)
 
-        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True, desc='(approximate)'):
+        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True):
             pass
 
         p.close()
         p.join()
-        #p.map(self.calc_tpu, sbet_las_generator)
 
 
     def run_tpu_singleprocess(self, num_las, sbet_las_generator):
@@ -400,6 +407,7 @@ class Tpu:
         :param sbet_las_generator:
         :return:
         """
+
         print('Calculating TPU...')
         with progressbar.ProgressBar(max_value=num_las) as bar:
             for i, sbet_las in enumerate(sbet_las_generator):

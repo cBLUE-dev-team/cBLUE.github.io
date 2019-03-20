@@ -96,7 +96,7 @@ class Las:
         z = ne.evaluate("Z * scale_z + offset_z")
 
         xyzt = np.vstack([x, y, z, t]).T
-        self.time_sort_indices = xyzt[:,3].argsort()
+        self.time_sort_indices = t.argsort()
 
         flight_lines = self.points_to_process['pt_src_id']
 
