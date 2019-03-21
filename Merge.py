@@ -34,8 +34,6 @@ import numpy as np
 import numexpr as ne
 from math import radians
 import logging
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
-
 import matplotlib.pyplot as plt
 
 
@@ -99,6 +97,7 @@ class Merge:
     def merge(self, las, fl, sbet_data, las_data):
 
         num_sbet_pts = sbet_data.shape[0]
+        #num_las_pts = 
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
@@ -125,10 +124,10 @@ class Merge:
                            np.min(las_data[:, 1]), 
                            np.max(las_data[:, 1]))
 
-            logging.info('trajectory and LAS data NOT MERGED')
-            logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
-            logging.info('trajctory extents: {}'.format(traj_extents))
-            logging.info('las extents: {}'.format(las_extents))
+            logging.warning('trajectory and LAS data NOT MERGED')
+            logging.warning('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
+            logging.warning('trajctory extents: {}'.format(traj_extents))
+            logging.warning('las extents: {}'.format(las_extents))
         else:
             data = np.asarray([
                 sbet_data[:, 0][idx[mask]],

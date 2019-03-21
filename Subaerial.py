@@ -31,7 +31,6 @@ christopher.parrish@oregonstate.edu
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 from Merge import Merge
 from sympy import lambdify, symbols, Matrix, cos, sin
 import numpy as np

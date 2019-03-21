@@ -53,10 +53,11 @@ log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year,
 
 logging.basicConfig(filename=log_file,
                     format='%(asctime)s:%(message)s', 
-                    level=logging.WARNING)
+                    level=logging.INFO)
 
-# Import Gui helper classes
+from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
+from Merge import Merge
 
 from Sbet import Sbet
 from Datum import Datum
@@ -452,6 +453,15 @@ class ControllerPanel(ttk.Frame):
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidity_options[kd_ind]
 
+        # CREATE OBSERVATION EQUATIONS
+        S = SensorModel(self.controller.controller_configuration['sensor_model'])
+
+        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
+        J = Jacobian(S)
+
+        # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
+        M = Merge()
+
         multiprocess = self.controller.controller_configuration['multiprocess']
 
         if multiprocess:
@@ -486,7 +496,7 @@ class ControllerPanel(ttk.Frame):
             """
 
             for las_file in las_files:
-                logging.info('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
+                logging.debug('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
 
                 inFile = laspy.file.File(las_file, mode="r")
                 las_header = inFile.header
@@ -496,15 +506,25 @@ class ControllerPanel(ttk.Frame):
                 north = las_header.reader.get_header_property('y_max')
                 south = las_header.reader.get_header_property('y_min')
 
-                yield self.sbet.get_tile_data(north, south, east, west), las_file
+                yield self.sbet.get_tile_data(north, south, east, west), las_file, J, M
+
+        logging.info('processing {} las file(s) ({})...'.format(num_las, cpu_process_info[0]))
 
         if multiprocess:
             tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
         else:
             tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
-        
+
         self.tpu_btn_text.set('TPU Calculated')
         self.tpuProcess.config(fg='darkgreen')
+
+        with open('cBLUE_ASCII_finished.txt', 'r') as f:
+            message = f.readlines()
+            print(''.join(message))
+
+
+
+        logging.warning('cBLUE processing complete')
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""
