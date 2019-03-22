@@ -36,6 +36,7 @@ import pandas as pd
 from datetime import datetime
 import progressbar
 import logging
+import numexpr as ne
 
 
 """
@@ -207,8 +208,16 @@ class Sbet:
 
         buff = 500  # meters
 
-        data = self.data[(self.data.Y >= south - buff) & (self.data.Y <= north + buff) &
-                         (self.data.X >= west - buff) & (self.data.X <= east + buff)]
+        x = self.data.X.values
+        y = self.data.Y.values
+
+        north += buff
+        south -= buff
+        east += buff
+        west -= buff
+
+        # using numexpr for accelerating computations of large arrays
+        data = self.data[ne.evaluate('(y >= south) & (y <= north) & (x >= west) & (x <= east)')]
 
         return data
 

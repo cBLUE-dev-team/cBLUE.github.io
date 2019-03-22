@@ -114,20 +114,9 @@ class Merge:
         if max_dt > self.max_allowable_dt:
             data = False
             stddev = False
-            traj_extents = (np.min(sbet_data[:, 3]), 
-                            np.max(sbet_data[:, 3]), 
-                            np.min(sbet_data[:, 4]), 
-                            np.max(sbet_data[:, 4]))
-
-            las_extents = (np.min(las_data[:, 0]), 
-                           np.max(las_data[:, 0]), 
-                           np.min(las_data[:, 1]), 
-                           np.max(las_data[:, 1]))
 
             logging.warning('trajectory and LAS data NOT MERGED')
             logging.warning('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
-            logging.warning('trajctory extents: {}'.format(traj_extents))
-            logging.warning('las extents: {}'.format(las_extents))
         else:
             data = np.asarray([
                 sbet_data[:, 0][idx[mask]],

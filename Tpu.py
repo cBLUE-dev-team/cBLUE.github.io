@@ -31,6 +31,7 @@ christopher.parrish@oregonstate.edu
 """
 
 import logging
+from pathos import logger
 import pathos.pools as pp
 import json
 import os
@@ -103,8 +104,6 @@ class Tpu:
         :return:
         """
 
-        
-
         sbet, las_file, J, M = sbet_las_files
 
         data_to_pickle = []
@@ -112,74 +111,72 @@ class Tpu:
 
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
-        cProfile.runctx('las = Las(las_file)', globals(), locals())
         
         if las.num_file_points:  # i.e., if las had data points
             logging.info('{} ({:,} points)'.format(las.las_short_name, las.num_file_points))
             logging.debug('flight lines {}'.format(las.unq_flight_lines))
-            #las_xyzt, t_sort_indx, flight_lines = las.get_flight_line_txyz()
+            las_xyzt, t_sort_indx, flight_lines = las.get_flight_line_txyz()
 
-            #for fl in las.unq_flight_lines:
+            for fl in las.unq_flight_lines:
 
-            #    logging.debug('flight line {} {}'.format(fl, '-' * 50))
+                logging.debug('flight line {} {}'.format(fl, '-' * 50))
 
                 # las_xyzt has the same order as self.points_to_process
-                #flight_line_indx = flight_lines == fl
-                #fl_sorted_las_xyzt = las_xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
+                flight_line_indx = flight_lines == fl
+                fl_sorted_las_xyzt = las_xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
 
-                ## CREATE MERGED-DATA OBJECT M
-                #logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
-                #merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
-                #toc = datetime.datetime.now()
+                # CREATE MERGED-DATA OBJECT M
+                logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
+                merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
 
-            #    if merged_data is not False:  # i.e., las and sbet is merged
+                if merged_data is not False:  # i.e., las and sbet is merged
 
-            #        logging.debug('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
-            #        subaer_obj = Subaerial(J, merged_data, stddev)
-            #        subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
-            #        depth = merged_data[4] + las.get_average_water_surface_ellip_height()
+                    logging.debug('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
+                    subaer_obj = Subaerial(J, merged_data, stddev)
+                    subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
+                    depth = merged_data[4] - las.get_average_water_surface_ellip_height()
 
-            #        logging.debug('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
-            #        subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
-            #        subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
-            #        self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
-            #        vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
+                    logging.debug('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
+                    subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
+                    subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
+                    self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
+                    vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
-            #        logging.debug('({}) calculating total THU...'.format(las.las_short_name))
-            #        total_thu = ne.evaluate('sqrt(subaer_thu**2 + subaqu_thu**2)')
+                    logging.debug('({}) calculating total THU...'.format(las.las_short_name))
+                    total_thu = ne.evaluate('sqrt(subaer_thu**2 + subaqu_thu**2)')
 
-            #        logging.debug('({}) calculating total TVU...'.format(las.las_short_name))
-            #        total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
-            #        num_points = total_tvu.shape[0]
-            #        output = np.vstack((
-            #            np.expand_dims(merged_data[1], axis=0),  # las_t
-            #            #np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
-            #            #np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
-            #            #np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
-            #            #np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
-            #            np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
-            #            np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
-            #            )).T
+                    logging.debug('({}) calculating total TVU...'.format(las.las_short_name))
+                    total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
+                    num_points = total_tvu.shape[0]
+                    output = np.vstack((
+                        np.expand_dims(merged_data[1], axis=0),  # las_t
+                        #np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
+                        #np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
+                        #np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
+                        #np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
+                        np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
+                        np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
+                        )).T
 
-            #        sigma_columns = ['total_thu', 'total_tvu']
+                    sigma_columns = ['total_thu', 'total_tvu']
 
-            #        # TODO: doesn't need to happen every iteration
-            #        #output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
-            #        output_columns = ['gps_time'] + sigma_columns
+                    # TODO: doesn't need to happen every iteration
+                    #output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
+                    output_columns = ['gps_time'] + sigma_columns
 
-            #        data_to_pickle.append(output)
-            #        stats = ['min', 'max', 'mean', 'std']
-            #        decimals = pd.Series([15] + [3] * len(sigma_columns), index=output_columns)
-            #        df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
-            #        self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
+                    data_to_pickle.append(output)
+                    stats = ['min', 'max', 'mean', 'std']
+                    decimals = pd.Series([15] + [3] * len(sigma_columns), index=output_columns)
+                    df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
+                    self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
-            #    else:
-            #        logging.warning('SBET and LAS not merged because max delta '
-            #                        'time exceeded acceptable threshold of {} '
-            #                        'sec(s).'.format(Merge.max_allowable_dt))
+                else:
+                    logging.warning('SBET and LAS not merged because max delta '
+                                    'time exceeded acceptable threshold of {} '
+                                    'sec(s).'.format(Merge.max_allowable_dt))
 
-            #self.write_metadata(las)  # TODO: include as VLR?
-            #self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
+            self.write_metadata(las)  # TODO: include as VLR?
+            self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
         else:
             logging.warning('WARNING: {} has no data points'.format(las.las_short_name))
 

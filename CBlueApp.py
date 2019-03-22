@@ -58,6 +58,7 @@ logging.basicConfig(filename=log_file,
 from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
 from Merge import Merge
+from Las import Las
 
 from Sbet import Sbet
 from Datum import Datum
@@ -498,13 +499,12 @@ class ControllerPanel(ttk.Frame):
             for las_file in las_files:
                 logging.debug('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
 
-                inFile = laspy.file.File(las_file, mode="r")
-                las_header = inFile.header
+                inFile = laspy.file.File(las_file, mode='r')
 
-                west = las_header.reader.get_header_property('x_min')
-                east = las_header.reader.get_header_property('x_max')
-                north = las_header.reader.get_header_property('y_max')
-                south = las_header.reader.get_header_property('y_min')
+                west = inFile.reader.get_header_property('x_min')
+                east = inFile.reader.get_header_property('x_max')
+                north = inFile.reader.get_header_property('y_max')
+                south = inFile.reader.get_header_property('y_min')
 
                 yield self.sbet.get_tile_data(north, south, east, west), las_file, J, M
 
@@ -521,8 +521,6 @@ class ControllerPanel(ttk.Frame):
         with open('cBLUE_ASCII_finished.txt', 'r') as f:
             message = f.readlines()
             print(''.join(message))
-
-
 
         logging.warning('cBLUE processing complete')
 
