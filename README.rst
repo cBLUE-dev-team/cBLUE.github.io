@@ -36,7 +36,7 @@ The GUI can be initiated from the command line with the following command (speci
 
 NOTE: If there are multiple Python installations on the computer running the GUI, ensure the desired installation is specified in the path environment variables or explicitly specify the full path of the relevant python executable in the command. For example:
 
-	(command line)> C:\\Python27\\64-bit\\python.exe CBlueApp.py
+	(command line)> C:\\Python32\\64-bit\\python.exe CBlueApp.py
 
 The GUI can also be initiated by running the CBlueApp.py file from a Python IDE, such as IDLE or PyCharm.
 

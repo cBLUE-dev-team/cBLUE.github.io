@@ -352,6 +352,7 @@ class Tpu:
             'sensor model': self.sensor_model,
             'cBLUE version': self.cblue_version,
             'cpu_processing_info': self.cpu_process_info, 
+            'water_surface_ellipsoid_height': self.water_surface_ellipsoid_height,
         })
 
         try:
