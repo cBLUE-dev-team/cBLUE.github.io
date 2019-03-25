@@ -3,7 +3,7 @@
 comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)
 =============================================================
 
-cBLUE is a tool to calculate the total propagated uncertainty of bathymetric lidar data.  Currently, the tool only supports the Riegl VQ-880-G system, but development plans include adding support for Leica's Chiroptera series.  The theoretical foundation for cBLUE is documented in Eren et al. (in press).
+cBLUE is a tool to calculate the total propagated uncertainty of bathymetric lidar data.  Currently, the tool only supports the Riegl VQ-880-G system, but development plans include adding support for Leica's Chiroptera series.  The theoretical foundation for cBLUE is documented in Eren et al. (in press) [#]_.
 
 cBLUE is a collaboration among the `Remote Sensing Division`_ within `NOAA's National Geodetic Survey`_ and researchers within the School of Construction and Civil Engineering at Oregon State University (`Parrish Research Group`_) and the Center for Coastal and Ocean Mapping/Joint Hydrographic Center (`CCOM/JHC`_) at the University of New Hampshire. 
 
@@ -15,16 +15,10 @@ cBLUE is a collaboration among the `Remote Sensing Division`_ within `NOAA's Nat
 
 .. _`CCOM/JHC`: http://ccom.unh.edu/about-ccomjhc
 
-**References**
-
-F. Eren, Jung, J., Parrish, C. E., Forfinski-Sarkozi, N., and Calder, B. R., “Total Vertical Uncertainty (TVU) modeling for topo-bathymetric lidar systems”, American Society for Photogrammetry and Remote Sensing (ASPRS). In Press.
-
 Installation
 ============
 
-cBLUE is designed to run on 64-bit Python 2.7.  Support for Python 3 is deferred to future versions (hopefully by 1/1/2020, when Python 2 will no longer be maintained!! https://pythonclock.org/).  
-
-cBLUE is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
+cBLUE, created with Python 3, is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
 
 Dependencies
 ------------
@@ -50,3 +44,7 @@ Documentation
 =============
 
 Access cBLUE documentation (under construction) by opening docs/index.html (from your local repo) in a web browser.  
+
+.. rubric:: Footnotes
+
+.. [#] F. Eren, Jung, J., Parrish, C. E., Forfinski-Sarkozi, N., and Calder, B. R., “Total Vertical Uncertainty (TVU) modeling for topo-bathymetric lidar systems”, American Society for Photogrammetry and Remote Sensing (ASPRS). In Press.
