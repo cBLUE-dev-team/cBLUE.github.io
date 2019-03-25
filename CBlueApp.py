@@ -204,6 +204,18 @@ class CBlueApp(tk.Tk):
         b1.pack()
         about.mainloop()
 
+    def show_message(self, msg):
+        about = tk.Toplevel()
+        about.resizable(False, False)
+        tk.Toplevel.iconbitmap(about, 'cBLUE_icon.ico')
+        about.wm_title('IMPORTANT!!!')
+
+        label = tk.Label(about, text=msg)
+        label.pack()
+        b1 = ttk.Button(about, text='Ok', command=about.destroy)
+        b1.pack()
+        about.mainloop()
+
     @staticmethod
     def popupmsg(msg):
         popup = tk.Tk()
@@ -220,6 +232,7 @@ class CBlueApp(tk.Tk):
 
 
 class Splash(tk.Toplevel):
+
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         splash_img = tk.PhotoImage(file='cBLUE_splash.gif', master=self)
@@ -445,6 +458,13 @@ class ControllerPanel(ttk.Frame):
         self.update_button_enable()
 
     def tpu_process_callback(self):
+
+        msg = '''
+        Make sure the nominal water-surface ellipsoid height of
+        {} meters specified in the configuration file is correct!
+        '''.format(self.controller.controller_configuration['water_surface_ellipsoid_height'])
+        self.controller.show_message(msg)
+
         surface_ind = self.waterSurfaceRadio.selection.get()
         surface_selection = self.water_surface_options[surface_ind]
 
