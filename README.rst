@@ -47,4 +47,4 @@ Access cBLUE documentation (under construction) by opening docs/index.html (from
 
 .. rubric:: Footnotes
 
-.. [#] F. Eren, Jung, J., Parrish, C. E., Forfinski-Sarkozi, N., and Calder, B. R., “Total Vertical Uncertainty (TVU) modeling for topo-bathymetric lidar systems”, American Society for Photogrammetry and Remote Sensing (ASPRS). In Press.
+.. [#]F. Eren, Jung, J., Parrish, C. E., Forfinski-Sarkozi, N., and Calder, B. R., “Total Vertical Uncertainty (TVU) modeling for topo-bathymetric lidar systems”, American Society for Photogrammetry and Remote Sensing (ASPRS). In Press.
