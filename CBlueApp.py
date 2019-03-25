@@ -487,7 +487,7 @@ class ControllerPanel(ttk.Frame):
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
-                     if l.endswith('.las')][0:20]
+                     if l.endswith('.las')][0:5]
 
         num_las = len(las_files)
 
@@ -498,6 +498,8 @@ class ControllerPanel(ttk.Frame):
             with open('cBLUE_ASCII_finished.txt', 'r') as f:
                 message = f.readlines()
                 print(''.join(message))
+
+            print('(close cBLUE before running again)')
 
         def sbet_las_tiles_generator():
             """This generator is the 2nd argument for the

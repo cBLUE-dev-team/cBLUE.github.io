@@ -549,9 +549,19 @@
 
         <span class="n">las_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lasInput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
                      <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lasInput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">)</span>
-                     <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.las&#39;</span><span class="p">)]</span>
+                     <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.las&#39;</span><span class="p">)][</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
 
         <span class="n">num_las</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">las_files</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">signal_completion</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tpu_btn_text</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;TPU Calculated&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tpuProcess</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">fg</span><span class="o">=</span><span class="s1">&#39;darkgreen&#39;</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;cBLUE_ASCII_finished.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;(close cBLUE before running again)&#39;</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">sbet_las_tiles_generator</span><span class="p">():</span>
             <span class="sd">&quot;&quot;&quot;This generator is the 2nd argument for the</span>
@@ -575,18 +585,13 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;processing </span><span class="si">{}</span><span class="s1"> las file(s) (</span><span class="si">{}</span><span class="s1">)...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">cpu_process_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 
         <span class="k">if</span> <span class="n">multiprocess</span><span class="p">:</span>
-            <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_multiprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_multiprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
+            <span class="n">signal_completion</span><span class="p">()</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_singleprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">tpu_btn_text</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;TPU Calculated&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tpuProcess</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">fg</span><span class="o">=</span><span class="s1">&#39;darkgreen&#39;</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;cBLUE_ASCII_finished.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">message</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
-
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;cBLUE processing complete&#39;</span><span class="p">)</span></div>
+            <span class="n">signal_completion</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="ControllerPanel.updateRadioEnable"><a class="viewcode-back" href="../CBlueApp.html#CBlueApp.ControllerPanel.updateRadioEnable">[docs]</a>    <span class="k">def</span> <span class="nf">updateRadioEnable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates the state of the windRadio, depending on waterSurfaceRadio.&quot;&quot;&quot;</span>

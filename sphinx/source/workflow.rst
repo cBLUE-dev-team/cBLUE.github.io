@@ -26,7 +26,7 @@ The data directories can be specified in any order. Once a directory is specifie
 Environmental Parameters
 ------------------------
 
-The user is required to characterize two environmental conditions - the water surface and turbidity.  
+The user is required to characterize two environmental conditions - the water surface and turbidity.  (See :ref:`environ-label` for more information.)  
 
 VDatum Region
 -------------
@@ -35,13 +35,16 @@ The user may also specify a VDatum region to include that region's maximum cumul
 
 Configuration File Settings
 ---------------------------
-In addition to logging the previously saved directory settings and selected sensor model, the configuration file contains the following settings:
+The configuration file contains the following settings, in addition to logging the previously saved directory settings and selected sensor model:
 
 	* CPU processing mode (single- or multi-processing)
 	* number of cores to use (if multi-processing specified)
 	* cBLUE version (to be moved to a separate configuration file)
-	* paths to subaqueous look up tables (LUTs)
+	* paths to subaqueous look up tables (LUTs) (to be moved to a separate configuration file)
+	
+.. warning::
 
+	cBLUE currently requires the user to manually specify a nominal water-surface ellipsoid height for the "water_surface_ellipsoid_height" variable in the configuration file (cblue_configuration.json).  Development plans include adding the options to calculate a nominal water-suface ellipsoid height from (1) the data points classified as water surface and (2) the average separation between local mean sea level (LMSL) and the GRS80 ellipoid in the specified VDatum zone.
 
 2. Load Trajectory File(s)
 ##########################
