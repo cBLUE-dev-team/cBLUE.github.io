@@ -1,4 +1,4 @@
-.. image:: ./cBLUE_splash.gif
+.. image:: ./cBLUE_readme.gif
 
 comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)
 =============================================================
