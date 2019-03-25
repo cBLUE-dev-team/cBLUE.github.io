@@ -92,12 +92,12 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
 <span class="kn">import</span> <span class="nn">laspy</span>
 
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This class provides the functionality to load las files into cBLUE.  One Las object </span>
@@ -114,6 +114,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">inFile</span> <span class="o">=</span> <span class="n">laspy</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">las</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_file_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inFile</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;point&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unq_flight_lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_flight_line_ids</span><span class="p">()</span>
 
         <span class="sd">&#39;&#39;&#39;index list that would sort gps_time (to be used to</span>
 <span class="sd">        later when exporting las data and calculated tpu to a las</span>
@@ -128,7 +129,9 @@
 
 <span class="sd">        :return: ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;pt_src_id&#39;</span><span class="p">])</span></div>
+
+        <span class="c1"># pandas&#39; unique faster than numpy&#39;s ?</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;pt_src_id&#39;</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="Las.get_flight_line_txyz"><a class="viewcode-back" href="../Las.html#Las.Las.get_flight_line_txyz">[docs]</a>    <span class="k">def</span> <span class="nf">get_flight_line_txyz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;retrieves the x, y, z, and timestamp data from the las data points</span>
@@ -166,7 +169,9 @@
 
 <div class="viewcode-block" id="Las.get_average_water_surface_ellip_height"><a class="viewcode-back" href="../Las.html#Las.Las.get_average_water_surface_ellip_height">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_average_water_surface_ellip_height</span><span class="p">():</span>
-        <span class="sd">&quot;&quot;&quot;returns the average ellipsoid height of the water surface returns</span>
+        <span class="sd">&quot;&quot;&quot;NOT CURRENTLY IMPLEMENTED</span>
+<span class="sd">        </span>
+<span class="sd">        returns the average ellipsoid height of the water surface returns</span>
 
 <span class="sd">        Currently, this method returns a visually-determined estimate of the average ellipsoid height</span>
 <span class="sd">        of the water surface returns in the survey area, which is used during tpu</span>
@@ -176,7 +181,7 @@
 
 <span class="sd">        :return: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mf">23.0</span></div></div>
+        <span class="k">return</span> <span class="o">-</span><span class="mf">23.0</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

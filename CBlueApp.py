@@ -481,13 +481,23 @@ class ControllerPanel(ttk.Frame):
                   self.tpuOutput.directoryName, 
                   self.controller.controller_configuration['cBLUE_version'], 
                   self.controller.controller_configuration['sensor_model'],
-                  cpu_process_info)
+                  cpu_process_info, 
+                  self.controller.controller_configuration['subaqueous_LUTs'],
+                  self.controller.controller_configuration['water_surface_ellipsoid_height'])
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
-                     if l.endswith('.las')]
+                     if l.endswith('.las')][0:20]
 
         num_las = len(las_files)
+
+        def signal_completion():
+            self.tpu_btn_text.set('TPU Calculated')
+            self.tpuProcess.config(fg='darkgreen')
+
+            with open('cBLUE_ASCII_finished.txt', 'r') as f:
+                message = f.readlines()
+                print(''.join(message))
 
         def sbet_las_tiles_generator():
             """This generator is the 2nd argument for the
@@ -511,18 +521,13 @@ class ControllerPanel(ttk.Frame):
         logging.info('processing {} las file(s) ({})...'.format(num_las, cpu_process_info[0]))
 
         if multiprocess:
-            tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
+            p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
+            signal_completion()
+            p.close()
+            p.join()
         else:
             tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
-
-        self.tpu_btn_text.set('TPU Calculated')
-        self.tpuProcess.config(fg='darkgreen')
-
-        with open('cBLUE_ASCII_finished.txt', 'r') as f:
-            message = f.readlines()
-            print(''.join(message))
-
-        logging.warning('cBLUE processing complete')
+            signal_completion()
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""

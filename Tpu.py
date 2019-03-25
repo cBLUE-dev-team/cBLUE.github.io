@@ -66,25 +66,16 @@ class Tpu:
         * Combine subaerial and subaqueous TPU
         * Export TPU (either as Python "pickle' or as Las extra bytes)
     
-    Currently, the following options are hard coded, but development 
-    plans include adding user-configurable options in a settings menu
-    within the GUI:
-
-    * Whether the TPU is exported as a Python binary pickle file or as TPU extra bytes within a Las file
-    * Whether step three is run as either single- or multi-processing    
     """
 
     def __init__(self, surface_select, surface_ind,
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
                  vdatum_region_mcu, tpu_output, cblue_version, 
-                 sensor_model, cpu_process_info):
+                 sensor_model, cpu_process_info, subaqueous_luts,
+                 water_surface_ellipsoid_height):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
-        self.cblue_version = cblue_version
-        self.sensor_model = sensor_model
-        self.cpu_process_info = cpu_process_info
-        self.subaqu_lookup_params = None
         self.surface_select = surface_select
         self.surface_ind = surface_ind
         self.wind_selection = wind_selection
@@ -93,7 +84,14 @@ class Tpu:
         self.kd_val = kd_val
         self.vdatum_region = vdatum_region
         self.vdatum_region_mcu = vdatum_region_mcu
-        self.tpuOutput = tpu_output
+        self.tpu_output = tpu_output
+        self.cblue_version = cblue_version
+        self.sensor_model = sensor_model
+        self.cpu_process_info = cpu_process_info
+        self.subaqueous_luts = subaqueous_luts
+        self.water_surface_ellipsoid_height = water_surface_ellipsoid_height
+
+        self.subaqu_lookup_params = None
         self.metadata = {}
         self.flight_line_stats = {}
 
@@ -134,10 +132,11 @@ class Tpu:
                     logging.debug('({}) calculating subaer THU/TVU...'.format(las.las_short_name))
                     subaer_obj = Subaerial(J, merged_data, stddev)
                     subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
-                    depth = merged_data[4] - las.get_average_water_surface_ellip_height()
+                    depth = merged_data[4] - self.water_surface_ellipsoid_height
 
                     logging.debug('({}) calculating subaqueous THU/TVU...'.format(las.las_short_name))
-                    subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, self.kd_val, depth)
+                    subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, 
+                                            self.kd_val, depth, self.subaqueous_luts)
                     subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
                     self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
@@ -148,6 +147,7 @@ class Tpu:
                     logging.debug('({}) calculating total TVU...'.format(las.las_short_name))
                     total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
                     num_points = total_tvu.shape[0]
+
                     output = np.vstack((
                         np.expand_dims(merged_data[1], axis=0),  # las_t
                         #np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
@@ -158,15 +158,14 @@ class Tpu:
                         np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
                         )).T
 
-                    sigma_columns = ['total_thu', 'total_tvu']
+                    extra_byte_columns = ['total_thu', 'total_tvu']
 
                     # TODO: doesn't need to happen every iteration
-                    #output_columns = ['gps_time'] + subaer_cols + subaqu_cols + sigma_columns
-                    output_columns = ['gps_time'] + sigma_columns
+                    output_columns = ['gps_time'] + extra_byte_columns
 
                     data_to_pickle.append(output)
                     stats = ['min', 'max', 'mean', 'std']
-                    decimals = pd.Series([15] + [3] * len(sigma_columns), index=output_columns)
+                    decimals = pd.Series([15] + [3] * len(extra_byte_columns), index=output_columns)
                     df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
                     self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
@@ -199,7 +198,7 @@ class Tpu:
             6, subaqueous_thu, subaqueous total horizontal uncertainty
             7, subaqueous_tvu, subaqueous total vertical uncertainty
             8, total_thu, total horizontal uncertainty
-            9, total_tvu, otal vertical uncertainty
+            9, total_tvu, total vertical uncertainty
 
         :param las:
         :param data_to_output:
@@ -208,7 +207,7 @@ class Tpu:
         """
 
         output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
-        output_path = '{}\\{}'.format(self.tpuOutput, output_tpu_file)
+        output_path = '{}\\{}'.format(self.tpu_output, output_tpu_file)
         output_df = pd.DataFrame(np.vstack(data_to_output), columns=output_columns)
         logging.debug('({}) writing TPU...'.format(las.las_short_name))
         output_df.to_pickle(output_path)
@@ -261,7 +260,7 @@ class Tpu:
         output_df = output_df.round(decimals) * 100
         output_df = output_df.astype('uint8')  # uint8 = numpy Unsigned integer (0 to 255)
 
-        out_las_name = os.path.join(self.tpuOutput, las.las_base_name) + '_TPU.las'
+        out_las_name = os.path.join(self.tpu_output, las.las_base_name) + '_TPU.las'
         logging.debug('logging las and tpu results to {}'.format(out_las_name))
         in_las = laspy.file.File(las.las, mode="r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
@@ -357,11 +356,13 @@ class Tpu:
 
         try:
             self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
-            with open(os.path.join(self.tpuOutput, '{}.json'.format(las.las_base_name)), 'w') as outfile:
+            with open(os.path.join(self.tpu_output, '{}.json'.format(las.las_base_name)), 'w') as outfile:
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
         except Exception as e:
             logging.error(e)
             print(e)
+
+
 
     def run_tpu_multiprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using multiprocessing
@@ -383,8 +384,7 @@ class Tpu:
         for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True):
             pass
 
-        p.close()
-        p.join()
+        return p
 
 
     def run_tpu_singleprocess(self, num_las, sbet_las_generator):

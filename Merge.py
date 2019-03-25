@@ -97,7 +97,6 @@ class Merge:
     def merge(self, las, fl, sbet_data, las_data):
 
         num_sbet_pts = sbet_data.shape[0]
-        #num_las_pts = 
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
@@ -109,9 +108,9 @@ class Merge:
         t_las_masked = las_data[:, 3][mask]
 
         dt = ne.evaluate('t_sbet_masked - t_las_masked')
-        max_dt = np.max(dt)
+        max_dt = ne.evaluate('max(dt)')  # may be empty
 
-        if max_dt > self.max_allowable_dt:
+        if max_dt > self.max_allowable_dt or max_dt.size == 0:
             data = False
             stddev = False
 

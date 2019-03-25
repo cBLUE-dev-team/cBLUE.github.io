@@ -93,9 +93,10 @@ Corvallis, OR  97331
 <a class="reference external" href="mailto:christopher&#46;parrish&#37;&#52;&#48;oregonstate&#46;edu">christopher<span>&#46;</span>parrish<span>&#64;</span>oregonstate<span>&#46;</span>edu</a></p>
 <dl class="class">
 <dt id="Tpu.Tpu">
-<em class="property">class </em><code class="descclassname">Tpu.</code><code class="descname">Tpu</code><span class="sig-paren">(</span><em>surface_select</em>, <em>surface_ind</em>, <em>wind_selection</em>, <em>wind_val</em>, <em>kd_selection</em>, <em>kd_val</em>, <em>vdatum_region</em>, <em>vdatum_region_mcu</em>, <em>tpu_output</em>, <em>cblue_version</em>, <em>sensor_model</em>, <em>cpu_process_info</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Tpu.</code><code class="descname">Tpu</code><span class="sig-paren">(</span><em>surface_select</em>, <em>surface_ind</em>, <em>wind_selection</em>, <em>wind_val</em>, <em>kd_selection</em>, <em>kd_val</em>, <em>vdatum_region</em>, <em>vdatum_region_mcu</em>, <em>tpu_output</em>, <em>cblue_version</em>, <em>sensor_model</em>, <em>cpu_process_info</em>, <em>subaqueous_luts</em>, <em>water_surface_ellipsoid_height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>This class coordinates the TPU workflow.  Beginning when the user 
+<p>TODO:  rework…becasue J &amp; M moved to CBlueApp.py
+This class coordinates the TPU workflow.  Beginning when the user 
 hits <em>Compute TPU</em>, the general workflow is summarized below:</p>
 <ol class="arabic">
 <li><p class="first">Form observation equation (SensorModel class)</p>
@@ -114,13 +115,6 @@ hits <em>Compute TPU</em>, the general workflow is summarized below:</p>
 </div></blockquote>
 </li>
 </ol>
-<p>Currently, the following options are hard coded, but development 
-plans include adding user-configurable options in a settings menu
-within the GUI:</p>
-<ul class="simple">
-<li>Whether the TPU is exported as a Python binary pickle file or as TPU extra bytes within a Las file</li>
-<li>Whether step three is run as either single- or multi-processing</li>
-</ul>
 <dl class="method">
 <dt id="Tpu.Tpu.calc_tpu">
 <code class="descname">calc_tpu</code><span class="sig-paren">(</span><em>sbet_las_files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.calc_tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.calc_tpu" title="Permalink to this definition">¶</a></dt>
@@ -281,7 +275,7 @@ following fields:</p>
 </tr>
 <tr class="row-odd"><td>9</td>
 <td>total_tvu</td>
-<td>otal vertical uncertainty</td>
+<td>total vertical uncertainty</td>
 </tr>
 </tbody>
 </table>

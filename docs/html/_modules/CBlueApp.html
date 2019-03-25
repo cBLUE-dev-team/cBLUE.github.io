@@ -115,10 +115,12 @@
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">log_file</span><span class="p">,</span>
                     <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> 
-                    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+                    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
-<span class="c1"># Import Gui helper classes</span>
+<span class="kn">from</span> <span class="nn">Subaerial</span> <span class="k">import</span> <span class="n">SensorModel</span><span class="p">,</span> <span class="n">Jacobian</span>
 <span class="kn">from</span> <span class="nn">GuiSupport</span> <span class="k">import</span> <span class="n">DirectorySelectButton</span><span class="p">,</span> <span class="n">RadioFrame</span>
+<span class="kn">from</span> <span class="nn">Merge</span> <span class="k">import</span> <span class="n">Merge</span>
+<span class="kn">from</span> <span class="nn">Las</span> <span class="k">import</span> <span class="n">Las</span>
 
 <span class="kn">from</span> <span class="nn">Sbet</span> <span class="k">import</span> <span class="n">Sbet</span>
 <span class="kn">from</span> <span class="nn">Datum</span> <span class="k">import</span> <span class="n">Datum</span>
@@ -514,6 +516,15 @@
         <span class="n">kd_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbidityRadio</span><span class="o">.</span><span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="n">kd_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbidity_options</span><span class="p">[</span><span class="n">kd_ind</span><span class="p">]</span>
 
+        <span class="c1"># CREATE OBSERVATION EQUATIONS</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">SensorModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;sensor_model&#39;</span><span class="p">])</span>
+
+        <span class="c1"># GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">Jacobian</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+
+        <span class="c1"># CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">()</span>
+
         <span class="n">multiprocess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;multiprocess&#39;</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">multiprocess</span><span class="p">:</span>
@@ -532,7 +543,9 @@
                   <span class="bp">self</span><span class="o">.</span><span class="n">tpuOutput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">,</span> 
                   <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;cBLUE_version&#39;</span><span class="p">],</span> 
                   <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;sensor_model&#39;</span><span class="p">],</span>
-                  <span class="n">cpu_process_info</span><span class="p">)</span>
+                  <span class="n">cpu_process_info</span><span class="p">,</span> 
+                  <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;subaqueous_LUTs&#39;</span><span class="p">],</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">[</span><span class="s1">&#39;water_surface_ellipsoid_height&#39;</span><span class="p">])</span>
 
         <span class="n">las_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lasInput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
                      <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lasInput</span><span class="o">.</span><span class="n">directoryName</span><span class="p">)</span>
@@ -548,25 +561,32 @@
 <span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="k">for</span> <span class="n">las_file</span> <span class="ow">in</span> <span class="n">las_files</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) generating SBET tile...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) generating SBET tile...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
 
-                <span class="n">inFile</span> <span class="o">=</span> <span class="n">laspy</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">las_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
-                <span class="n">las_header</span> <span class="o">=</span> <span class="n">inFile</span><span class="o">.</span><span class="n">header</span>
+                <span class="n">inFile</span> <span class="o">=</span> <span class="n">laspy</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">las_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
 
-                <span class="n">west</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;x_min&#39;</span><span class="p">)</span>
-                <span class="n">east</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;x_max&#39;</span><span class="p">)</span>
-                <span class="n">north</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;y_max&#39;</span><span class="p">)</span>
-                <span class="n">south</span> <span class="o">=</span> <span class="n">las_header</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;y_min&#39;</span><span class="p">)</span>
+                <span class="n">west</span> <span class="o">=</span> <span class="n">inFile</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;x_min&#39;</span><span class="p">)</span>
+                <span class="n">east</span> <span class="o">=</span> <span class="n">inFile</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;x_max&#39;</span><span class="p">)</span>
+                <span class="n">north</span> <span class="o">=</span> <span class="n">inFile</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;y_max&#39;</span><span class="p">)</span>
+                <span class="n">south</span> <span class="o">=</span> <span class="n">inFile</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_header_property</span><span class="p">(</span><span class="s1">&#39;y_min&#39;</span><span class="p">)</span>
 
-                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">sbet</span><span class="o">.</span><span class="n">get_tile_data</span><span class="p">(</span><span class="n">north</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">west</span><span class="p">),</span> <span class="n">las_file</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">sbet</span><span class="o">.</span><span class="n">get_tile_data</span><span class="p">(</span><span class="n">north</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">west</span><span class="p">),</span> <span class="n">las_file</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">M</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;processing </span><span class="si">{}</span><span class="s1"> las file(s) (</span><span class="si">{}</span><span class="s1">)...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">cpu_process_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 
         <span class="k">if</span> <span class="n">multiprocess</span><span class="p">:</span>
             <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_multiprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">tpu</span><span class="o">.</span><span class="n">run_tpu_singleprocess</span><span class="p">(</span><span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_tiles_generator</span><span class="p">())</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">tpu_btn_text</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;TPU Calculated&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tpuProcess</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">fg</span><span class="o">=</span><span class="s1">&#39;darkgreen&#39;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tpuProcess</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">fg</span><span class="o">=</span><span class="s1">&#39;darkgreen&#39;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;cBLUE_ASCII_finished.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;cBLUE processing complete&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ControllerPanel.updateRadioEnable"><a class="viewcode-back" href="../CBlueApp.html#CBlueApp.ControllerPanel.updateRadioEnable">[docs]</a>    <span class="k">def</span> <span class="nf">updateRadioEnable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates the state of the windRadio, depending on waterSurfaceRadio.&quot;&quot;&quot;</span>

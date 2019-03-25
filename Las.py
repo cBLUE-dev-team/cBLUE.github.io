@@ -107,7 +107,9 @@ class Las:
 
     @staticmethod
     def get_average_water_surface_ellip_height():
-        """returns the average ellipsoid height of the water surface returns
+        """NOT CURRENTLY IMPLEMENTED
+        
+        returns the average ellipsoid height of the water surface returns
 
         Currently, this method returns a visually-determined estimate of the average ellipsoid height
         of the water surface returns in the survey area, which is used during tpu
@@ -117,7 +119,7 @@ class Las:
 
         :return: float
         """
-        return 23.0
+        return -23.0
 
 
 if __name__ == '__main__':

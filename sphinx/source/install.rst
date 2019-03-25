@@ -58,3 +58,5 @@ NOTE: If there are multiple Python installations on the computer running the GUI
 	(command line)> C:\\Python27\\64-bit\\python.exe CBlueApp.py
 
 The GUI can also be initiated by running the CBlueApp.py file from a Python IDE, such as IDLE, PyCharm, or Microsoft Visual Studio.
+
+Development plans include packaging all of the necessary files into a single-file executable.
