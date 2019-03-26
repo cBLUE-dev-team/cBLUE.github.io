@@ -33,7 +33,7 @@ The recommended way to ensure that all of the necessary dependencies are loaded 
 
 	conda env create --file <evn file name>
 	
-where <env file name> is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.
+where <env file name> is the path to cBLUE_env.yml, which is included in the cBLUE GitHub repository.
 
 Major dependencies are summarized in the table below:
 
