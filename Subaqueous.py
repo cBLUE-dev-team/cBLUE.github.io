@@ -39,23 +39,24 @@ class Subaqueous:
     """Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
     To be used in conjunction with the associated Gui.py.
     """
-    def __init__(self, surface, wind_par, kd_par, depth):
+
+    def __init__(self, surface, wind_par, kd_par, depth, subaqueous_luts):
         self.surface = surface
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
-        self.lut_files = {'ECKV': './lookup_tables/ECKV_LUT_HG0995_1sig.csv',
-                          'Reigl': './lookup_tables/Riegl_look_up_fit_HG0995_1sig.csv'}
+        self.subaqueous_luts = subaqueous_luts
         self.curr_lut = None
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing.
         """
+
         if self.surface == 0:
-            self.curr_lut = self.lut_files['Reigl']
+            self.curr_lut = self.subaqueous_luts['Reigl']
             fit_tvu = self.riegl_process(self.curr_lut)
         else:
-            self.curr_lut = self.lut_files['ECKV']
+            self.curr_lut = self.subaqueous_luts['ECKV']
             fit_thu, fit_tvu = self.model_process(self.curr_lut)
 
         res_tvu = fit_tvu[0] * self.depth ** 2 + fit_tvu[1] * self.depth + fit_tvu[2]
@@ -78,6 +79,8 @@ class Subaqueous:
         look_up_thu_data = look_up_thu.readlines()
         look_up_thu.close()
         fit_thu = np.asarray([0.0, 0.0, 0.0])
+
+        # TODO:  what are '31' and '6' in following equations?
 
         for w in self.wind_par:
             for k in self.kd_par:

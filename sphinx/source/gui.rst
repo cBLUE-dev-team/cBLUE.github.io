@@ -1,4 +1,4 @@
-GUI
+GUI Components
 =================
 
 The cBLUE GUI consists of a single window with a menu bar.
@@ -17,7 +17,8 @@ The menu bar has the following categories.
 	File, Save Settings, Saves specified directories to a Json file
 	.., Exit, Closes cBLUE		
 	Sensor Model, Riegl VQ-880-G, "Currently, this is only a dummy menu option.  The senor model configuration for the Reigl VQ-880-G is hard-coded into cBLUE.  Development plans include refactoring the code to read sensor model information from a separate file and extending support to other lidar systems, including Leica Chiroptera 4X."
-	Help, About, Displays the cBLUE splash screen (need to add versioning and copyright info)
+	Help, Documentation, Opens the cBLUE documentation in a web browser
+	.., About, Displays the cBLUE splash screen
 
 Data Directories
 ****************
@@ -32,6 +33,8 @@ cBLUE requires three directories to be set:
 	LAS, contains the LAS files
 	Output, where the output files will be created
 
+.. _environ-label:
+	
 Environmental Parameters
 ************************
 
@@ -39,6 +42,7 @@ The subaqueous TPU calculations rely on characterizing two general environmental
 
 Water Surface
 -------------
+
 The user has two options to characterize the water-surface. Both options use pre-computed coefficient lookup tables generated using Monte Carlo simulations.
 
 * *Riegl VQ-880-G*
@@ -56,9 +60,10 @@ The user has two options to characterize the water-surface. Both options use pre
 		Gentle Breeze, 7-10
 		Moderate Breeze, 11-15
 		Fresh Breeze, 16-20
-	
+
 Turbidity
 ---------
+
 The user can chose among 5 turbidity classes.
 
 .. csv-table:: Turbidity (Kd_490) Classes

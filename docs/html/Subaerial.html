@@ -94,12 +94,13 @@ Corvallis, OR  97331
 <dl class="class">
 <dt id="Subaerial.Jacobian">
 <em class="property">class </em><code class="descclassname">Subaerial.</code><code class="descname">Jacobian</code><span class="sig-paren">(</span><em>S</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Jacobian" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class is used to calculate and evaluate the Jacobian of a
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class is used to calculate and evaluate the Jacobian of a
 sensor model’s laser geolocation equation.  The class Jacobian attempts
 to decouple a Jacobian and the data used to evaluate it.  For example, 
 the inputs to the lambdified Jacobian components are not hard-coded in 
 the function call, but are determined from accessing the 
-.func_code.co_varnames attribute of the Jacobian component and then 
+.__code__.co_varnames attribute of the Jacobian component and then 
 looking up the corresponding values in a dict.  Although this somewhat
 decouples the Jacobian from the data used to evaluate it, the dict 
 containing the corresponding values is manually created, separate from
@@ -317,7 +318,8 @@ parameters, instead of the parameters directly.</p>
 <dl class="class">
 <dt id="Subaerial.SensorModel">
 <em class="property">class </em><code class="descclassname">Subaerial.</code><code class="descname">SensorModel</code><span class="sig-paren">(</span><em>sensor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#SensorModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.SensorModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class is used to define and access the sensor model of a particular 
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class is used to define and access the sensor model of a particular 
 lidar sensor, including the laser geolocation equation and any
 supporting information or parameters.  Currently, only a single 
 sensor, the Riegl VQ-880-G, is supported, but development plans
@@ -691,7 +693,8 @@ M &amp;= M2*M1 = \left[\begin{matrix}\cos{\left (b \right )} &amp; \sin{\left (a
 <dl class="class">
 <dt id="Subaerial.Subaerial">
 <em class="property">class </em><code class="descclassname">Subaerial.</code><code class="descname">Subaerial</code><span class="sig-paren">(</span><em>J</em>, <em>merged_data</em>, <em>stddev</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Subaerial.html#Subaerial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Subaerial.Subaerial" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class provides the functionality to calculate the subaerial
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>This class provides the functionality to calculate the subaerial
 portion of the total propagated uncertainty (TPU), given the Jacobian 
 of a laser geolocation equation, merged lidar/trajectory 
 data, and the standard deviations of the provided data.</p>
@@ -981,7 +984,7 @@ are zero (and one).</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

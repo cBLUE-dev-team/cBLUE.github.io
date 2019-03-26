@@ -34,8 +34,6 @@ import numpy as np
 import numexpr as ne
 from math import radians
 import logging
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
-
 import matplotlib.pyplot as plt
 
 
@@ -110,25 +108,14 @@ class Merge:
         t_las_masked = las_data[:, 3][mask]
 
         dt = ne.evaluate('t_sbet_masked - t_las_masked')
-        max_dt = np.max(dt)
+        max_dt = ne.evaluate('max(dt)')  # may be empty
 
-        if max_dt > self.max_allowable_dt:
+        if max_dt > self.max_allowable_dt or max_dt.size == 0:
             data = False
             stddev = False
-            traj_extents = (np.min(sbet_data[:, 3]), 
-                            np.max(sbet_data[:, 3]), 
-                            np.min(sbet_data[:, 4]), 
-                            np.max(sbet_data[:, 4]))
 
-            las_extents = (np.min(las_data[:, 0]), 
-                           np.max(las_data[:, 0]), 
-                           np.min(las_data[:, 1]), 
-                           np.max(las_data[:, 1]))
-
-            logging.info('trajectory and LAS data NOT MERGED')
-            logging.info('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
-            logging.info('trajctory extents: {}'.format(traj_extents))
-            logging.info('las extents: {}'.format(las_extents))
+            logging.warning('trajectory and LAS data NOT MERGED')
+            logging.warning('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
         else:
             data = np.asarray([
                 sbet_data[:, 0][idx[mask]],

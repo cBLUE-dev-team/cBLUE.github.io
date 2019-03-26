@@ -72,10 +72,7 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This documentation is under construction.</p>
-</div>
+  <img alt="_images/cBLUE_splash.gif" src="_images/cBLUE_splash.gif" />
 <div class="section" id="comprehensive-bathymetric-lidar-uncertainty-estimator-cblue">
 <h1>comprehensive Bathymetric Lidar Uncertainty Estimator (cBLUE)<a class="headerlink" href="#comprehensive-bathymetric-lidar-uncertainty-estimator-cblue" title="Permalink to this headline">¶</a></h1>
 <p>cBLUE is a tool to calculate the total propagated uncertainty of bathymetric lidar data.  Currently, the tool only supports the Riegl VQ-880-G system, but development plans include adding support for Leica’s Chiroptera series.  The theoretical foundation for cBLUE is documented in Eren et al. (in press).</p>
@@ -98,7 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="install.html#starting-the-gui">Starting the GUI</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI Components</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="gui.html#menu-bar">Menu bar</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gui.html#data-directories">Data Directories</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gui.html#environmental-parameters">Environmental Parameters</a><ul>
@@ -111,15 +108,21 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Operational Workflow</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="workflow.html#specify-directories">1. Specify Directories</a></li>
-<li class="toctree-l2"><a class="reference internal" href="workflow.html#specify-parameters">2. Specify Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="workflow.html#load-trajectory-file-s">3. Load Trajectory File(s)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="workflow.html#process-tpu">4. Process TPU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#specify-settings">1. Specify Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="workflow.html#data-directories">Data Directories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow.html#environmental-parameters">Environmental Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow.html#vdatum-region">VDatum Region</a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow.html#configuration-file-settings">Configuration File Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#load-trajectory-file-s">2. Load Trajectory File(s)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#process-tpu">3. Process TPU</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">Output Files</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="output.html#las-file-las">LAS File (.las)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="output.html#metadata-file-json">Metadata File (.json)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="output.html#cblue-log">cBLUE log</a></li>
 </ul>
 </li>
 </ul>
@@ -153,7 +156,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

@@ -93,24 +93,28 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pathos</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">import</span> <span class="nn">pathos.pools</span> <span class="k">as</span> <span class="nn">pp</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">laspy</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">progressbar</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">Merge</span> <span class="k">import</span> <span class="n">Merge</span>
-<span class="kn">from</span> <span class="nn">Subaerial</span> <span class="k">import</span> <span class="n">Subaerial</span><span class="p">,</span> <span class="n">SensorModel</span><span class="p">,</span> <span class="n">Jacobian</span>
+<span class="kn">from</span> <span class="nn">Subaerial</span> <span class="k">import</span> <span class="n">Subaerial</span>
 <span class="kn">from</span> <span class="nn">Subaqueous</span> <span class="k">import</span> <span class="n">Subaqueous</span>
+<span class="kn">from</span> <span class="nn">Las</span> <span class="k">import</span> <span class="n">Las</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">cProfile</span>
 
 
 <div class="viewcode-block" id="Tpu"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu">[docs]</a><span class="k">class</span> <span class="nc">Tpu</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO:  rework...becasue J &amp; M moved to CBlueApp.py</span>
 <span class="sd">    This class coordinates the TPU workflow.  Beginning when the user </span>
 <span class="sd">    hits *Compute TPU*, the general workflow is summarized below:</span>
 
@@ -124,24 +128,16 @@
 <span class="sd">        * Combine subaerial and subaqueous TPU</span>
 <span class="sd">        * Export TPU (either as Python &quot;pickle&#39; or as Las extra bytes)</span>
 <span class="sd">    </span>
-<span class="sd">    Currently, the following options are hard coded, but development </span>
-<span class="sd">    plans include adding user-configurable options in a settings menu</span>
-<span class="sd">    within the GUI:</span>
-
-<span class="sd">    * Whether the TPU is exported as a Python binary pickle file or as TPU extra bytes within a Las file</span>
-<span class="sd">    * Whether step three is run as either single- or multi-processing    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">surface_select</span><span class="p">,</span> <span class="n">surface_ind</span><span class="p">,</span>
                  <span class="n">wind_selection</span><span class="p">,</span> <span class="n">wind_val</span><span class="p">,</span>
                  <span class="n">kd_selection</span><span class="p">,</span> <span class="n">kd_val</span><span class="p">,</span> <span class="n">vdatum_region</span><span class="p">,</span>
                  <span class="n">vdatum_region_mcu</span><span class="p">,</span> <span class="n">tpu_output</span><span class="p">,</span> <span class="n">cblue_version</span><span class="p">,</span> 
-                 <span class="n">sensor_model</span><span class="p">):</span>
+                 <span class="n">sensor_model</span><span class="p">,</span> <span class="n">cpu_process_info</span><span class="p">,</span> <span class="n">subaqueous_luts</span><span class="p">,</span>
+                 <span class="n">water_surface_ellipsoid_height</span><span class="p">):</span>
 
         <span class="c1"># TODO: refactor to pass the GUI object, not individual variables (with controller?)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span> <span class="o">=</span> <span class="n">cblue_version</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span> <span class="o">=</span> <span class="n">sensor_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">subaqu_lookup_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_select</span> <span class="o">=</span> <span class="n">surface_select</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_ind</span> <span class="o">=</span> <span class="n">surface_ind</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wind_selection</span> <span class="o">=</span> <span class="n">wind_selection</span>
@@ -150,7 +146,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">kd_val</span> <span class="o">=</span> <span class="n">kd_val</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region</span> <span class="o">=</span> <span class="n">vdatum_region</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region_mcu</span> <span class="o">=</span> <span class="n">vdatum_region_mcu</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tpuOutput</span> <span class="o">=</span> <span class="n">tpu_output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tpu_output</span> <span class="o">=</span> <span class="n">tpu_output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span> <span class="o">=</span> <span class="n">cblue_version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span> <span class="o">=</span> <span class="n">sensor_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpu_process_info</span> <span class="o">=</span> <span class="n">cpu_process_info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subaqueous_luts</span> <span class="o">=</span> <span class="n">subaqueous_luts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">water_surface_ellipsoid_height</span> <span class="o">=</span> <span class="n">water_surface_ellipsoid_height</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subaqu_lookup_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">flight_line_stats</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -161,95 +164,82 @@
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">sbet</span><span class="p">,</span> <span class="n">las</span> <span class="o">=</span> <span class="n">sbet_las_files</span>
+        <span class="n">sbet</span><span class="p">,</span> <span class="n">las_file</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">sbet_las_files</span>
 
         <span class="n">data_to_pickle</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">output_columns</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># FORM OBSERVATION EQUATIONS</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="n">SensorModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span><span class="p">)</span>
+        <span class="c1"># CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE</span>
+        <span class="n">las</span> <span class="o">=</span> <span class="n">Las</span><span class="p">(</span><span class="n">las_file</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">las</span><span class="o">.</span><span class="n">num_file_points</span><span class="p">:</span>  <span class="c1"># i.e., if las had data points</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> (</span><span class="si">{:,}</span><span class="s1"> points)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">,</span> <span class="n">las</span><span class="o">.</span><span class="n">num_file_points</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;flight lines </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">unq_flight_lines</span><span class="p">))</span>
+            <span class="n">las_xyzt</span><span class="p">,</span> <span class="n">t_sort_indx</span><span class="p">,</span> <span class="n">flight_lines</span> <span class="o">=</span> <span class="n">las</span><span class="o">.</span><span class="n">get_flight_line_txyz</span><span class="p">()</span>
 
-        <span class="c1"># GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="n">Jacobian</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">fl</span> <span class="ow">in</span> <span class="n">las</span><span class="o">.</span><span class="n">unq_flight_lines</span><span class="p">:</span>
 
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> (</span><span class="si">{:,}</span><span class="s1"> points)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span> <span class="o">*</span> <span class="mi">30</span><span class="p">,</span> <span class="n">las</span><span class="o">.</span><span class="n">num_file_points</span><span class="p">))</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">get_flight_line_ids</span><span class="p">())</span>
-        <span class="n">las_xyzt</span><span class="p">,</span> <span class="n">t_sort_indx</span><span class="p">,</span> <span class="n">flight_lines</span> <span class="o">=</span> <span class="n">las</span><span class="o">.</span><span class="n">get_flight_line_txyz</span><span class="p">()</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;flight line </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fl</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">))</span>
 
-        <span class="n">M</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">()</span>
-        <span class="c1">#0       t_sbet</span>
-        <span class="c1">#1       t_las </span>
-        <span class="c1">#2       x_las </span>
-        <span class="c1">#3       y_las </span>
-        <span class="c1">#4       z_las </span>
-        <span class="c1">#5       x_sbet</span>
-        <span class="c1">#6       y_sbet</span>
-        <span class="c1">#7       z_sbet</span>
-        <span class="c1">#8       r     </span>
-        <span class="c1">#9       p     </span>
-        <span class="c1">#10      h     </span>
+                <span class="c1"># las_xyzt has the same order as self.points_to_process</span>
+                <span class="n">flight_line_indx</span> <span class="o">=</span> <span class="n">flight_lines</span> <span class="o">==</span> <span class="n">fl</span>
+                <span class="n">fl_sorted_las_xyzt</span> <span class="o">=</span> <span class="n">las_xyzt</span><span class="p">[</span><span class="n">t_sort_indx</span><span class="p">][</span><span class="n">flight_line_indx</span><span class="p">[</span><span class="n">t_sort_indx</span><span class="p">]]</span>
 
-        <span class="k">for</span> <span class="n">fl</span> <span class="ow">in</span> <span class="n">las</span><span class="o">.</span><span class="n">get_flight_line_ids</span><span class="p">():</span>
+                <span class="c1"># CREATE MERGED-DATA OBJECT M</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) merging trajectory and las data...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
+                <span class="n">merged_data</span><span class="p">,</span> <span class="n">stddev</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fl_sorted_las_xyzt</span><span class="p">)</span>
 
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;flight line </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fl</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">merged_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># i.e., las and sbet is merged</span>
 
-            <span class="c1"># las_xyzt has the same order as self.points_to_process</span>
-            <span class="n">flight_line_indx</span> <span class="o">=</span> <span class="n">flight_lines</span> <span class="o">==</span> <span class="n">fl</span>
-            <span class="n">fl_sorted_las_xyzt</span> <span class="o">=</span> <span class="n">las_xyzt</span><span class="p">[</span><span class="n">t_sort_indx</span><span class="p">][</span><span class="n">flight_line_indx</span><span class="p">[</span><span class="n">t_sort_indx</span><span class="p">]]</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating subaer THU/TVU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
+                    <span class="n">subaer_obj</span> <span class="o">=</span> <span class="n">Subaerial</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">merged_data</span><span class="p">,</span> <span class="n">stddev</span><span class="p">)</span>
+                    <span class="n">subaer_thu</span><span class="p">,</span> <span class="n">subaer_tvu</span><span class="p">,</span> <span class="n">subaer_cols</span> <span class="o">=</span> <span class="n">subaer_obj</span><span class="o">.</span><span class="n">calc_subaerial_tpu</span><span class="p">()</span>
+                    <span class="n">depth</span> <span class="o">=</span> <span class="n">merged_data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_surface_ellipsoid_height</span>
 
-            <span class="c1"># CREATE MERGED-DATA OBJECT M</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) merging trajectory and las data...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
-            <span class="n">merged_data</span><span class="p">,</span> <span class="n">stddev</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fl_sorted_las_xyzt</span><span class="p">)</span>
-            <span class="n">toc</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating subaqueous THU/TVU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
+                    <span class="n">subaqu_obj</span> <span class="o">=</span> <span class="n">Subaqueous</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_val</span><span class="p">,</span> 
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">kd_val</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subaqueous_luts</span><span class="p">)</span>
+                    <span class="n">subaqu_thu</span><span class="p">,</span> <span class="n">subaqu_tvu</span><span class="p">,</span> <span class="n">subaqu_cols</span> <span class="o">=</span> <span class="n">subaqu_obj</span><span class="o">.</span><span class="n">fit_lut</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">subaqu_lookup_params</span> <span class="o">=</span> <span class="n">subaqu_obj</span><span class="o">.</span><span class="n">get_subaqueous_meta_data</span><span class="p">()</span>
+                    <span class="n">vdatum_mcu</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region_mcu</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>  <span class="c1"># file is in cm (1-sigma)</span>
 
-            <span class="k">if</span> <span class="n">merged_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># i.e., las and sbet is merged</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating total THU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
+                    <span class="n">total_thu</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;sqrt(subaer_thu**2 + subaqu_thu**2)&#39;</span><span class="p">)</span>
 
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating subaer THU/TVU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
-                <span class="n">subaer_obj</span> <span class="o">=</span> <span class="n">Subaerial</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">merged_data</span><span class="p">,</span> <span class="n">stddev</span><span class="p">)</span>
-                <span class="n">subaer_thu</span><span class="p">,</span> <span class="n">subaer_tvu</span><span class="p">,</span> <span class="n">subaer_cols</span> <span class="o">=</span> <span class="n">subaer_obj</span><span class="o">.</span><span class="n">calc_subaerial_tpu</span><span class="p">()</span>
-                <span class="n">depth</span> <span class="o">=</span> <span class="n">merged_data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">las</span><span class="o">.</span><span class="n">get_average_water_surface_ellip_height</span><span class="p">()</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating total TVU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
+                    <span class="n">total_tvu</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)&#39;</span><span class="p">)</span>
+                    <span class="n">num_points</span> <span class="o">=</span> <span class="n">total_tvu</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating subaqueous THU/TVU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
-                <span class="n">subaqu_obj</span> <span class="o">=</span> <span class="n">Subaqueous</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kd_val</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
-                <span class="n">subaqu_thu</span><span class="p">,</span> <span class="n">subaqu_tvu</span><span class="p">,</span> <span class="n">subaqu_cols</span> <span class="o">=</span> <span class="n">subaqu_obj</span><span class="o">.</span><span class="n">fit_lut</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">subaqu_lookup_params</span> <span class="o">=</span> <span class="n">subaqu_obj</span><span class="o">.</span><span class="n">get_subaqueous_meta_data</span><span class="p">()</span>
-                <span class="n">vdatum_mcu</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region_mcu</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>  <span class="c1"># file is in cm (1-sigma)</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">merged_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>  <span class="c1"># las_t</span>
+                        <span class="c1">#np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),</span>
+                        <span class="c1">#np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),</span>
+                        <span class="c1">#np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),</span>
+                        <span class="c1">#np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">total_thu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">total_tvu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+                        <span class="p">))</span><span class="o">.</span><span class="n">T</span>
 
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating total THU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
-                <span class="n">total_thu</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;sqrt(subaer_thu**2 + subaqu_thu**2)&#39;</span><span class="p">)</span>
+                    <span class="n">extra_byte_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;total_thu&#39;</span><span class="p">,</span> <span class="s1">&#39;total_tvu&#39;</span><span class="p">]</span>
 
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) calculating total TVU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
-                <span class="n">total_tvu</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)&#39;</span><span class="p">)</span>
-                <span class="n">num_points</span> <span class="o">=</span> <span class="n">total_tvu</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">merged_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>  <span class="c1"># las_t</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">subaer_thu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">subaer_tvu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">subaqu_thu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">subaqu_tvu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">total_thu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">round_</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">total_tvu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
-                    <span class="p">))</span><span class="o">.</span><span class="n">T</span>
+                    <span class="c1"># TODO: doesn&#39;t need to happen every iteration</span>
+                    <span class="n">output_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gps_time&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">extra_byte_columns</span>
 
-                <span class="n">sigma_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;total_thu&#39;</span><span class="p">,</span> <span class="s1">&#39;total_tvu&#39;</span><span class="p">]</span>
+                    <span class="n">data_to_pickle</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+                    <span class="n">stats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">]</span>
+                    <span class="n">decimals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">extra_byte_columns</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">output_columns</span><span class="p">)</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">output_columns</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">stats</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flight_line_stats</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">fl</span><span class="p">)]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 
-                <span class="c1"># TODO: doesn&#39;t need to happen every iteration</span>
-                <span class="n">output_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gps_time&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">subaer_cols</span> <span class="o">+</span> <span class="n">subaqu_cols</span> <span class="o">+</span> <span class="n">sigma_columns</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;SBET and LAS not merged because max delta &#39;</span>
+                                    <span class="s1">&#39;time exceeded acceptable threshold of </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                                    <span class="s1">&#39;sec(s).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Merge</span><span class="o">.</span><span class="n">max_allowable_dt</span><span class="p">))</span>
 
-                <span class="n">data_to_pickle</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
-                <span class="n">stats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">]</span>
-                <span class="n">decimals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">15</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_columns</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">output_columns</span><span class="p">)</span>
-                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">output_columns</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">stats</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">flight_line_stats</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">fl</span><span class="p">)]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;SBET and LAS not merged because max delta &#39;</span>
-                                <span class="s1">&#39;time exceeded acceptable threshold of </span><span class="si">{}</span><span class="s1"> &#39;</span>
-                                <span class="s1">&#39;sec(s).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Merge</span><span class="o">.</span><span class="n">max_allowable_dt</span><span class="p">))</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">write_metadata</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span><span class="p">)</span>  <span class="c1"># TODO: include as VLR?</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_tpu_to_las_extra_bytes</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">data_to_pickle</span><span class="p">,</span> <span class="n">output_columns</span><span class="p">)</span></div>
-        <span class="c1">#self.output_tpu_to_pickle(las, data_to_pickle, output_columns)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_metadata</span><span class="p">(</span><span class="n">las</span><span class="p">)</span>  <span class="c1"># TODO: include as VLR?</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_tpu_to_las_extra_bytes</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">data_to_pickle</span><span class="p">,</span> <span class="n">output_columns</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;WARNING: </span><span class="si">{}</span><span class="s1"> has no data points&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Tpu.output_tpu_to_pickle"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.output_tpu_to_pickle">[docs]</a>    <span class="k">def</span> <span class="nf">output_tpu_to_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">data_to_output</span><span class="p">,</span> <span class="n">output_columns</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;output the calculated tpu to a Python &quot;pickle&quot; file</span>
@@ -270,19 +260,20 @@
 <span class="sd">            6, subaqueous_thu, subaqueous total horizontal uncertainty</span>
 <span class="sd">            7, subaqueous_tvu, subaqueous total vertical uncertainty</span>
 <span class="sd">            8, total_thu, total horizontal uncertainty</span>
-<span class="sd">            9, total_tvu, otal vertical uncertainty</span>
+<span class="sd">            9, total_tvu, total vertical uncertainty</span>
 
 <span class="sd">        :param las:</span>
 <span class="sd">        :param data_to_output:</span>
 <span class="sd">        :param output_columns:</span>
 <span class="sd">        :return: n/a</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">output_tpu_file</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_TPU.tpu&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_base_name</span><span class="p">)</span>
-        <span class="n">output_path</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\\</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tpuOutput</span><span class="p">,</span> <span class="n">output_tpu_file</span><span class="p">)</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\\</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tpu_output</span><span class="p">,</span> <span class="n">output_tpu_file</span><span class="p">)</span>
         <span class="n">output_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">data_to_output</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">output_columns</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) writing TPU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) writing TPU...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
         <span class="n">output_df</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;finished writing&#39;</span><span class="p">)</span></div>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;finished writing&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Tpu.output_tpu_to_las_extra_bytes"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.output_tpu_to_las_extra_bytes">[docs]</a>    <span class="k">def</span> <span class="nf">output_tpu_to_las_extra_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">data_to_output</span><span class="p">,</span> <span class="n">output_columns</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;output the calculated tpu to a las file</span>
@@ -331,8 +322,8 @@
         <span class="n">output_df</span> <span class="o">=</span> <span class="n">output_df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
         <span class="n">output_df</span> <span class="o">=</span> <span class="n">output_df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>  <span class="c1"># uint8 = numpy Unsigned integer (0 to 255)</span>
 
-        <span class="n">out_las_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tpuOutput</span><span class="p">,</span> <span class="n">las</span><span class="o">.</span><span class="n">las_base_name</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_TPU.las&#39;</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;logging las and tpu results to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_las_name</span><span class="p">))</span>
+        <span class="n">out_las_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tpu_output</span><span class="p">,</span> <span class="n">las</span><span class="o">.</span><span class="n">las_base_name</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_TPU.las&#39;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;logging las and tpu results to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_las_name</span><span class="p">))</span>
         <span class="n">in_las</span> <span class="o">=</span> <span class="n">laspy</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>  <span class="c1"># las is Las object</span>
         <span class="n">out_las</span> <span class="o">=</span> <span class="n">laspy</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">out_las_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">in_las</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
 
@@ -353,47 +344,52 @@
             <span class="p">])</span>
 
         <span class="c1"># define new extrabyte dimensions</span>
-        <span class="k">for</span> <span class="n">dimension</span><span class="p">,</span> <span class="n">description</span> <span class="ow">in</span> <span class="n">extra_byte_dimensions</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;creating extra byte dimension for </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dimension</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">dimension</span><span class="p">,</span> <span class="n">description</span> <span class="ow">in</span> <span class="n">extra_byte_dimensions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;creating extra byte dimension for </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dimension</span><span class="p">))</span>
             <span class="n">out_las</span><span class="o">.</span><span class="n">define_new_dimension</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span> 
                 <span class="n">data_type</span><span class="o">=</span><span class="n">description</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> 
                 <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-        <span class="c1">#logging.info(&#39;populating extra byte data for cblue_x...&#39;)</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        using eval to do following with a loop, versus explicityly</span>
+<span class="sd">        defining each one, takes too long because lists are made</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">#logging.debug(&#39;populating extra byte data for cblue_x...&#39;)</span>
         <span class="c1">#out_las.cblue_x = output_df[&#39;cblue_x&#39;]</span>
 
-        <span class="c1">#logging.info(&#39;populating extra byte data for cblue_y...&#39;)</span>
+        <span class="c1">#logging.debug(&#39;populating extra byte data for cblue_y...&#39;)</span>
         <span class="c1">#out_las.cblue_y = output_df[&#39;cblue_y&#39;]</span>
         
-        <span class="c1">#logging.info(&#39;populating extra byte data for cblue_z...&#39;)</span>
+        <span class="c1">#logging.debug(&#39;populating extra byte data for cblue_z...&#39;)</span>
         <span class="c1">#out_las.cblue_z = output_df[&#39;cblue_z&#39;]</span>
         
-        <span class="c1">#logging.info(&#39;populating extra byte data for subaerial_thu...&#39;)</span>
+        <span class="c1">#logging.debug(&#39;populating extra byte data for subaerial_thu...&#39;)</span>
         <span class="c1">#out_las.subaerial_thu = output_df[&#39;subaerial_thu&#39;]</span>
         
-        <span class="c1">#logging.info(&#39;populating extra byte data for subaerial_tvu...&#39;)</span>
+        <span class="c1">#logging.debug(&#39;populating extra byte data for subaerial_tvu...&#39;)</span>
         <span class="c1">#out_las.subaerial_tvu = output_df[&#39;subaerial_tvu&#39;]</span>
         
-        <span class="c1">#logging.info(&#39;populating extra byte data for subaqueous_thu...&#39;)</span>
+        <span class="c1">#logging.debug(&#39;populating extra byte data for subaqueous_thu...&#39;)</span>
         <span class="c1">#out_las.subaqueous_thu = output_df[&#39;subaqueous_thu&#39;]</span>
         
-        <span class="c1">#logging.info(&#39;populating extra byte data for subaqueous_tvu...&#39;)</span>
+        <span class="c1">#logging.debug(&#39;populating extra byte data for subaqueous_tvu...&#39;)</span>
         <span class="c1">#out_las.subaqueous_tvu = output_df[&#39;subaqueous_tvu&#39;]</span>
         
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;populating extra byte data for total_thu...&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;populating extra byte data for total_thu...&#39;</span><span class="p">)</span>
         <span class="n">out_las</span><span class="o">.</span><span class="n">total_thu</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="s1">&#39;total_thu&#39;</span><span class="p">]</span>
         
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;populating extra byte data for total_tvu...&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;populating extra byte data for total_tvu...&#39;</span><span class="p">)</span>
         <span class="n">out_las</span><span class="o">.</span><span class="n">total_tvu</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="s1">&#39;total_tvu&#39;</span><span class="p">]</span>
 
         <span class="c1"># copy data from in_las</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">in_las</span><span class="o">.</span><span class="n">point_format</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;writing </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1"> ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">out_las</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;writing </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1"> ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">out_las</span><span class="p">))</span>
             <span class="n">dat</span> <span class="o">=</span> <span class="n">in_las</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_dimension</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">out_las</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dat</span><span class="p">[</span><span class="n">las</span><span class="o">.</span><span class="n">time_sort_indices</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Tpu.write_metadata"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.write_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">write_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">cblue_version</span><span class="p">):</span>
+<div class="viewcode-block" id="Tpu.write_metadata"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.write_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">write_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;creates a json file with summary statistics and metedata</span>
 
 <span class="sd">        This method creates a json file containing summary statistics for each</span>
@@ -406,7 +402,7 @@
 <span class="sd">        :return: n/a</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) creating TPU meta data file...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) creating TPU meta data file...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_short_name</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
             <span class="s1">&#39;subaqueous lookup params&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">subaqu_lookup_params</span><span class="p">,</span>
             <span class="s1">&#39;water surface&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_select</span><span class="p">,</span>
@@ -415,16 +411,21 @@
             <span class="s1">&#39;VDatum region&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region</span><span class="p">,</span>
             <span class="s1">&#39;VDatum region MCU&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdatum_region_mcu</span><span class="p">,</span>
             <span class="s1">&#39;flight line stats&#39;</span><span class="p">:</span> <span class="p">{},</span>
-            <span class="s1">&#39;sensor model&#39;</span><span class="p">:</span> <span class="n">sensor_model</span><span class="p">,</span>
-            <span class="s1">&#39;cBLUE version&#39;</span><span class="p">:</span> <span class="n">cblue_version</span><span class="p">,</span>
+            <span class="s1">&#39;sensor model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor_model</span><span class="p">,</span>
+            <span class="s1">&#39;cBLUE version&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cblue_version</span><span class="p">,</span>
+            <span class="s1">&#39;cpu_processing_info&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpu_process_info</span><span class="p">,</span> 
+            <span class="s1">&#39;water_surface_ellipsoid_height&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_surface_ellipsoid_height</span><span class="p">,</span>
         <span class="p">})</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;flight line stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flight_line_stats</span><span class="p">)</span>  <span class="c1"># flight line metadata</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tpuOutput</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_base_name</span><span class="p">)),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tpu_output</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="o">.</span><span class="n">las_base_name</span><span class="p">)),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
                 <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
 
 <div class="viewcode-block" id="Tpu.run_tpu_multiprocess"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.run_tpu_multiprocess">[docs]</a>    <span class="k">def</span> <span class="nf">run_tpu_multiprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;runs the tpu calculations using multiprocessing</span>
@@ -433,18 +434,21 @@
 <span class="sd">        framework (https://pypi.org/project/pathos/).  Whether the tpu calculations</span>
 <span class="sd">        are done with multiprocessing or not is currently determined by which</span>
 <span class="sd">        &quot;run_tpu_*&quot; method is manually specified in the tpu_process_callback()</span>
-<span class="sd">        method of the CBlueApp class.  Including a user option to select single</span>
-<span class="sd">        processing or multiprocessing is deferred to future versions.</span>
+<span class="sd">        method of the CBlueApp class.  TODO: Include</span>
+<span class="sd">        a user option to select single processing or multiprocessing</span>
 
 <span class="sd">        :param sbet_las_generator:</span>
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">ProcessPool</span><span class="p">()</span>
-    
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">enumerage</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">)):</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">done </span><span class="si">{0:%}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="n">num_las</span><span class="p">))</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating TPU...&#39;</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">ProcessPool</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="n">num_las</span><span class="p">,</span> <span class="n">ascii</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">p</span></div>
+
 
 <div class="viewcode-block" id="Tpu.run_tpu_singleprocess"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.run_tpu_singleprocess">[docs]</a>    <span class="k">def</span> <span class="nf">run_tpu_singleprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;runs the tpu calculations using a single processing</span>
@@ -452,18 +456,18 @@
 <span class="sd">        This methods initiates the tpu calculations using single processing.</span>
 <span class="sd">        Whether the tpu calculations are done with multiprocessing or not is</span>
 <span class="sd">        currently determined by which &quot;run_tpu_*&quot; method is manually specified</span>
-<span class="sd">        the tpu_process_callback() method of the CBlueApp class.  Including</span>
-<span class="sd">        a user option to select single processing or multiprocessing is</span>
-<span class="sd">        deferred to a future version.</span>
+<span class="sd">        the tpu_process_callback() method of the CBlueApp class.  TODO: Include</span>
+<span class="sd">        a user option to select single processing or multiprocessing</span>
 
 <span class="sd">        :param sbet_las_generator:</span>
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating TPU...&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">progressbar</span><span class="o">.</span><span class="n">ProgressBar</span><span class="p">(</span><span class="n">max_value</span><span class="o">=</span><span class="n">num_las</span><span class="p">)</span> <span class="k">as</span> <span class="n">bar</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sbet_las</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sbet_las_generator</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">(</span><span class="n">sbet_las</span><span class="p">)</span>
-                <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div></div>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sbet_las</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sbet_las_generator</span><span class="p">):</span>
+                <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_tpu</span><span class="p">(</span><span class="n">sbet_las</span><span class="p">)</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
@@ -490,7 +494,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

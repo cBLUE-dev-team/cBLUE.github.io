@@ -33,13 +33,16 @@ christopher.parrish@oregonstate.edu
 # -*- coding: utf-8 -*-
 import logging
 
-import Tkinter as tk
-import ttk
+import tkinter as tk
+from tkinter import ttk
 import os
 import time
 import datetime
 import json
 import webbrowser
+import laspy
+import cProfile
+
 
 now = datetime.datetime.now()
 log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year, 
@@ -53,17 +56,17 @@ logging.basicConfig(filename=log_file,
                     format='%(asctime)s:%(message)s', 
                     level=logging.INFO)
 
-# Import Gui helper classes
+from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
+from Merge import Merge
+from Las import Las
 
 from Sbet import Sbet
 from Datum import Datum
 from Las import Las
 from Tpu import Tpu
 
-import matplotlib
 from matplotlib import style
-from matplotlib import pyplot as plt
 
 
 LARGE_FONT = ('Verdanna', 12)
@@ -72,8 +75,6 @@ NORM_FONT_BOLD = ('Verdanna', 10, 'bold')
 SMALL_FONT = ('Verdanna', 8)
 
 style.use('ggplot')  # 'dark_background'
-
-f = plt.figure()
 
 
 class CBlueApp(tk.Tk):
@@ -93,10 +94,8 @@ class CBlueApp(tk.Tk):
             message = f.readlines()
             print(''.join(message))
 
-        self.cblue_version = r'v2.0.3 (pre-release)'
-        self.sensor_model = 'Riegl VQ-880-G'
         self.config_file = 'cblue_configuration.json'
-        self.load_config()
+        self.load_config()  # sets controller_configuration variables
 
         # show splash screen
         self.withdraw()
@@ -193,7 +192,7 @@ class CBlueApp(tk.Tk):
         but WITHOUT ANY WARRANTY; without even the implied warranty of
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
         Lesser General Public License for more details.
-        '''.format(self.cblue_version)
+        '''.format(self.controller_configuration['cBLUE_version'])
 
         canvas.create_image(0, 0, image=splash_img, anchor=tk.NW)
         canvas_id = canvas.create_text(10, 10, anchor="nw")
@@ -222,6 +221,7 @@ class CBlueApp(tk.Tk):
 
 
 class Splash(tk.Toplevel):
+
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         splash_img = tk.PhotoImage(file='cBLUE_splash.gif', master=self)
@@ -442,11 +442,37 @@ class ControllerPanel(ttk.Frame):
         self.sbet = Sbet(self.sbetInput.directoryName)
         self.sbet.set_data()
         self.is_sbet_loaded = True
-        self.sbet_btn_text.set('Trajectory Loaded')  # TODO: do for compute, too
+        self.sbet_btn_text.set('Trajectory Loaded')
         self.sbetProcess.config(fg='darkgreen')
         self.update_button_enable()
 
     def tpu_process_callback(self):
+        self.verify_water_level()
+
+    def continue_with_tpu_calc(self, alert):
+        alert.destroy()
+        self.begin_tpu_calc()
+
+    def verify_water_level(self):
+        about = tk.Toplevel()
+        tk.Toplevel.iconbitmap(about, 'cBLUE_icon.ico')
+        about.resizable(False, False)
+        about.wm_title('IMPORTANT!!!')
+
+        msg = '''
+        Make sure the nominal water-surface ellipsoid height of
+        {} meters specified in the configuration file is correct
+        before pushing OK!
+        '''.format(self.controller.controller_configuration['water_surface_ellipsoid_height'])
+
+        label = tk.Label(about, text=msg)
+        label.pack()
+        b1 = ttk.Button(about, text='Ok', command=lambda: self.continue_with_tpu_calc(about))
+        b1.pack()
+        about.mainloop()
+
+    def begin_tpu_calc(self):
+
         surface_ind = self.waterSurfaceRadio.selection.get()
         surface_selection = self.water_surface_options[surface_ind]
 
@@ -456,17 +482,52 @@ class ControllerPanel(ttk.Frame):
         kd_ind = self.turbidityRadio.selection.get()
         kd_selection = self.turbidity_options[kd_ind]
 
+        # CREATE OBSERVATION EQUATIONS
+        S = SensorModel(self.controller.controller_configuration['sensor_model'])
+
+        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
+        J = Jacobian(S)
+
+        # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
+        M = Merge()
+
+        multiprocess = self.controller.controller_configuration['multiprocess']
+
+        if multiprocess:
+            num_cores = self.controller.controller_configuration['number_cores']
+            cpu_process_info = ('multiprocess', num_cores)
+        else:
+            cpu_process_info = ('singleprocess', )
+
         tpu = Tpu(surface_selection, surface_ind,
-                  wind_selection, self.wind_vals[wind_ind][1], kd_selection,
-                  self.kd_vals[kd_ind][1], self.vdatum_region.get(), self.mcu,
-                  self.tpuOutput.directoryName, self.controller.cblue_version, 
-                  self.controller.sensor_model)
+                  wind_selection, 
+                  self.wind_vals[wind_ind][1], 
+                  kd_selection,
+                  self.kd_vals[kd_ind][1], 
+                  self.vdatum_region.get(), 
+                  self.mcu,
+                  self.tpuOutput.directoryName, 
+                  self.controller.controller_configuration['cBLUE_version'], 
+                  self.controller.controller_configuration['sensor_model'],
+                  cpu_process_info, 
+                  self.controller.controller_configuration['subaqueous_LUTs'],
+                  self.controller.controller_configuration['water_surface_ellipsoid_height'])
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
-                     if l.endswith('.las')]
+                     if l.endswith('.las')][0:5]
 
         num_las = len(las_files)
+
+        def signal_completion():
+            self.tpu_btn_text.set('TPU Calculated')
+            self.tpuProcess.config(fg='darkgreen')
+
+            with open('cBLUE_ASCII_finished.txt', 'r') as f:
+                message = f.readlines()
+                print(''.join(message))
+
+            print('(close cBLUE before running again)')
 
         def sbet_las_tiles_generator():
             """This generator is the 2nd argument for the
@@ -475,24 +536,28 @@ class ControllerPanel(ttk.Frame):
             sbets to the calc_tpu() method
             """
 
-            tile_size = 500  # meters
-            for las in las_files:  # 2016_422000e_2873500n.las
+            for las_file in las_files:
+                logging.debug('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
 
-                las = Las(las)
-                las_header = las.inFile.header
+                inFile = laspy.file.File(las_file, mode='r')
 
-                west = las_header.reader.get_header_property('x_min')
-                east = las_header.reader.get_header_property('x_max')
-                north = las_header.reader.get_header_property('y_max')
-                south = las_header.reader.get_header_property('y_min')
+                west = inFile.reader.get_header_property('x_min')
+                east = inFile.reader.get_header_property('x_max')
+                north = inFile.reader.get_header_property('y_max')
+                south = inFile.reader.get_header_property('y_min')
 
-                logging.info('({}) generating SBET tile...'.format(las.las_short_name))
-                yield self.sbet.get_tile_data(north, south, east, west), las
+                yield self.sbet.get_tile_data(north, south, east, west), las_file, J, M
 
-        tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator)
-        #tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
-        self.tpu_btn_text.set('TPU Calculated')
-        self.tpuProcess.config(fg='darkgreen')
+        logging.info('processing {} las file(s) ({})...'.format(num_las, cpu_process_info[0]))
+
+        if multiprocess:
+            p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
+            signal_completion()
+            p.close()
+            p.join()
+        else:
+            tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
+            signal_completion()
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""
@@ -505,5 +570,5 @@ class ControllerPanel(ttk.Frame):
 if __name__ == "__main__":
     app = CBlueApp()
     app.geometry('225x515')
-    app.mainloop()  # tk functionality
+    app.mainloop()
 

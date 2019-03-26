@@ -96,8 +96,6 @@
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">radians</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
-
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 
@@ -172,25 +170,14 @@
         <span class="n">t_las_masked</span> <span class="o">=</span> <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span>
 
         <span class="n">dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;t_sbet_masked - t_las_masked&#39;</span><span class="p">)</span>
-        <span class="n">max_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">max_dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;max(dt)&#39;</span><span class="p">)</span>  <span class="c1"># may be empty</span>
 
-        <span class="k">if</span> <span class="n">max_dt</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_allowable_dt</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_dt</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_allowable_dt</span> <span class="ow">or</span> <span class="n">max_dt</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">stddev</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">traj_extents</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]),</span> 
-                            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]),</span> 
-                            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]),</span> 
-                            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]))</span>
 
-            <span class="n">las_extents</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> 
-                           <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> 
-                           <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> 
-                           <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
-
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;trajectory and LAS data NOT MERGED&#39;</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> FL </span><span class="si">{}</span><span class="s1">) max_dt: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">max_dt</span><span class="p">))</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;trajctory extents: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">traj_extents</span><span class="p">))</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;las extents: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las_extents</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;trajectory and LAS data NOT MERGED&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> FL </span><span class="si">{}</span><span class="s1">) max_dt: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">max_dt</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span>
                 <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
@@ -248,7 +235,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

@@ -93,9 +93,8 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">Merge</span> <span class="k">import</span> <span class="n">Merge</span>
-<span class="kn">from</span> <span class="nn">sympy</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="k">import</span> <span class="n">lambdify</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
 
@@ -298,12 +297,12 @@
 
         <span class="c1"># TODO: only pass needed columns</span>
 
-        <span class="n">x_las</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1">#.x_las</span>
-        <span class="n">y_las</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1">#.y_las</span>
-        <span class="n">z_las</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>  <span class="c1">#.z_las</span>
-        <span class="n">x_sbet</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1">#.x_sbet</span>
-        <span class="n">y_sbet</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>  <span class="c1">#.y_sbet</span>
-        <span class="n">z_sbet</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1">#.z_sbet</span>
+        <span class="n">x_las</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># x_las</span>
+        <span class="n">y_las</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># y_las</span>
+        <span class="n">z_las</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>  <span class="c1"># z_las</span>
+        <span class="n">x_sbet</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># x_sbet</span>
+        <span class="n">y_sbet</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>  <span class="c1"># y_sbet</span>
+        <span class="n">z_sbet</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># z_sbet</span>
 
         <span class="n">rho_x</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;x_las - x_sbet&quot;</span><span class="p">)</span>
         <span class="n">rho_y</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;y_las - y_sbet&quot;</span><span class="p">)</span>
@@ -530,7 +529,7 @@
 <span class="sd">    to decouple a Jacobian and the data used to evaluate it.  For example, </span>
 <span class="sd">    the inputs to the lambdified Jacobian components are not hard-coded in </span>
 <span class="sd">    the function call, but are determined from accessing the </span>
-<span class="sd">    .func_code.co_varnames attribute of the Jacobian component and then </span>
+<span class="sd">    .__code__.co_varnames attribute of the Jacobian component and then </span>
 <span class="sd">    looking up the corresponding values in a dict.  Although this somewhat</span>
 <span class="sd">    decouples the Jacobian from the data used to evaluate it, the dict </span>
 <span class="sd">    containing the corresponding values is manually created, separate from</span>
@@ -760,8 +759,9 @@
 <span class="sd">        :return vals:</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">vals</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">term_vars</span> <span class="o">=</span> <span class="n">J_term</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_varnames</span>
+        <span class="n">term_vars</span> <span class="o">=</span> <span class="n">J_term</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_varnames</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">term_vars</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">var</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;p&#39;</span><span class="p">:</span>
                 <span class="n">vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values_for_J_eval</span><span class="p">[</span><span class="s1">&#39;p_coeffs&#39;</span><span class="p">][</span><span class="n">J_comp</span><span class="p">][</span><span class="n">var</span><span class="p">])</span>
@@ -987,7 +987,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
   </body>
 </html>

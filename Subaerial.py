@@ -31,9 +31,8 @@ christopher.parrish@oregonstate.edu
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 from Merge import Merge
-from sympy import *
+from sympy import lambdify, symbols, Matrix, cos, sin
 import numpy as np
 import numexpr as ne
 
@@ -236,12 +235,12 @@ class SensorModel:
 
         # TODO: only pass needed columns
 
-        x_las = data[2]  #.x_las
-        y_las = data[3]  #.y_las
-        z_las = data[4]  #.z_las
-        x_sbet = data[5]  #.x_sbet
-        y_sbet = data[6]  #.y_sbet
-        z_sbet = data[7]  #.z_sbet
+        x_las = data[2]  # x_las
+        y_las = data[3]  # y_las
+        z_las = data[4]  # z_las
+        x_sbet = data[5]  # x_sbet
+        y_sbet = data[6]  # y_sbet
+        z_sbet = data[7]  # z_sbet
 
         rho_x = ne.evaluate("x_las - x_sbet")
         rho_y = ne.evaluate("y_las - y_sbet")
@@ -468,7 +467,7 @@ class Jacobian:
     to decouple a Jacobian and the data used to evaluate it.  For example, 
     the inputs to the lambdified Jacobian components are not hard-coded in 
     the function call, but are determined from accessing the 
-    .func_code.co_varnames attribute of the Jacobian component and then 
+    .__code__.co_varnames attribute of the Jacobian component and then 
     looking up the corresponding values in a dict.  Although this somewhat
     decouples the Jacobian from the data used to evaluate it, the dict 
     containing the corresponding values is manually created, separate from
@@ -698,8 +697,9 @@ class Jacobian:
         :return vals:
         
         """
+
         vals = []
-        term_vars = J_term.func_code.co_varnames
+        term_vars = J_term.__code__.co_varnames
         for var in term_vars:
             if var[0] == 'p':
                 vals.append(values_for_J_eval['p_coeffs'][J_comp][var])

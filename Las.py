@@ -30,12 +30,12 @@ christopher.parrish@oregonstate.edu
 
 """
 
+import pandas as pd
 import logging
 import numpy as np
 import numexpr as ne
 import laspy
 
-logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
 
 """
 This class provides the functionality to load las files into cBLUE.  One Las object 
@@ -52,6 +52,7 @@ class Las:
         self.inFile = laspy.file.File(self.las, mode="r")
         self.num_file_points = self.inFile.__len__()
         self.points_to_process = self.inFile.points['point']
+        self.unq_flight_lines = self.get_flight_line_ids()
 
         '''index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
@@ -66,7 +67,9 @@ class Las:
 
         :return: ndarray
         """
-        return np.unique(self.points_to_process['pt_src_id'])
+
+        # pandas' unique faster than numpy's ?
+        return pd.unique(self.points_to_process['pt_src_id'])
 
     def get_flight_line_txyz(self):
         """retrieves the x, y, z, and timestamp data from the las data points
@@ -96,7 +99,7 @@ class Las:
         z = ne.evaluate("Z * scale_z + offset_z")
 
         xyzt = np.vstack([x, y, z, t]).T
-        self.time_sort_indices = xyzt[:,3].argsort()
+        self.time_sort_indices = t.argsort()
 
         flight_lines = self.points_to_process['pt_src_id']
 
@@ -104,7 +107,9 @@ class Las:
 
     @staticmethod
     def get_average_water_surface_ellip_height():
-        """returns the average ellipsoid height of the water surface returns
+        """NOT CURRENTLY IMPLEMENTED
+        
+        returns the average ellipsoid height of the water surface returns
 
         Currently, this method returns a visually-determined estimate of the average ellipsoid height
         of the water surface returns in the survey area, which is used during tpu
@@ -114,7 +119,7 @@ class Las:
 
         :return: float
         """
-        return 23.0
+        return -23.0
 
 
 if __name__ == '__main__':

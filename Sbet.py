@@ -36,6 +36,7 @@ import pandas as pd
 from datetime import datetime
 import progressbar
 import logging
+import numexpr as ne
 
 
 """
@@ -55,6 +56,7 @@ class Sbet:
         the user clicks the 'Load Sbet Data' button.
         :param str sbet_dir: directory contained trajectory files
         """
+
         self.sbet_dir = sbet_dir
         self.sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
                                   if f.endswith('.txt')])
@@ -71,6 +73,7 @@ class Sbet:
         :param str sbet: ASCII sbet filename
         :return: List[int]
         """
+
         sbet_parts = sbet.split('\\')
         sbet_name = sbet_parts[-1]
         year = int(sbet_name[0:4])
@@ -93,7 +96,7 @@ class Sbet:
         :return: float
         """
         
-        logging.info('converting GPS week seconds to GPS adjusted standard time...'),
+        logging.debug('converting GPS week seconds to GPS adjusted standard time...'),
 
         year = gps_date[0]
         month = gps_date[1]
@@ -108,7 +111,7 @@ class Sbet:
         return gps_time_adj
 
     def check_if_sow(self, time):
-        logging.info('checking if timestamps are GPS week seconds...')
+        logging.debug('checking if timestamps are GPS week seconds...')
         if time <= self.SECS_PER_GPS_WK:
             return True
         else:
@@ -146,10 +149,11 @@ class Sbet:
         header_sbet = ['time', 'lon', 'lat', 'X', 'Y', 'Z', 'roll', 'pitch', 'heading',
                        'stdX', 'stdY', 'stdZ', 'stdroll', 'stdpitch', 'stdheading']
         print(r'Loading trajectory files...')
-        for sbet in progressbar.progressbar(sorted(self.sbet_files), redirect_stdout=True):
-            logging.info('-' * 50)
-            logging.info('getting trajectory data from {}...'.format(sbet))
-            sbet_df = pd.read_table(
+        logging.info('loading {} trajectory files...'.format(len(self.sbet_files)))
+        for sbet in progressbar.progressbar(sorted(self.sbet_files[0:1]), redirect_stdout=True):
+            logging.debug('-' * 50)
+            logging.info('{}...'.format(sbet))
+            sbet_df = pd.read_csv(
                 sbet,
                 skip_blank_lines=True,
                 engine='c',
@@ -157,7 +161,7 @@ class Sbet:
                 header=None,
                 names=header_sbet,
                 index_col=False)
-            logging.info('({} trajectory points)'.format(sbet_df.shape[0]))
+            logging.debug('({} trajectory points)'.format(sbet_df.shape[0]))
             sbet_date = self.get_sbet_date(sbet)
 
             is_sow = self.check_if_sow(sbet_df['time'][0])
@@ -177,10 +181,11 @@ class Sbet:
 
         :return: n/a
         """
+
         sbet_tic = time.clock()
         self.data = self.build_sbets_data()  # df
         sbet_toc = time.clock()
-        logging.info('It took {:.1f} mins to load the trajectory data.'.format((sbet_toc - sbet_tic) / 60))
+        logging.debug('It took {:.1f} mins to load the trajectory data.'.format((sbet_toc - sbet_tic) / 60))
 
     def get_tile_data(self, north, south, east, west):
         """queries the sbet data points that lie within the given las tile bounding coordinates
@@ -203,14 +208,19 @@ class Sbet:
 
         buff = 500  # meters
 
-        data = self.data[(self.data.Y >= south - buff) & (self.data.Y <= north + buff) &
-                         (self.data.X >= west - buff) & (self.data.X <= east + buff)]
+        x = self.data.X.values
+        y = self.data.Y.values
+
+        north += buff
+        south -= buff
+        east += buff
+        west -= buff
+
+        # using numexpr for accelerating computations of large arrays
+        data = self.data[ne.evaluate('(y >= south) & (y <= north) & (x >= west) & (x <= east)')]
 
         return data
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s:%(message)s', level=logging.INFO)
-    sbet = Sbet(r'C:\QAQC_contract\marco_island')
-    sbet_df = sbet.build_sbets_data()
-    print(sbet_df)
+    pass
