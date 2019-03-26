@@ -122,6 +122,8 @@ class Tpu:
                 # las_xyzt has the same order as self.points_to_process
                 flight_line_indx = flight_lines == fl
                 fl_sorted_las_xyzt = las_xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
+                num_fl_points = np.sum(flight_line_indx)
+                logging.debug('{} fl {}: {} points'.format(las.las_short_name, fl, num_fl_points))
 
                 # CREATE MERGED-DATA OBJECT M
                 logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
@@ -172,7 +174,28 @@ class Tpu:
                 else:
                     logging.warning('SBET and LAS not merged because max delta '
                                     'time exceeded acceptable threshold of {} '
-                                    'sec(s).'.format(Merge.max_allowable_dt))
+                                    'sec(s).'.format(M.max_allowable_dt))
+
+                    output = np.vstack((
+                        np.expand_dims(np.zeros(num_fl_points), axis=0),  # las_t
+                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
+                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
+                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
+                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
+                        np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
+                        np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
+                        )).T
+
+                    extra_byte_columns = ['total_thu', 'total_tvu']
+
+                    # TODO: doesn't need to happen every iteration
+                    output_columns = ['gps_time'] + extra_byte_columns
+
+                    data_to_pickle.append(output)
+                    stats = ['min', 'max', 'mean', 'std']
+                    decimals = pd.Series([15] + [3] * len(extra_byte_columns), index=output_columns)
+                    df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
+                    self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
 
             self.write_metadata(las)  # TODO: include as VLR?
             self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)

@@ -150,7 +150,7 @@ class Sbet:
                        'stdX', 'stdY', 'stdZ', 'stdroll', 'stdpitch', 'stdheading']
         print(r'Loading trajectory files...')
         logging.info('loading {} trajectory files...'.format(len(self.sbet_files)))
-        for sbet in progressbar.progressbar(sorted(self.sbet_files), redirect_stdout=True):
+        for sbet in progressbar.progressbar(sorted(self.sbet_files[0:1]), redirect_stdout=True):
             logging.debug('-' * 50)
             logging.info('{}...'.format(sbet))
             sbet_df = pd.read_csv(

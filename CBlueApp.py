@@ -43,6 +43,7 @@ import webbrowser
 import laspy
 import cProfile
 
+
 now = datetime.datetime.now()
 log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year, 
                                             str(now.month).zfill(2), 
@@ -200,18 +201,6 @@ class CBlueApp(tk.Tk):
 
         #label = tk.Label(about, image=splash_img, text=license_msg, compound=tk.CENTER)
         #label.pack()
-        b1 = ttk.Button(about, text='Ok', command=about.destroy)
-        b1.pack()
-        about.mainloop()
-
-    def show_message(self, msg):
-        about = tk.Toplevel()
-        about.resizable(False, False)
-        tk.Toplevel.iconbitmap(about, 'cBLUE_icon.ico')
-        about.wm_title('IMPORTANT!!!')
-
-        label = tk.Label(about, text=msg)
-        label.pack()
         b1 = ttk.Button(about, text='Ok', command=about.destroy)
         b1.pack()
         about.mainloop()
@@ -453,17 +442,36 @@ class ControllerPanel(ttk.Frame):
         self.sbet = Sbet(self.sbetInput.directoryName)
         self.sbet.set_data()
         self.is_sbet_loaded = True
-        self.sbet_btn_text.set('Trajectory Loaded')  # TODO: do for compute, too
+        self.sbet_btn_text.set('Trajectory Loaded')
         self.sbetProcess.config(fg='darkgreen')
         self.update_button_enable()
 
     def tpu_process_callback(self):
+        self.verify_water_level()
+
+    def continue_with_tpu_calc(self, alert):
+        alert.destroy()
+        self.begin_tpu_calc()
+
+    def verify_water_level(self):
+        about = tk.Toplevel()
+        tk.Toplevel.iconbitmap(about, 'cBLUE_icon.ico')
+        about.resizable(False, False)
+        about.wm_title('IMPORTANT!!!')
 
         msg = '''
         Make sure the nominal water-surface ellipsoid height of
-        {} meters specified in the configuration file is correct!
+        {} meters specified in the configuration file is correct
+        before pushing OK!
         '''.format(self.controller.controller_configuration['water_surface_ellipsoid_height'])
-        self.controller.show_message(msg)
+
+        label = tk.Label(about, text=msg)
+        label.pack()
+        b1 = ttk.Button(about, text='Ok', command=lambda: self.continue_with_tpu_calc(about))
+        b1.pack()
+        about.mainloop()
+
+    def begin_tpu_calc(self):
 
         surface_ind = self.waterSurfaceRadio.selection.get()
         surface_selection = self.water_surface_options[surface_ind]
