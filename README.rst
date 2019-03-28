@@ -23,11 +23,11 @@ cBLUE, created with Python 3, is currently provided as a collection of Python mo
 Dependencies
 ------------
 
-The recommended way to ensure that all of the necessary dependencies are loaded is to create a conda environment from the text file cBLUE_install.txt using the following command, 
+The recommended way to ensure that all of the necessary dependencies are loaded is to create a conda environment from the text file cBLUE_env.yml using the following command, 
 
-	conda env create --file <evn file name>
+	conda env create --file <env file name>
 	
-where <env file name> is the path to cBLUE_install.txt, which is included in the cBLUE GitHub release.
+where <env file name> is the path to cBLUE_env.yml, which is included in the cBLUE GitHub release.
 
 Starting the GUI
 ----------------
