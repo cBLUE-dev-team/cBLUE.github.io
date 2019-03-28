@@ -49,12 +49,9 @@ Major dependencies are summarized in the table below:
 	laspy, used to read LAS files
 	Tkinter, used to create GUI
 
-.. role:: python(code)
-   :language: python
-	
-.. warning:
+.. warning::
 
-	Due to a current issue with the most recent version of conda (https://github.com/conda/conda/issues/8404), the above method will not install the pip packages listed in the .yml file.  To install the necessary pip packages, use :python:`` in addition to the :python:`conda env create --file <evn file name>` command listed above.
+	Due to a current issue with the most recent version of conda (https://github.com/conda/conda/issues/8404), the above method will not install the pip packages listed in the .yml file.  To install the necessary pip packages, use :code:`pip install -r cBLUE_env_pip.txt` in addition to the :code:`conda env create --file cBLUE_env.yml` command listed above.
 	
 Starting the GUI
 ----------------
