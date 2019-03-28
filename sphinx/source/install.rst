@@ -49,6 +49,13 @@ Major dependencies are summarized in the table below:
 	laspy, used to read LAS files
 	Tkinter, used to create GUI
 
+.. role:: python(code)
+   :language: python
+	
+.. warning:
+
+	Due to a current issue with the most recent version of conda (https://github.com/conda/conda/issues/8404), the above method will not install the pip packages listed in the .yml file.  To install the necessary pip packages, use :python:`` in addition to the :python:`conda env create --file <evn file name>` command listed above.
+	
 Starting the GUI
 ----------------
 The GUI can be initiated from the command line with the following command (specify the full path of CBlueApp.py if the current directory is not the location of CBlueApp.py):
