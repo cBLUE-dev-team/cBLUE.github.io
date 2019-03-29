@@ -3,9 +3,7 @@ Installation
 
 The latest release of cBLUE can be found at https://github.com/forkozi/cBLUE/releases.
 
-cBLUE is designed to run on 64-bit Python 2.7.  Support for Python 3 is deferred to future versions.  
-
-cBLUE is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
+cBLUE, designed to run on 64-bit Python 3, is currently provided as a collection of Python modules (.py files) and supporting text files.  The cBLUE GUI is accessed by running the CBlueApp.py file via the command line or a Python IDE. 
 
 cBLUE Files
 -----------
@@ -33,7 +31,11 @@ The recommended way to ensure that all of the necessary dependencies are loaded 
 
 	conda env create --file <evn file name>
 	
-where <env file name> is the path to cBLUE_env.yml, which is included in the cBLUE GitHub repository.
+where <env file name> is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.
+
+.. warning::
+
+	Due to a current issue with the most recent version of conda (https://github.com/conda/conda/issues/8404), the above method will not install the pip packages listed in the .yml file.  To install the necessary pip packages, use :code:`pip install -r cBLUE_env_pip.txt` in addition to the :code:`conda env create --file cBLUE_env.yml` command listed above.
 
 Major dependencies are summarized in the table below:
 
@@ -49,10 +51,6 @@ Major dependencies are summarized in the table below:
 	laspy, used to read LAS files
 	Tkinter, used to create GUI
 
-.. warning::
-
-	Due to a current issue with the most recent version of conda (https://github.com/conda/conda/issues/8404), the above method will not install the pip packages listed in the .yml file.  To install the necessary pip packages, use :code:`pip install -r cBLUE_env_pip.txt` in addition to the :code:`conda env create --file cBLUE_env.yml` command listed above.
-	
 Starting the GUI
 ----------------
 The GUI can be initiated from the command line with the following command (specify the full path of CBlueApp.py if the current directory is not the location of CBlueApp.py):
