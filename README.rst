@@ -47,7 +47,7 @@ The GUI can also be initiated by running the CBlueApp.py file from a Python IDE,
 Documentation
 =============
 
-Access cBLUE documentation (under construction) by opening docs/index.html (from your local repo) in a web browser.  
+Access cBLUE documentation by opening docs/index.html (from your local repo) in a web browser.  
 
 .. rubric:: Footnotes
 

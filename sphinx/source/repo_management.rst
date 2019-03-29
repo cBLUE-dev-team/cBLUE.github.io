@@ -1,7 +1,7 @@
 Repository Management
 =====================
 
-This section contains documentation of current best practices and standard operating procedures (SOPs) for managing NOAA RSD's cBLUE repository.
+This section contains NOAA RSD's best practices and standard operating procedures (SOPs) for managing the cBLUE repository.
 
 .. toctree:: 
 	:maxdepth: 1
