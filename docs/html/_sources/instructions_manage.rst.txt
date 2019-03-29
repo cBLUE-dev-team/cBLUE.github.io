@@ -1,2 +1,2 @@
-Instructions to Repo Manager (To Be Done)
-=========================================
+Instructions to Repository Manager (draft)
+==========================================

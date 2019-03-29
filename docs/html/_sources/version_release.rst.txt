@@ -4,7 +4,7 @@ cBLUE Version Release Procedure
 The general cBLUE version-release procedure consists of four main steps:
 
 	1. update Sphinx documentation
-	2. commit/push local repo
+	2. commit/push local repository
 	3. create distribution
 	4. publish GitHub release
 

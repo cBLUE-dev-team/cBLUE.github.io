@@ -1,2 +1,2 @@
-Instructions to Collaborators (To Be Done)
-==========================================
+Instructions to Collaborators (draft)
+=====================================
