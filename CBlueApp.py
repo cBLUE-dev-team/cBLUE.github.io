@@ -90,7 +90,7 @@ class CBlueApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
-        with open('cBLUE_ASCII.txt', 'r') as f:
+        with open('cBLUE_ASCII_splash.txt', 'r') as f:
             message = f.readlines()
             print(''.join(message))
 
@@ -515,19 +515,14 @@ class ControllerPanel(ttk.Frame):
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
-                     if l.endswith('.las')]
+                     if l.endswith('.las')][0:1]
 
         num_las = len(las_files)
 
         def signal_completion():
             self.tpu_btn_text.set('TPU Calculated')
             self.tpuProcess.config(fg='darkgreen')
-
-            with open('cBLUE_ASCII_finished.txt', 'r') as f:
-                message = f.readlines()
-                print(''.join(message))
-
-            print('(close cBLUE before running again)')
+            print('DONE!! (close cBLUE before running again)')
 
         def sbet_las_tiles_generator():
             """This generator is the 2nd argument for the

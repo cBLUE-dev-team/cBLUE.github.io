@@ -98,6 +98,9 @@ class Merge:
 
         num_sbet_pts = sbet_data.shape[0]
 
+        # sort xyzt array based on t_idx column
+        las_data.view('f,f,f,f,i').sort(order=['f4'], axis=0)
+
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
 
@@ -119,10 +122,10 @@ class Merge:
         else:
             data = np.asarray([
                 sbet_data[:, 0][idx[mask]],
-                las_data[:, 3][mask],   # t
-                las_data[:, 0][mask],   # x
-                las_data[:, 1][mask],   # y
-                las_data[:, 2][mask],   # z
+                las_data[:, 3][mask],                           # t
+                las_data[:, 0][mask],                           # x
+                las_data[:, 1][mask],                           # y
+                las_data[:, 2][mask],                           # z
                 sbet_data[:, 3][idx[mask]],
                 sbet_data[:, 4][idx[mask]],
                 sbet_data[:, 5][idx[mask]],
@@ -145,9 +148,8 @@ class Merge:
                 np.full(num_points, self.std_rho)               # std_rho
             ])
 
-        return data, stddev
+        return data, stddev, las_data[:, 4][mask]  # last array is t_idx
 
 
 if __name__ == '__main__':
     pass
-

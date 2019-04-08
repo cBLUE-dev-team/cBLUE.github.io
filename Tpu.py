@@ -104,8 +104,11 @@ class Tpu:
 
         sbet, las_file, J, M = sbet_las_files
 
-        data_to_pickle = []
-        output_columns = []
+        data_to_output = []
+
+        extra_byte_columns = ['total_thu', 'total_tvu']
+        stats = ['min', 'max', 'mean', 'std']
+        decimals = pd.Series([1] * len(extra_byte_columns), index=extra_byte_columns)
 
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
@@ -113,21 +116,22 @@ class Tpu:
         if las.num_file_points:  # i.e., if las had data points
             logging.info('{} ({:,} points)'.format(las.las_short_name, las.num_file_points))
             logging.debug('flight lines {}'.format(las.unq_flight_lines))
-            las_xyzt, t_sort_indx, flight_lines = las.get_flight_line_txyz()
+            las_xyzt, flight_lines = las.get_flight_line_txyz()
 
             for fl in las.unq_flight_lines:
 
                 logging.debug('flight line {} {}'.format(fl, '-' * 50))
 
-                # las_xyzt has the same order as self.points_to_process
+                # las_xyzt has the same order as points in las (i.e., unordered)
                 flight_line_indx = flight_lines == fl
-                fl_sorted_las_xyzt = las_xyzt[t_sort_indx][flight_line_indx[t_sort_indx]]
+                fl_unsorted_las_xyzt = las_xyzt[flight_line_indx]
+
                 num_fl_points = np.sum(flight_line_indx)
                 logging.debug('{} fl {}: {} points'.format(las.las_short_name, fl, num_fl_points))
 
                 # CREATE MERGED-DATA OBJECT M
                 logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
-                merged_data, stddev = M.merge(las.las_short_name, fl, sbet.values, fl_sorted_las_xyzt)
+                merged_data, stddev, t_idx = M.merge(las.las_short_name, fl, sbet.values, fl_unsorted_las_xyzt)
 
                 if merged_data is not False:  # i.e., las and sbet is merged
 
@@ -150,93 +154,30 @@ class Tpu:
                     total_tvu = ne.evaluate('sqrt(subaqu_tvu**2 + subaer_tvu**2 + vdatum_mcu**2)')
                     num_points = total_tvu.shape[0]
 
-                    output = np.vstack((
-                        np.expand_dims(merged_data[1], axis=0),  # las_t
-                        #np.round_(np.expand_dims(subaer_thu, axis=0), decimals=5),
-                        #np.round_(np.expand_dims(subaer_tvu, axis=0), decimals=5),
-                        #np.round_(np.expand_dims(subaqu_thu, axis=0), decimals=5),
-                        #np.round_(np.expand_dims(subaqu_tvu, axis=0), decimals=5),
-                        np.round_(np.expand_dims(total_thu, axis=0), decimals=5),
-                        np.round_(np.expand_dims(total_tvu, axis=0), decimals=5),
+                    fl_tpu_data = np.vstack((
+                        #np.round_(np.expand_dims(subaer_thu * 100, axis=0)).astype('int'),
+                        #np.round_(np.expand_dims(subaer_tvu * 100, axis=0)).astype('int'),
+                        #np.round_(np.expand_dims(subaqu_thu * 100, axis=0)).astype('int'),
+                        #np.round_(np.expand_dims(subaqu_tvu * 100, axis=0)).astype('int'),
+                        np.round_(np.expand_dims(total_thu * 100, axis=0)).astype('int'),
+                        np.round_(np.expand_dims(total_tvu * 100, axis=0)).astype('int'),
+                        np.full(num_points, fl),
+                        t_idx
                         )).T
 
-                    extra_byte_columns = ['total_thu', 'total_tvu']
-
-                    # TODO: doesn't need to happen every iteration
-                    output_columns = ['gps_time'] + extra_byte_columns
-
-                    data_to_pickle.append(output)
-                    stats = ['min', 'max', 'mean', 'std']
-                    decimals = pd.Series([15] + [3] * len(extra_byte_columns), index=output_columns)
-                    df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
-                    self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
+                    data_to_output.append(fl_tpu_data)
 
                 else:
                     logging.warning('SBET and LAS not merged because max delta '
                                     'time exceeded acceptable threshold of {} '
                                     'sec(s).'.format(M.max_allowable_dt))
 
-                    output = np.vstack((
-                        np.expand_dims(np.zeros(num_fl_points), axis=0),  # las_t
-                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
-                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
-                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
-                        #np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
-                        np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
-                        np.round_(np.expand_dims(np.zeros(num_fl_points), axis=0), decimals=5),
-                        )).T
-
-                    extra_byte_columns = ['total_thu', 'total_tvu']
-
-                    # TODO: doesn't need to happen every iteration
-                    output_columns = ['gps_time'] + extra_byte_columns
-
-                    data_to_pickle.append(output)
-                    stats = ['min', 'max', 'mean', 'std']
-                    decimals = pd.Series([15] + [3] * len(extra_byte_columns), index=output_columns)
-                    df = pd.DataFrame(output, columns=output_columns).describe().loc[stats]
-                    self.flight_line_stats[str(fl)] = df.round(decimals).to_dict()
-
             self.write_metadata(las)  # TODO: include as VLR?
-            self.output_tpu_to_las_extra_bytes(las, data_to_pickle, output_columns)
+            self.output_tpu_to_las_extra_bytes(las, data_to_output, extra_byte_columns)
         else:
             logging.warning('WARNING: {} has no data points'.format(las.las_short_name))
 
-    def output_tpu_to_pickle(self, las, data_to_output, output_columns):
-        """output the calculated tpu to a Python "pickle" file
-
-        This method outputs the calculated tpu to a Python "pickle" file, with the
-        following fields:
-
-        .. csv-table:: Data Pickle...mmmm
-            :header: index, ndarray, description
-            :widths: 14, 20, 20
-
-            0, gps_time, GPS standard adjusted time
-            1, cblue_x, cBLUE-calculated x coordinate
-            2, cblue_y, cBLUE-calculated y coordinate
-            3, cblue_z, cBLUE-calculated z coordinate
-            4, subaerial_thu, subaerial total horizontal uncertainty
-            5, subaerial_tvu, subaerial total vertical uncertainty
-            6, subaqueous_thu, subaqueous total horizontal uncertainty
-            7, subaqueous_tvu, subaqueous total vertical uncertainty
-            8, total_thu, total horizontal uncertainty
-            9, total_tvu, total vertical uncertainty
-
-        :param las:
-        :param data_to_output:
-        :param output_columns:
-        :return: n/a
-        """
-
-        output_tpu_file = r'{}_TPU.tpu'.format(las.las_base_name)
-        output_path = '{}\\{}'.format(self.tpu_output, output_tpu_file)
-        output_df = pd.DataFrame(np.vstack(data_to_output), columns=output_columns)
-        logging.debug('({}) writing TPU...'.format(las.las_short_name))
-        output_df.to_pickle(output_path)
-        logging.debug('finished writing')
-
-    def output_tpu_to_las_extra_bytes(self, las, data_to_output, output_columns):
+    def output_tpu_to_las_extra_bytes(self, las, data_to_output, extra_byte_columns):
         """output the calculated tpu to a las file
 
         This method creates a las file tht contains the contents of the
@@ -262,9 +203,6 @@ class Tpu:
             :header: id, dtype, description
             :widths: 14, 20, 20
 
-            cblue_x, unsigned long long (8 bytes), cBLUE-calculated x coordinate
-            cblue_y, unsigned long long (8 bytes), cBLUE-calculated y coordinate
-            cblue_z, long (4 bytes), cBLUE-calculated z coordinate
             subaerial_thu, unsigned short (2 bytes), subaerial total horizontal uncertainty
             subaerial_tvu, unsigned short (2 bytes), subaerial total vertical uncertainty
             subaqueous_thu, unsigned short (2 bytes), subaqueous total horizontal uncertainty
@@ -277,11 +215,6 @@ class Tpu:
         :param output_columns:
         :return:
         """
-        output_df = pd.DataFrame(np.vstack(data_to_output), columns=output_columns)
-        output_df = output_df.sort_values(by=['gps_time'])
-        decimals = pd.Series([2] * len(output_df.columns), index=output_columns)
-        output_df = output_df.round(decimals) * 100
-        output_df = output_df.astype('uint8')  # uint8 = numpy Unsigned integer (0 to 255)
 
         out_las_name = os.path.join(self.tpu_output, las.las_base_name) + '_TPU.las'
         logging.debug('logging las and tpu results to {}'.format(out_las_name))
@@ -290,12 +223,9 @@ class Tpu:
 
         xy_data_type = 7  # 7 = laspy unsigned long long (8 bytes)
         z_data_type = 6  # 6 = laspy long (4 bytes)
-        tpu_data_type = 2  # 2 = laspy char (1 byte)
+        tpu_data_type = 3  # 3 = laspy unsigned short (2 bytes)
 
         extra_byte_dimensions = OrderedDict([
-            #('cblue_x', ('calculated x', xy_data_type)),
-            #('cblue_y', ('calculated y', xy_data_type)),
-            #('cblue_z', ('calculated z', z_data_type)),
             #('subaerial_thu', ('subaerial thu', tpu_data_type)),
             #('subaerial_tvu', ('subaerial tvu', tpu_data_type)),
             #('subaqueous_thu', ('subaqueous thu', tpu_data_type)),
@@ -307,25 +237,31 @@ class Tpu:
         # define new extrabyte dimensions
         for dimension, description in extra_byte_dimensions.items():
             logging.debug('creating extra byte dimension for {}...'.format(dimension))
-            out_las.define_new_dimension(
-                name=dimension, 
-                data_type=description[1], 
-                description=description[0])
+            out_las.define_new_dimension(name=dimension, 
+                                         data_type=description[1],
+                                         description=description[0])
+
+        extra_byte_df = pd.DataFrame(np.vstack(data_to_output), columns=extra_byte_columns + ['pt_src_id', 't_idx'])
+
+        # data within flight lines are sorted, but not flight ling to flight line
+        extra_byte_df = extra_byte_df.sort_values(by=['t_idx'])
+        
+        # rename indices to t_idx
+        extra_byte_df = extra_byte_df.rename(extra_byte_df['t_idx'])
+        extra_byte_df = extra_byte_df.drop(['t_idx'], axis=1)
+
+        # fill missing indices (i.e., data points for which TPU was not calculated) with no_data_value
+        no_data_value = -1
+        extra_byte_df = extra_byte_df.reindex(range(las.num_file_points), fill_value=no_data_value)
+
+        stats_df = extra_byte_df.groupby('pt_src_id').describe().round(1).stack()
+        extra_byte_df = extra_byte_df.drop(['pt_src_id'], axis=1)
+        print(stats_df)
 
         '''
-        using eval to do following with a loop, versus explicityly
+        using eval to do the following with a loop, versus explicityly
         defining each one, takes too long because lists are made
-        '''
-
-        #logging.debug('populating extra byte data for cblue_x...')
-        #out_las.cblue_x = output_df['cblue_x']
-
-        #logging.debug('populating extra byte data for cblue_y...')
-        #out_las.cblue_y = output_df['cblue_y']
-        
-        #logging.debug('populating extra byte data for cblue_z...')
-        #out_las.cblue_z = output_df['cblue_z']
-        
+        '''        
         #logging.debug('populating extra byte data for subaerial_thu...')
         #out_las.subaerial_thu = output_df['subaerial_thu']
         
@@ -339,16 +275,16 @@ class Tpu:
         #out_las.subaqueous_tvu = output_df['subaqueous_tvu']
         
         logging.debug('populating extra byte data for total_thu...')
-        out_las.total_thu = output_df['total_thu']
+        out_las.total_thu = extra_byte_df['total_thu']
         
         logging.debug('populating extra byte data for total_tvu...')
-        out_las.total_tvu = output_df['total_tvu']
+        out_las.total_tvu = extra_byte_df['total_tvu']
 
         # copy data from in_las
         for field in in_las.point_format:
             logging.debug('writing {} to {} ...'.format(field.name, out_las))
-            dat = in_las.reader.get_dimension(field.name)
-            out_las.writer.set_dimension(field.name, dat[las.time_sort_indices])
+            las_data = in_las.reader.get_dimension(field.name)
+            out_las.writer.set_dimension(field.name, las_data[las.time_sort_indices])
 
     def write_metadata(self, las):
         """creates a json file with summary statistics and metedata
@@ -379,14 +315,12 @@ class Tpu:
         })
 
         try:
-            self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
+            #self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
             with open(os.path.join(self.tpu_output, '{}.json'.format(las.las_base_name)), 'w') as outfile:
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
         except Exception as e:
             logging.error(e)
             print(e)
-
-
 
     def run_tpu_multiprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using multiprocessing

@@ -1,7 +1,7 @@
 Algorithm Workflow
 ==================
 
-The cBLUE algorithm workflow consists of three main steps:
+The cBLUE algorithm workflow consists of four main steps:
 
 1. Form Sensor Model Observation Equation
 
@@ -19,4 +19,7 @@ The cBLUE algorithm workflow consists of three main steps:
 	* Calculate subaerial THU and TVU (Subaerial class)
 	* Calculate subaqueous THU and TVU (Subaqueous class)
 	* Combine subaerial and subaqueous TPU (Tpu class)
-	* Export TPU as Las extra bytes (Tpu Class)
+	
+4. Export TPU as Las extra bytes (Tpu Class)
+
+	The total propagated horizontal uncertainty (THU) and the total propagated vertical uncertainty (TVU) values are written to a new las file as variable length record (VLR) extra bytes, along with the data in the original las file.  (Rather than adding extra bytes to an existing las file, cBLUE creates a new las file containing the information in the original las file and the THU and TVU extra bytes.)

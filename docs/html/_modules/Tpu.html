@@ -449,7 +449,7 @@
 
         <span class="n">xy_data_type</span> <span class="o">=</span> <span class="mi">7</span>  <span class="c1"># 7 = laspy unsigned long long (8 bytes)</span>
         <span class="n">z_data_type</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># 6 = laspy long (4 bytes)</span>
-        <span class="n">tpu_data_type</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># 2 = laspy char (1 byte)</span>
+        <span class="n">tpu_data_type</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 1 = laspy unsigned char (1 byte)</span>
 
         <span class="n">extra_byte_dimensions</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
             <span class="c1">#(&#39;cblue_x&#39;, (&#39;calculated x&#39;, xy_data_type)),</span>
@@ -498,10 +498,10 @@
         <span class="c1">#out_las.subaqueous_tvu = output_df[&#39;subaqueous_tvu&#39;]</span>
         
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;populating extra byte data for total_thu...&#39;</span><span class="p">)</span>
-        <span class="n">out_las</span><span class="o">.</span><span class="n">total_thu</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="s1">&#39;total_thu&#39;</span><span class="p">]</span>
+        <span class="n">out_las</span><span class="o">.</span><span class="n">total_thu</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="s1">&#39;total_thu&#39;</span><span class="p">]</span><span class="c1">#.astype(&#39;uint8&#39;)</span>
         
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;populating extra byte data for total_tvu...&#39;</span><span class="p">)</span>
-        <span class="n">out_las</span><span class="o">.</span><span class="n">total_tvu</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="s1">&#39;total_tvu&#39;</span><span class="p">]</span>
+        <span class="n">out_las</span><span class="o">.</span><span class="n">total_tvu</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="s1">&#39;total_tvu&#39;</span><span class="p">]</span><span class="c1">#.astype(&#39;uint8&#39;)</span>
 
         <span class="c1"># copy data from in_las</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">in_las</span><span class="o">.</span><span class="n">point_format</span><span class="p">:</span>
@@ -544,8 +544,6 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
-
-
 
 <div class="viewcode-block" id="Tpu.run_tpu_multiprocess"><a class="viewcode-back" href="../Tpu.html#Tpu.Tpu.run_tpu_multiprocess">[docs]</a>    <span class="k">def</span> <span class="nf">run_tpu_multiprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_las</span><span class="p">,</span> <span class="n">sbet_las_generator</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;runs the tpu calculations using multiprocessing</span>

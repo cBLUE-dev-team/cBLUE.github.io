@@ -98,28 +98,13 @@ class Las:
         y = ne.evaluate("Y * scale_y + offset_y")
         z = ne.evaluate("Z * scale_z + offset_z")
 
-        xyzt = np.vstack([x, y, z, t]).T
         self.time_sort_indices = t.argsort()
+
+        xyzt = np.vstack([x, y, z, t, self.time_sort_indices]).T
 
         flight_lines = self.points_to_process['pt_src_id']
 
-        return xyzt, self.time_sort_indices, flight_lines
-
-    @staticmethod
-    def get_average_water_surface_ellip_height():
-        """NOT CURRENTLY IMPLEMENTED
-        
-        returns the average ellipsoid height of the water surface returns
-
-        Currently, this method returns a visually-determined estimate of the average ellipsoid height
-        of the water surface returns in the survey area, which is used during tpu
-        calculation to calculate the depth of each data point.
-
-        # TODO: define better way to determine average ellipsoid height of surface
-
-        :return: float
-        """
-        return -23.0
+        return xyzt, flight_lines
 
 
 if __name__ == '__main__':
