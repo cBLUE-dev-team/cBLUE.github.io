@@ -515,7 +515,7 @@ class ControllerPanel(ttk.Frame):
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
-                     if l.endswith('.las')][0:1]
+                     if l.endswith('.las')]
 
         num_las = len(las_files)
 

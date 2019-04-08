@@ -159,10 +159,10 @@ class Tpu:
                         #np.round_(np.expand_dims(subaer_tvu * 100, axis=0)).astype('int'),
                         #np.round_(np.expand_dims(subaqu_thu * 100, axis=0)).astype('int'),
                         #np.round_(np.expand_dims(subaqu_tvu * 100, axis=0)).astype('int'),
-                        np.round_(np.expand_dims(total_thu * 100, axis=0)).astype('int'),
-                        np.round_(np.expand_dims(total_tvu * 100, axis=0)).astype('int'),
-                        np.full(num_points, fl),
-                        t_idx
+                        np.round_(total_thu * 100).astype('int'),
+                        np.round_(total_tvu * 100).astype('int'),
+                        np.full(num_points, fl).astype('int'),
+                        t_idx.astype('int')
                         )).T
 
                     data_to_output.append(fl_tpu_data)
@@ -243,20 +243,17 @@ class Tpu:
 
         extra_byte_df = pd.DataFrame(np.vstack(data_to_output), columns=extra_byte_columns + ['pt_src_id', 't_idx'])
 
-        # data within flight lines are sorted, but not flight ling to flight line
-        extra_byte_df = extra_byte_df.sort_values(by=['t_idx'])
-        
         # rename indices to t_idx
-        extra_byte_df = extra_byte_df.rename(extra_byte_df['t_idx'])
+        extra_byte_df.set_index('t_idx')
         extra_byte_df = extra_byte_df.drop(['t_idx'], axis=1)
-
-        # fill missing indices (i.e., data points for which TPU was not calculated) with no_data_value
+                
+        # fill data points for which TPU was not calculated with no_data_value (also sorts by index, or t_idx)
         no_data_value = -1
         extra_byte_df = extra_byte_df.reindex(range(las.num_file_points), fill_value=no_data_value)
-
-        stats_df = extra_byte_df.groupby('pt_src_id').describe().round(1).stack()
+        
+        # calculate flight line THU/TVU summary stats
+        stats_df = extra_byte_df.groupby('pt_src_id').describe().round().stack()
         extra_byte_df = extra_byte_df.drop(['pt_src_id'], axis=1)
-        print(stats_df)
 
         '''
         using eval to do the following with a loop, versus explicityly
