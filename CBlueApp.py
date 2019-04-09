@@ -56,6 +56,9 @@ logging.basicConfig(filename=log_file,
                     format='%(asctime)s:%(message)s', 
                     level=logging.INFO)
 
+#logging.basicConfig(format='%(asctime)s:%(message)s', 
+#                    level=logging.DEBUG)
+
 from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
 from Merge import Merge
@@ -461,8 +464,7 @@ class ControllerPanel(ttk.Frame):
 
         msg = '''
         Make sure the nominal water-surface ellipsoid height of
-        {} meters specified in the configuration file is correct
-        before pushing OK!
+        {} meters specified in the configuration file is correct!
         '''.format(self.controller.controller_configuration['water_surface_ellipsoid_height'])
 
         label = tk.Label(about, text=msg)

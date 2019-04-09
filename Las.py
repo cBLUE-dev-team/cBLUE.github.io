@@ -100,11 +100,11 @@ class Las:
 
         self.time_sort_indices = t.argsort()
 
-        xyzt = np.vstack([x, y, z, t, self.time_sort_indices]).T
+        xyzt = np.vstack([x, y, z, t]).T
 
         flight_lines = self.points_to_process['pt_src_id']
 
-        return xyzt, flight_lines
+        return xyzt, self.time_sort_indices, flight_lines
 
 
 if __name__ == '__main__':

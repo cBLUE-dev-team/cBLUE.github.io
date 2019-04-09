@@ -94,21 +94,23 @@ class Merge:
         =====   =========   ========================    =======
         """
 
-    def merge(self, las, fl, sbet_data, las_data):
+    def merge(self, las, fl, sbet_data, fl_las_data, fl_t_idx):
 
         num_sbet_pts = sbet_data.shape[0]
 
         # sort xyzt array based on t_idx column
-        las_data.view('f,f,f,f,i').sort(order=['f4'], axis=0)
+        idx = fl_t_idx.argsort()
+        fl_las_data = fl_las_data[idx]
+        fl_t_idx = fl_t_idx[idx]
 
         # match sbet and las dfs based on timestamps
-        idx = np.searchsorted(sbet_data[:, 0], las_data[:, 3])
+        idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
 
         # don't use las points outside range of sbet points
         mask = ne.evaluate('0 < idx') & ne.evaluate('idx < num_sbet_pts')
 
         t_sbet_masked = sbet_data[:, 0][idx[mask]]
-        t_las_masked = las_data[:, 3][mask]
+        t_las_masked = fl_las_data[:, 3][mask]
 
         dt = ne.evaluate('t_sbet_masked - t_las_masked')
         max_dt = ne.evaluate('max(dt)')  # may be empty
@@ -122,10 +124,10 @@ class Merge:
         else:
             data = np.asarray([
                 sbet_data[:, 0][idx[mask]],
-                las_data[:, 3][mask],                           # t
-                las_data[:, 0][mask],                           # x
-                las_data[:, 1][mask],                           # y
-                las_data[:, 2][mask],                           # z
+                fl_las_data[:, 3][mask],                           # t
+                fl_las_data[:, 0][mask],                           # x
+                fl_las_data[:, 1][mask],                           # y
+                fl_las_data[:, 2][mask],                           # z
                 sbet_data[:, 3][idx[mask]],
                 sbet_data[:, 4][idx[mask]],
                 sbet_data[:, 5][idx[mask]],
@@ -148,7 +150,7 @@ class Merge:
                 np.full(num_points, self.std_rho)               # std_rho
             ])
 
-        return data, stddev, las_data[:, 4][mask]  # last array is t_idx
+        return data, stddev, fl_t_idx[mask]   # last array is masked t_idx
 
 
 if __name__ == '__main__':
