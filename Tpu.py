@@ -163,13 +163,19 @@ class Tpu:
                     data_to_output.append(fl_tpu_data)
 
                     # calc flight line tpu summary stats
-                    fl_tpu_min = fl_tpu_data[:, 0:2].min(axis=0)
-                    fl_tpu_max = fl_tpu_data[:, 0:2].max(axis=0)
-                    fl_tpu_mean = fl_tpu_data[:, 0:2].mean(axis=0)
-                    fl_tpu_stddev = fl_tpu_data[:, 0:2].std(axis=0)
+                    fl_tpu_min = fl_tpu_data[:, 0:2].min(axis=0).tolist()
+                    fl_tpu_max = fl_tpu_data[:, 0:2].max(axis=0).tolist()
+                    fl_tpu_mean = fl_tpu_data[:, 0:2].mean(axis=0).tolist()
+                    fl_tpu_stddev = fl_tpu_data[:, 0:2].std(axis=0).tolist()
 
-                    self.flight_line_stats.update({str(fl): (list(fl_tpu_min), list(fl_tpu_max), 
-                                                             list(fl_tpu_mean), list(fl_tpu_stddev))})
+                    self.flight_line_stats.update(
+                        {str(fl): 
+                         [
+                         'THU: {:6d}{:6d}{:6.0f}{:6.0f}'.format(
+                             fl_tpu_min[0], fl_tpu_max[0], fl_tpu_mean[0], fl_tpu_stddev[0]),
+                         'TVU: {:6d}{:6d}{:6.0f}{:6.0f}'.format(
+                             fl_tpu_min[1], fl_tpu_max[1], fl_tpu_mean[1], fl_tpu_stddev[1])
+                         ]})
 
                 else:
                     logging.warning('SBET and LAS not merged because max delta '
@@ -292,7 +298,7 @@ class Tpu:
             'kd': self.kd_selection,
             'VDatum region': self.vdatum_region,
             'VDatum region MCU': self.vdatum_region_mcu,
-            'flight line stats': self.flight_line_stats,
+            'flight line stats (min max mean stddev)': self.flight_line_stats,
             'sensor model': self.sensor_model,
             'cBLUE version': self.cblue_version,
             'cpu_processing_info': self.cpu_process_info, 
