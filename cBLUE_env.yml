@@ -1,4 +1,4 @@
-name: cblue_py36
+name: cblue
 channels:
   - conda-forge
   - defaults
@@ -78,6 +78,7 @@ dependencies:
     - pathos==0.2.3
     - progressbar2==3.39.3
     - python-utils==2.3.0
+    - sphinx-rtd-theme==0.4.3
     - tqdm==4.31.1
-prefix: C:\Users\Nick.Forfinski-Sarko\AppData\Local\Continuum\anaconda3\envs\cblue_py36
+prefix: C:\Users\Nick.Forfinski-Sarko\AppData\Local\Continuum\anaconda3\envs\cblue
 

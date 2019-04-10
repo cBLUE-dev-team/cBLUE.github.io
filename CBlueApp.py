@@ -98,6 +98,7 @@ class CBlueApp(tk.Tk):
             print(''.join(message))
 
         self.config_file = 'cblue_configuration.json'
+        print('Be sure to verify the settings in {}.'.format(self.config_file))
         self.load_config()  # sets controller_configuration variables
 
         # show splash screen
@@ -157,6 +158,8 @@ class CBlueApp(tk.Tk):
         if os.path.isfile(self.config_file):
             with open(self.config_file) as cf:
                 self.controller_configuration = json.load(cf)
+
+            print(json.dumps(self.controller_configuration, indent=1, sort_keys=True))
         else:
             logging.info("configuration file doesn't exist")
 

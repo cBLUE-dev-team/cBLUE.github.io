@@ -257,6 +257,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">config_file</span> <span class="o">=</span> <span class="s1">&#39;cblue_configuration.json&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Be sure to verify the settings in </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">load_config</span><span class="p">()</span>  <span class="c1"># sets controller_configuration variables</span>
 
         <span class="c1"># show splash screen</span>
@@ -316,6 +317,8 @@
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">):</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">cf</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">controller_configuration</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controller_configuration</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;configuration file doesn&#39;t exist&quot;</span><span class="p">)</span></div>
 
@@ -398,11 +401,6 @@
         <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">lastFileLoc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-
-        <span class="c1"># Build the title label</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;RIEGL VQ-880-G</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                         <span class="s2">&quot;TOTAL PROPAGATED UNCERTAINTY (TPU) PROGRAM</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                         <span class="s2">&quot;v2.0&quot;</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
 
         <span class="c1"># TODO:  get from separate text file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kd_vals</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Clear&#39;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">11</span><span class="p">)),</span>
