@@ -240,11 +240,6 @@ class ControllerPanel(ttk.Frame):
 
         self.lastFileLoc = os.getcwd()
 
-        # Build the title label
-        self.title = tk.Label(self, text="RIEGL VQ-880-G\n"
-                                         "TOTAL PROPAGATED UNCERTAINTY (TPU) PROGRAM\n"
-                                         "v2.0", background="green")
-
         # TODO:  get from separate text file
         self.kd_vals = {0: ('Clear', range(6, 11)),
                         1: ('Clear-Moderate', range(11, 18)),

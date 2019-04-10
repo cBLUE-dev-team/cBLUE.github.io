@@ -5,7 +5,7 @@ The general cBLUE version-release procedure consists of four main steps:
 
 	1. update Sphinx documentation
 	2. commit/push local repository
-	3. create distribution
+	3. create distribution (DRAFT...currently only for cBLUE_to_exe repo branch)
 	4. publish GitHub release
 
 Click here_ to view the draw.io document shown below.

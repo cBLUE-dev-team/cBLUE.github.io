@@ -24,9 +24,9 @@ copyright = u'2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division'
 author = u'Nick Forfinski-Sarkozi'
 
 # The short X.Y version
-version = u'v2.1.0-rc1'
+version = u'v2.1.0-rc2'
 # The full version, including alpha/beta/rc tags
-release = u'v2.1.0-rc1'
+release = u'v2.1.0-rc2'
 
 
 # -- General configuration ---------------------------------------------------
