@@ -225,7 +225,7 @@ hits <em>Compute TPU</em>, the general workflow is summarized below:</p>
 
 <dl class="method">
 <dt id="Tpu.Tpu.output_tpu_to_las_extra_bytes">
-<code class="descname">output_tpu_to_las_extra_bytes</code><span class="sig-paren">(</span><em>las</em>, <em>data_to_output</em>, <em>output_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.output_tpu_to_las_extra_bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.output_tpu_to_las_extra_bytes" title="Permalink to this definition">¶</a></dt>
+<code class="descname">output_tpu_to_las_extra_bytes</code><span class="sig-paren">(</span><em>las</em>, <em>data_to_output</em>, <em>extra_byte_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.output_tpu_to_las_extra_bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.output_tpu_to_las_extra_bytes" title="Permalink to this definition">¶</a></dt>
 <dd><p>output the calculated tpu to a las file</p>
 <p>This method creates a las file tht contains the contents of the
 original las file and the calculated tpu values as VLR extra bytes.
@@ -254,39 +254,11 @@ extra bytes:</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>cblue_x</td>
-<td>unsigned long long (8 bytes)</td>
-<td>cBLUE-calculated x coordinate</td>
-</tr>
-<tr class="row-odd"><td>cblue_y</td>
-<td>unsigned long long (8 bytes)</td>
-<td>cBLUE-calculated y coordinate</td>
-</tr>
-<tr class="row-even"><td>cblue_z</td>
-<td>long (4 bytes)</td>
-<td>cBLUE-calculated z coordinate</td>
-</tr>
-<tr class="row-odd"><td>subaerial_thu</td>
-<td>unsigned short (2 bytes)</td>
-<td>subaerial total horizontal uncertainty</td>
-</tr>
-<tr class="row-even"><td>subaerial_tvu</td>
-<td>unsigned short (2 bytes)</td>
-<td>subaerial total vertical uncertainty</td>
-</tr>
-<tr class="row-odd"><td>subaqueous_thu</td>
-<td>unsigned short (2 bytes)</td>
-<td>subaqueous total horizontal uncertainty</td>
-</tr>
-<tr class="row-even"><td>subaqueous_tvu</td>
-<td>unsigned short (2 bytes)</td>
-<td>subaqueous total vertical uncertainty</td>
-</tr>
-<tr class="row-odd"><td>total_thu</td>
+<tr class="row-even"><td>total_thu</td>
 <td>unsigned short (2 bytes)</td>
 <td>total horizontal uncertainty</td>
 </tr>
-<tr class="row-even"><td>total_tvu</td>
+<tr class="row-odd"><td>total_tvu</td>
 <td>unsigned short (2 bytes)</td>
 <td>total vertical uncertainty</td>
 </tr>
@@ -304,86 +276,6 @@ extra bytes:</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="Tpu.Tpu.output_tpu_to_pickle">
-<code class="descname">output_tpu_to_pickle</code><span class="sig-paren">(</span><em>las</em>, <em>data_to_output</em>, <em>output_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.output_tpu_to_pickle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.output_tpu_to_pickle" title="Permalink to this definition">¶</a></dt>
-<dd><p>output the calculated tpu to a Python “pickle” file</p>
-<p>This method outputs the calculated tpu to a Python “pickle” file, with the
-following fields:</p>
-<table border="1" class="colwidths-given docutils" id="id2">
-<caption><span class="caption-text">Data Pickle…mmmm</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
-<colgroup>
-<col width="26%" />
-<col width="37%" />
-<col width="37%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">index</th>
-<th class="head">ndarray</th>
-<th class="head">description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>0</td>
-<td>gps_time</td>
-<td>GPS standard adjusted time</td>
-</tr>
-<tr class="row-odd"><td>1</td>
-<td>cblue_x</td>
-<td>cBLUE-calculated x coordinate</td>
-</tr>
-<tr class="row-even"><td>2</td>
-<td>cblue_y</td>
-<td>cBLUE-calculated y coordinate</td>
-</tr>
-<tr class="row-odd"><td>3</td>
-<td>cblue_z</td>
-<td>cBLUE-calculated z coordinate</td>
-</tr>
-<tr class="row-even"><td>4</td>
-<td>subaerial_thu</td>
-<td>subaerial total horizontal uncertainty</td>
-</tr>
-<tr class="row-odd"><td>5</td>
-<td>subaerial_tvu</td>
-<td>subaerial total vertical uncertainty</td>
-</tr>
-<tr class="row-even"><td>6</td>
-<td>subaqueous_thu</td>
-<td>subaqueous total horizontal uncertainty</td>
-</tr>
-<tr class="row-odd"><td>7</td>
-<td>subaqueous_tvu</td>
-<td>subaqueous total vertical uncertainty</td>
-</tr>
-<tr class="row-even"><td>8</td>
-<td>total_thu</td>
-<td>total horizontal uncertainty</td>
-</tr>
-<tr class="row-odd"><td>9</td>
-<td>total_tvu</td>
-<td>total vertical uncertainty</td>
-</tr>
-</tbody>
-</table>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>las</strong> – </li>
-<li><strong>data_to_output</strong> – </li>
-<li><strong>output_columns</strong> – </li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">n/a</p>
 </td>
 </tr>
 </tbody>

@@ -257,28 +257,13 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;Y * scale_y + offset_y&quot;</span><span class="p">)</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;Z * scale_z + offset_z&quot;</span><span class="p">)</span>
 
-        <span class="n">xyzt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_sort_indices</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+
+        <span class="n">xyzt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
 
         <span class="n">flight_lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_to_process</span><span class="p">[</span><span class="s1">&#39;pt_src_id&#39;</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">xyzt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_sort_indices</span><span class="p">,</span> <span class="n">flight_lines</span></div>
-
-<div class="viewcode-block" id="Las.get_average_water_surface_ellip_height"><a class="viewcode-back" href="../Las.html#Las.Las.get_average_water_surface_ellip_height">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_average_water_surface_ellip_height</span><span class="p">():</span>
-        <span class="sd">&quot;&quot;&quot;NOT CURRENTLY IMPLEMENTED</span>
-<span class="sd">        </span>
-<span class="sd">        returns the average ellipsoid height of the water surface returns</span>
-
-<span class="sd">        Currently, this method returns a visually-determined estimate of the average ellipsoid height</span>
-<span class="sd">        of the water surface returns in the survey area, which is used during tpu</span>
-<span class="sd">        calculation to calculate the depth of each data point.</span>
-
-<span class="sd">        # TODO: define better way to determine average ellipsoid height of surface</span>
-
-<span class="sd">        :return: float</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="o">-</span><span class="mf">23.0</span></div></div>
+        <span class="k">return</span> <span class="n">xyzt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_sort_indices</span><span class="p">,</span> <span class="n">flight_lines</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

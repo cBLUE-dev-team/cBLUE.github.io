@@ -169,7 +169,7 @@
             
   <div class="section" id="algorithm-workflow">
 <h1>Algorithm Workflow<a class="headerlink" href="#algorithm-workflow" title="Permalink to this headline">¶</a></h1>
-<p>The cBLUE algorithm workflow consists of three main steps:</p>
+<p>The cBLUE algorithm workflow consists of four main steps:</p>
 <ol class="arabic">
 <li><p class="first">Form Sensor Model Observation Equation</p>
 <blockquote>
@@ -193,6 +193,9 @@
 </div></blockquote>
 </li>
 <li><p class="first">Export TPU as Las extra bytes (Tpu Class)</p>
+<blockquote>
+<div><p>The total propagated horizontal uncertainty (THU) and the total propagated vertical uncertainty (TVU) values are written to a new las file as variable length record (VLR) extra bytes, along with the data in the original las file.  (Rather than adding extra bytes to an existing las file, cBLUE creates a new las file containing the information in the original las file and the THU and TVU extra bytes.)</p>
+</div></blockquote>
 </li>
 </ol>
 </div>

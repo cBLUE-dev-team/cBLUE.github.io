@@ -163,18 +163,19 @@ class Tpu:
                     data_to_output.append(fl_tpu_data)
 
                     # calc flight line tpu summary stats
+                    fl_tpu_count = fl_tpu_data.shape[0]
                     fl_tpu_min = fl_tpu_data[:, 0:2].min(axis=0).tolist()
                     fl_tpu_max = fl_tpu_data[:, 0:2].max(axis=0).tolist()
                     fl_tpu_mean = fl_tpu_data[:, 0:2].mean(axis=0).tolist()
                     fl_tpu_stddev = fl_tpu_data[:, 0:2].std(axis=0).tolist()
 
                     self.flight_line_stats.update(
-                        {str(fl): 
+                        {'{} ({}/{} points with TPU)'.format(fl, fl_tpu_count, num_fl_points): 
                          [
-                         'THU: {:6d}{:6d}{:6.0f}{:6.0f}'.format(
-                             fl_tpu_min[0], fl_tpu_max[0], fl_tpu_mean[0], fl_tpu_stddev[0]),
-                         'TVU: {:6d}{:6d}{:6.0f}{:6.0f}'.format(
-                             fl_tpu_min[1], fl_tpu_max[1], fl_tpu_mean[1], fl_tpu_stddev[1])
+                         'THU: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[0], fl_tpu_max[0], 
+                                                                fl_tpu_mean[0], fl_tpu_stddev[0]),
+                         'TVU: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[1], fl_tpu_max[1], 
+                                                                fl_tpu_mean[1], fl_tpu_stddev[1])
                          ]})
 
                 else:
@@ -182,8 +183,11 @@ class Tpu:
                                     'time exceeded acceptable threshold of {} '
                                     'sec(s).'.format(M.max_allowable_dt))
 
+                    self.flight_line_stats.update(
+                        {'{} (0/{} points with TPU)'.format(fl, num_fl_points): None})
+
             self.write_metadata(las)  # TODO: include as VLR?
-            self.output_tpu_to_las_extra_bytes(las, np.vstack(data_to_output), supp_columns)
+            self.output_tpu_to_las_extra_bytes(las, data_to_output, supp_columns)
         else:
             logging.warning('WARNING: {} has no data points'.format(las.las_short_name))
 
@@ -213,10 +217,6 @@ class Tpu:
             :header: id, dtype, description
             :widths: 14, 20, 20
 
-            subaerial_thu, unsigned short (2 bytes), subaerial total horizontal uncertainty
-            subaerial_tvu, unsigned short (2 bytes), subaerial total vertical uncertainty
-            subaqueous_thu, unsigned short (2 bytes), subaqueous total horizontal uncertainty
-            subaqueous_tvu, unsigned short (2 bytes), subaqueous total vertical uncertainty
             total_thu,  unsigned short (2 bytes), total horizontal uncertainty
             total_tvu,  unsigned short (2 bytes), total vertical uncertainty
 
@@ -245,9 +245,9 @@ class Tpu:
                                          data_type=description[1],
                                          description=description[0])
 
-        if data_to_output.size != 0:
-            extra_byte_df = pd.DataFrame(data_to_output[:, 0:2], 
-                                         index=data_to_output[:, 2], 
+        if len(data_to_output) != 0:
+            tpu_data = np.vstack(data_to_output)
+            extra_byte_df = pd.DataFrame(tpu_data[:, 0:2], index=tpu_data[:, 2], 
                                          columns=extra_byte_columns)
                 
             if extra_byte_df.shape[0] == las.num_file_points:
@@ -256,7 +256,8 @@ class Tpu:
                 '''fill data points for which TPU was not calculated 
                 with no_data_value (also sorts by index, or t_idx)'''
                 no_data_value = -1
-                extra_byte_df = extra_byte_df.reindex(las.time_sort_indices, fill_value=no_data_value)
+                extra_byte_df = extra_byte_df.reindex(las.time_sort_indices, 
+                                                      fill_value=no_data_value)
 
             logging.debug('populating extra byte data for total_thu...')
             out_las.total_thu = extra_byte_df['total_thu']

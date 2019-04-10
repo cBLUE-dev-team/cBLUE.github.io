@@ -253,18 +253,23 @@
 <span class="sd">        =====   =========   ========================    =======</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Merge.merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet_data</span><span class="p">,</span> <span class="n">las_data</span><span class="p">):</span>
+<div class="viewcode-block" id="Merge.merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet_data</span><span class="p">,</span> <span class="n">fl_las_data</span><span class="p">,</span> <span class="n">fl_t_idx</span><span class="p">):</span>
 
         <span class="n">num_sbet_pts</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+        <span class="c1"># sort xyzt array based on t_idx column</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">fl_t_idx</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+        <span class="n">fl_las_data</span> <span class="o">=</span> <span class="n">fl_las_data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">fl_t_idx</span> <span class="o">=</span> <span class="n">fl_t_idx</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
         <span class="c1"># match sbet and las dfs based on timestamps</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
 
         <span class="c1"># don&#39;t use las points outside range of sbet points</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;0 &lt; idx&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;idx &lt; num_sbet_pts&#39;</span><span class="p">)</span>
 
         <span class="n">t_sbet_masked</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]</span>
-        <span class="n">t_las_masked</span> <span class="o">=</span> <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span>
+        <span class="n">t_las_masked</span> <span class="o">=</span> <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span>
 
         <span class="n">dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;t_sbet_masked - t_las_masked&#39;</span><span class="p">)</span>
         <span class="n">max_dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;max(dt)&#39;</span><span class="p">)</span>  <span class="c1"># may be empty</span>
@@ -278,10 +283,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span>
                 <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
-                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># t</span>
-                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># x</span>
-                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># y</span>
-                <span class="n">las_data</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>   <span class="c1"># z</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># t</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># x</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># y</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># z</span>
                 <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
                 <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
                 <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
@@ -304,12 +309,11 @@
                 <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_rho</span><span class="p">)</span>               <span class="c1"># std_rho</span>
             <span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">stddev</span></div></div>
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">stddev</span><span class="p">,</span> <span class="n">fl_t_idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>   <span class="c1"># last array is masked t_idx</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="k">pass</span>
-
 </pre></div>
 
            </div>
