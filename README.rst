@@ -31,7 +31,7 @@ where <env file name> is the path to cBLUE_env.yml, which is included in the cBL
 
 **!!! WARNING !!!**
 
-Due to a current issue with the most recent version of conda (https://github.com/conda/conda/issues/8404), the above method will not install the pip packages listed in the .yml file.  To install the necessary pip packages, use :code:`pip install -r cBLUE_env_pip.txt` in addition to the :code:`conda env create --file cBLUE_env.yml` command listed above.
+Depending on the version of Anaconda installed on your system, the above method might not install the pip packages listed in the .yml file (https://github.com/conda/conda/issues/8404).  If this is the case, use :code:`pip install -r cBLUE_env_pip.txt` in addition to the :code:`conda env create --file cBLUE_env.yml` command listed above to install the necessary pip packages.
 	
 Starting the GUI
 ----------------
