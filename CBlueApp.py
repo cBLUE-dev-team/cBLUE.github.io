@@ -98,7 +98,10 @@ class CBlueApp(tk.Tk):
             print(''.join(message))
 
         self.config_file = 'cblue_configuration.json'
-        print('Be sure to verify the settings in {}.'.format(self.config_file))
+
+        print('Be sure to verify the settings in {}\n' \
+              '(If you change a setting, restart cBLUE.)\n'.format(self.config_file))
+
         self.load_config()  # sets controller_configuration variables
 
         # show splash screen
