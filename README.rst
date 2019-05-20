@@ -1,3 +1,3 @@
 .. image:: ./cBLUE_readme.gif
 
-https://noaa-rsd.github.io/cBLUE.github.io/
+To view cBLUE documentation, click https://noaa-rsd.github.io/cBLUE.github.io/.
