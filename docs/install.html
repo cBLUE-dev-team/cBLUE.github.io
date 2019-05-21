@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -219,8 +220,9 @@
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>The recommended way to ensure that all of the necessary dependencies are loaded is to create a conda environment from the text file cBLUE_install.txt using the following command,</p>
-<blockquote>
-<div>conda env create –file &lt;evn file name&gt;</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">env</span> <span class="n">create</span> <span class="o">--</span><span class="n">file</span> <span class="o">&lt;</span><span class="n">evn</span> <span class="n">file</span> <span class="n">name</span><span class="o">&gt;</span>
+</pre></div>
+</div>
 <p>where &lt;env file name&gt; is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -267,8 +269,9 @@
 <h2>Starting the GUI<a class="headerlink" href="#starting-the-gui" title="Permalink to this headline">¶</a></h2>
 <p>The GUI can be initiated from the command line with the following command (specify the full path of CBlueApp.py if the current directory is not the location of CBlueApp.py):</p>
 <p>NOTE: If there are multiple Python installations on the computer running the GUI, ensure the desired installation is specified in the path environment variables or explicitly specify the full path of the relevant python executable in the command. For example:</p>
-<blockquote>
-<div>(command line)&gt; C:\Python27\64-bit\python.exe CBlueApp.py</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">command</span> <span class="n">line</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">C</span><span class="p">:</span>\\<span class="n">Python27</span>\\<span class="mi">64</span><span class="o">-</span><span class="n">bit</span>\\<span class="n">python</span><span class="o">.</span><span class="n">exe</span> <span class="n">CBlueApp</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
 <p>The GUI can also be initiated by running the CBlueApp.py file from a Python IDE, such as IDLE, PyCharm, or Microsoft Visual Studio.</p>
 <p>Development plans include packaging all of the necessary files into a single-file executable.</p>
 </div>
