@@ -28,6 +28,7 @@ The following table lists the main classes comprising cBLUE:
 Dependencies
 ------------
 The recommended way to ensure that all of the necessary dependencies are loaded is to create a conda environment from the text file cBLUE_install.txt using the following command, 
+::
 
 	conda env create --file <evn file name>
 	
@@ -56,6 +57,7 @@ Starting the GUI
 The GUI can be initiated from the command line with the following command (specify the full path of CBlueApp.py if the current directory is not the location of CBlueApp.py):
 
 NOTE: If there are multiple Python installations on the computer running the GUI, ensure the desired installation is specified in the path environment variables or explicitly specify the full path of the relevant python executable in the command. For example:
+::
 
 	(command line)> C:\\Python27\\64-bit\\python.exe CBlueApp.py
 
