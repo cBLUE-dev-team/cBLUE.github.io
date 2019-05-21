@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Merge &mdash; cBLUE v2.1.0-rc2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> cBLUE
+          
+
+          
+            
+            <img src="../_static/cBLUE_sphinx_logo.gif" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v2.1.0-rc2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gui.html">GUI Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Operational Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output.html">Output Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../repo_management.html">Repository Management</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cBLUE</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>Merge</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for Merge</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)</span>
+<span class="sd">Copyright (C) 2019 </span>
+<span class="sd">Oregon State University (OSU)</span>
+<span class="sd">Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)</span>
+<span class="sd">NOAA Remote Sensing Division (NOAA RSD)</span>
+
+<span class="sd">This library is free software; you can redistribute it and/or</span>
+<span class="sd">modify it under the terms of the GNU Lesser General Public</span>
+<span class="sd">License as published by the Free Software Foundation; either</span>
+<span class="sd">version 2.1 of the License, or (at your option) any later version.</span>
+
+<span class="sd">This library is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span>
+<span class="sd">Lesser General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU Lesser General Public</span>
+<span class="sd">License along with this library; if not, write to the Free Software</span>
+<span class="sd">Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA</span>
+
+<span class="sd">Contact:</span>
+<span class="sd">Christopher Parrish, PhD</span>
+<span class="sd">School of Construction and Civil Engineering</span>
+<span class="sd">101 Kearney Hall</span>
+<span class="sd">Oregon State University</span>
+<span class="sd">Corvallis, OR  97331</span>
+<span class="sd">(541) 737-5688</span>
+<span class="sd">christopher.parrish@oregonstate.edu</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">radians</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+
+<div class="viewcode-block" id="Merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge">[docs]</a><span class="k">class</span> <span class="nc">Merge</span><span class="p">:</span>
+
+    <span class="n">max_allowable_dt</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># second</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_std_dev</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># degrees</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std_rho</span> <span class="o">=</span> <span class="mf">0.025</span>
+
+        <span class="sd">&quot;&quot;&quot;returns sbet &amp; las data merged based on timestamps</span>
+
+<span class="sd">        The cBLUE TPU calculations require the sbet and las data to be in</span>
+<span class="sd">        a single array, so the sbet and lidar data, which are contained in</span>
+<span class="sd">        separate files, are &#39;merged&#39;, based on time.  cBLUE uses the numpy</span>
+<span class="sd">        searchsorted function to match lidar datapoints with the nearest-in-time</span>
+<span class="sd">        (with sorter=&#39;left&#39;) sbet datapoints.</span>
+
+<span class="sd">        If the delta_t between any of the matched datapoints is &gt; 1, TPU is</span>
+<span class="sd">        not calculated.  Future versions might be smart enough to exclude only</span>
+<span class="sd">        the offending datapoints rather than discarding the whole file, but for</span>
+<span class="sd">        the time being, if a single datapoint&#39;s delta_t exceeds the allowable</span>
+<span class="sd">        maximum dt, the entire line is ignored.</span>
+
+<span class="sd">        :param str las:</span>
+<span class="sd">        :param ? fl:</span>
+<span class="sd">        :param ? sbet_data:</span>
+<span class="sd">        :param Tuple(ndarray)  # TODO: are the parentheses necessary?</span>
+<span class="sd">        :return: List[ndarray]</span>
+
+<span class="sd">        The following table lists the contents of the returned list of ndarrays:</span>
+
+<span class="sd">        =====   =========   ========================    =======</span>
+<span class="sd">        Index   ndarray     description                 units</span>
+<span class="sd">        =====   =========   ========================    =======</span>
+<span class="sd">        0       t_sbet      sbet timestamps</span>
+<span class="sd">        1       t_las       las timestamps</span>
+<span class="sd">        2       x_las       las x coordinates</span>
+<span class="sd">        3       y_las       las y coordinates</span>
+<span class="sd">        4       z_las       las z coordinates</span>
+<span class="sd">        5       x_sbet      sbet x coordinates</span>
+<span class="sd">        6       y_sbet      sbet y coordinates</span>
+<span class="sd">        7       z_sbet      sbet z coordinates</span>
+<span class="sd">        8       r           sbet roll</span>
+<span class="sd">        9       p           sbet pitch</span>
+<span class="sd">        10      h           sbet heading</span>
+<span class="sd">        11      std_a       a uncertainty</span>
+<span class="sd">        12      std_b       b uncertainty</span>
+<span class="sd">        13      std_r       sbet roll uncertainty</span>
+<span class="sd">        14      std_p       sbet pitch uncertainty</span>
+<span class="sd">        15      std_h       sbet heading uncertainty</span>
+<span class="sd">        16      stdx_sbet   sbet x uncertainty</span>
+<span class="sd">        17      stdy_sbet   sbet y uncertainty</span>
+<span class="sd">        18      stdz_sbet   sbet z uncertainty</span>
+<span class="sd">        19      std_rho     ?</span>
+<span class="sd">        =====   =========   ========================    =======</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Merge.merge"><a class="viewcode-back" href="../Merge.html#Merge.Merge.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">sbet_data</span><span class="p">,</span> <span class="n">fl_las_data</span><span class="p">,</span> <span class="n">fl_t_idx</span><span class="p">):</span>
+
+        <span class="n">num_sbet_pts</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># sort xyzt array based on t_idx column</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">fl_t_idx</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+        <span class="n">fl_las_data</span> <span class="o">=</span> <span class="n">fl_las_data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">fl_t_idx</span> <span class="o">=</span> <span class="n">fl_t_idx</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># match sbet and las dfs based on timestamps</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="c1"># don&#39;t use las points outside range of sbet points</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;0 &lt; idx&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;idx &lt; num_sbet_pts&#39;</span><span class="p">)</span>
+
+        <span class="n">t_sbet_masked</span> <span class="o">=</span> <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]</span>
+        <span class="n">t_las_masked</span> <span class="o">=</span> <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;t_sbet_masked - t_las_masked&#39;</span><span class="p">)</span>
+        <span class="n">max_dt</span> <span class="o">=</span> <span class="n">ne</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;max(dt)&#39;</span><span class="p">)</span>  <span class="c1"># may be empty</span>
+
+        <span class="k">if</span> <span class="n">max_dt</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_allowable_dt</span> <span class="ow">or</span> <span class="n">max_dt</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">stddev</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;trajectory and LAS data NOT MERGED&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> FL </span><span class="si">{}</span><span class="s1">) max_dt: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">las</span><span class="p">,</span> <span class="n">fl</span><span class="p">,</span> <span class="n">max_dt</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># t</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># x</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># y</span>
+                <span class="n">fl_las_data</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>                           <span class="c1"># z</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]])</span>
+            <span class="p">])</span>
+
+            <span class="n">num_points</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="n">stddev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_std_dev</span><span class="p">)),</span>   <span class="c1"># std_a</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_std_dev</span><span class="p">)),</span>   <span class="c1"># std_b</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">12</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>        <span class="c1"># std_r</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">13</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>        <span class="c1"># std_p</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">14</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]]),</span>        <span class="c1"># std_h</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">9</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>                     <span class="c1"># stdx_sbet</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">10</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>                    <span class="c1"># stdy_sbet</span>
+                <span class="n">sbet_data</span><span class="p">[:,</span> <span class="mi">11</span><span class="p">][</span><span class="n">idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]],</span>                    <span class="c1"># stdz_sbet</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_rho</span><span class="p">)</span>               <span class="c1"># std_rho</span>
+            <span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">stddev</span><span class="p">,</span> <span class="n">fl_t_idx</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>   <span class="c1"># last array is masked t_idx</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

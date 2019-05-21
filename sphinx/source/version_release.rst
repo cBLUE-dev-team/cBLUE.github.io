@@ -1,5 +1,5 @@
-cBLUE Version Release Procedure
-===============================
+cBLUE Version Release Procedure (for future version)
+====================================================
 
 The general cBLUE version-release procedure consists of four main steps:
 

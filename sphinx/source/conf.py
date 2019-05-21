@@ -105,15 +105,6 @@ html_theme_options = {
     'titles_only': False
 }
 
-#html_context = {
-#    "display_github": True, # Integrate GitHub
-#    "github_user": "forkozi", # Username
-#    "github_repo": "cBLUE", # Repo name
-#    "github_version": "master", # Version
-#    "conf_py_path": "/source/", # Path in the checkout to the docs root
-#}
-
-#github_url = r"https://github.com/forkozi/cBLUE"
 html_logo = r"../images/cBLUE_sphinx_logo.gif"
 
 # Add any paths that contain custom static files (such as style sheets) here,

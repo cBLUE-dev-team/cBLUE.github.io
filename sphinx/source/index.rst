@@ -24,8 +24,12 @@ cBLUE is a collaboration among the `Remote Sensing Division`_ within `NOAA's Nat
 	license
 	repo_management
 	
-Source Code Documentation
--------------------------
+Source Code
+-----------
+
+The source code for cBLUE is maintained in a GitHub repository located `here`_.
+
+.. _`here`:  https://github.com/noaa-rsd/cBLUE.github.io
    
 * :ref:`genindex`
 * :ref:`modindex`	

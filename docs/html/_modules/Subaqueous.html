@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Subaqueous &mdash; cBLUE v2.1.0-rc2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> cBLUE
+          
+
+          
+            
+            <img src="../_static/cBLUE_sphinx_logo.gif" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v2.1.0-rc2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gui.html">GUI Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Operational Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output.html">Output Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../repo_management.html">Repository Management</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cBLUE</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>Subaqueous</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for Subaqueous</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)</span>
+<span class="sd">Copyright (C) 2019 </span>
+<span class="sd">Oregon State University (OSU)</span>
+<span class="sd">Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)</span>
+<span class="sd">NOAA Remote Sensing Division (NOAA RSD)</span>
+
+<span class="sd">This library is free software; you can redistribute it and/or</span>
+<span class="sd">modify it under the terms of the GNU Lesser General Public</span>
+<span class="sd">License as published by the Free Software Foundation; either</span>
+<span class="sd">version 2.1 of the License, or (at your option) any later version.</span>
+
+<span class="sd">This library is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span>
+<span class="sd">Lesser General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU Lesser General Public</span>
+<span class="sd">License along with this library; if not, write to the Free Software</span>
+<span class="sd">Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA</span>
+
+<span class="sd">Contact:</span>
+<span class="sd">Christopher Parrish, PhD</span>
+<span class="sd">School of Construction and Civil Engineering</span>
+<span class="sd">101 Kearney Hall</span>
+<span class="sd">Oregon State University</span>
+<span class="sd">Corvallis, OR  97331</span>
+<span class="sd">(541) 737-5688</span>
+<span class="sd">christopher.parrish@oregonstate.edu</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="Subaqueous"><a class="viewcode-back" href="../Subaqueous.html#Subaqueous.Subaqueous">[docs]</a><span class="k">class</span> <span class="nc">Subaqueous</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.</span>
+<span class="sd">    To be used in conjunction with the associated Gui.py.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> <span class="n">wind_par</span><span class="p">,</span> <span class="n">kd_par</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">subaqueous_luts</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="n">surface</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_par</span> <span class="o">=</span> <span class="n">wind_par</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kd_par</span> <span class="o">=</span> <span class="n">kd_par</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subaqueous_luts</span> <span class="o">=</span> <span class="n">subaqueous_luts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Subaqueous.fit_lut"><a class="viewcode-back" href="../Subaqueous.html#Subaqueous.Subaqueous.fit_lut">[docs]</a>    <span class="k">def</span> <span class="nf">fit_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called to begin the SubAqueous processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subaqueous_luts</span><span class="p">[</span><span class="s1">&#39;Reigl&#39;</span><span class="p">]</span>
+            <span class="n">fit_tvu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">riegl_process</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subaqueous_luts</span><span class="p">[</span><span class="s1">&#39;ECKV&#39;</span><span class="p">]</span>
+            <span class="n">fit_thu</span><span class="p">,</span> <span class="n">fit_tvu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_process</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span><span class="p">)</span>
+
+        <span class="n">res_tvu</span> <span class="o">=</span> <span class="n">fit_tvu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">fit_tvu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="n">fit_tvu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">res_thu</span> <span class="o">=</span> <span class="n">fit_thu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">fit_thu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="n">fit_thu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;subaqueous_thu&#39;</span><span class="p">,</span> <span class="s1">&#39;subaqueous_tvu&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res_thu</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">res_tvu</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">columns</span></div>
+
+<div class="viewcode-block" id="Subaqueous.model_process"><a class="viewcode-back" href="../Subaqueous.html#Subaqueous.Subaqueous.model_process">[docs]</a>    <span class="k">def</span> <span class="nf">model_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lut</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieves the average fit for all given combinations of wind and kd given from look_up_fit.csv.</span>
+<span class="sd">        look_up_fit.csv uses precalculated uncertainties based on seasurface models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">look_up_tvu</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">lut</span><span class="p">)</span>
+        <span class="n">look_up_tvu_data</span> <span class="o">=</span> <span class="n">look_up_tvu</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">look_up_tvu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">fit_tvu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+        <span class="n">look_up_thu</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;./lookup_tables/THU.csv&quot;</span><span class="p">)</span>
+        <span class="n">look_up_thu_data</span> <span class="o">=</span> <span class="n">look_up_thu</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">look_up_thu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">fit_thu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+        <span class="c1"># TODO:  what are &#39;31&#39; and &#39;6&#39; in following equations?</span>
+
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_par</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kd_par</span><span class="p">:</span>
+                <span class="n">fit_par_tvu_strings</span> <span class="o">=</span> <span class="n">look_up_tvu_data</span><span class="p">[</span><span class="mi">31</span> <span class="o">*</span> <span class="p">(</span><span class="n">w</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># exclude trailing \n</span>
+                <span class="n">fit_par_tvu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">fit_par_tvu_strings</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                <span class="n">fit_tvu</span> <span class="o">+=</span> <span class="n">fit_par_tvu</span>  <span class="c1"># adding two 3-element arrays</span>
+
+                <span class="n">fit_par_thu_strings</span> <span class="o">=</span> <span class="n">look_up_thu_data</span><span class="p">[</span><span class="mi">31</span> <span class="o">*</span> <span class="p">(</span><span class="n">w</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># exclude trailing \n</span>
+                <span class="n">fit_par_thu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">fit_par_thu_strings</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                <span class="n">fit_thu</span> <span class="o">+=</span> <span class="n">fit_par_thu</span>  <span class="c1"># adding two 3-element arrays</span>
+
+        <span class="n">fit_tvu</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kd_par</span><span class="p">)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_par</span><span class="p">)</span>
+        <span class="n">fit_thu</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kd_par</span><span class="p">)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_par</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fit_thu</span><span class="p">,</span> <span class="n">fit_tvu</span></div>
+
+<div class="viewcode-block" id="Subaqueous.riegl_process"><a class="viewcode-back" href="../Subaqueous.html#Subaqueous.Subaqueous.riegl_process">[docs]</a>    <span class="k">def</span> <span class="nf">riegl_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lut</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieves the average fit for all kd given from reigl_look_up_fit.csv.</span>
+<span class="sd">        reigl_look_up_fit.csv uses precalculated uncertainties based on riegl models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">look_up</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">lut</span><span class="p">)</span>
+        <span class="n">look_up_data</span> <span class="o">=</span> <span class="n">look_up</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">look_up</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kd_par</span><span class="p">:</span>
+            <span class="n">fit_par_str</span> <span class="o">=</span> <span class="n">look_up_data</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="n">fit_par</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">fit_par_str</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">fit</span> <span class="o">+=</span> <span class="n">fit_par</span>  <span class="c1"># adding two 3-element arrays</span>
+
+        <span class="n">fit</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kd_par</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fit</span></div>
+
+<div class="viewcode-block" id="Subaqueous.get_subaqueous_meta_data"><a class="viewcode-back" href="../Subaqueous.html#Subaqueous.Subaqueous.get_subaqueous_meta_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_subaqueous_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">subaqueous_f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curr_lut</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">subaqueous_metadata</span> <span class="o">=</span> <span class="n">subaqueous_f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">subaqueous_f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">subaqueous_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">subaqueous_metadata</span><span class="p">]}</span>
+        <span class="k">return</span> <span class="n">subaqueous_metadata</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CCOM/JHC UNH, OSU, NOAA Remote Sensing Division
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

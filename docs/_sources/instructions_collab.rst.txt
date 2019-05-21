@@ -1,2 +1,0 @@
-Instructions to Collaborators (draft)
-=====================================
