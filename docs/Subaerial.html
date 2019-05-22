@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -270,16 +271,14 @@ array is set to all 1s.</p>
 <dd><p>generate the jacobian of the specified geolocation equation</p>
 <p>This method generates the Jacobian (i.e., the matrix of partial
 derivatives with respect to component variables) of the specified
-geoloation equation using the sympy symbolic math package.  Using
-sympy to symbolically calculate the Jacobian simplifies the coding
-of what would otherwise be very long equations.</p>
+geoloation equation using the sympy symbolic math package.</p>
 <img alt="_images/eq_Jacobian.png" src="_images/eq_Jacobian.png" />
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name" colspan="2">Return (Matrix, Matrix, Matrix):</th></tr>
-<tr class="field-odd field"><td>&#160;</td><td class="field-body">sympy matrices for x, y, and z Jacobian components</td>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">sympy matrices for x, y, and z J components</td>
 </tr>
 </tbody>
 </table>
