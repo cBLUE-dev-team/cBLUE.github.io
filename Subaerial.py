@@ -503,13 +503,11 @@ class Jacobian:
 
         This method generates the Jacobian (i.e., the matrix of partial
         derivatives with respect to component variables) of the specified
-        geoloation equation using the sympy symbolic math package.  Using
-        sympy to symbolically calculate the Jacobian simplifies the coding
-        of what would otherwise be very long equations.
+        geoloation equation using the sympy symbolic math package.
 
         .. image:: ../images/eq_Jacobian.png
 
-        :return (Matrix, Matrix, Matrix): sympy matrices for x, y, and z Jacobian components
+        :return (Matrix, Matrix, Matrix): sympy matrices for x, y, and z J components
         """
 
         a, b, r, p, h, x, y, z, rho = symbols('a b r p h x y z rho')
