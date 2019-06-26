@@ -1,36 +1,28 @@
 from pathlib import Path
 import pdal
-import json
 import rasterio
 import rasterio.merge
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 from matplotlib.gridspec import GridSpec
-import os
-import seaborn as sns
 import numpy as np
-import pandas as pd
 
 
-sns.set(font_scale=1.5)
-sns.set_style("whitegrid")
-plt.rcParams['figure.figsize'] = (12, 8)
+def get_directories():
+    #in_dir = Path(input('Enter tpu las directory:  '))
+    #out_dir = Path(input('Enter results diretory:  '))
 
-las_dir = Path('C:/QAQC_contract/marco_island/tpu_output')
-las_files = list(las_dir.glob('*.las'))
+    in_dir = Path(r'C:\QAQC_contract\marco_island\tpu_output')
+    out_dir = Path(r'Z:\cBLUE\summary_test')
 
-for las in las_files:
-    las_str = str(las).replace('\\', '/')
-    print(las.name)
+    return in_dir, out_dir
 
-    gtiff_path_thu = 'Z:/cBLUE/summary_test/{}_THU.tif'.format(las.stem)
-    gtiff_path_tvu = 'Z:/cBLUE/summary_test/{}_TVU.tif'.format(las.stem)
 
-    pdal_jsons = """{
+def gen_pipline(tpu, gtiff_path):
+    pdal_json = """{
         "pipeline":[
             {
                 "type": "readers.las",
-                "extra_dims": "total_tvu=uint16",
+                "extra_dims": "total_thu=uint16,total_tvu=uint16",
                 "filename": """ + '"{}"'.format(las_str) + """
             },
             {
@@ -40,8 +32,8 @@ for las in las_files:
             },
             {
                 "inputs": ["A"],
-                "dimension": "total_tvu",
-                "filename": """ + '"{}"'.format(gtiff_path_tvu) + """,
+                "dimension": """ + '"total_{}"'.format(tpu) + """,
+                "filename": """ + '"{}"'.format(gtiff_path) + """,
                 "gdaldriver": "GTiff",
                 "output_type": "mean",
                 "resolution": "1.0",
@@ -50,70 +42,106 @@ for las in las_files:
         ]
     }"""
 
-    
-    pipeline = pdal.Pipeline(p)
-    #pipeline.validate()
+    print(pdal_json)
 
+    return pdal_json
+
+
+def create_tpu_dem(tpu):
+    gtiff_path = out_dir / '{}_{}.tif'.format(las.stem, tpu.upper())
+    gtiff_path = str(gtiff_path).replace('\\', '/')
+    pipeline = pdal.Pipeline(gen_pipline(tpu, gtiff_path))
     count = pipeline.execute()
-    #arrays = pipeline.arrays
 
 
-tpu_dem_dir = Path('Z:/cBLUE/summary_test')
+def gen_summary_graphic(mosaics):
+    min_x = 0
+    max_x = 50
 
-tpu_thu_dems = list(tpu_dem_dir.glob('*_THU.tif'))
-tpu_thu_dems_to_mosaic = []
+    fig = plt.figure(figsize=(6, 8))
+    fig.suptitle('cBLUE TPU Results Summary\n{}'.format('Marco Island, FL'))
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.subplots_adjust(left=0.25)
 
-tpu_tvu_dems = list(tpu_dem_dir.glob('*_TVU.tif'))
-tpu_tvu_dems_to_mosaic = []
+    gs = GridSpec(3, 1, width_ratios=[1], height_ratios=[1, 1, 1], hspace=0.3)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax3 = fig.add_subplot(gs[2, 0])
 
-for tpu_thu_dem in tpu_thu_dems:
-    src = rasterio.open(tpu_thu_dem)
-    tpu_thu_dems_to_mosaic.append(src)    
+    thu_stats = [np.nanmin(mosaics['thu']), 
+                 np.nanmax(mosaics['thu']), 
+                 np.nanmean(mosaics['thu']), 
+                 np.nanstd(mosaics['thu'])]
+
+    tvu_stats = [np.nanmin(mosaics['tvu']), 
+                 np.nanmax(mosaics['tvu']), 
+                 np.nanmean(mosaics['tvu']), 
+                 np.nanstd(mosaics['tvu'])]
+
+    tpu_stats = np.asarray([thu_stats, tvu_stats]).T
+
+    df_idx = ['min', 'max', 'mean', 'std']
+    df_cols = ['Total THU (cm)', 'Total TVU (cm)']
+    ax1.axis('tight')
+    ax1.axis('off')
+    ax1.table(cellText=tpu_stats.round(1), colLabels=df_cols, rowLabels=df_idx, bbox=[0, 0, 1, 1])
+
+    bins = range(0, 100)
+    thu_count, __, __ = ax2.hist(mosaics['thu'].ravel(), bins=bins, color='gray', edgecolor='white')
+    tvu_count, __, __ = ax3.hist(mosaics['tvu'].ravel(), bins=bins, color='gray', edgecolor='white')
+    max_count = max(max(thu_count), max(tvu_count))
     
-for tpu_tvu_dem in tpu_tvu_dems:
-    src = rasterio.open(tpu_tvu_dem)
-    tpu_tvu_dems_to_mosaic.append(src)  
+    ax2.set_xticklabels([])
+
+    ax2.set_xticks(range(max_x), minor=True)
+    ax3.set_xticks(range(max_x), minor=True)
+
+    ax2.set(xlabel=None, ylabel='Count', title='Total THU')
+    ax3.set(xlabel='(cm)', ylabel='Count', title='Total TVU')
+
+    ax2.set_xlim(min_x, max_x)
+    ax3.set_xlim(min_x, max_x)
+
+    ax2.set_ylim(0, max_count + 0.1 * max_count)
+    ax3.set_ylim(0, max_count + 0.1 * max_count)
+
+    plt.tight_layout()
+    plt.show()
 
 
-mosaic_thu, out_trans = rasterio.merge.merge(tpu_thu_dems_to_mosaic)
-mosaic_thu[mosaic_thu < 0] = np.nan
+if __name__ == '__main__':
 
-mosaic_tvu, out_trans = rasterio.merge.merge(tpu_tvu_dems_to_mosaic)
-mosaic_tvu[mosaic_tvu < 0] = np.nan
+    las_dir, out_dir = get_directories()
 
+    tpu_dems = {'thu': [], 'tvu': []}
+    tpu_dems_to_mosaic = {'thu': [], 'tvu': []}
+    mosaics = {'thu': None, 'tvu': None}
+    out_trans = {'thu': None, 'tvu': None}
 
-min_x = 0
-max_x = 50
+    ## generate individual tile DEMs
+    #for las in list(las_dir.glob('*.las')):
+    #    las_str = str(las).replace('\\', '/')
+    #    for tpu in ['thu', 'tvu']:
+    #         create_tpu_dem(tpu)
 
-fig = plt.figure(constrained_layout=True)
-fig.suptitle('cBLUE TPU Results Summary')
+    # mosaic TPU DEMs
+    for tpu in ['thu', 'tvu']:
+        for tpu_dem in list(out_dir.glob('*_{}.tif'.format(tpu.upper()))):
+            src = rasterio.open(tpu_dem)
+            tpu_dems_to_mosaic[tpu].append(src)    
 
-gs = GridSpec(3, 2, width_ratios=[1, 1], height_ratios=[1, 1, 1], hspace=0.5, wspace=0.35)
-ax0 = fig.add_subplot(gs[:, 0])
-ax1 = fig.add_subplot(gs[0, 1])
-ax2 = fig.add_subplot(gs[1, 1])
-ax3 = fig.add_subplot(gs[2, 1])
+        mosaics[tpu], out_trans[tpu] = rasterio.merge.merge(tpu_dems_to_mosaic[tpu])
+        mosaics[tpu][mosaics[tpu] < 0] = np.nan
 
-im = ax0.imshow(mosaic_tvu.squeeze(), cmap='jet', vmin=20, vmax=50)
-cax = fig.add_axes([0.05, 0.3, 0.02, 0.3])
-fig.colorbar(im, cax=cax, orientation='vertical')
+        out_meta = src.meta.copy()  # uses last src made
+        out_meta.update({
+            "driver": "GTiff",
+            "height": mosaics[tpu].shape[1],
+            "width": mosaics[tpu].shape[2],
+            "transform": out_trans[tpu]})
 
-tpu_stats = np.asarray([
-    [np.nanmin(mosaic_thu), np.nanmax(mosaic_thu), np.nanmean(mosaic_thu), np.nanstd(mosaic_thu)],
-    [np.nanmin(mosaic_tvu), np.nanmax(mosaic_tvu), np.nanmean(mosaic_tvu), np.nanstd(mosaic_tvu)]]).T
-df_idx = ['min', 'max', 'mean', 'std']
-df_cols = ['Total THU', 'Total TVU']
-ax1.axis('tight')
-ax1.axis('off')
-ax1.table(cellText=tpu_stats.round(1), colLabels=df_cols, rowLabels=df_idx, bbox=[0, 0, 1, 1])
+        # save TPU mosaic DEMs
+        with rasterio.open(str(out_dir / '{}_DEM.tif'.format(tpu.upper())), 'w', **out_meta) as dest:
+            dest.write(mosaics[tpu])
 
-ax2.hist([-1], bins=100, color='gray')
-ax2.set_xlim(min_x, max_x)
-ax2.set_xticklabels([])
-ax2.set(xlabel=None, ylabel='Count', title='Total THU')
-
-ax3.hist(mosaic_tvu.ravel(), bins=100, color='gray')
-ax3.set_xlim(min_x, max_x)
-ax3.set(xlabel='(cm)', ylabel='Count', title='Total TVU')
-
-plt.show()
+    gen_summary_graphic(mosaics)
