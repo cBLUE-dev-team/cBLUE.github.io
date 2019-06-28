@@ -30,7 +30,7 @@ def get_tile_dems(dem_type):
         
 def gen_mosaic(dems, out_meta):
     mosaic, out_trans = rasterio.merge.merge(dems)
-    mosaic[mosaic <= 0] = np.nan
+    mosaic[mosaic < 0] = np.nan
 
     out_meta.update({
         "driver": "GTiff",
@@ -64,11 +64,9 @@ def gen_pipline(dem_type, gtiff_path):
             },
             {
                 "type":"filters.returns",
-                "groups":"last",
-                "tag": "A"
+                "groups":"last,only"
             },
             {
-                "inputs": ["A"],    
                 "filename": """ + '"{}"'.format(gtiff_path) + """,
                 "gdaldriver": "GTiff",
                 "output_type": """ + '"{}"'.format(dem_type) + """,
@@ -77,7 +75,6 @@ def gen_pipline(dem_type, gtiff_path):
             }
         ]
     }"""
-
     print(pdal_json)
 
     return pdal_json
@@ -125,13 +122,13 @@ def gen_summary_graphic(mosaic, dem_type):
 
 
 if __name__ == '__main__':
-    dem_type = 'stdev'
+    dem_type = 'mean'
     las_dir, out_dir = get_directories()
 
-    ## generate individual tile DEMs
-    #for las in list(las_dir.glob('*.las'))[0:]:
-    #    las_str = str(las).replace('\\', '/')
-    #    create_dem(dem_type)
+    # generate individual tile DEMs
+    for las in list(las_dir.glob('*.las'))[0:]:
+        las_str = str(las).replace('\\', '/')
+        create_dem(dem_type)
 
     # mosaic tile DEMs
     dems, out_meta = get_tile_dems(dem_type)
