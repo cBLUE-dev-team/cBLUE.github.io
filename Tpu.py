@@ -155,8 +155,8 @@ class Tpu:
                     num_points = total_tvu.shape[0]
 
                     fl_tpu_data = np.vstack((
-                        np.round_(total_thu * 100).astype('int'),
-                        np.round_(total_tvu * 100).astype('int'),
+                        np.round_(subaqu_tvu * 100).astype('int'),
+                        np.round_(subaer_tvu * 100).astype('int'),
                         masked_fl_t_idx.astype('int')
                         )).T
 
