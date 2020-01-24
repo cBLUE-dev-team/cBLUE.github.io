@@ -218,7 +218,7 @@ class SensorModel:
         positional differences resulting from the difference between the cBLUE scan
         model and the manufacturer scan model.
 
-        :return: (list[], list[], list[], list[])
+        :return: (list[], list[], list[])
         """
 
         #0       t_sbet
@@ -854,12 +854,18 @@ class Subaerial:
         Jy = J_eval[1]
         Jz = J_eval[2]
 
-        sum_Jx = ne.evaluate("sum(Jx * Jx * Vx, axis=0)")
-        sum_Jy = ne.evaluate("sum(Jy * Jy * Vy, axis=0)")
-        sum_Jz = ne.evaluate("sum(Jz * Jz * Vz, axis=0)")
+        # componenet uncertainties
+        x_comps = ne.evaluate("Jx * Jx * Vx")
+        y_comps = ne.evaluate("Jy * Jy * Vy")
+        z_comps = ne.evaluate("Jz * Jz * Vz")
+
+        sum_Jx = ne.evaluate("sum(x_comps, axis=0)")
+        sum_Jy = ne.evaluate("sum(y_comps, axis=0)")
+        sum_Jz = ne.evaluate("sum(z_comps, axis=0)")
 
         sx = ne.evaluate("sqrt(sum_Jx)")
         sy = ne.evaluate("sqrt(sum_Jy)")
+
         aer_tvu = ne.evaluate("sqrt(sum_Jz)")
         aer_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
 
