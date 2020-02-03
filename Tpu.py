@@ -144,6 +144,9 @@ class Tpu:
                     subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, 
                                             self.kd_val, depth, self.subaqueous_luts)
                     subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
+
+                    print(subaqu_tvu)
+
                     self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
@@ -176,9 +179,9 @@ class Tpu:
                     self.flight_line_stats.update(
                         {'{} ({}/{} points with TPU)'.format(fl, fl_tpu_count, num_fl_points): 
                          [
-                         'thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[0], fl_tpu_max[0], 
+                         'total_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[0], fl_tpu_max[0], 
                                                                 fl_tpu_mean[0], fl_tpu_stddev[0]),
-                         'tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[1], fl_tpu_max[1], 
+                         'total_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[1], fl_tpu_max[1], 
                                                                 fl_tpu_mean[1], fl_tpu_stddev[1]),
                          'subaer_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[2], fl_tpu_max[2], 
                                                                 fl_tpu_mean[2], fl_tpu_stddev[2]),
