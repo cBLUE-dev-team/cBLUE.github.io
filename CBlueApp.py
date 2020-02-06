@@ -486,13 +486,13 @@ class ControllerPanel(ttk.Frame):
         kd_selection = self.turbidity_options[kd_ind]
 
         # CREATE OBSERVATION EQUATIONS
-        S = SensorModel(self.controller.controller_configuration['sensor_model'])
+        sensor_model = SensorModel(self.controller.controller_configuration['sensor_model'])
 
         # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
-        J = Jacobian(S)
+        jacobian = Jacobian(sensor_model)
 
         # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
-        M = Merge()
+        merge = Merge()
 
         multiprocess = self.controller.controller_configuration['multiprocess']
 
@@ -544,7 +544,7 @@ class ControllerPanel(ttk.Frame):
                 north = inFile.reader.get_header_property('y_max')
                 south = inFile.reader.get_header_property('y_min')
 
-                yield self.sbet.get_tile_data(north, south, east, west), las_file, J, M
+                yield self.sbet.get_tile_data(north, south, east, west), las_file, jacobian, merge
 
         logging.info('processing {} las file(s) ({})...'.format(num_las, cpu_process_info[0]))
 

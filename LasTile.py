@@ -36,7 +36,7 @@ def get_tiles_template():
 wgs84_epsg = 'epsg:4326'
 gpkg = Path(r'z:\las_files.gpkg')
 
-las_dir = Path(r'T:\\')
+las_dir = Path(r'V:\\')
 lasses = list(las_dir.rglob('*.las'))
 
 bboxes, attributes = get_tiles_template()
@@ -102,7 +102,7 @@ for las_path in tqdm(lasses):
             gdf['las_version'] = attributes['las_version']
 
             print(f'writing to {gpkg}...')
-            layer = f'Lidar_Proc01_BLOCK{block_count}'
+            layer = f'Lidar_Contract00_BLOCK{block_count}'
             gdf.to_file(gpkg, layer=layer, driver='GPKG')
             bboxes, attributes = get_tiles_template()
 

@@ -95,6 +95,61 @@ class Tpu:
         self.metadata = {}
         self.flight_line_stats = {}
 
+    def update_fl_stats(self, fl, num_fl_points, fl_tpu_data):
+
+        # calc flight line tpu summary stats
+        fl_tpu_count = fl_tpu_data.shape[0]
+        fl_tpu_min = fl_tpu_data[:, 0:6].min(axis=0).tolist()
+        fl_tpu_max = fl_tpu_data[:, 0:6].max(axis=0).tolist()
+        fl_tpu_mean = fl_tpu_data[:, 0:6].mean(axis=0).tolist()
+        fl_tpu_stddev = fl_tpu_data[:, 0:6].std(axis=0).tolist()
+
+        fl_stat_indx = {
+            'total_thu': 0,
+            'total_tvu': 1,
+            'subaer_thu': 2,
+            'subaer_tvu': 3,                   
+            'subaqu_thu': 4,
+            'subaqu_tvu': 5,
+            }
+
+        fl_stats_strs = []
+        for fl_stat, ind in fl_stat_indx.items():
+            fl_stats_vals = (fl_stat,
+                             fl_tpu_min[ind], 
+                             fl_tpu_max[ind],
+                             fl_tpu_mean[ind], 
+                             fl_tpu_stddev[ind])
+        
+            fl_stats_str = '{}: {:6d}{:6d}{:6.0f}{:6.0f}'.format(*fl_stats_vals)
+            fl_stats_strs.append(fl_stats_str)
+
+        fl_header_str = f'{fl} ({fl_tpu_count}/{num_fl_points} points with TPU)'
+        self.flight_line_stats.update({fl_header_str: fl_stats_strs})
+
+        #self.flight_line_stats.update(
+        #    {'{} ({}/{} points with TPU)'.format(fl, fl_tpu_count, num_fl_points): 
+        #        [
+        #        'total_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[0], fl_tpu_max[0],
+        #                                                     fl_tpu_mean[0], fl_tpu_stddev[0]),
+        #        'total_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[1], fl_tpu_max[1], 
+        #                                                     fl_tpu_mean[1], fl_tpu_stddev[1]),
+        #        'subaer_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[2], fl_tpu_max[2], 
+        #                                                      fl_tpu_mean[2], fl_tpu_stddev[2]),
+        #        'subaer_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[3], fl_tpu_max[3], 
+        #                                                      fl_tpu_mean[3], fl_tpu_stddev[3]),
+        #        'subaqu_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[4], fl_tpu_max[4], 
+        #                                                      fl_tpu_mean[4], fl_tpu_stddev[4]),
+        #        'subaqu_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[5], fl_tpu_max[5], 
+        #                                                      fl_tpu_mean[5], fl_tpu_stddev[5])
+        #        ]})
+
+    def output_diagnostic_data(self, merged_data, stddev, subaer_obj, subaqu_obj, total_thu, total_tvu):
+        print(merged_data)
+        print(stddev)
+        print(subaer_obj.jacobian.sensor_model.consolidate_data())
+        print(merged_data)
+
     def calc_tpu(self, sbet_las_files):
         """
 
@@ -102,11 +157,13 @@ class Tpu:
         :return:
         """
 
-        sbet, las_file, J, M = sbet_las_files
+        sbet, las_file, jacobian, merge = sbet_las_files
 
         data_to_output = []
 
-        supp_columns = ['total_thu', 'total_tvu', 'subaer_thu', 'subaer_tvu' , 'subaqu_thu', 'subaqu_tvu']
+        supp_columns = ['total_thu', 'total_tvu', 
+                        'subaer_thu', 'subaer_tvu', 
+                        'subaqu_thu', 'subaqu_tvu']
 
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
@@ -116,6 +173,7 @@ class Tpu:
             logging.debug('flight lines {}'.format(las.unq_flight_lines))
             unsorted_las_xyzt, t_idx, flight_lines = las.get_flight_line_txyz()
 
+            self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
 
                 logging.debug('flight line {} {}'.format(fl, '-' * 50))
@@ -126,27 +184,24 @@ class Tpu:
                 fl_t_idx = t_idx[fl_idx]
 
                 num_fl_points = np.sum(fl_idx)
-                logging.debug('{} fl {}: {} points'.format(las.las_short_name, fl, num_fl_points))
+                logging.debug(f'{las.las_short_name} fl {fl}: {num_fl_points} points')
 
                 # CREATE MERGED-DATA OBJECT M
                 logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
-                merged_data, stddev, masked_fl_t_idx = M.merge(las.las_short_name, fl, sbet.values, 
-                                                               fl_unsorted_las_xyzt, fl_t_idx)
+                merged_data, stddev, masked_fl_t_idx = merge.merge(las.las_short_name, fl, sbet.values,
+                                                                   fl_unsorted_las_xyzt, fl_t_idx)
 
                 if merged_data is not False:  # i.e., las and sbet is merged
 
                     logging.debug('({}) calculating subaer thu/tvu...'.format(las.las_short_name))
-                    subaer_obj = Subaerial(J, merged_data, stddev)
-                    subaer_thu, subaer_tvu, subaer_cols = subaer_obj.calc_subaerial_tpu()
+                    subaer_obj = Subaerial(jacobian, merged_data, stddev)
+                    subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
                     depth = merged_data[4] - self.water_surface_ellipsoid_height
 
                     logging.debug('({}) calculating subaqueous thu/tvu...'.format(las.las_short_name))
                     subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, 
                                             self.kd_val, depth, self.subaqueous_luts)
-                    subaqu_thu, subaqu_tvu, subaqu_cols = subaqu_obj.fit_lut()
-
-                    print(subaqu_tvu)
-
+                    subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
                     self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
 
@@ -166,43 +221,22 @@ class Tpu:
                         np.round_(subaqu_tvu * 100).astype('int'),
                         masked_fl_t_idx.astype('int')
                         )).T
-
                     data_to_output.append(fl_tpu_data)
 
-                    # calc flight line tpu summary stats
-                    fl_tpu_count = fl_tpu_data.shape[0]
-                    fl_tpu_min = fl_tpu_data[:, 0:6].min(axis=0).tolist()
-                    fl_tpu_max = fl_tpu_data[:, 0:6].max(axis=0).tolist()
-                    fl_tpu_mean = fl_tpu_data[:, 0:6].mean(axis=0).tolist()
-                    fl_tpu_stddev = fl_tpu_data[:, 0:6].std(axis=0).tolist()
-
-                    self.flight_line_stats.update(
-                        {'{} ({}/{} points with TPU)'.format(fl, fl_tpu_count, num_fl_points): 
-                         [
-                         'total_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[0], fl_tpu_max[0], 
-                                                                fl_tpu_mean[0], fl_tpu_stddev[0]),
-                         'total_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[1], fl_tpu_max[1], 
-                                                                fl_tpu_mean[1], fl_tpu_stddev[1]),
-                         'subaer_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[2], fl_tpu_max[2], 
-                                                                fl_tpu_mean[2], fl_tpu_stddev[2]),
-                         'subaer_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[3], fl_tpu_max[3], 
-                                                                fl_tpu_mean[3], fl_tpu_stddev[3]),
-                         'subaqu_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[4], fl_tpu_max[4], 
-                                                                fl_tpu_mean[4], fl_tpu_stddev[4]),
-                         'subaqu_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[5], fl_tpu_max[5], 
-                                                                fl_tpu_mean[5], fl_tpu_stddev[5])
-                         ]})
+                    self.update_fl_stats(fl, num_fl_points, fl_tpu_data)
 
                 else:
                     logging.warning('SBET and LAS not merged because max delta '
                                     'time exceeded acceptable threshold of {} '
-                                    'sec(s).'.format(M.max_allowable_dt))
+                                    'sec(s).'.format(merge.max_allowable_dt))
 
                     self.flight_line_stats.update(
                         {'{} (0/{} points with TPU)'.format(fl, num_fl_points): None})
 
             self.write_metadata(las)  # TODO: include as VLR?
             self.output_tpu_to_las_extra_bytes(las, data_to_output, supp_columns)
+            self.output_diagnostic_data(merged_data, stddev, subaer_obj, subaqu_obj, total_thu, total_tvu)
+
         else:
             logging.warning('WARNING: {} has no data points'.format(las.las_short_name))
 
