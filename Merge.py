@@ -123,17 +123,17 @@ class Merge:
             logging.warning('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
         else:
             data = np.asarray([
-                sbet_data[:, 0][idx[mask]],
-                fl_las_data[:, 3][mask],                           # t
-                fl_las_data[:, 0][mask],                           # x
-                fl_las_data[:, 1][mask],                           # y
-                fl_las_data[:, 2][mask],                           # z
-                sbet_data[:, 3][idx[mask]],
-                sbet_data[:, 4][idx[mask]],
-                sbet_data[:, 5][idx[mask]],
-                np.radians(sbet_data[:, 6][idx[mask]]),
-                np.radians(sbet_data[:, 7][idx[mask]]),
-                np.radians(sbet_data[:, 8][idx[mask]])
+                sbet_data[:, 0][idx[mask]],                     # t?
+                fl_las_data[:, 3][mask],                        # t
+                fl_las_data[:, 0][mask],                        # x
+                fl_las_data[:, 1][mask],                        # y
+                fl_las_data[:, 2][mask],                        # z
+                sbet_data[:, 3][idx[mask]],                     # x?
+                sbet_data[:, 4][idx[mask]],                     # y?
+                sbet_data[:, 5][idx[mask]],                     # z?
+                np.radians(sbet_data[:, 6][idx[mask]]),         # r?
+                np.radians(sbet_data[:, 7][idx[mask]]),         # p?
+                np.radians(sbet_data[:, 8][idx[mask]])          # h?
             ])
 
             num_points = data[0].shape

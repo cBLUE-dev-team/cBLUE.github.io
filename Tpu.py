@@ -31,6 +31,7 @@ christopher.parrish@oregonstate.edu
 """
 
 import logging
+from pathlib import Path
 from pathos import logger
 import pathos.pools as pp
 import json
@@ -107,10 +108,6 @@ class Tpu:
         fl_stat_indx = {
             'total_thu': 0,
             'total_tvu': 1,
-            'subaer_thu': 2,
-            'subaer_tvu': 3,                   
-            'subaqu_thu': 4,
-            'subaqu_tvu': 5,
             }
 
         fl_stats_strs = []
@@ -127,28 +124,180 @@ class Tpu:
         fl_header_str = f'{fl} ({fl_tpu_count}/{num_fl_points} points with TPU)'
         self.flight_line_stats.update({fl_header_str: fl_stats_strs})
 
-        #self.flight_line_stats.update(
-        #    {'{} ({}/{} points with TPU)'.format(fl, fl_tpu_count, num_fl_points): 
-        #        [
-        #        'total_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[0], fl_tpu_max[0],
-        #                                                     fl_tpu_mean[0], fl_tpu_stddev[0]),
-        #        'total_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[1], fl_tpu_max[1], 
-        #                                                     fl_tpu_mean[1], fl_tpu_stddev[1]),
-        #        'subaer_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[2], fl_tpu_max[2], 
-        #                                                      fl_tpu_mean[2], fl_tpu_stddev[2]),
-        #        'subaer_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[3], fl_tpu_max[3], 
-        #                                                      fl_tpu_mean[3], fl_tpu_stddev[3]),
-        #        'subaqu_thu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[4], fl_tpu_max[4], 
-        #                                                      fl_tpu_mean[4], fl_tpu_stddev[4]),
-        #        'subaqu_tvu: {:6d}{:6d}{:6.0f}{:6.0f}'.format(fl_tpu_min[5], fl_tpu_max[5], 
-        #                                                      fl_tpu_mean[5], fl_tpu_stddev[5])
-        #        ]})
+    def export_diag_data(self, las_base_name, diag_dfs):
+        diag_data_fields = {
+            'las_data': [
+                'las_name', 
+                'flight_line', 
+                'las_t', 
+                'las_x', 
+                'las_y', 
+                'las_z'],
+            'sbet_data': [
+                'sbet_t', 
+                'sbet_x', 
+                'sbet_y', 
+                'sbet_z', 
+                'r', 
+                'p', 
+                'h', 
+                'std_r', 
+                'std_p', 
+                'std_h', 
+                'stdx_sbet', 
+                'stdy_sbet', 
+                'stdz_sbet'],
+            'subaerial_data': [
+                'rho_est', 
+                'a_est', 
+                'b_est', 
+                'std_a', 
+                'std_b', 
+                'std_rho', 
+                'aer_x_pre_poly', 
+                'aer_y_pre_poly', 
+                'aer_z_pre_poly', 
+                'dx', 
+                'dy', 
+                'dz'],
+            'cblue_data': [
+                'cblue_aer_pos_x', 
+                'cblue_aer_pos_y', 
+                'cblue_aer_pos_z', 
+                'cblue_aer_pos_err_x', 
+                'cblue_aer_pos_err_y', 
+                'cblue_aer_pos_err_z'],
+            'subaer_comp_uncertainties': [
+                'x_subaer_uncertainty_comp_a', 
+                'x_subaer_uncertainty_comp_b', 
+                'x_subaer_uncertainty_comp_r', 
+                'x_subaer_uncertainty_comp_p', 
+                'x_subaer_uncertainty_comp_h', 
+                'x_subaer_uncertainty_comp_x', 
+                'x_subaer_uncertainty_comp_y', 
+                'x_subaer_uncertainty_comp_z', 
+                'x_subaer_uncertainty_comp_rho', 
+                'y_subaer_uncertainty_comp_a', 
+                'y_subaer_uncertainty_comp_b', 
+                'y_subaer_uncertainty_comp_r', 
+                'y_subaer_uncertainty_comp_p', 
+                'y_subaer_uncertainty_comp_h', 
+                'y_subaer_uncertainty_comp_x', 
+                'y_subaer_uncertainty_comp_y', 
+                'y_subaer_uncertainty_comp_z', 
+                'y_subaer_uncertainty_comp_rho', 
+                'z_subaer_uncertainty_comp_a', 
+                'z_subaer_uncertainty_comp_b', 
+                'z_subaer_uncertainty_comp_r', 
+                'z_subaer_uncertainty_comp_p', 
+                'z_subaer_uncertainty_comp_h', 
+                'z_subaer_uncertainty_comp_x', 
+                'z_subaer_uncertainty_comp_y', 
+                'z_subaer_uncertainty_comp_z', 
+                'z_subaer_uncertainty_comp_rho'],
+            'tpu_data': [
+                'subaerial_thu', 
+                'subaerial_tvu', 
+                'subaqueous_thu', 
+                'subaqueous_tvu', 
+                'total_thu', 
+                'total_tvu']
+            }
 
-    def output_diagnostic_data(self, merged_data, stddev, subaer_obj, subaqu_obj, total_thu, total_tvu):
-        print(merged_data)
-        print(stddev)
-        print(subaer_obj.jacobian.sensor_model.consolidate_data())
-        print(merged_data)
+        for k, v in diag_data_fields.items():
+            data ={}
+            for field in v:
+                data[field] = []
+                for fl_df in diag_dfs:
+                    data[field].append(fl_df[field].to_list())
+            
+            df = pd.DataFrame(data)
+            out_path = Path(self.tpu_output) / f'{las_base_name}_{k}.parquet'
+            df.to_parquet(str(out_path), engine='fastparquet')
+
+    def output_diagnostic_data(self, las_short_name, fl, merged_data, 
+                               stddev, subaer_obj, subaqu_obj, 
+                               total_thu, total_tvu):
+
+        print(f'outputting diagnostic data - {las_short_name}, flight line {fl}...')
+
+        las_pos_xyz = (merged_data[2], merged_data[3], merged_data[4], )
+        sensor_model_diag_data = subaer_obj.jacobian.sensor_model.get_sensor_model_diagnostic_data(las_pos_xyz)
+
+        diag_data = {
+            'las_name': las_short_name,
+            'flight_line': fl,
+            'las_t': merged_data[1],
+            'las_x': merged_data[2],
+            'las_y': merged_data[3],
+            'las_z': merged_data[4],
+            'sbet_t': merged_data[0],
+            'sbet_x': merged_data[5],
+            'sbet_y': merged_data[6],
+            'sbet_z': merged_data[7],
+            'r': merged_data[8],
+            'p': merged_data[9],
+            'h': merged_data[10],
+            'std_a': stddev[0],
+            'std_b': stddev[1],
+            'std_r': stddev[2],
+            'std_p': stddev[3],
+            'std_h': stddev[4],
+            'stdx_sbet': stddev[5],
+            'stdy_sbet': stddev[6],
+            'stdz_sbet': stddev[7],
+            'std_rho': stddev[8],
+            'rho_est': sensor_model_diag_data[0],
+            'a_est': sensor_model_diag_data[1],
+            'b_est': sensor_model_diag_data[2],
+            'aer_x_pre_poly': sensor_model_diag_data[3],
+            'aer_y_pre_poly': sensor_model_diag_data[4],
+            'aer_z_pre_poly': sensor_model_diag_data[5],
+            'dx': sensor_model_diag_data[6],
+            'dy': sensor_model_diag_data[7],
+            'dz': sensor_model_diag_data[8],
+            'cblue_aer_pos_x': sensor_model_diag_data[9],
+            'cblue_aer_pos_y': sensor_model_diag_data[10],
+            'cblue_aer_pos_z': sensor_model_diag_data[11],
+            'cblue_aer_pos_err_x': sensor_model_diag_data[12],
+            'cblue_aer_pos_err_y': sensor_model_diag_data[13],
+            'cblue_aer_pos_err_z': sensor_model_diag_data[14],
+            'x_subaer_uncertainty_comp_a': subaer_obj.x_comp_uncertainties[0],
+            'x_subaer_uncertainty_comp_b': subaer_obj.x_comp_uncertainties[1],
+            'x_subaer_uncertainty_comp_r': subaer_obj.x_comp_uncertainties[2],
+            'x_subaer_uncertainty_comp_p': subaer_obj.x_comp_uncertainties[3],
+            'x_subaer_uncertainty_comp_h': subaer_obj.x_comp_uncertainties[4],
+            'x_subaer_uncertainty_comp_x': subaer_obj.x_comp_uncertainties[5],
+            'x_subaer_uncertainty_comp_y': None,
+            'x_subaer_uncertainty_comp_z': None,
+            'x_subaer_uncertainty_comp_rho': subaer_obj.x_comp_uncertainties[6],
+            'y_subaer_uncertainty_comp_a': subaer_obj.y_comp_uncertainties[0],
+            'y_subaer_uncertainty_comp_b': subaer_obj.y_comp_uncertainties[1],
+            'y_subaer_uncertainty_comp_r': subaer_obj.y_comp_uncertainties[2],
+            'y_subaer_uncertainty_comp_p': subaer_obj.y_comp_uncertainties[3],
+            'y_subaer_uncertainty_comp_h': subaer_obj.y_comp_uncertainties[4],
+            'y_subaer_uncertainty_comp_x': None,
+            'y_subaer_uncertainty_comp_y': subaer_obj.y_comp_uncertainties[5],
+            'y_subaer_uncertainty_comp_z': None,
+            'y_subaer_uncertainty_comp_rho': subaer_obj.y_comp_uncertainties[6],
+            'z_subaer_uncertainty_comp_a': subaer_obj.z_comp_uncertainties[0],
+            'z_subaer_uncertainty_comp_b': subaer_obj.z_comp_uncertainties[1],
+            'z_subaer_uncertainty_comp_r': subaer_obj.z_comp_uncertainties[2],
+            'z_subaer_uncertainty_comp_p': subaer_obj.z_comp_uncertainties[3],
+            'z_subaer_uncertainty_comp_h': None,
+            'z_subaer_uncertainty_comp_x': None,
+            'z_subaer_uncertainty_comp_y': None,
+            'z_subaer_uncertainty_comp_z': subaer_obj.z_comp_uncertainties[4],
+            'z_subaer_uncertainty_comp_rho': subaer_obj.z_comp_uncertainties[5],
+            'subaerial_thu': subaer_obj.thu,
+            'subaerial_tvu': subaer_obj.tvu,
+            'subaqueous_thu': subaqu_obj.thu,
+            'subaqueous_tvu': subaqu_obj.tvu,
+            'total_thu': total_thu,
+            'total_tvu': total_tvu,
+            }
+
+        return pd.DataFrame(diag_data)
 
     def calc_tpu(self, sbet_las_files):
         """
@@ -161,13 +310,13 @@ class Tpu:
 
         data_to_output = []
 
-        supp_columns = ['total_thu', 'total_tvu', 
-                        'subaer_thu', 'subaer_tvu', 
-                        'subaqu_thu', 'subaqu_tvu']
+        supp_columns = ['total_thu', 'total_tvu']
 
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
         
+        diag_dfs = []
+
         if las.num_file_points:  # i.e., if las had data points
             logging.info('{} ({:,} points)'.format(las.las_short_name, las.num_file_points))
             logging.debug('flight lines {}'.format(las.unq_flight_lines))
@@ -215,15 +364,16 @@ class Tpu:
                     fl_tpu_data = np.vstack((
                         np.round_(total_thu * 100).astype('int'),
                         np.round_(total_tvu * 100).astype('int'),
-                        np.round_(subaer_thu * 100).astype('int'),
-                        np.round_(subaer_tvu * 100).astype('int'),
-                        np.round_(subaqu_thu * 100).astype('int'),
-                        np.round_(subaqu_tvu * 100).astype('int'),
                         masked_fl_t_idx.astype('int')
                         )).T
                     data_to_output.append(fl_tpu_data)
 
                     self.update_fl_stats(fl, num_fl_points, fl_tpu_data)
+
+                    diag_dfs.append(self.output_diagnostic_data(las.las_short_name, fl,
+                                                                merged_data, stddev, 
+                                                                subaer_obj, subaqu_obj, 
+                                                                total_thu, total_tvu))
 
                 else:
                     logging.warning('SBET and LAS not merged because max delta '
@@ -235,7 +385,9 @@ class Tpu:
 
             self.write_metadata(las)  # TODO: include as VLR?
             self.output_tpu_to_las_extra_bytes(las, data_to_output, supp_columns)
-            self.output_diagnostic_data(merged_data, stddev, subaer_obj, subaqu_obj, total_thu, total_tvu)
+
+            # merge fl diagnostic dataframes
+            self.export_diag_data(las.las_base_name, diag_dfs)
 
         else:
             logging.warning('WARNING: {} has no data points'.format(las.las_short_name))
@@ -284,11 +436,7 @@ class Tpu:
 
         extra_byte_dimensions = OrderedDict([
             ('total_thu', ('total_thu', tpu_data_type)),
-            ('total_tvu', ('total_tvu', tpu_data_type)),
-            ('subaer_thu', ('subaer_thu', tpu_data_type)),
-            ('subaer_tvu', ('subaer_tvu', tpu_data_type)),
-            ('subaqu_thu', ('subaqu_thu', tpu_data_type)),
-            ('subaqu_tvu', ('subaqu_tvu', tpu_data_type)),
+            ('total_tvu', ('total_tvu', tpu_data_type))
             ])
 
         # define new extrabyte dimensions
@@ -300,7 +448,7 @@ class Tpu:
 
         if len(data_to_output) != 0:
             tpu_data = np.vstack(data_to_output)
-            extra_byte_df = pd.DataFrame(tpu_data[:, 0:6], index=tpu_data[:, 6], 
+            extra_byte_df = pd.DataFrame(tpu_data[:, 0:2], index=tpu_data[:, 2], 
                                          columns=extra_byte_columns)
                 
             if extra_byte_df.shape[0] == las.num_file_points:
@@ -317,18 +465,6 @@ class Tpu:
         
             logging.debug('populating extra byte data for total_tvu...')
             out_las.total_tvu = extra_byte_df['total_tvu']
-
-            logging.debug('populating extra byte data for subaer_thu...')
-            out_las.subaer_thu = extra_byte_df['subaer_thu']
-        
-            logging.debug('populating extra byte data for subaer_tvu...')
-            out_las.subaer_tvu = extra_byte_df['subaer_tvu']
-
-            logging.debug('populating extra byte data for subaqu_thu...')
-            out_las.subaqu_thu = extra_byte_df['subaqu_thu']
-        
-            logging.debug('populating extra byte data for subaqu_tvu...')
-            out_las.subaqu_tvu = extra_byte_df['subaqu_tvu']
             
         else:
             logging.debug('populating extra byte data for total_thu...')
@@ -336,18 +472,6 @@ class Tpu:
         
             logging.debug('populating extra byte data for total_tvu...')
             out_las.total_tvu = np.zeros(las.num_file_points)
-
-            logging.debug('populating extra byte data for subaer_thu...')
-            out_las.subaer_thu = np.zeros(las.num_file_points)
-        
-            logging.debug('populating extra byte data for subaer_tvu...')
-            out_las.subaer_tvu = np.zeros(las.num_file_points)
-
-            logging.debug('populating extra byte data for subaqu_thu...')
-            out_las.subaqu_thu = np.zeros(las.num_file_points)
-        
-            logging.debug('populating extra byte data for subaqu_tvu...')
-            out_las.subaqu_tvu = np.zeros(las.num_file_points)
 
         # copy data from in_las
         for field in in_las.point_format:

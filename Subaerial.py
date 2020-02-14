@@ -48,7 +48,6 @@ class SensorModel:
 
     """
 
-
     eval_type = 'numexpr'
 
     def __init__(self, sensor):
@@ -65,12 +64,16 @@ class SensorModel:
         self.dx = None
         self.dy = None
         self.dz = None
-        self.coeffs_x = None
-        self.coeffs_y = None
-        self.coeffs_z = None
+        self.poly_err_surf_coeffs_x = None
+        self.poly_err_surf_coeffs_y = None
+        self.poly_err_surf_coeffs_z = None
 
-    def consolidate_data(self):
-        data = np.vstack((
+    def get_sensor_model_diagnostic_data(self, las_pox_xyz):
+
+        cblue_aer_pos = self.calc_cblue_aer_pos()
+        cblue_aer_pos_err = self.calc_aer_pos_err(cblue_aer_pos, las_pox_xyz)
+
+        return (
             self.rho_est,
             self.a_est,
             self.b_est,
@@ -79,9 +82,14 @@ class SensorModel:
             self.aer_z_pre_poly,
             self.dx,
             self.dy,
-            self.dz
-            )).T
-        return data
+            self.dz,
+            cblue_aer_pos[0],
+            cblue_aer_pos[1],
+            cblue_aer_pos[2],
+            cblue_aer_pos_err[0],
+            cblue_aer_pos_err[1],
+            cblue_aer_pos_err[2]
+            )
 
     def set_rotation_matrix_airplane(self):
         """define rotation matrix for airplane
@@ -326,13 +334,13 @@ class SensorModel:
             ne.evaluate('A0 * B0 ** 2'),
             ne.evaluate('B0 ** 3'))).T
 
-        (self.coeffs_x, __, __, __) = np.linalg.lstsq(A, self.dx[::itv], rcond=None)
-        (self.coeffs_y, __, __, __) = np.linalg.lstsq(A, self.dy[::itv], rcond=None)
-        (self.coeffs_z, __, __, __) = np.linalg.lstsq(A, self.dz[::itv], rcond=None)
+        (self.poly_err_surf_coeffs_x, __, __, __) = np.linalg.lstsq(A, self.dx[::itv], rcond=None)
+        (self.poly_err_surf_coeffs_y, __, __, __) = np.linalg.lstsq(A, self.dy[::itv], rcond=None)
+        (self.poly_err_surf_coeffs_z, __, __, __) = np.linalg.lstsq(A, self.dz[::itv], rcond=None)
 
     @staticmethod
     def calcRMSE(data):
-        """calc root mean square error for input data  NOT CURRENTLY USED"""
+        """calc root mean square error for input data"""
 
         num_coords, num_points = data.shape
         AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
@@ -408,7 +416,7 @@ class SensorModel:
         self.aer_y_pre_poly = self.obs_eq_pre_poly[1](self.a_est, self.b_est, data[10], data[9], data[8], self.rho_est, data[6])
         self.aer_z_pre_poly = self.obs_eq_pre_poly[2](self.a_est, self.b_est, data[9], data[8], self.rho_est, data[7])
 
-    def calc_aer_pos(self, coeffs, a_est, b_est, aer_pos_pre):
+    def calc_cblue_aer_pos(self):
         """calculates the final cBLUE subearial position
 
         This method calculates the final cBLUE subaerial position by adding
@@ -421,6 +429,9 @@ class SensorModel:
         :return:
         """
 
+        a_est = self.a_est
+        b_est = self.b_est
+
         A = np.vstack((
             ne.evaluate('a_est * 0 + 1'),
             ne.evaluate('a_est'),
@@ -432,21 +443,26 @@ class SensorModel:
             ne.evaluate('a_est * b_est ** 2'),
             ne.evaluate('b_est ** 3'))).T
 
-        aer_x_pre = aer_pos_pre[0]
-        aer_y_pre = aer_pos_pre[1]
-        aer_z_pre = aer_pos_pre[2]
+        aer_x_pre = self.aer_x_pre_poly
+        aer_y_pre = self.aer_y_pre_poly
+        aer_z_pre = self.aer_z_pre_poly
 
-        err_x = np.sum(A * coeffs[0], axis=1)
-        err_y = np.sum(A * coeffs[1], axis=1)
-        err_z = np.sum(A * coeffs[2], axis=1)
+        coeffs_x = self.poly_err_surf_coeffs_x
+        coeffs_y = self.poly_err_surf_coeffs_y
+        coeffs_z = self.poly_err_surf_coeffs_z
+
+        err_x = np.sum(A * coeffs_x, axis=1)
+        err_y = np.sum(A * coeffs_y, axis=1)
+        err_z = np.sum(A * coeffs_z, axis=1)
 
         aer_pos_x = ne.evaluate('aer_x_pre + err_x')
         aer_pos_y = ne.evaluate('aer_y_pre + err_y')
         aer_pos_z = ne.evaluate('aer_z_pre + err_z')
 
-        return aer_pos_x, aer_pos_y, aer_pos_z
+        return (aer_pos_x, aer_pos_y, aer_pos_z, )
 
-    def calc_aer_pos_err(self, aer_pos, data):
+    @staticmethod
+    def calc_aer_pos_err(aer_pos, las_pox_xyz):
         """calculates the difference between the las and cBLUE positions
 
         This method calculates the differences between the x, y, and z
@@ -479,15 +495,15 @@ class SensorModel:
         aer_y = aer_pos[1]
         aer_z = aer_pos[2]
 
-        x_las = data[2]
-        y_las = data[3]
-        z_las = data[4]
+        x_las = las_pox_xyz[0]
+        y_las = las_pox_xyz[1]
+        z_las = las_pox_xyz[2]
 
         aer_x_err = ne.evaluate('aer_x - x_las')
         aer_y_err = ne.evaluate('aer_y - y_las')
         aer_z_err = ne.evaluate('aer_z - z_las')
 
-        return [aer_x_err, aer_y_err, aer_z_err]
+        return (aer_x_err, aer_y_err, aer_z_err, )
 
 
 class Jacobian:
@@ -651,9 +667,9 @@ class Jacobian:
 
         The returned dictionary contains the following data:
 
-        =========   ========================
+        =========   ===================================================================
         data        description
-        =========   ========================
+        =========   ===================================================================
         a           calculated a values
         b           calculated b values
         rho         calculated rho values
@@ -668,7 +684,7 @@ class Jacobian:
         cos_r       calculated cos(r) values
         cos_p       calculated cos(p) values
         cos_h       calculated cos(h) values
-        =========   ========================
+        =========   ===================================================================
 
         :param data
         :return dict: calcualted values used to evaluate Jacobian
@@ -697,9 +713,9 @@ class Jacobian:
             'b': self.sensor_model.b_est,
             'rho': self.sensor_model.rho_est,
             'p_coeffs': {
-                'x': {k: self.sensor_model.coeffs_x[i] for i, k in enumerate(p_coeffs_vars)},  # e.g., {'p00': p00x, ...}
-                'y': {k: self.sensor_model.coeffs_y[i] for i, k in enumerate(p_coeffs_vars)},
-                'z': {k: self.sensor_model.coeffs_z[i] for i, k in enumerate(p_coeffs_vars)},
+                'x': {k: self.sensor_model.poly_err_surf_coeffs_x[i] for i, k in enumerate(p_coeffs_vars)},  # e.g., {'p00': p00x, ...}
+                'y': {k: self.sensor_model.poly_err_surf_coeffs_y[i] for i, k in enumerate(p_coeffs_vars)},
+                'z': {k: self.sensor_model.poly_err_surf_coeffs_z[i] for i, k in enumerate(p_coeffs_vars)},
                 },
             'sin_a': trig_subs[0],
             'sin_b': trig_subs[1],
@@ -840,10 +856,13 @@ class Subaerial:
         self.jacobian = jacobian  # Jacobian object
         self.merged_data = merged_data  # merged-data ndarray
         self.stddev = stddev  # nparray of standard deviations
+        self.x_comp_uncertainties = None
+        self.y_comp_uncertainties = None
+        self.z_comp_uncertainties = None
         self.thu = None
         self.tvu = None
 
-    def propogate_uncertainty(self, J_eval):
+    def propogate_uncertainty(self, J_eval):  # 25875
         """propogates the subaerial uncertatinty
 
         This method propogates the uncertainty of the component uncertainties
@@ -888,21 +907,23 @@ class Subaerial:
         Jz = J_eval[2]
 
         # componenet uncertainties
-        x_comps = ne.evaluate("Jx * Jx * Vx")
-        y_comps = ne.evaluate("Jy * Jy * Vy")
-        z_comps = ne.evaluate("Jz * Jz * Vz")
+        self.x_comp_uncertainties = ne.evaluate("Jx * Jx * Vx")
+        self.y_comp_uncertainties = ne.evaluate("Jy * Jy * Vy")
+        self.z_comp_uncertainties = ne.evaluate("Jz * Jz * Vz")
 
-        sum_Jx = ne.evaluate("sum(x_comps, axis=0)")
-        sum_Jy = ne.evaluate("sum(y_comps, axis=0)")
-        sum_Jz = ne.evaluate("sum(z_comps, axis=0)")
+        x_comp_uncertainties = self.x_comp_uncertainties
+        y_comp_uncertainties = self.y_comp_uncertainties
+        z_comp_uncertainties = self.z_comp_uncertainties
+
+        sum_Jx = ne.evaluate("sum(x_comp_uncertainties, axis=0)")
+        sum_Jy = ne.evaluate("sum(y_comp_uncertainties, axis=0)")
+        sum_Jz = ne.evaluate("sum(z_comp_uncertainties, axis=0)")
 
         sx = ne.evaluate("sqrt(sum_Jx)")
         sy = ne.evaluate("sqrt(sum_Jy)")
 
-        aer_tvu = ne.evaluate("sqrt(sum_Jz)")
-        aer_thu = ne.evaluate('sqrt(sx**2 + sy**2)')
-
-        return aer_thu, aer_tvu
+        self.tvu = ne.evaluate("sqrt(sum_Jz)")
+        self.thu = ne.evaluate('sqrt(sx**2 + sy**2)')
 
     def calc_subaerial_tpu(self):
         """calculates the subaerial uncertainty
@@ -933,7 +954,7 @@ class Subaerial:
         J_eval = self.jacobian.eval_jacobian(self.merged_data)
 
         # PROPAGATE UNCERTAINTY
-        self.thu, self.tvu = self.propogate_uncertainty(J_eval)
+        self.propogate_uncertainty(J_eval)
 
         return self.thu, self.tvu
 
