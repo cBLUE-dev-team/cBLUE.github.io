@@ -160,41 +160,41 @@ class Tpu:
                 'dx', 
                 'dy', 
                 'dz'],
-            'cblue_data': [
-                'cblue_aer_pos_x', 
-                'cblue_aer_pos_y', 
-                'cblue_aer_pos_z', 
-                'cblue_aer_pos_err_x', 
-                'cblue_aer_pos_err_y', 
-                'cblue_aer_pos_err_z'],
+            'cblue_position': [
+                'cblue_aer_x', 
+                'cblue_aer_y', 
+                'cblue_aer_z', 
+                'cblue_aer_err_x', 
+                'cblue_aer_err_y', 
+                'cblue_aer_err_z'],
             'subaer_comp_uncertainties': [
-                'x_subaer_uncertainty_comp_a', 
-                'x_subaer_uncertainty_comp_b', 
-                'x_subaer_uncertainty_comp_r', 
-                'x_subaer_uncertainty_comp_p', 
-                'x_subaer_uncertainty_comp_h', 
-                'x_subaer_uncertainty_comp_x', 
-                'x_subaer_uncertainty_comp_y', 
-                'x_subaer_uncertainty_comp_z', 
-                'x_subaer_uncertainty_comp_rho', 
-                'y_subaer_uncertainty_comp_a', 
-                'y_subaer_uncertainty_comp_b', 
-                'y_subaer_uncertainty_comp_r', 
-                'y_subaer_uncertainty_comp_p', 
-                'y_subaer_uncertainty_comp_h', 
-                'y_subaer_uncertainty_comp_x', 
-                'y_subaer_uncertainty_comp_y', 
-                'y_subaer_uncertainty_comp_z', 
-                'y_subaer_uncertainty_comp_rho', 
-                'z_subaer_uncertainty_comp_a', 
-                'z_subaer_uncertainty_comp_b', 
-                'z_subaer_uncertainty_comp_r', 
-                'z_subaer_uncertainty_comp_p', 
-                'z_subaer_uncertainty_comp_h', 
-                'z_subaer_uncertainty_comp_x', 
-                'z_subaer_uncertainty_comp_y', 
-                'z_subaer_uncertainty_comp_z', 
-                'z_subaer_uncertainty_comp_rho'],
+                'x_subaer_a', 
+                'x_subaer_b', 
+                'x_subaer_r', 
+                'x_subaer_p', 
+                'x_subaer_h', 
+                'x_subaer_x', 
+                'x_subaer_y', 
+                'x_subaer_z', 
+                'x_subaer_rho', 
+                'y_subaer_a', 
+                'y_subaer_b', 
+                'y_subaer_r', 
+                'y_subaer_p', 
+                'y_subaer_h', 
+                'y_subaer_x', 
+                'y_subaer_y', 
+                'y_subaer_z', 
+                'y_subaer_rho', 
+                'z_subaer_a', 
+                'z_subaer_b', 
+                'z_subaer_r', 
+                'z_subaer_p', 
+                'z_subaer_h', 
+                'z_subaer_x', 
+                'z_subaer_y', 
+                'z_subaer_z', 
+                'z_subaer_rho'],
             'tpu_data': [
                 'subaerial_thu', 
                 'subaerial_tvu', 
@@ -205,15 +205,17 @@ class Tpu:
             }
 
         for k, v in diag_data_fields.items():
-            data ={}
+            data = {}
             for field in v:
+                print(f'adding {field} data to array...')
                 data[field] = []
                 for fl_df in diag_dfs:
-                    data[field].append(fl_df[field].to_list())
+                    data[field].extend(fl_df[field].to_list())
             
             df = pd.DataFrame(data)
-            out_path = Path(self.tpu_output) / f'{las_base_name}_{k}.parquet'
-            df.to_parquet(str(out_path), engine='fastparquet')
+            out_path = Path(self.tpu_output) / f'{las_base_name}_{k}.pkl'
+            print(f'pickling {out_path}...')
+            df.to_pickle(str(out_path))
 
     def output_diagnostic_data(self, las_short_name, fl, merged_data, 
                                stddev, subaer_obj, subaqu_obj, 
@@ -256,39 +258,39 @@ class Tpu:
             'dx': sensor_model_diag_data[6],
             'dy': sensor_model_diag_data[7],
             'dz': sensor_model_diag_data[8],
-            'cblue_aer_pos_x': sensor_model_diag_data[9],
-            'cblue_aer_pos_y': sensor_model_diag_data[10],
-            'cblue_aer_pos_z': sensor_model_diag_data[11],
-            'cblue_aer_pos_err_x': sensor_model_diag_data[12],
-            'cblue_aer_pos_err_y': sensor_model_diag_data[13],
-            'cblue_aer_pos_err_z': sensor_model_diag_data[14],
-            'x_subaer_uncertainty_comp_a': subaer_obj.x_comp_uncertainties[0],
-            'x_subaer_uncertainty_comp_b': subaer_obj.x_comp_uncertainties[1],
-            'x_subaer_uncertainty_comp_r': subaer_obj.x_comp_uncertainties[2],
-            'x_subaer_uncertainty_comp_p': subaer_obj.x_comp_uncertainties[3],
-            'x_subaer_uncertainty_comp_h': subaer_obj.x_comp_uncertainties[4],
-            'x_subaer_uncertainty_comp_x': subaer_obj.x_comp_uncertainties[5],
-            'x_subaer_uncertainty_comp_y': None,
-            'x_subaer_uncertainty_comp_z': None,
-            'x_subaer_uncertainty_comp_rho': subaer_obj.x_comp_uncertainties[6],
-            'y_subaer_uncertainty_comp_a': subaer_obj.y_comp_uncertainties[0],
-            'y_subaer_uncertainty_comp_b': subaer_obj.y_comp_uncertainties[1],
-            'y_subaer_uncertainty_comp_r': subaer_obj.y_comp_uncertainties[2],
-            'y_subaer_uncertainty_comp_p': subaer_obj.y_comp_uncertainties[3],
-            'y_subaer_uncertainty_comp_h': subaer_obj.y_comp_uncertainties[4],
-            'y_subaer_uncertainty_comp_x': None,
-            'y_subaer_uncertainty_comp_y': subaer_obj.y_comp_uncertainties[5],
-            'y_subaer_uncertainty_comp_z': None,
-            'y_subaer_uncertainty_comp_rho': subaer_obj.y_comp_uncertainties[6],
-            'z_subaer_uncertainty_comp_a': subaer_obj.z_comp_uncertainties[0],
-            'z_subaer_uncertainty_comp_b': subaer_obj.z_comp_uncertainties[1],
-            'z_subaer_uncertainty_comp_r': subaer_obj.z_comp_uncertainties[2],
-            'z_subaer_uncertainty_comp_p': subaer_obj.z_comp_uncertainties[3],
-            'z_subaer_uncertainty_comp_h': None,
-            'z_subaer_uncertainty_comp_x': None,
-            'z_subaer_uncertainty_comp_y': None,
-            'z_subaer_uncertainty_comp_z': subaer_obj.z_comp_uncertainties[4],
-            'z_subaer_uncertainty_comp_rho': subaer_obj.z_comp_uncertainties[5],
+            'cblue_aer_x': sensor_model_diag_data[9],  # np.round_(total_thu * 100).astype('int')
+            'cblue_aer_y': sensor_model_diag_data[10],
+            'cblue_aer_z': sensor_model_diag_data[11],
+            'cblue_aer_err_x': sensor_model_diag_data[12],
+            'cblue_aer_err_y': sensor_model_diag_data[13],
+            'cblue_aer_err_z': sensor_model_diag_data[14],
+            'x_subaer_a': np.round_(subaer_obj.x_comp_uncertainties[0] * 1000).astype('uint16'),
+            'x_subaer_b': np.round_(subaer_obj.x_comp_uncertainties[1] * 1000).astype('uint16'),
+            'x_subaer_r': np.round_(subaer_obj.x_comp_uncertainties[2] * 1000).astype('uint16'),
+            'x_subaer_p': np.round_(subaer_obj.x_comp_uncertainties[3] * 1000).astype('uint16'),
+            'x_subaer_h': np.round_(subaer_obj.x_comp_uncertainties[4] * 1000).astype('uint16'),
+            'x_subaer_x': np.round_(subaer_obj.x_comp_uncertainties[5] * 1000).astype('uint16'),
+            'x_subaer_y': None,
+            'x_subaer_z': None,
+            'x_subaer_rho': np.round_(subaer_obj.x_comp_uncertainties[6] * 1000).astype('uint16'),
+            'y_subaer_a': np.round_(subaer_obj.y_comp_uncertainties[0] * 1000).astype('uint16'),
+            'y_subaer_b': np.round_(subaer_obj.y_comp_uncertainties[1] * 1000).astype('uint16'),
+            'y_subaer_r': np.round_(subaer_obj.y_comp_uncertainties[2] * 1000).astype('uint16'),
+            'y_subaer_p': np.round_(subaer_obj.y_comp_uncertainties[3] * 1000).astype('uint16'),
+            'y_subaer_h': np.round_(subaer_obj.y_comp_uncertainties[4] * 1000).astype('uint16'),
+            'y_subaer_x': None,
+            'y_subaer_y': np.round_(subaer_obj.y_comp_uncertainties[5] * 1000).astype('uint16'),
+            'y_subaer_z': None,
+            'y_subaer_rho': np.round_(subaer_obj.y_comp_uncertainties[6] * 1000).astype('uint16'),
+            'z_subaer_a': np.round_(subaer_obj.z_comp_uncertainties[0] * 1000).astype('uint16'),
+            'z_subaer_b': np.round_(subaer_obj.z_comp_uncertainties[1] * 1000).astype('uint16'),
+            'z_subaer_r': np.round_(subaer_obj.z_comp_uncertainties[2] * 1000).astype('uint16'),
+            'z_subaer_p': np.round_(subaer_obj.z_comp_uncertainties[3] * 1000).astype('uint16'),
+            'z_subaer_h': None,
+            'z_subaer_x': None,
+            'z_subaer_y': None,
+            'z_subaer_z': np.round_(subaer_obj.z_comp_uncertainties[4] * 1000).astype('uint16'),
+            'z_subaer_rho': np.round_(subaer_obj.z_comp_uncertainties[5] * 1000).astype('uint16'),
             'subaerial_thu': subaer_obj.thu,
             'subaerial_tvu': subaer_obj.tvu,
             'subaqueous_thu': subaqu_obj.thu,
@@ -362,10 +364,17 @@ class Tpu:
                     num_points = total_tvu.shape[0]
 
                     fl_tpu_data = np.vstack((
-                        np.round_(total_thu * 100).astype('int'),
-                        np.round_(total_tvu * 100).astype('int'),
+                        np.round_(total_thu * 1000).astype('uint16'),
+                        np.round_(total_tvu * 1000).astype('uint16'),
                         masked_fl_t_idx.astype('int')
                         )).T
+
+                    #fl_tpu_data = np.vstack((
+                    #    total_thu,
+                    #    total_tvu,
+                    #    masked_fl_t_idx.astype('int')
+                    #    )).T
+
                     data_to_output.append(fl_tpu_data)
 
                     self.update_fl_stats(fl, num_fl_points, fl_tpu_data)
@@ -432,7 +441,7 @@ class Tpu:
         in_las = laspy.file.File(las.las, mode="r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        tpu_data_type = 3  # 3 = laspy unsigned short (2 bytes)
+        tpu_data_type = 29  # 3 = laspy unsigned short (2 bytes)
 
         extra_byte_dimensions = OrderedDict([
             ('total_thu', ('total_thu', tpu_data_type)),

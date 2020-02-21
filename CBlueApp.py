@@ -69,7 +69,7 @@ from Datum import Datum
 from Las import Las
 from Tpu import Tpu
 
-from matplotlib import style
+#from matplotlib import style
 
 
 LARGE_FONT = ('Verdanna', 12)
@@ -77,7 +77,7 @@ NORM_FONT = ('Verdanna', 10)
 NORM_FONT_BOLD = ('Verdanna', 10, 'bold')
 SMALL_FONT = ('Verdanna', 8)
 
-style.use('ggplot')  # 'dark_background'
+#style.use('ggplot')  # 'dark_background'
 
 
 class CBlueApp(tk.Tk):
