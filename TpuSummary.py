@@ -8,7 +8,7 @@ import numpy as np
 
 
 def get_directories():
-    in_dir = Path(r'D:\04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc\MarcoIsland\tpu_outdir')
+    in_dir = Path(r'D:\04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc\MarcoIsland\tpu_outdir\u2_extrabytes')
     out_dir = Path(r'D:\04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc\MarcoIsland\tpu_outdir\tDEMs')
 
     return in_dir, out_dir
@@ -16,6 +16,12 @@ def get_directories():
 
 def gen_pipeline(tpu, gtiff_path):
     '''"limits":"Z[-50:0],Classification[26:26]"'''
+            #{
+            #    "type":"filters.range",
+            #    "limits":"Z[-50:0]",
+            #    "tag": "A"
+            #},
+                #"inputs": ["A"],
     pdal_json = """{
         "pipeline":[
             {
@@ -24,17 +30,11 @@ def gen_pipeline(tpu, gtiff_path):
                 "filename": """ + '"{}"'.format(las_str) + """
             },
             {
-                "type":"filters.range",
-                "limits":"Z[-50:0]",
-                "tag": "A"
-            },
-            {
-                "inputs": ["A"],
                 "dimension": """ + '"total_{}"'.format(tpu) + """,
                 "filename": """ + '"{}"'.format(gtiff_path) + """,
                 "gdaldriver": "GTiff",
                 "output_type": "mean",
-                "resolution": "0.5",
+                "resolution": "1",
                 "type": "writers.gdal"
             }
         ]

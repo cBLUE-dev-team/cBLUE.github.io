@@ -42,6 +42,7 @@ import json
 import webbrowser
 import laspy
 import cProfile
+from pathlib import Path
 
 
 now = datetime.datetime.now()
@@ -519,6 +520,10 @@ class ControllerPanel(ttk.Frame):
         las_files = [os.path.join(self.lasInput.directoryName, l)
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
+
+        #las_files = [Path(l) for l in las_files]
+        #lasses_to_process = ['2016_429000e_2859000n', '2016_429500e_2859000n']
+        #las_files = [str(l) for l in las_files if l.stem in lasses_to_process]
 
         num_las = len(las_files)
 

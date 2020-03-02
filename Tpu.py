@@ -369,12 +369,6 @@ class Tpu:
                         masked_fl_t_idx.astype('int')
                         )).T
 
-                    #fl_tpu_data = np.vstack((
-                    #    total_thu,
-                    #    total_tvu,
-                    #    masked_fl_t_idx.astype('int')
-                    #    )).T
-
                     data_to_output.append(fl_tpu_data)
 
                     self.update_fl_stats(fl, num_fl_points, fl_tpu_data)
@@ -441,7 +435,7 @@ class Tpu:
         in_las = laspy.file.File(las.las, mode="r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        tpu_data_type = 29  # 3 = laspy unsigned short (2 bytes)
+        tpu_data_type = 3  # 3 = laspy unsigned short (2 bytes)
 
         extra_byte_dimensions = OrderedDict([
             ('total_thu', ('total_thu', tpu_data_type)),
