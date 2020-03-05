@@ -117,6 +117,7 @@ class Merge:
         if max_dt > self.max_allowable_dt or max_dt.size == 0:
             data = False
             stddev = False
+            raw_class = False
 
             logging.warning('trajectory and LAS data NOT MERGED')
             logging.warning('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
@@ -149,7 +150,9 @@ class Merge:
                 np.full(num_points, self.std_rho)               # std_rho
             ])
 
-        return data, stddev, fl_t_idx[mask]   # last array is masked t_idx
+            raw_class = fl_las_data[:, 4][mask]
+
+        return data, stddev, fl_t_idx[mask], raw_class  # last array is masked t_idx
 
 
 if __name__ == '__main__':

@@ -50,24 +50,21 @@ class QuickLook:
 
         extra_bytes = [
             'total_thu', 
-            'total_tvu', 
-            'subaer_thu',
-            'subaer_tvu',
-            'subaqu_thu',
-            'subaqu_tvu'
+            'total_tvu'
             ]
 
         for eb in extra_bytes:
 
             gtiff_path = self.out_dir / las_path.name.replace('.las', f'_{eb}.tif')
             gtiff_path = str(gtiff_path).replace('\\', '/')
+
        
             pdal_json = """{
                 "pipeline":[
                     {
                         "type": "readers.las",
                         "filename": """ + '"{}"'.format(las_str) + """,
-                        "extra_dims": """ + '"{}=uint8"'.format(eb) + """,
+                        "extra_dims": """ + '"{}=uint16"'.format(eb) + """,
                         "use_eb_vlr": "true"
                     },
                     {
@@ -80,6 +77,7 @@ class QuickLook:
                         "gdaldriver": "GTiff",
                         "output_type": "mean",
                         "resolution": "1.0",
+                        "radius": "1.0",
                         "type": "writers.gdal"
                     }
                 ]
@@ -87,8 +85,14 @@ class QuickLook:
 
             try:
                 pipeline = pdal.Pipeline(pdal_json)
+                
                 __ = pipeline.execute()
-                print(pipeline.arrays['total_thu'])
+                arrays = pipeline.arrays
+                metadata = pipeline.metadata
+
+                print(arrays)
+                print(metadata)
+
             except Exception as e:
                 print(e)
 
@@ -120,22 +124,18 @@ def set_env_vars(env_name):
 
 def main():
 
-    set_env_vars('shore_att')
+    set_env_vars('cblue_diag')
 
-    las_dir = Path(r'C:\QAQC_contract\marco_island\tpu_output')
+    las_dir = Path(r'D:\JeromesCreek\AllPoints\class_added')
     las_paths = list(las_dir.glob('*.las'))
 
-    out_dir = las_dir
+    out_dir = las_dir / 'DEMs'
 
     ql = QuickLook(out_dir)
     ql.gen_mean_z_surface_multiprocess(las_paths)
 
     ql.gen_mosaic('total_thu')
     ql.gen_mosaic('total_tvu')
-    ql.gen_mosaic('subaer_thu')
-    ql.gen_mosaic('subaer_tvu')
-    ql.gen_mosaic('subaqu_thu')
-    ql.gen_mosaic('subaqu_tvu')
 
 
 if __name__ == '__main__':

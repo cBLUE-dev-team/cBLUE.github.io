@@ -34,9 +34,10 @@ def get_tiles_template():
 
 
 wgs84_epsg = 'epsg:4326'
-gpkg = Path(r'z:\las_files.gpkg')
+gpkg = Path(r'D:/04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc/MarcoIsland/las_files.gpkg')
+geojson_path = Path(r'D:/04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc/MarcoIsland/las_tiles.geojson')
 
-las_dir = Path(r'V:\\')
+las_dir = Path(r'D:/04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc/MarcoIsland/las_files')
 lasses = list(las_dir.rglob('*.las'))
 
 bboxes, attributes = get_tiles_template()
@@ -90,7 +91,7 @@ for las_path in tqdm(lasses):
         attributes['hor_srs'].append(projcs)
         attributes['las_version'].append(las_version)
 
-        if las_count % block_size == 0:
+        if las_count % block_size == 0 or las_count < block_size:
             block_count += 1
             print('creating GeoDataFrame...')
             gdf = gpd.GeoDataFrame(geometry=bboxes, crs=wgs84_epsg)
@@ -102,9 +103,11 @@ for las_path in tqdm(lasses):
             gdf['las_version'] = attributes['las_version']
 
             print(f'writing to {gpkg}...')
-            layer = f'Lidar_Contract00_BLOCK{block_count}'
-            gdf.to_file(gpkg, layer=layer, driver='GPKG')
-            bboxes, attributes = get_tiles_template()
+            layer = f'MarcoIsland_{block_count}'
+            #bboxes, attributes = get_tiles_template()
+            #gdf.to_file(gpkg, layer=layer, driver='GPKG')
+            
+        gdf.to_file(geojson_path, driver='GeoJSON')
 
     except Exception as e:
         print(f'{e} - {str(las_path)}')

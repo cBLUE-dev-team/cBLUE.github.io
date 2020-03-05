@@ -129,6 +129,7 @@ class Tpu:
             'las_data': [
                 'las_name', 
                 'flight_line', 
+                'raw_class',
                 'las_t', 
                 'las_x', 
                 'las_y', 
@@ -219,7 +220,7 @@ class Tpu:
 
     def output_diagnostic_data(self, las_short_name, fl, merged_data, 
                                stddev, subaer_obj, subaqu_obj, 
-                               total_thu, total_tvu):
+                               total_thu, total_tvu, raw_class):
 
         print(f'outputting diagnostic data - {las_short_name}, flight line {fl}...')
 
@@ -229,6 +230,7 @@ class Tpu:
         diag_data = {
             'las_name': las_short_name,
             'flight_line': fl,
+            'raw_class': raw_class,
             'las_t': merged_data[1],
             'las_x': merged_data[2],
             'las_y': merged_data[3],
@@ -339,7 +341,7 @@ class Tpu:
 
                 # CREATE MERGED-DATA OBJECT M
                 logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
-                merged_data, stddev, masked_fl_t_idx = merge.merge(las.las_short_name, fl, sbet.values,
+                merged_data, stddev, masked_fl_t_idx, raw_class = merge.merge(las.las_short_name, fl, sbet.values,
                                                                    fl_unsorted_las_xyzt, fl_t_idx)
 
                 if merged_data is not False:  # i.e., las and sbet is merged
@@ -376,7 +378,7 @@ class Tpu:
                     diag_dfs.append(self.output_diagnostic_data(las.las_short_name, fl,
                                                                 merged_data, stddev, 
                                                                 subaer_obj, subaqu_obj, 
-                                                                total_thu, total_tvu))
+                                                                total_thu, total_tvu, raw_class))
 
                 else:
                     logging.warning('SBET and LAS not merged because max delta '

@@ -182,9 +182,9 @@ class Sbet:
         :return: n/a
         """
 
-        sbet_tic = time.clock()
+        sbet_tic = time.process_time()
         self.data = self.build_sbets_data()  # df
-        sbet_toc = time.clock()
+        sbet_toc = time.process_time()
         logging.debug('It took {:.1f} mins to load the trajectory data.'.format((sbet_toc - sbet_tic) / 60))
 
     def get_tile_data(self, north, south, east, west):

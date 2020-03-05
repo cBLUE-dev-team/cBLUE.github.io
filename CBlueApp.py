@@ -521,9 +521,33 @@ class ControllerPanel(ttk.Frame):
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
 
-        #las_files = [Path(l) for l in las_files]
-        #lasses_to_process = ['2016_429000e_2859000n', '2016_429500e_2859000n']
-        #las_files = [str(l) for l in las_files if l.stem in lasses_to_process]
+        las_files = [Path(l) for l in las_files]
+        lasses_to_process = [
+            '2017_3805000e_42195000n_las',
+            '2017_3805000e_42205000n_las',
+            '2017_3805000e_42200000n_las',
+            '2017_3805000e_42210000n_las',
+            '2017_3810000e_42195000n_las',
+            '2017_3810000e_42200000n_las',
+            '2017_3810000e_42210000n_las',
+            '2017_3810000e_42205000n_las',
+            '2017_3815000e_42195000n_las',
+            '2017_3815000e_42205000n_las',
+            '2017_3815000e_42200000n_las',
+            '2017_3815000e_42210000n_las',
+            '2017_3820000e_42195000n_las',
+            '2017_3820000e_42205000n_las',
+            '2017_3820000e_42210000n_las',
+            '2017_3820000e_42200000n_las',
+            '2017_3825000e_42195000n_las',
+            '2017_3825000e_42200000n_las',
+            '2017_3825000e_42205000n_las',
+            '2017_3825000e_42210000n_las',
+            '2017_3830000e_42195000n_las',
+            '2017_3830000e_42200000n_las',
+            '2017_3830000e_42205000n_las',
+            '2017_3830000e_42210000n_las']
+        las_files = [str(l) for l in las_files if l.stem in lasses_to_process]
 
         num_las = len(las_files)
 

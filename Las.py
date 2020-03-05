@@ -50,8 +50,8 @@ class Las:
         self.las_short_name = las.split('\\')[-1]
         self.las_base_name = self.las_short_name.replace('.las', '')
         self.inFile = laspy.file.File(self.las, mode="r")
-        #self.points_to_process = self.inFile.points['point']
-        self.points_to_process = self.get_bathy_points()
+        self.points_to_process = self.inFile.points['point']
+        #self.points_to_process = self.get_bathy_points()
         self.unq_flight_lines = self.get_flight_line_ids()
         #self.num_file_points = self.inFile.__len__()
         self.num_file_points = self.points_to_process.shape[0]
@@ -101,6 +101,7 @@ class Las:
         X = self.points_to_process['X']
         Y = self.points_to_process['Y']
         Z = self.points_to_process['Z']
+        c = self.points_to_process['raw_classification']
 
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
@@ -108,11 +109,11 @@ class Las:
 
         self.time_sort_indices = t.argsort()
 
-        xyzt = np.vstack([x, y, z, t]).T
+        xyztc = np.vstack([x, y, z, t, c]).T
 
         flight_lines = self.points_to_process['pt_src_id']
 
-        return xyzt, self.time_sort_indices, flight_lines
+        return xyztc, self.time_sort_indices, flight_lines
 
 
 if __name__ == '__main__':
