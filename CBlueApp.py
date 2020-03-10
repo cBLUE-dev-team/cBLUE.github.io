@@ -453,29 +453,35 @@ class ControllerPanel(ttk.Frame):
     def tpu_process_callback(self):
         self.verify_water_level()
 
-    def continue_with_tpu_calc(self, alert):
-        alert.destroy()
+    def continue_with_tpu_calc(self, wseh_popup, wseh_value):
+        self.controller.controller_configuration['water_surface_ellipsoid_height'] = wseh_value
+        self.controller.save_config()
+        wseh_popup.destroy()
         self.begin_tpu_calc()
 
     def verify_water_level(self):
-        about = tk.Toplevel()
-        tk.Toplevel.iconbitmap(about, 'cBLUE_icon.ico')
-        about.resizable(False, False)
-        about.wm_title('IMPORTANT!!!')
+        wseh = tk.Toplevel()
+        tk.Toplevel.iconbitmap(wseh, 'cBLUE_icon.ico')
+        wseh.resizable(False, False)
+        wseh.wm_title('IMPORTANT!!!')
 
-        msg = '''
-        Make sure the nominal water-surface ellipsoid height of
-        {} meters specified in the configuration file is correct!
-        '''.format(self.controller.controller_configuration['water_surface_ellipsoid_height'])
+        msg = 'Enter the nominal water-surface ellipsoid height:\n(default value read from config file)'
 
-        label = tk.Label(about, text=msg)
+        label = tk.Label(wseh, text=msg)
         label.pack()
-        b1 = ttk.Button(about, text='Ok', command=lambda: self.continue_with_tpu_calc(about))
+
+        wseh_value = tk.StringVar(self)
+        wseh_value.set(self.controller.controller_configuration['water_surface_ellipsoid_height'])
+
+        entry = tk.Entry(wseh, textvariable=wseh_value)
+        entry.pack()
+
+        b1 = ttk.Button(wseh, text='Ok', command=lambda: self.continue_with_tpu_calc(wseh, float(wseh_value.get())))
         b1.pack()
-        about.mainloop()
+
+        wseh.mainloop()
 
     def begin_tpu_calc(self):
-
         surface_ind = self.waterSurfaceRadio.selection.get()
         surface_selection = self.water_surface_options[surface_ind]
 
