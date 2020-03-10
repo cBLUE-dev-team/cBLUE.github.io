@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -185,45 +186,40 @@ Corvallis, OR  97331
 <a class="reference external" href="mailto:christopher&#46;parrish&#37;&#52;&#48;oregonstate&#46;edu">christopher<span>&#46;</span>parrish<span>&#64;</span>oregonstate<span>&#46;</span>edu</a></p>
 <dl class="class">
 <dt id="Las.Las">
-<em class="property">class </em><code class="descclassname">Las.</code><code class="descname">Las</code><span class="sig-paren">(</span><em>las</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Las.html#Las"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Las.Las" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Las.</code><code class="sig-name descname">Las</code><span class="sig-paren">(</span><em class="sig-param">las</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Las.html#Las"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Las.Las" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="Las.Las.get_flight_line_ids">
-<code class="descname">get_flight_line_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Las.html#Las.get_flight_line_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Las.Las.get_flight_line_ids" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_flight_line_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Las.html#Las.get_flight_line_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Las.Las.get_flight_line_ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>generates a list of unique flight line ids</p>
 <p>This method returns a list of unique flight line ids.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Las.Las.get_flight_line_txyz">
-<code class="descname">get_flight_line_txyz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Las.html#Las.get_flight_line_txyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Las.Las.get_flight_line_txyz" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_flight_line_txyz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Las.html#Las.get_flight_line_txyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Las.Las.get_flight_line_txyz" title="Permalink to this definition">¶</a></dt>
 <dd><p>retrieves the x, y, z, and timestamp data from the las data points</p>
 <p>The x, y, and z values in the las file are stored as integers.  The
 scale and offset values in the las file header are used to convert
 the integer values to decimal values with centimeter precision.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fl</strong> (<em>?</em>) – </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">np.array, np.array, np.array, np.array</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fl</strong> (<em>?</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>np.array, np.array, np.array, np.array</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Las.Las.unq_flight_lines">
-<code class="descname">unq_flight_lines</code><em class="property"> = None</em><a class="headerlink" href="#Las.Las.unq_flight_lines" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">unq_flight_lines</code><em class="property"> = None</em><a class="headerlink" href="#Las.Las.unq_flight_lines" title="Permalink to this definition">¶</a></dt>
 <dd><p>index list that would sort gps_time (to be used to
 later when exporting las data and calculated tpu to a las
 file</p>

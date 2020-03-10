@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -172,47 +172,47 @@
 <div class="section" id="cblue-files">
 <h2>cBLUE Files<a class="headerlink" href="#cblue-files" title="Permalink to this headline">¶</a></h2>
 <p>The following table lists the main classes comprising cBLUE:</p>
-<table border="1" class="colwidths-given docutils" id="id1">
+<table class="colwidths-given docutils align-default" id="id1">
 <caption><span class="caption-text">Main cBLUE classes</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="32%" />
-<col width="68%" />
+<col style="width: 32%" />
+<col style="width: 68%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">file</th>
-<th class="head">description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>file</p></th>
+<th class="head"><p>description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>CBlueApp.py</td>
-<td>defines and initiates the GUI</td>
+<tbody>
+<tr class="row-even"><td><p>CBlueApp.py</p></td>
+<td><p>defines and initiates the GUI</p></td>
 </tr>
-<tr class="row-odd"><td>Sbet.py</td>
-<td>loads the ASCII trajectory files (or “sbets”)</td>
+<tr class="row-odd"><td><p>Sbet.py</p></td>
+<td><p>loads the ASCII trajectory files (or “sbets”)</p></td>
 </tr>
-<tr class="row-even"><td>Las.py</td>
-<td>loads the las files</td>
+<tr class="row-even"><td><p>Las.py</p></td>
+<td><p>loads the las files</p></td>
 </tr>
-<tr class="row-odd"><td>Merge.py</td>
-<td>merges the trajectory and las data based on timestamps</td>
+<tr class="row-odd"><td><p>Merge.py</p></td>
+<td><p>merges the trajectory and las data based on timestamps</p></td>
 </tr>
-<tr class="row-even"><td>SensorModel.py</td>
-<td>defines and gives access to lidar sensor model</td>
+<tr class="row-even"><td><p>SensorModel.py</p></td>
+<td><p>defines and gives access to lidar sensor model</p></td>
 </tr>
-<tr class="row-odd"><td>Jacobian.py</td>
-<td>forms and evaluates the Jacobian of a sensor model’s laser geolocation equation</td>
+<tr class="row-odd"><td><p>Jacobian.py</p></td>
+<td><p>forms and evaluates the Jacobian of a sensor model’s laser geolocation equation</p></td>
 </tr>
-<tr class="row-even"><td>Tpu.py</td>
-<td>coordinates the TPU workflow</td>
+<tr class="row-even"><td><p>Tpu.py</p></td>
+<td><p>coordinates the TPU workflow</p></td>
 </tr>
-<tr class="row-odd"><td>Subaerial.py</td>
-<td>calculates the subaerial TPU</td>
+<tr class="row-odd"><td><p>Subaerial.py</p></td>
+<td><p>calculates the subaerial TPU</p></td>
 </tr>
-<tr class="row-even"><td>Subaqueous.py</td>
-<td>calculates the subaqueous TPU</td>
+<tr class="row-even"><td><p>Subaqueous.py</p></td>
+<td><p>calculates the subaqueous TPU</p></td>
 </tr>
-<tr class="row-odd"><td>Datum.py</td>
-<td>loads the zone-specific VDatum zone MCU</td>
+<tr class="row-odd"><td><p>Datum.py</p></td>
+<td><p>loads the zone-specific VDatum zone MCU</p></td>
 </tr>
 </tbody>
 </table>
@@ -223,44 +223,40 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">env</span> <span class="n">create</span> <span class="o">--</span><span class="n">file</span> <span class="o">&lt;</span><span class="n">evn</span> <span class="n">file</span> <span class="n">name</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>where &lt;env file name&gt; is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.</p>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">Depending on the version of Anaconda installed on your system, the above method might not install the pip packages listed in the .yml file (<a class="reference external" href="https://github.com/conda/conda/issues/8404">https://github.com/conda/conda/issues/8404</a>).  If this is the case, use <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">cBLUE_env_pip.txt</span></code> in addition to the <code class="code docutils literal notranslate"><span class="pre">conda</span> <span class="pre">env</span> <span class="pre">create</span> <span class="pre">--file</span> <span class="pre">cBLUE_env.yml</span></code> command listed above to install the necessary pip packages.</p>
-</div>
+<p>where &lt;env file name&gt; is the path to cBLUE.yml, which is included in the cBLUE GitHub repository.</p>
 <p>Major dependencies are summarized in the table below:</p>
-<table border="1" class="colwidths-given docutils" id="id2">
+<table class="colwidths-given docutils align-default" id="id2">
 <caption><span class="caption-text">Main Dependencies</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="25%" />
-<col width="75%" />
+<col style="width: 25%" />
+<col style="width: 75%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">package</th>
-<th class="head">comment</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>package</p></th>
+<th class="head"><p>comment</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>numpy</td>
-<td>most of the matrix calculations are based on numpy arrays</td>
+<tbody>
+<tr class="row-even"><td><p>numpy</p></td>
+<td><p>most of the matrix calculations are based on numpy arrays</p></td>
 </tr>
-<tr class="row-odd"><td>numexpr</td>
-<td>used to accelerate numpy-array calculations of large arrays</td>
+<tr class="row-odd"><td><p>numexpr</p></td>
+<td><p>used to accelerate numpy-array calculations of large arrays</p></td>
 </tr>
-<tr class="row-even"><td>sympy</td>
-<td>used to symbolically form geolocation equation and form/evaluate Jacobian</td>
+<tr class="row-even"><td><p>sympy</p></td>
+<td><p>used to symbolically form geolocation equation and form/evaluate Jacobian</p></td>
 </tr>
-<tr class="row-odd"><td>pandas</td>
-<td>certain operations are based on Pandas dataframes</td>
+<tr class="row-odd"><td><p>pandas</p></td>
+<td><p>certain operations are based on Pandas dataframes</p></td>
 </tr>
-<tr class="row-even"><td>pathos</td>
-<td>multiprocess framework (if user specifies multiprocessing)</td>
+<tr class="row-even"><td><p>pathos</p></td>
+<td><p>multiprocess framework (if user specifies multiprocessing)</p></td>
 </tr>
-<tr class="row-odd"><td>laspy</td>
-<td>used to read LAS files</td>
+<tr class="row-odd"><td><p>laspy</p></td>
+<td><p>used to read LAS files</p></td>
 </tr>
-<tr class="row-even"><td>Tkinter</td>
-<td>used to create GUI</td>
+<tr class="row-even"><td><p>Tkinter</p></td>
+<td><p>used to create GUI</p></td>
 </tr>
 </tbody>
 </table>

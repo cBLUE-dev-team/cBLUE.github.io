@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -174,19 +175,19 @@
 <h1>Operational Workflow<a class="headerlink" href="#operational-workflow" title="Permalink to this headline">¶</a></h1>
 <p>The cBLUE workflow consists of 3 general steps:</p>
 <ol class="arabic simple">
-<li>Specify Settings</li>
+<li><p>Specify Settings</p></li>
 </ol>
 <blockquote>
 <div><ul class="simple">
-<li>Data Directories</li>
-<li>Environmental Parameters</li>
-<li>VDatum Region</li>
-<li>Configuration File Settings</li>
+<li><p>Data Directories</p></li>
+<li><p>Environmental Parameters</p></li>
+<li><p>VDatum Region</p></li>
+<li><p>Configuration File Settings</p></li>
 </ul>
 </div></blockquote>
 <ol class="arabic simple" start="2">
-<li>Load trajectory file(s)</li>
-<li>Process TPU</li>
+<li><p>Load trajectory file(s)</p></li>
+<li><p>Process TPU</p></li>
 </ol>
 <div class="section" id="specify-settings">
 <h2>1. Specify Settings<a class="headerlink" href="#specify-settings" title="Permalink to this headline">¶</a></h2>
@@ -208,15 +209,15 @@
 <p>The configuration file contains the following settings, in addition to logging the previously saved directory settings and selected sensor model:</p>
 <blockquote>
 <div><ul class="simple">
-<li>CPU processing mode (single- or multi-processing)</li>
-<li>number of cores to use (if multi-processing specified)</li>
-<li>cBLUE version (to be moved to a separate configuration file)</li>
-<li>paths to subaqueous look up tables (LUTs) (to be moved to a separate configuration file)</li>
+<li><p>CPU processing mode (single- or multi-processing)</p></li>
+<li><p>number of cores to use (if multi-processing specified)</p></li>
+<li><p>cBLUE version (to be moved to a separate configuration file)</p></li>
+<li><p>paths to subaqueous look up tables (LUTs) (to be moved to a separate configuration file)</p></li>
 </ul>
 </div></blockquote>
 <div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">cBLUE currently requires the user to manually specify a nominal water-surface ellipsoid height for the “water_surface_ellipsoid_height” variable in the configuration file (cblue_configuration.json).  Development plans include adding the options to calculate a nominal water-suface ellipsoid height from (1) the data points classified as water surface and (2) the average separation between local mean sea level (LMSL) and the GRS80 ellipoid in the specified VDatum zone.</p>
+<p class="admonition-title">Warning</p>
+<p>cBLUE currently requires the user to manually specify a nominal water-surface ellipsoid height for the “water_surface_ellipsoid_height” variable in the configuration file (cblue_configuration.json).  Development plans include adding the options to calculate a nominal water-suface ellipsoid height from (1) the data points classified as water surface and (2) the average separation between local mean sea level (LMSL) and the GRS80 ellipoid in the specified VDatum zone.</p>
 </div>
 </div>
 </div>

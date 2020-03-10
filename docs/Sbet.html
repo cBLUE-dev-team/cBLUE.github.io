@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -185,76 +186,73 @@ Corvallis, OR  97331
 <a class="reference external" href="mailto:christopher&#46;parrish&#37;&#52;&#48;oregonstate&#46;edu">christopher<span>&#46;</span>parrish<span>&#64;</span>oregonstate<span>&#46;</span>edu</a></p>
 <dl class="class">
 <dt id="Sbet.Sbet">
-<em class="property">class </em><code class="descclassname">Sbet.</code><code class="descname">Sbet</code><span class="sig-paren">(</span><em>sbet_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Sbet.</code><code class="sig-name descname">Sbet</code><span class="sig-paren">(</span><em class="sig-param">sbet_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <dl class="method">
 <dt id="Sbet.Sbet.build_sbets_data">
-<code class="descname">build_sbets_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.build_sbets_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.build_sbets_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">build_sbets_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.build_sbets_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.build_sbets_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>builds 1 pandas dataframe from all ASCII sbet files</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">pandas dataframe</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>pandas dataframe</p>
+</dd>
+</dl>
 <p>The following table lists the contents of the returned pandas sbet dataframe:</p>
-<table border="1" class="docutils">
+<table class="docutils align-default">
 <colgroup>
-<col width="8%" />
-<col width="92%" />
+<col style="width: 8%" />
+<col style="width: 92%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Index</th>
-<th class="head">description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Index</p></th>
+<th class="head"><p>description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>0</td>
-<td>timestamp (GPS seconds-of-week or GPS standard adjusted time)</td>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>timestamp (GPS seconds-of-week or GPS standard adjusted time)</p></td>
 </tr>
-<tr class="row-odd"><td>1</td>
-<td>longitude</td>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>longitude</p></td>
 </tr>
-<tr class="row-even"><td>2</td>
-<td>latitude</td>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>latitude</p></td>
 </tr>
-<tr class="row-odd"><td>3</td>
-<td>X (easting)</td>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>X (easting)</p></td>
 </tr>
-<tr class="row-even"><td>4</td>
-<td>Y (northing)</td>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>Y (northing)</p></td>
 </tr>
-<tr class="row-odd"><td>5</td>
-<td>Z (ellipsoid height)</td>
+<tr class="row-odd"><td><p>5</p></td>
+<td><p>Z (ellipsoid height)</p></td>
 </tr>
-<tr class="row-even"><td>6</td>
-<td>roll</td>
+<tr class="row-even"><td><p>6</p></td>
+<td><p>roll</p></td>
 </tr>
-<tr class="row-odd"><td>7</td>
-<td>pitch</td>
+<tr class="row-odd"><td><p>7</p></td>
+<td><p>pitch</p></td>
 </tr>
-<tr class="row-even"><td>8</td>
-<td>heading</td>
+<tr class="row-even"><td><p>8</p></td>
+<td><p>heading</p></td>
 </tr>
-<tr class="row-odd"><td>9</td>
-<td>standard deviation X</td>
+<tr class="row-odd"><td><p>9</p></td>
+<td><p>standard deviation X</p></td>
 </tr>
-<tr class="row-even"><td>10</td>
-<td>standard deviation Y</td>
+<tr class="row-even"><td><p>10</p></td>
+<td><p>standard deviation Y</p></td>
 </tr>
-<tr class="row-odd"><td>11</td>
-<td>standard deviation Z</td>
+<tr class="row-odd"><td><p>11</p></td>
+<td><p>standard deviation Z</p></td>
 </tr>
-<tr class="row-even"><td>12</td>
-<td>standard deviation roll</td>
+<tr class="row-even"><td><p>12</p></td>
+<td><p>standard deviation roll</p></td>
 </tr>
-<tr class="row-odd"><td>13</td>
-<td>standard deviation pitch</td>
+<tr class="row-odd"><td><p>13</p></td>
+<td><p>standard deviation pitch</p></td>
 </tr>
-<tr class="row-even"><td>14</td>
-<td>standard deviation heading</td>
+<tr class="row-even"><td><p>14</p></td>
+<td><p>standard deviation heading</p></td>
 </tr>
 </tbody>
 </table>
@@ -262,28 +260,26 @@ Corvallis, OR  97331
 
 <dl class="method">
 <dt id="Sbet.Sbet.check_if_sow">
-<code class="descname">check_if_sow</code><span class="sig-paren">(</span><em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.check_if_sow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.check_if_sow" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">check_if_sow</code><span class="sig-paren">(</span><em class="sig-param">time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.check_if_sow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.check_if_sow" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="Sbet.Sbet.get_sbet_date">
-<em class="property">static </em><code class="descname">get_sbet_date</code><span class="sig-paren">(</span><em>sbet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.get_sbet_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.get_sbet_date" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">get_sbet_date</code><span class="sig-paren">(</span><em class="sig-param">sbet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.get_sbet_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.get_sbet_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>parses year, month, and day from ASCII sbet filename</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sbet</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ASCII sbet filename</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List[int]</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sbet</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – ASCII sbet filename</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List[int]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Sbet.Sbet.get_tile_data">
-<code class="descname">get_tile_data</code><span class="sig-paren">(</span><em>north</em>, <em>south</em>, <em>east</em>, <em>west</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.get_tile_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.get_tile_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_tile_data</code><span class="sig-paren">(</span><em class="sig-param">north</em>, <em class="sig-param">south</em>, <em class="sig-param">east</em>, <em class="sig-param">west</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.get_tile_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.get_tile_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>queries the sbet data points that lie within the given las tile bounding coordinates</p>
 <p>One pandas dataframe is created from all of the loaded ASCII sbet files,
 but as each las tile is processed, only the sbet data located within the
@@ -292,64 +288,53 @@ las tile limits are sent to the calc_tpu() method.</p>
 whose corresponding trajectory data falls outside of the las tile extents,
 a buffer is added to the bounds of the tile when retreiving the
 trajectory data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>north</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – northern limit of las tile</li>
-<li><strong>south</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – southern limit of las tile</li>
-<li><strong>east</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – eastern limit of las tile</li>
-<li><strong>west</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – western limit of las tile</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>north</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – northern limit of las tile</p></li>
+<li><p><strong>south</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – southern limit of las tile</p></li>
+<li><p><strong>east</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – eastern limit of las tile</p></li>
+<li><p><strong>west</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a>) – western limit of las tile</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">pandas dataframe</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pandas dataframe</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Sbet.Sbet.gps_sow_to_gps_adj">
-<code class="descname">gps_sow_to_gps_adj</code><span class="sig-paren">(</span><em>gps_date</em>, <em>gps_wk_sec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.gps_sow_to_gps_adj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.gps_sow_to_gps_adj" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">gps_sow_to_gps_adj</code><span class="sig-paren">(</span><em class="sig-param">gps_date</em>, <em class="sig-param">gps_wk_sec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.gps_sow_to_gps_adj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.gps_sow_to_gps_adj" title="Permalink to this definition">¶</a></dt>
 <dd><p>converts GPS seconds-of-week timestamp to GPS adjusted standard time</p>
 <p>In the case that the timestamps in the sbet files are GPS week seconds,
 this method is called to convert the timestamps to GPS adjusted standard
 time, which is what the las file timestamps are.  The timestamps in the
 sbet and las files need to be the same format, because the merging process
 merges the data in the sbet and las files based on timestamps.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>gps_date</strong> (<em>?</em>) – [year, month, day]</li>
-<li><strong>gps_wk_sec</strong> (<em>?</em>) – GPS seconds-of-week timestamp</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gps_date</strong> (<em>?</em>) – [year, month, day]</p></li>
+<li><p><strong>gps_wk_sec</strong> (<em>?</em>) – GPS seconds-of-week timestamp</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">float</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Sbet.Sbet.set_data">
-<code class="descname">set_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.set_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.set_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Sbet.html#Sbet.set_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Sbet.Sbet.set_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>populates Sbet object’s data field with pandas dataframe (when user
 presses the “Load Trajectory File(s)” button)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">n/a</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>n/a</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

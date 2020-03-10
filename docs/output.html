@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -170,82 +171,82 @@
 <div class="section" id="las-file-las">
 <h2>LAS File (.las)<a class="headerlink" href="#las-file-las" title="Permalink to this headline">¶</a></h2>
 <p>The output .las file contains the same information contained in the original .las file, in addition to any of the fields listed in the following table as variable length record (VLR) extra bytes</p>
-<style> .bold {font-weight:bold} </style><table border="1" class="colwidths-given docutils" id="id1">
+<style> .bold {font-weight:bold} </style><table class="colwidths-given docutils align-default" id="id1">
 <caption><span class="caption-text">Output cBLUE Las Extra Bytes (defaults in bold)</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="26%" />
-<col width="37%" />
-<col width="37%" />
+<col style="width: 26%" />
+<col style="width: 37%" />
+<col style="width: 37%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">id</th>
-<th class="head">dtype</th>
-<th class="head">description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>id</p></th>
+<th class="head"><p>dtype</p></th>
+<th class="head"><p>description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><span class="bold">total_thu</span></td>
-<td><span class="bold">unsigned short (1 byte)</span></td>
-<td><span class="bold">total horizontal uncertainty</span></td>
+<tbody>
+<tr class="row-even"><td><p><span class="bold">total_thu</span></p></td>
+<td><p><span class="bold">unsigned short (1 byte)</span></p></td>
+<td><p><span class="bold">total horizontal uncertainty</span></p></td>
 </tr>
-<tr class="row-odd"><td><span class="bold">total_tvu</span></td>
-<td><span class="bold">unsigned short (1 byte)</span></td>
-<td><span class="bold">total vertical uncertainty</span></td>
+<tr class="row-odd"><td><p><span class="bold">total_tvu</span></p></td>
+<td><p><span class="bold">unsigned short (1 byte)</span></p></td>
+<td><p><span class="bold">total vertical uncertainty</span></p></td>
 </tr>
-<tr class="row-even"><td>cblue_x</td>
-<td>unsigned long long (8 bytes)</td>
-<td>cBLUE-calculated x coordinate</td>
+<tr class="row-even"><td><p>cblue_x</p></td>
+<td><p>unsigned long long (8 bytes)</p></td>
+<td><p>cBLUE-calculated x coordinate</p></td>
 </tr>
-<tr class="row-odd"><td>cblue_y</td>
-<td>unsigned long long (8 bytes)</td>
-<td>cBLUE-calculated y coordinate</td>
+<tr class="row-odd"><td><p>cblue_y</p></td>
+<td><p>unsigned long long (8 bytes)</p></td>
+<td><p>cBLUE-calculated y coordinate</p></td>
 </tr>
-<tr class="row-even"><td>cblue_z</td>
-<td>long (4 bytes)</td>
-<td>cBLUE-calculated z coordinate</td>
+<tr class="row-even"><td><p>cblue_z</p></td>
+<td><p>long (4 bytes)</p></td>
+<td><p>cBLUE-calculated z coordinate</p></td>
 </tr>
-<tr class="row-odd"><td>subaerial_thu</td>
-<td>unsigned short (1 byte)</td>
-<td>subaerial total horizontal uncertainty</td>
+<tr class="row-odd"><td><p>subaerial_thu</p></td>
+<td><p>unsigned short (1 byte)</p></td>
+<td><p>subaerial total horizontal uncertainty</p></td>
 </tr>
-<tr class="row-even"><td>subaerial_tvu</td>
-<td>unsigned short (1 byte)</td>
-<td>subaerial total vertical uncertainty</td>
+<tr class="row-even"><td><p>subaerial_tvu</p></td>
+<td><p>unsigned short (1 byte)</p></td>
+<td><p>subaerial total vertical uncertainty</p></td>
 </tr>
-<tr class="row-odd"><td>subaqueous_thu</td>
-<td>unsigned short (1 byte)</td>
-<td>subaqueous total horizontal uncertainty</td>
+<tr class="row-odd"><td><p>subaqueous_thu</p></td>
+<td><p>unsigned short (1 byte)</p></td>
+<td><p>subaqueous total horizontal uncertainty</p></td>
 </tr>
-<tr class="row-even"><td>subaqueous_tvu</td>
-<td>unsigned short (1 byte)</td>
-<td>subaqueous total vertical uncertainty</td>
+<tr class="row-even"><td><p>subaqueous_tvu</p></td>
+<td><p>unsigned short (1 byte)</p></td>
+<td><p>subaqueous total vertical uncertainty</p></td>
 </tr>
 </tbody>
 </table>
 <p>By default, the only the total propagated horizontal uncertainty (THU) and total propagated vertical uncertainty (TVU) are exported as extra bytes.  The cBLUE-calculated position and subaerial/subaqueous component TPU fields can be exported as extra bytes by uncommenting the corresponding lines of code in the output_tpu_to_las_extra_bytes method of the TPU class.</p>
 <div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">Exporting non-default fields is not aligned with current draft standard ExtraByte definitions of the ASPRS Las Working Group (<a class="reference external" href="https://github.com/ASPRSorg/LAS/wiki/Standard-ExtraByte-Definitions">https://github.com/ASPRSorg/LAS/wiki/Standard-ExtraByte-Definitions</a>).  Additionally, exporting addition extra bytes will increase file sizes and processing times.</p>
+<p class="admonition-title">Warning</p>
+<p>Exporting non-default fields is not aligned with current draft standard ExtraByte definitions of the ASPRS Las Working Group (<a class="reference external" href="https://github.com/ASPRSorg/LAS/wiki/Standard-ExtraByte-Definitions">https://github.com/ASPRSorg/LAS/wiki/Standard-ExtraByte-Definitions</a>).  Additionally, exporting addition extra bytes will increase file sizes and processing times.</p>
 </div>
 </div>
 <div class="section" id="metadata-file-json">
 <h2>Metadata File (.json)<a class="headerlink" href="#metadata-file-json" title="Permalink to this headline">¶</a></h2>
 <p>The .json metadata file contains the following information:</p>
 <ul class="simple">
-<li>cBLUE version</li>
-<li>Sensor model</li>
-<li>per flight line summary statistics of component an total THU and TVU</li>
-<li>VDatum region and corresponding region MCU</li>
-<li>Environmental parameters (including subaqueous lookup parameters)</li>
-<li>CPU processing information (single- or multi-processing)</li>
+<li><p>cBLUE version</p></li>
+<li><p>Sensor model</p></li>
+<li><p>per flight line summary statistics of component an total THU and TVU</p></li>
+<li><p>VDatum region and corresponding region MCU</p></li>
+<li><p>Environmental parameters (including subaqueous lookup parameters)</p></li>
+<li><p>CPU processing information (single- or multi-processing)</p></li>
 </ul>
 </div>
 <div class="section" id="cblue-log">
 <h2>cBLUE log<a class="headerlink" href="#cblue-log" title="Permalink to this headline">¶</a></h2>
 <p>By default, cBLUE is configured to export messages with a logging level of INFO and above to a text log file in cBLUE’s root directory.</p>
 <div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">The log file was originally intended for single-processing.  The log file for multi-processing currently does not necessarily log all intended messages.  Development plans include reworking log-file generation to accommodate logging messages from multiple processes to a single file.</p>
+<p class="admonition-title">Warning</p>
+<p>The log file was originally intended for single-processing.  The log file for multi-processing currently does not necessarily log all intended messages.  Development plans include reworking log-file generation to accommodate logging messages from multiple processes to a single file.</p>
 </div>
 </div>
 </div>
