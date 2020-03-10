@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -185,15 +186,15 @@ Corvallis, OR  97331
 <a class="reference external" href="mailto:christopher&#46;parrish&#37;&#52;&#48;oregonstate&#46;edu">christopher<span>&#46;</span>parrish<span>&#64;</span>oregonstate<span>&#46;</span>edu</a></p>
 <dl class="class">
 <dt id="GuiSupport.DirectorySelectButton">
-<em class="property">class </em><code class="descclassname">GuiSupport.</code><code class="descname">DirectorySelectButton</code><span class="sig-paren">(</span><em>master</em>, <em>frame</em>, <em>direct_type</em>, <em>dir_path</em>, <em>width</em>, <em>callback=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">GuiSupport.</code><code class="sig-name descname">DirectorySelectButton</code><span class="sig-paren">(</span><em class="sig-param">master</em>, <em class="sig-param">frame</em>, <em class="sig-param">direct_type</em>, <em class="sig-param">dir_path</em>, <em class="sig-param">width</em>, <em class="sig-param">callback=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Button used to get the name of a directing containing
 files that need to be imported during processing.</p>
 <p>Created: 2017-12-07</p>
 <p>&#64;author Timothy Kammerer</p>
 <dl class="method">
 <dt id="GuiSupport.DirectorySelectButton.callback">
-<code class="descname">callback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton.callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton.callback" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">callback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton.callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton.callback" title="Permalink to this definition">¶</a></dt>
 <dd><p>Callback for the button.</p>
 <p>Gets the directoryName from user with filedialog.
 Updates the display to reflect directory choice.</p>
@@ -201,13 +202,13 @@ Updates the display to reflect directory choice.</p>
 
 <dl class="method">
 <dt id="GuiSupport.DirectorySelectButton.grid">
-<code class="descname">grid</code><span class="sig-paren">(</span><em>**args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton.grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton.grid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">grid</code><span class="sig-paren">(</span><em class="sig-param">**args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton.grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton.grid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper function for self.button.grid.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="GuiSupport.DirectorySelectButton.set_state">
-<code class="descname">set_state</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton.set_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton.set_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_state</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#DirectorySelectButton.set_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.DirectorySelectButton.set_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the state of the button.</p>
 </dd></dl>
 
@@ -215,18 +216,18 @@ Updates the display to reflect directory choice.</p>
 
 <dl class="class">
 <dt id="GuiSupport.RadioFrame">
-<em class="property">class </em><code class="descclassname">GuiSupport.</code><code class="descname">RadioFrame</code><span class="sig-paren">(</span><em>root</em>, <em>radioName</em>, <em>radioOptions</em>, <em>startSelect=0</em>, <em>background=None</em>, <em>foreground=None</em>, <em>callback=None</em>, <em>width=40</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#RadioFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.RadioFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">GuiSupport.</code><code class="sig-name descname">RadioFrame</code><span class="sig-paren">(</span><em class="sig-param">root</em>, <em class="sig-param">radioName</em>, <em class="sig-param">radioOptions</em>, <em class="sig-param">startSelect=0</em>, <em class="sig-param">background=None</em>, <em class="sig-param">foreground=None</em>, <em class="sig-param">callback=None</em>, <em class="sig-param">width=40</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#RadioFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.RadioFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Created: 2017-12-08</p>
 <p>&#64;author: Timothy Kammerer</p>
 <dl class="method">
 <dt id="GuiSupport.RadioFrame.grid">
-<code class="descname">grid</code><span class="sig-paren">(</span><em>**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#RadioFrame.grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.RadioFrame.grid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">grid</code><span class="sig-paren">(</span><em class="sig-param">**options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#RadioFrame.grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.RadioFrame.grid" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="GuiSupport.RadioFrame.setState">
-<code class="descname">setState</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#RadioFrame.setState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.RadioFrame.setState" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setState</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/GuiSupport.html#RadioFrame.setState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#GuiSupport.RadioFrame.setState" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

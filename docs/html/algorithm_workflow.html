@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -170,28 +171,28 @@
 <h1>Algorithm Workflow<a class="headerlink" href="#algorithm-workflow" title="Permalink to this headline">¶</a></h1>
 <p>The cBLUE algorithm workflow consists of four main steps:</p>
 <ol class="arabic">
-<li><p class="first">Form Sensor Model Observation Equation</p>
+<li><p>Form Sensor Model Observation Equation</p>
 <blockquote>
 <div><p>A laser geolocation equation is formed based on characteristics of the specified lidar sensor model.  The symbolic math library <em>SymPy</em> (<a class="reference external" href="https://www.sympy.org/en/index.html">https://www.sympy.org/en/index.html</a>) is used to construct the laser geolocation equation from specified laser and airplane rotation matrices.</p>
 </div></blockquote>
 </li>
-<li><p class="first">Generate Jacobian</p>
+<li><p>Generate Jacobian</p>
 <blockquote>
 <div><p>The general equation of the Jacobian, or the matrix of partial derivatives, of the laser geolocation equation is calculated using SymPy.</p>
 </div></blockquote>
 </li>
-<li><p class="first">Propagate Uncertainty</p>
+<li><p>Propagate Uncertainty</p>
 <blockquote>
 <div><p>Once the general equation of the Jacobian is calculated, the uncertainties of the component variables are propagated for each data point, per flight line, per Las tile, using the following steps:</p>
 <ul class="simple">
-<li>Merge the Las data and trajectory data (Merge class)</li>
-<li>Calculate subaerial THU and TVU (Subaerial class)</li>
-<li>Calculate subaqueous THU and TVU (Subaqueous class)</li>
-<li>Combine subaerial and subaqueous TPU (Tpu class)</li>
+<li><p>Merge the Las data and trajectory data (Merge class)</p></li>
+<li><p>Calculate subaerial THU and TVU (Subaerial class)</p></li>
+<li><p>Calculate subaqueous THU and TVU (Subaqueous class)</p></li>
+<li><p>Combine subaerial and subaqueous TPU (Tpu class)</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">Export TPU as Las extra bytes (Tpu Class)</p>
+<li><p>Export TPU as Las extra bytes (Tpu Class)</p>
 <blockquote>
 <div><p>The total propagated horizontal uncertainty (THU) and the total propagated vertical uncertainty (TVU) values are written to a new las file as variable length record (VLR) extra bytes, along with the data in the original las file.  (Rather than adding extra bytes to an existing las file, cBLUE creates a new las file containing the information in the original las file and the THU and TVU extra bytes.)</p>
 </div></blockquote>

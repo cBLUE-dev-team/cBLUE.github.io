@@ -34,7 +34,6 @@ import numpy as np
 import numexpr as ne
 from math import radians
 import logging
-import matplotlib.pyplot as plt
 
 
 class Merge:

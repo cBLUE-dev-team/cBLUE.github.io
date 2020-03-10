@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -190,7 +190,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">pathos</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">pathos</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">import</span> <span class="nn">pathos.pools</span> <span class="k">as</span> <span class="nn">pp</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -200,11 +200,11 @@
 <span class="kn">import</span> <span class="nn">numexpr</span> <span class="k">as</span> <span class="nn">ne</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">progressbar</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">Subaerial</span> <span class="k">import</span> <span class="n">Subaerial</span>
-<span class="kn">from</span> <span class="nn">Subaqueous</span> <span class="k">import</span> <span class="n">Subaqueous</span>
-<span class="kn">from</span> <span class="nn">Las</span> <span class="k">import</span> <span class="n">Las</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">Subaerial</span> <span class="kn">import</span> <span class="n">Subaerial</span>
+<span class="kn">from</span> <span class="nn">Subaqueous</span> <span class="kn">import</span> <span class="n">Subaqueous</span>
+<span class="kn">from</span> <span class="nn">Las</span> <span class="kn">import</span> <span class="n">Las</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">cProfile</span>
 
@@ -227,7 +227,7 @@
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">surface_select</span><span class="p">,</span> <span class="n">surface_ind</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">surface_select</span><span class="p">,</span> <span class="n">surface_ind</span><span class="p">,</span>
                  <span class="n">wind_selection</span><span class="p">,</span> <span class="n">wind_val</span><span class="p">,</span>
                  <span class="n">kd_selection</span><span class="p">,</span> <span class="n">kd_val</span><span class="p">,</span> <span class="n">vdatum_region</span><span class="p">,</span>
                  <span class="n">vdatum_region_mcu</span><span class="p">,</span> <span class="n">tpu_output</span><span class="p">,</span> <span class="n">cblue_version</span><span class="p">,</span> 
