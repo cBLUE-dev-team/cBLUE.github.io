@@ -52,10 +52,6 @@ log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year,
                                             str(now.minute).zfill(2),
                                             str(now.second).zfill(2))
 
-logging.basicConfig(filename=log_file,
-                    format='%(asctime)s:%(message)s', 
-                    level=logging.INFO)
-
 #logging.basicConfig(format='%(asctime)s:%(message)s', 
 #                    level=logging.DEBUG)
 
