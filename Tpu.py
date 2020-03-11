@@ -50,6 +50,8 @@ from Las import Las
 import datetime
 import cProfile
 
+import matplotlib.pyplot as plt
+
 
 class Tpu:
     """
@@ -118,7 +120,8 @@ class Tpu:
                              fl_tpu_mean[ind], 
                              fl_tpu_stddev[ind])
         
-            fl_stats_str = '{}: {:6d}{:6d}{:6.0f}{:6.0f}'.format(*fl_stats_vals)
+            fl_stats_str = '{}: {:6.3f}{:6.3f}{:6.3f}{:6.3f}'.format(*fl_stats_vals)
+            #fl_stats_str = '{}: {:6d}{:6d}{:6.0f}{:6.0f}'.format(*fl_stats_vals)
             fl_stats_strs.append(fl_stats_str)
 
         fl_header_str = f'{fl} ({fl_tpu_count}/{num_fl_points} points with TPU)'
@@ -314,8 +317,6 @@ class Tpu:
 
         data_to_output = []
 
-        supp_columns = ['total_thu', 'total_tvu']
-
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
         
@@ -366,19 +367,30 @@ class Tpu:
                     num_points = total_tvu.shape[0]
 
                     fl_tpu_data = np.vstack((
-                        np.round_(total_thu * 1000).astype('uint16'),
-                        np.round_(total_tvu * 1000).astype('uint16'),
-                        masked_fl_t_idx.astype('int')
+                        #np.round_(total_thu * 1000).astype('uint16'),
+                        #np.round_(total_tvu * 1000).astype('uint16'),
+                        total_thu,
+                        total_tvu,
+                        merged_data[1],
+                        merged_data[2],
+                        merged_data[3],
+                        merged_data[4],
+                        raw_class,
+                        fl_unsorted_las_xyzt[:, 3], 
+                        fl_t_idx,
+                        #masked_fl_t_idx.astype('int')
+                        masked_fl_t_idx
                         )).T
 
+                    print(fl_tpu_data)
                     data_to_output.append(fl_tpu_data)
 
                     self.update_fl_stats(fl, num_fl_points, fl_tpu_data)
 
-                    diag_dfs.append(self.output_diagnostic_data(las.las_short_name, fl,
-                                                                merged_data, stddev, 
-                                                                subaer_obj, subaqu_obj, 
-                                                                total_thu, total_tvu, raw_class))
+                    #diag_dfs.append(self.output_diagnostic_data(las.las_short_name, fl,
+                    #                                            merged_data, stddev, 
+                    #                                            subaer_obj, subaqu_obj, 
+                    #                                            total_thu, total_tvu, raw_class))
 
                 else:
                     logging.warning('SBET and LAS not merged because max delta '
@@ -389,15 +401,15 @@ class Tpu:
                         {'{} (0/{} points with TPU)'.format(fl, num_fl_points): None})
 
             self.write_metadata(las)  # TODO: include as VLR?
-            self.output_tpu_to_las_extra_bytes(las, data_to_output, supp_columns)
+            self.output_tpu_to_las_extra_bytes(las, data_to_output)
 
-            # merge fl diagnostic dataframes
-            self.export_diag_data(las.las_base_name, diag_dfs)
+            ## merge fl diagnostic dataframes
+            #self.export_diag_data(las.las_base_name, diag_dfs)
 
         else:
             logging.warning('WARNING: {} has no data points'.format(las.las_short_name))
 
-    def output_tpu_to_las_extra_bytes(self, las, data_to_output, extra_byte_columns):
+    def output_tpu_to_las_extra_bytes(self, las, data_to_output):
         """output the calculated tpu to a las file
 
         This method creates a las file tht contains the contents of the
@@ -437,24 +449,36 @@ class Tpu:
         in_las = laspy.file.File(las.las, mode="r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        tpu_data_type = 3  # 3 = laspy unsigned short (2 bytes)
+        tpu_data_type = 9  # 3 = laspy unsigned short (2 bytes)
 
         extra_byte_dimensions = OrderedDict([
-            ('total_thu', ('total_thu', tpu_data_type)),
-            ('total_tvu', ('total_tvu', tpu_data_type))
+            ('total_thu', tpu_data_type),
+            ('total_tvu', tpu_data_type),
+            ('t', tpu_data_type),
+            ('x', tpu_data_type),
+            ('y', tpu_data_type),
+            ('z', tpu_data_type),
+            ('raw_class', tpu_data_type),
+            ('fl_unsorted_las_t', tpu_data_type),
+            ('fl_t_idx', tpu_data_type)
             ])
 
+        num_extra_bytes = len(extra_byte_dimensions.keys())
+
         # define new extrabyte dimensions
-        for dimension, description in extra_byte_dimensions.items():
+        for dimension, dtype in extra_byte_dimensions.items():
             logging.debug('creating extra byte dimension for {}...'.format(dimension))
             out_las.define_new_dimension(name=dimension, 
-                                         data_type=description[1],
-                                         description=description[0])
+                                         data_type=dtype,
+                                         description=dimension)
 
         if len(data_to_output) != 0:
             tpu_data = np.vstack(data_to_output)
-            extra_byte_df = pd.DataFrame(tpu_data[:, 0:2], index=tpu_data[:, 2], 
-                                         columns=extra_byte_columns)
+            print(tpu_data)
+            extra_byte_df = pd.DataFrame(tpu_data[:, 0:num_extra_bytes], 
+                                         index=tpu_data[:, num_extra_bytes], 
+                                         columns=extra_byte_dimensions.keys())
+            print(extra_byte_df)
                 
             if extra_byte_df.shape[0] == las.num_file_points:
                 extra_byte_df = extra_byte_df.sort_index()
@@ -471,6 +495,26 @@ class Tpu:
             logging.debug('populating extra byte data for total_tvu...')
             out_las.total_tvu = extra_byte_df['total_tvu']
             
+            logging.debug('populating extra byte data for t...')
+            out_las.t = extra_byte_df['t']
+        
+            logging.debug('populating extra byte data for x...')
+            out_las.x = extra_byte_df['x']
+
+            logging.debug('populating extra byte data for y...')
+            out_las.y = extra_byte_df['y']
+        
+            logging.debug('populating extra byte data for z...')
+            out_las.z = extra_byte_df['z']
+
+            logging.debug('populating extra byte data for raw_class...')
+            out_las.raw_class = extra_byte_df['raw_class']
+
+            logging.debug('populating extra byte data for fl_unsorted_las_t...')
+            out_las.fl_unsorted_las_t = extra_byte_df['fl_unsorted_las_t']
+
+            logging.debug('populating extra byte data for fl_t_idx...')
+            out_las.fl_t_idx = extra_byte_df['fl_t_idx']
         else:
             logging.debug('populating extra byte data for total_thu...')
             out_las.total_thu = np.zeros(las.num_file_points)

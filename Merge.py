@@ -152,7 +152,7 @@ class Merge:
 
             raw_class = fl_las_data[:, 4][mask]
 
-        return data, stddev, fl_t_idx[mask], raw_class  # last array is masked t_idx
+        return data, stddev, fl_t_idx[mask], raw_class  # 2nd to last array is masked t_idx
 
 
 if __name__ == '__main__':

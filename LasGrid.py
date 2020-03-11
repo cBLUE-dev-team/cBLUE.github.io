@@ -49,7 +49,6 @@ class QuickLook:
         las_str = str(las_path).replace('\\', '/')
 
         extra_bytes = [
-            'total_thu', 
             'total_tvu'
             ]
 
@@ -64,7 +63,7 @@ class QuickLook:
                     {
                         "type": "readers.las",
                         "filename": """ + '"{}"'.format(las_str) + """,
-                        "extra_dims": """ + '"{}=uint16"'.format(eb) + """,
+                        "extra_dims": """ + '"{}=float"'.format(eb) + """,
                         "use_eb_vlr": "true"
                     },
                     {
@@ -85,14 +84,10 @@ class QuickLook:
 
             try:
                 pipeline = pdal.Pipeline(pdal_json)
-                
                 __ = pipeline.execute()
                 arrays = pipeline.arrays
-                metadata = pipeline.metadata
-
                 print(arrays)
-                print(metadata)
-
+                metadata = pipeline.metadata
             except Exception as e:
                 print(e)
 
@@ -126,7 +121,7 @@ def main():
 
     set_env_vars('cblue_diag')
 
-    las_dir = Path(r'D:\JeromesCreek\AllPoints\class_added')
+    las_dir = Path(r'D:\JeromesCreek\tpu_dir')
     las_paths = list(las_dir.glob('*.las'))
 
     out_dir = las_dir / 'DEMs'
@@ -134,7 +129,6 @@ def main():
     ql = QuickLook(out_dir)
     ql.gen_mean_z_surface_multiprocess(las_paths)
 
-    ql.gen_mosaic('total_thu')
     ql.gen_mosaic('total_tvu')
 
 
