@@ -89,7 +89,6 @@ class Merge:
         16      stdx_sbet   sbet x uncertainty
         17      stdy_sbet   sbet y uncertainty
         18      stdz_sbet   sbet z uncertainty
-        19      std_rho     ?
         =====   =========   ========================    =======
         """
 
