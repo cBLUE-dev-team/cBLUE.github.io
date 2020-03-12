@@ -336,14 +336,15 @@ class Tpu:
                 fl_idx = flight_lines == fl
                 fl_unsorted_las_xyzt = unsorted_las_xyzt[fl_idx]
                 fl_t_argsort = t_argsort[fl_idx]
+                fl_las_idx = t_argsort.argsort()[fl_idx]
 
                 num_fl_points = np.sum(fl_idx)  # count Trues
                 logging.debug(f'{las.las_short_name} fl {fl}: {num_fl_points} points')
 
                 # CREATE MERGED-DATA OBJECT M
                 logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
-                merged_data, stddev, masked_fl_t_idx, raw_class = merge.merge(las.las_short_name, fl, sbet.values,
-                                                                   fl_unsorted_las_xyzt, fl_t_argsort)
+                merged_data, stddev, unsort_idx, raw_class = merge.merge(las.las_short_name, fl, sbet.values,
+                                                                   fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx)
 
                 if merged_data is not False:  # i.e., las and sbet is merged
 
@@ -364,7 +365,6 @@ class Tpu:
 
                     logging.debug('({}) calculating total tvu...'.format(las.las_short_name))
                     total_tvu = ne.evaluate('sqrt(subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2)')
-                    num_points = total_tvu.shape[0]
 
                     fl_tpu_data = np.vstack((
                         #np.round_(total_thu * 1000).astype('uint16'),
@@ -376,10 +376,7 @@ class Tpu:
                         merged_data[3],
                         merged_data[4],
                         raw_class,
-                        fl_unsorted_las_xyzt[:, 3], 
-                        fl_t_argsort,
-                        #masked_fl_t_idx.astype('int')
-                        masked_fl_t_idx
+                        unsort_idx
                         )).T
 
                     print(fl_tpu_data)
@@ -459,9 +456,7 @@ class Tpu:
             ('y', tpu_data_type),
             ('z', tpu_data_type),
             ('raw_class', tpu_data_type),
-            ('fl_unsorted_las_t', tpu_data_type),
-            ('fl_t_argsort', tpu_data_type),
-            ('masked_fl_t_idx', tpu_data_type)
+            ('unsort_idx', tpu_data_type)
             ])
 
         num_extra_bytes = len(extra_byte_dimensions.keys())
@@ -511,14 +506,11 @@ class Tpu:
             logging.debug('populating extra byte data for raw_class...')
             out_las.raw_class = extra_byte_df['raw_class']
 
-            logging.debug('populating extra byte data for fl_unsorted_las_t...')
-            out_las.fl_unsorted_las_t = extra_byte_df['fl_unsorted_las_t']
+            logging.debug('populating extra byte data for unsort_idx...')
+            out_las.unsort_idx = extra_byte_df['unsort_idx']
 
-            logging.debug('populating extra byte data for fl_t_argsort...')
-            out_las.fl_t_argsort = extra_byte_df['fl_t_argsort']
-
-            logging.debug('populating extra byte data for masked_fl_t_idx...')
-            out_las.masked_fl_t_idx = extra_byte_df['masked_fl_t_idx']
+            #logging.debug('populating extra byte data for masked_fl_t_idx...')
+            #out_las.masked_fl_t_idx = extra_byte_df['masked_fl_t_idx']
         else:
             logging.debug('populating extra byte data for total_thu...')
             out_las.total_thu = np.zeros(las.num_file_points)

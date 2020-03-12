@@ -93,14 +93,14 @@ class Merge:
         =====   =========   ========================    =======
         """
 
-    def merge(self, las, fl, sbet_data, fl_las_data, fl_t_idx):  # fl_t_idx = fl_t_argsort
+    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx):
 
         num_sbet_pts = sbet_data.shape[0]
 
         # sort xyzt array based on t_idx column
-        idx = fl_t_idx.argsort()
-        fl_las_data = fl_las_data[idx]
-        fl_t_idx = fl_t_idx[idx]
+        idx = fl_t_argsort.argsort()
+        fl_las_data = fl_unsorted_las_xyzt[idx]
+        fl_las_idx = fl_las_idx[idx]
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
@@ -152,7 +152,7 @@ class Merge:
 
             raw_class = fl_las_data[:, 4][mask]
 
-        return data, stddev, fl_t_idx[mask], raw_class  # 2nd to last array is masked t_idx
+        return data, stddev, fl_las_idx[mask], raw_class  # 2nd to last array is masked t_idx
 
 
 if __name__ == '__main__':

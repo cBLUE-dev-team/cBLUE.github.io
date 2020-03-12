@@ -75,8 +75,7 @@ class QuickLook:
                         "dimension": """ + '"{}"'.format(eb) + """,
                         "gdaldriver": "GTiff",
                         "output_type": "mean",
-                        "resolution": "1.0",
-                        "radius": "1.0",
+                        "resolution": "0.5",
                         "type": "writers.gdal"
                     }
                 ]
