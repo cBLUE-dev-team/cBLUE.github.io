@@ -325,7 +325,7 @@ class Tpu:
         if las.num_file_points:  # i.e., if las had data points
             logging.info('{} ({:,} points)'.format(las.las_short_name, las.num_file_points))
             logging.debug('flight lines {}'.format(las.unq_flight_lines))
-            unsorted_las_xyzt, t_idx, flight_lines = las.get_flight_line_txyz()
+            unsorted_las_xyzt, t_argsort, flight_lines = las.get_flight_line_txyz()
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
@@ -335,15 +335,15 @@ class Tpu:
                 # las_xyzt has the same order as points in las (i.e., unordered)
                 fl_idx = flight_lines == fl
                 fl_unsorted_las_xyzt = unsorted_las_xyzt[fl_idx]
-                fl_t_idx = t_idx[fl_idx]
+                fl_t_argsort = t_argsort[fl_idx]
 
-                num_fl_points = np.sum(fl_idx)
+                num_fl_points = np.sum(fl_idx)  # count Trues
                 logging.debug(f'{las.las_short_name} fl {fl}: {num_fl_points} points')
 
                 # CREATE MERGED-DATA OBJECT M
                 logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
                 merged_data, stddev, masked_fl_t_idx, raw_class = merge.merge(las.las_short_name, fl, sbet.values,
-                                                                   fl_unsorted_las_xyzt, fl_t_idx)
+                                                                   fl_unsorted_las_xyzt, fl_t_argsort)
 
                 if merged_data is not False:  # i.e., las and sbet is merged
 
@@ -377,7 +377,7 @@ class Tpu:
                         merged_data[4],
                         raw_class,
                         fl_unsorted_las_xyzt[:, 3], 
-                        fl_t_idx,
+                        fl_t_argsort,
                         #masked_fl_t_idx.astype('int')
                         masked_fl_t_idx
                         )).T
@@ -460,7 +460,8 @@ class Tpu:
             ('z', tpu_data_type),
             ('raw_class', tpu_data_type),
             ('fl_unsorted_las_t', tpu_data_type),
-            ('fl_t_idx', tpu_data_type)
+            ('fl_t_argsort', tpu_data_type),
+            ('masked_fl_t_idx', tpu_data_type)
             ])
 
         num_extra_bytes = len(extra_byte_dimensions.keys())
@@ -475,8 +476,8 @@ class Tpu:
         if len(data_to_output) != 0:
             tpu_data = np.vstack(data_to_output)
             print(tpu_data)
-            extra_byte_df = pd.DataFrame(tpu_data[:, 0:num_extra_bytes], 
-                                         index=tpu_data[:, num_extra_bytes], 
+            extra_byte_df = pd.DataFrame(tpu_data, 
+                                         index=tpu_data[:, -1], 
                                          columns=extra_byte_dimensions.keys())
             print(extra_byte_df)
                 
@@ -486,7 +487,7 @@ class Tpu:
                 '''fill data points for which TPU was not calculated 
                 with no_data_value (also sorts by index, or t_idx)'''
                 no_data_value = -1
-                extra_byte_df = extra_byte_df.reindex(las.time_sort_indices, 
+                extra_byte_df = extra_byte_df.reindex(las.t_argsort, 
                                                       fill_value=no_data_value)
 
             logging.debug('populating extra byte data for total_thu...')
@@ -513,8 +514,11 @@ class Tpu:
             logging.debug('populating extra byte data for fl_unsorted_las_t...')
             out_las.fl_unsorted_las_t = extra_byte_df['fl_unsorted_las_t']
 
-            logging.debug('populating extra byte data for fl_t_idx...')
-            out_las.fl_t_idx = extra_byte_df['fl_t_idx']
+            logging.debug('populating extra byte data for fl_t_argsort...')
+            out_las.fl_t_argsort = extra_byte_df['fl_t_argsort']
+
+            logging.debug('populating extra byte data for masked_fl_t_idx...')
+            out_las.masked_fl_t_idx = extra_byte_df['masked_fl_t_idx']
         else:
             logging.debug('populating extra byte data for total_thu...')
             out_las.total_thu = np.zeros(las.num_file_points)
@@ -526,7 +530,7 @@ class Tpu:
         for field in in_las.point_format:
             logging.debug('writing {} to {} ...'.format(field.name, out_las))
             las_data = in_las.reader.get_dimension(field.name)
-            out_las.writer.set_dimension(field.name, las_data[las.time_sort_indices])
+            out_las.writer.set_dimension(field.name, las_data[las.t_argsort])
 
     def write_metadata(self, las):
         """creates a json file with summary statistics and metedata

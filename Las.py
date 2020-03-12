@@ -60,7 +60,7 @@ class Las:
         later when exporting las data and calculated tpu to a las
         file
         '''
-        self.time_sort_indices = None
+        self.t_argsort = None
 
     def get_bathy_points(self):
         class_codes = {'BATHYMETRY': 26}
@@ -107,13 +107,13 @@ class Las:
         y = ne.evaluate("Y * scale_y + offset_y")
         z = ne.evaluate("Z * scale_z + offset_z")
 
-        self.time_sort_indices = t.argsort()
+        self.t_argsort = t.argsort()
 
         xyztc = np.vstack([x, y, z, t, c]).T
 
         flight_lines = self.points_to_process['pt_src_id']
 
-        return xyztc, self.time_sort_indices, flight_lines
+        return xyztc, self.t_argsort, flight_lines
 
 
 if __name__ == '__main__':

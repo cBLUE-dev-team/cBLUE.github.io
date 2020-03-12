@@ -93,7 +93,7 @@ class Merge:
         =====   =========   ========================    =======
         """
 
-    def merge(self, las, fl, sbet_data, fl_las_data, fl_t_idx):
+    def merge(self, las, fl, sbet_data, fl_las_data, fl_t_idx):  # fl_t_idx = fl_t_argsort
 
         num_sbet_pts = sbet_data.shape[0]
 
