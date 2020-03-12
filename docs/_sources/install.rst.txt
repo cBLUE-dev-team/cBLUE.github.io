@@ -32,11 +32,7 @@ The recommended way to ensure that all of the necessary dependencies are loaded 
 
 	conda env create --file <evn file name>
 	
-where <env file name> is the path to cBLUE_install.txt, which is included in the cBLUE GitHub repository.
-
-.. warning::
-
-	Depending on the version of Anaconda installed on your system, the above method might not install the pip packages listed in the .yml file (https://github.com/conda/conda/issues/8404).  If this is the case, use :code:`pip install -r cBLUE_env_pip.txt` in addition to the :code:`conda env create --file cBLUE_env.yml` command listed above to install the necessary pip packages.
+where <env file name> is the path to cBLUE.yml, which is included in the cBLUE GitHub repository.
 
 Major dependencies are summarized in the table below:
 

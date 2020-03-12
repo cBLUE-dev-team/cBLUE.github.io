@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -186,46 +186,42 @@ Corvallis, OR  97331
 <a class="reference external" href="mailto:christopher&#46;parrish&#37;&#52;&#48;oregonstate&#46;edu">christopher<span>&#46;</span>parrish<span>&#64;</span>oregonstate<span>&#46;</span>edu</a></p>
 <dl class="class">
 <dt id="Tpu.Tpu">
-<em class="property">class </em><code class="descclassname">Tpu.</code><code class="descname">Tpu</code><span class="sig-paren">(</span><em>surface_select</em>, <em>surface_ind</em>, <em>wind_selection</em>, <em>wind_val</em>, <em>kd_selection</em>, <em>kd_val</em>, <em>vdatum_region</em>, <em>vdatum_region_mcu</em>, <em>tpu_output</em>, <em>cblue_version</em>, <em>sensor_model</em>, <em>cpu_process_info</em>, <em>subaqueous_luts</em>, <em>water_surface_ellipsoid_height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="sig-prename descclassname">Tpu.</code><code class="sig-name descname">Tpu</code><span class="sig-paren">(</span><em class="sig-param">surface_select</em>, <em class="sig-param">surface_ind</em>, <em class="sig-param">wind_selection</em>, <em class="sig-param">wind_val</em>, <em class="sig-param">kd_selection</em>, <em class="sig-param">kd_val</em>, <em class="sig-param">vdatum_region</em>, <em class="sig-param">vdatum_region_mcu</em>, <em class="sig-param">tpu_output</em>, <em class="sig-param">cblue_version</em>, <em class="sig-param">sensor_model</em>, <em class="sig-param">cpu_process_info</em>, <em class="sig-param">subaqueous_luts</em>, <em class="sig-param">water_surface_ellipsoid_height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>TODO:  rework…becasue J &amp; M moved to CBlueApp.py
 This class coordinates the TPU workflow.  Beginning when the user 
 hits <em>Compute TPU</em>, the general workflow is summarized below:</p>
 <ol class="arabic">
-<li><p class="first">Form observation equation (SensorModel class)</p>
-</li>
-<li><p class="first">Generate Jacobian (Jacobian class)</p>
-</li>
-<li><p class="first">for each flight line within Las</p>
+<li><p>Form observation equation (SensorModel class)</p></li>
+<li><p>Generate Jacobian (Jacobian class)</p></li>
+<li><p>for each flight line within Las</p>
 <blockquote>
 <div><ul class="simple">
-<li>Merge the Las data and trajectory data (Merge class)</li>
-<li>Calculate subaerial THU and TVU (Subaerial class)</li>
-<li>Calculate subaqueous THU and TVU (Subaqueous class)</li>
-<li>Combine subaerial and subaqueous TPU</li>
-<li>Export TPU (either as Python “pickle’ or as Las extra bytes)</li>
+<li><p>Merge the Las data and trajectory data (Merge class)</p></li>
+<li><p>Calculate subaerial THU and TVU (Subaerial class)</p></li>
+<li><p>Calculate subaqueous THU and TVU (Subaqueous class)</p></li>
+<li><p>Combine subaerial and subaqueous TPU</p></li>
+<li><p>Export TPU (either as Python “pickle’ or as Las extra bytes)</p></li>
 </ul>
 </div></blockquote>
 </li>
 </ol>
 <dl class="method">
 <dt id="Tpu.Tpu.calc_tpu">
-<code class="descname">calc_tpu</code><span class="sig-paren">(</span><em>sbet_las_files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.calc_tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.calc_tpu" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sbet_las_tile</strong> – generator yielding sbet data and las tile name for each las tile</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<code class="sig-name descname">calc_tpu</code><span class="sig-paren">(</span><em class="sig-param">sbet_las_files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.calc_tpu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.calc_tpu" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sbet_las_tile</strong> – generator yielding sbet data and las tile name for each las tile</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Tpu.Tpu.output_tpu_to_las_extra_bytes">
-<code class="descname">output_tpu_to_las_extra_bytes</code><span class="sig-paren">(</span><em>las</em>, <em>data_to_output</em>, <em>extra_byte_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.output_tpu_to_las_extra_bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.output_tpu_to_las_extra_bytes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">output_tpu_to_las_extra_bytes</code><span class="sig-paren">(</span><em class="sig-param">las</em>, <em class="sig-param">data_to_output</em>, <em class="sig-param">extra_byte_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.output_tpu_to_las_extra_bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.output_tpu_to_las_extra_bytes" title="Permalink to this definition">¶</a></dt>
 <dd><p>output the calculated tpu to a las file</p>
 <p>This method creates a las file tht contains the contents of the
 original las file and the calculated tpu values as VLR extra bytes.
@@ -240,51 +236,47 @@ extra bytes:</p>
 <p>ASPRS LAS Working Group Github repository
 <a class="reference external" href="https://github.com/ASPRSorg/LAS">https://github.com/ASPRSorg/LAS</a></p>
 <p>The following table lists the information contained as extra bytes:</p>
-<table border="1" class="colwidths-given docutils" id="id1">
+<table class="colwidths-given docutils align-default" id="id1">
 <caption><span class="caption-text">cBLUE VLR Extra Bytes</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="26%" />
-<col width="37%" />
-<col width="37%" />
+<col style="width: 26%" />
+<col style="width: 37%" />
+<col style="width: 37%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">id</th>
-<th class="head">dtype</th>
-<th class="head">description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>id</p></th>
+<th class="head"><p>dtype</p></th>
+<th class="head"><p>description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>total_thu</td>
-<td>unsigned short (2 bytes)</td>
-<td>total horizontal uncertainty</td>
+<tbody>
+<tr class="row-even"><td><p>total_thu</p></td>
+<td><p>unsigned short (2 bytes)</p></td>
+<td><p>total horizontal uncertainty</p></td>
 </tr>
-<tr class="row-odd"><td>total_tvu</td>
-<td>unsigned short (2 bytes)</td>
-<td>total vertical uncertainty</td>
+<tr class="row-odd"><td><p>total_tvu</p></td>
+<td><p>unsigned short (2 bytes)</p></td>
+<td><p>total vertical uncertainty</p></td>
 </tr>
 </tbody>
 </table>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>las</strong> – </li>
-<li><strong>data_to_output</strong> – </li>
-<li><strong>output_columns</strong> – </li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>las</strong> – </p></li>
+<li><p><strong>data_to_output</strong> – </p></li>
+<li><p><strong>output_columns</strong> – </p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Tpu.Tpu.run_tpu_multiprocess">
-<code class="descname">run_tpu_multiprocess</code><span class="sig-paren">(</span><em>num_las</em>, <em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_multiprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_multiprocess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_tpu_multiprocess</code><span class="sig-paren">(</span><em class="sig-param">num_las</em>, <em class="sig-param">sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_multiprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_multiprocess" title="Permalink to this definition">¶</a></dt>
 <dd><p>runs the tpu calculations using multiprocessing</p>
 <p>This methods initiates the tpu calculations using the pathos multiprocessing
 framework (<a class="reference external" href="https://pypi.org/project/pathos/">https://pypi.org/project/pathos/</a>).  Whether the tpu calculations
@@ -292,58 +284,52 @@ are done with multiprocessing or not is currently determined by which
 “run_tpu_*” method is manually specified in the tpu_process_callback()
 method of the CBlueApp class.  TODO: Include
 a user option to select single processing or multiprocessing</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sbet_las_generator</strong> – </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sbet_las_generator</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Tpu.Tpu.run_tpu_singleprocess">
-<code class="descname">run_tpu_singleprocess</code><span class="sig-paren">(</span><em>num_las</em>, <em>sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_singleprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_singleprocess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_tpu_singleprocess</code><span class="sig-paren">(</span><em class="sig-param">num_las</em>, <em class="sig-param">sbet_las_generator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.run_tpu_singleprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.run_tpu_singleprocess" title="Permalink to this definition">¶</a></dt>
 <dd><p>runs the tpu calculations using a single processing</p>
 <p>This methods initiates the tpu calculations using single processing.
 Whether the tpu calculations are done with multiprocessing or not is
 currently determined by which “run_tpu_*” method is manually specified
 the tpu_process_callback() method of the CBlueApp class.  TODO: Include
 a user option to select single processing or multiprocessing</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sbet_las_generator</strong> – </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sbet_las_generator</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="Tpu.Tpu.write_metadata">
-<code class="descname">write_metadata</code><span class="sig-paren">(</span><em>las</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.write_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.write_metadata" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write_metadata</code><span class="sig-paren">(</span><em class="sig-param">las</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Tpu.html#Tpu.write_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Tpu.Tpu.write_metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>creates a json file with summary statistics and metedata</p>
 <p>This method creates a json file containing summary statistics for each
 tpu field, per flight line, and a record of the environmental and VDatum
 parameters specified by the user.  The file also records certain
 parameters used during the monte carlo simulations used to create
 the lookup tables used in the subaqueous portion of the tpu calculations.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>las</strong> – </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">n/a</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>las</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>n/a</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

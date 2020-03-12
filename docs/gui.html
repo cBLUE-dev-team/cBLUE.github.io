@@ -21,10 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -177,39 +178,39 @@
 <div class="section" id="menu-bar">
 <h2>Menu bar<a class="headerlink" href="#menu-bar" title="Permalink to this headline">¶</a></h2>
 <p>The menu bar has the following categories.</p>
-<table border="1" class="colwidths-given docutils" id="id1">
+<table class="colwidths-given docutils align-default" id="id1">
 <caption><span class="caption-text">cBLUE File Menu Options</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="16%" />
-<col width="19%" />
-<col width="65%" />
+<col style="width: 16%" />
+<col style="width: 19%" />
+<col style="width: 65%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Category</th>
-<th class="head">Options</th>
-<th class="head">Description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Category</p></th>
+<th class="head"><p>Options</p></th>
+<th class="head"><p>Description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>File</td>
-<td>Save Settings</td>
-<td>Saves specified directories to a Json file</td>
+<tbody>
+<tr class="row-even"><td><p>File</p></td>
+<td><p>Save Settings</p></td>
+<td><p>Saves specified directories to a Json file</p></td>
 </tr>
 <tr class="row-odd"><td></td>
-<td>Exit</td>
-<td>Closes cBLUE</td>
+<td><p>Exit</p></td>
+<td><p>Closes cBLUE</p></td>
 </tr>
-<tr class="row-even"><td>Sensor Model</td>
-<td>Riegl VQ-880-G</td>
-<td>Currently, this is only a dummy menu option.  The senor model configuration for the Reigl VQ-880-G is hard-coded into cBLUE.  Development plans include refactoring the code to read sensor model information from a separate file and extending support to other lidar systems, including Leica Chiroptera 4X.</td>
+<tr class="row-even"><td><p>Sensor Model</p></td>
+<td><p>Riegl VQ-880-G</p></td>
+<td><p>Currently, this is only a dummy menu option.  The senor model configuration for the Reigl VQ-880-G is hard-coded into cBLUE.  Development plans include refactoring the code to read sensor model information from a separate file and extending support to other lidar systems, including Leica Chiroptera 4X.</p></td>
 </tr>
-<tr class="row-odd"><td>Help</td>
-<td>Documentation</td>
-<td>Opens the cBLUE documentation in a web browser</td>
+<tr class="row-odd"><td><p>Help</p></td>
+<td><p>Documentation</p></td>
+<td><p>Opens the cBLUE documentation in a web browser</p></td>
 </tr>
 <tr class="row-even"><td></td>
-<td>About</td>
-<td>Displays the cBLUE splash screen</td>
+<td><p>About</p></td>
+<td><p>Displays the cBLUE splash screen</p></td>
 </tr>
 </tbody>
 </table>
@@ -217,26 +218,26 @@
 <div class="section" id="data-directories">
 <h2>Data Directories<a class="headerlink" href="#data-directories" title="Permalink to this headline">¶</a></h2>
 <p>cBLUE requires three directories to be set:</p>
-<table border="1" class="colwidths-given docutils" id="id2">
+<table class="colwidths-given docutils align-default" id="id2">
 <caption><span class="caption-text">cBLUE File Menu Options</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="23%" />
-<col width="77%" />
+<col style="width: 23%" />
+<col style="width: 77%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Directory</th>
-<th class="head">Description</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Directory</p></th>
+<th class="head"><p>Description</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>Trajectory</td>
-<td>contains the ASCII trajectory</td>
+<tbody>
+<tr class="row-even"><td><p>Trajectory</p></td>
+<td><p>contains the ASCII trajectory</p></td>
 </tr>
-<tr class="row-odd"><td>LAS</td>
-<td>contains the LAS files</td>
+<tr class="row-odd"><td><p>LAS</p></td>
+<td><p>contains the LAS files</p></td>
 </tr>
-<tr class="row-even"><td>Output</td>
-<td>where the output files will be created</td>
+<tr class="row-even"><td><p>Output</p></td>
+<td><p>where the output files will be created</p></td>
 </tr>
 </tbody>
 </table>
@@ -248,41 +249,39 @@
 <h3>Water Surface<a class="headerlink" href="#water-surface" title="Permalink to this headline">¶</a></h3>
 <p>The user has two options to characterize the water-surface. Both options use pre-computed coefficient lookup tables generated using Monte Carlo simulations.</p>
 <ul>
-<li><dl class="first docutils">
-<dt><em>Riegl VQ-880-G</em></dt>
-<dd><p class="first last">This proof-of-concept option is currently limited in applicability. The lookup table used in this approach is generated from a water surface defined by a sampling of the first returns in a small area of the NOAA RSD Marcos Island project. Future development plans include deriving representative surface models for each flight line within each input tile.</p>
+<li><dl class="simple">
+<dt><em>Riegl VQ-880-G</em></dt><dd><p>This proof-of-concept option is currently limited in applicability. The lookup table used in this approach is generated from a water surface defined by a sampling of the first returns in a small area of the NOAA RSD Marcos Island project. Future development plans include deriving representative surface models for each flight line within each input tile.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt><em>Model (ECKV spectrum)</em></dt>
-<dd><p class="first">The lookup table used in this option is generated using a version of the Elfouhaily et al. (ECKV) directional gravity-capillary wave spectrum model that characterizes the distribution of wave frequencies using estimates of wind speed.</p>
-<table border="1" class="colwidths-given last docutils" id="id3">
+<li><dl>
+<dt><em>Model (ECKV spectrum)</em></dt><dd><p>The lookup table used in this option is generated using a version of the Elfouhaily et al. (ECKV) directional gravity-capillary wave spectrum model that characterizes the distribution of wave frequencies using estimates of wind speed.</p>
+<table class="colwidths-given docutils align-default" id="id3">
 <caption><span class="caption-text">ECKV Spectrum Options</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="50%" />
-<col width="50%" />
+<col style="width: 50%" />
+<col style="width: 50%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">options</th>
-<th class="head">wind speed range (kts)</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>options</p></th>
+<th class="head"><p>wind speed range (kts)</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>Calm-light air</td>
-<td>0-2</td>
+<tbody>
+<tr class="row-even"><td><p>Calm-light air</p></td>
+<td><p>0-2</p></td>
 </tr>
-<tr class="row-odd"><td>Light Breeze</td>
-<td>3-6</td>
+<tr class="row-odd"><td><p>Light Breeze</p></td>
+<td><p>3-6</p></td>
 </tr>
-<tr class="row-even"><td>Gentle Breeze</td>
-<td>7-10</td>
+<tr class="row-even"><td><p>Gentle Breeze</p></td>
+<td><p>7-10</p></td>
 </tr>
-<tr class="row-odd"><td>Moderate Breeze</td>
-<td>11-15</td>
+<tr class="row-odd"><td><p>Moderate Breeze</p></td>
+<td><p>11-15</p></td>
 </tr>
-<tr class="row-even"><td>Fresh Breeze</td>
-<td>16-20</td>
+<tr class="row-even"><td><p>Fresh Breeze</p></td>
+<td><p>16-20</p></td>
 </tr>
 </tbody>
 </table>
@@ -294,32 +293,32 @@
 <div class="section" id="turbidity">
 <h3>Turbidity<a class="headerlink" href="#turbidity" title="Permalink to this headline">¶</a></h3>
 <p>The user can chose among 5 turbidity classes.</p>
-<table border="1" class="colwidths-given docutils" id="id4">
+<table class="colwidths-given docutils align-default" id="id4">
 <caption><span class="caption-text">Turbidity (Kd_490) Classes</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="50%" />
-<col width="50%" />
+<col style="width: 50%" />
+<col style="width: 50%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">class</th>
-<th class="head">value range (<span class="math notranslate nohighlight">\(m^{-1}\)</span>)</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>class</p></th>
+<th class="head"><p>value range (<span class="math notranslate nohighlight">\(m^{-1}\)</span>)</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>Clear</td>
-<td>0.06-0.10</td>
+<tbody>
+<tr class="row-even"><td><p>Clear</p></td>
+<td><p>0.06-0.10</p></td>
 </tr>
-<tr class="row-odd"><td>Clear-Moderate</td>
-<td>0.11-0.17</td>
+<tr class="row-odd"><td><p>Clear-Moderate</p></td>
+<td><p>0.11-0.17</p></td>
 </tr>
-<tr class="row-even"><td>Moderate</td>
-<td>0.18-0.25</td>
+<tr class="row-even"><td><p>Moderate</p></td>
+<td><p>0.18-0.25</p></td>
 </tr>
-<tr class="row-odd"><td>Moderate-High</td>
-<td>0.26-0.32</td>
+<tr class="row-odd"><td><p>Moderate-High</p></td>
+<td><p>0.26-0.32</p></td>
 </tr>
-<tr class="row-even"><td>High</td>
-<td>0.33-0.36</td>
+<tr class="row-even"><td><p>High</p></td>
+<td><p>0.33-0.36</p></td>
 </tr>
 </tbody>
 </table>
@@ -332,23 +331,23 @@
 <div class="section" id="process-buttons">
 <h2>Process Buttons<a class="headerlink" href="#process-buttons" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><table border="1" class="colwidths-given docutils" id="id5">
+<div><table class="colwidths-given docutils align-default" id="id5">
 <caption><span class="caption-text">Process Buttons</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="29%" />
-<col width="71%" />
+<col style="width: 29%" />
+<col style="width: 71%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Button</th>
-<th class="head">Function</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Button</p></th>
+<th class="head"><p>Function</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>Load Trajectory File(s)</td>
-<td>Loads the trajectory data from the ASCII sbet files located in the user-specified Trajectory directory into a single Pandas dataframe</td>
+<tbody>
+<tr class="row-even"><td><p>Load Trajectory File(s)</p></td>
+<td><p>Loads the trajectory data from the ASCII sbet files located in the user-specified Trajectory directory into a single Pandas dataframe</p></td>
 </tr>
-<tr class="row-odd"><td>Process TPU</td>
-<td>Initiates the TPU calculations and creates Las files with calculated TPU as variable length record (VLR) extra bytes</td>
+<tr class="row-odd"><td><p>Process TPU</p></td>
+<td><p>Initiates the TPU calculations and creates Las files with calculated TPU as variable length record (VLR) extra bytes</p></td>
 </tr>
 </tbody>
 </table>
