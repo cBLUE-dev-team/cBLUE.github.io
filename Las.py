@@ -50,16 +50,23 @@ class Las:
         self.las_short_name = las.split('\\')[-1]
         self.las_base_name = self.las_short_name.replace('.las', '')
         self.inFile = laspy.file.File(self.las, mode="r")
-        self.num_file_points = self.inFile.__len__()
         self.points_to_process = self.inFile.points['point']
+        #self.points_to_process = self.get_bathy_points()
         self.unq_flight_lines = self.get_flight_line_ids()
+        #self.num_file_points = self.inFile.__len__()
+        self.num_file_points = self.points_to_process.shape[0]
 
         '''index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
         file
         '''
-        self.time_sort_indices = None
+        self.t_argsort = None
 
+    def get_bathy_points(self):
+        class_codes = {'BATHYMETRY': 26}
+        bathy_inds = self.inFile.raw_classification == class_codes['BATHYMETRY']
+        return self.inFile.points[bathy_inds]['point']
+        
     def get_flight_line_ids(self):
         """generates a list of unique flight line ids
 
@@ -81,6 +88,7 @@ class Las:
         :param ? fl:
         :return: np.array, np.array, np.array, np.array
         """
+
         scale_x = np.asarray(self.inFile.header.scale[0])
         scale_y = np.asarray(self.inFile.header.scale[1])
         scale_z = np.asarray(self.inFile.header.scale[2])
@@ -93,18 +101,19 @@ class Las:
         X = self.points_to_process['X']
         Y = self.points_to_process['Y']
         Z = self.points_to_process['Z']
+        c = self.points_to_process['raw_classification']
 
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
         z = ne.evaluate("Z * scale_z + offset_z")
 
-        self.time_sort_indices = t.argsort()
+        self.t_argsort = t.argsort()
 
-        xyzt = np.vstack([x, y, z, t]).T
+        xyztc = np.vstack([x, y, z, t, c]).T
 
         flight_lines = self.points_to_process['pt_src_id']
 
-        return xyzt, self.time_sort_indices, flight_lines
+        return xyztc, self.t_argsort, flight_lines
 
 
 if __name__ == '__main__':

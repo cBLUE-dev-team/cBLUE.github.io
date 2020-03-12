@@ -47,6 +47,8 @@ class Subaqueous:
         self.depth = depth
         self.subaqueous_luts = subaqueous_luts
         self.curr_lut = None
+        self.thu = None
+        self.tvu = None
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing.
@@ -59,11 +61,13 @@ class Subaqueous:
             self.curr_lut = self.subaqueous_luts['ECKV']
             fit_thu, fit_tvu = self.model_process(self.curr_lut)
 
-        res_tvu = fit_tvu[0] * self.depth ** 2 + fit_tvu[1] * self.depth + fit_tvu[2]
         res_thu = fit_thu[0] * self.depth ** 2 + fit_thu[1] * self.depth + fit_thu[2]
+        res_tvu = fit_tvu[0] * self.depth ** 2 + fit_tvu[1] * self.depth + fit_tvu[2]
 
-        columns = ['subaqueous_thu', 'subaqueous_tvu']
-        return res_thu.T, res_tvu.T, columns
+        self.thu = res_thu.T
+        self.tvu = res_tvu.T
+
+        return self.thu, self.tvu
 
     def model_process(self, lut):
         """Retrieves the average fit for all given combinations of wind and kd given from look_up_fit.csv.

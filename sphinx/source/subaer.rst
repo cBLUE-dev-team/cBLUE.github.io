@@ -6,4 +6,4 @@ The figure below summarizes the subaerial TPU workflow.  First, the laser geoloc
 
 .. image:: ../images/SubaerialLaserGeolocationEquation.png
 
-Image Credit: Jaehoon Jung
+Image Credit: Jaehoon Jung (modified by Nick Forfinski-Sarkozi)

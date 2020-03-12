@@ -93,14 +93,14 @@ class Merge:
         =====   =========   ========================    =======
         """
 
-    def merge(self, las, fl, sbet_data, fl_las_data, fl_t_idx):
+    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx):
 
         num_sbet_pts = sbet_data.shape[0]
 
         # sort xyzt array based on t_idx column
-        idx = fl_t_idx.argsort()
-        fl_las_data = fl_las_data[idx]
-        fl_t_idx = fl_t_idx[idx]
+        idx = fl_t_argsort.argsort()
+        fl_las_data = fl_unsorted_las_xyzt[idx]
+        fl_las_idx = fl_las_idx[idx]
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
@@ -117,22 +117,23 @@ class Merge:
         if max_dt > self.max_allowable_dt or max_dt.size == 0:
             data = False
             stddev = False
+            raw_class = False
 
             logging.warning('trajectory and LAS data NOT MERGED')
             logging.warning('({} FL {}) max_dt: {}'.format(las, fl, max_dt))
         else:
             data = np.asarray([
-                sbet_data[:, 0][idx[mask]],
-                fl_las_data[:, 3][mask],                           # t
-                fl_las_data[:, 0][mask],                           # x
-                fl_las_data[:, 1][mask],                           # y
-                fl_las_data[:, 2][mask],                           # z
-                sbet_data[:, 3][idx[mask]],
-                sbet_data[:, 4][idx[mask]],
-                sbet_data[:, 5][idx[mask]],
-                np.radians(sbet_data[:, 6][idx[mask]]),
-                np.radians(sbet_data[:, 7][idx[mask]]),
-                np.radians(sbet_data[:, 8][idx[mask]])
+                sbet_data[:, 0][idx[mask]],                     # t?
+                fl_las_data[:, 3][mask],                        # t
+                fl_las_data[:, 0][mask],                        # x
+                fl_las_data[:, 1][mask],                        # y
+                fl_las_data[:, 2][mask],                        # z
+                sbet_data[:, 3][idx[mask]],                     # x?
+                sbet_data[:, 4][idx[mask]],                     # y?
+                sbet_data[:, 5][idx[mask]],                     # z?
+                np.radians(sbet_data[:, 6][idx[mask]]),         # r?
+                np.radians(sbet_data[:, 7][idx[mask]]),         # p?
+                np.radians(sbet_data[:, 8][idx[mask]])          # h?
             ])
 
             num_points = data[0].shape
@@ -149,7 +150,9 @@ class Merge:
                 np.full(num_points, self.std_rho)               # std_rho
             ])
 
-        return data, stddev, fl_t_idx[mask]   # last array is masked t_idx
+            raw_class = fl_las_data[:, 4][mask]
+
+        return data, stddev, fl_las_idx[mask], raw_class  # 2nd to last array is masked t_idx
 
 
 if __name__ == '__main__':

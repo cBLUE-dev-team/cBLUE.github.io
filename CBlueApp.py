@@ -42,6 +42,7 @@ import json
 import webbrowser
 import laspy
 import cProfile
+from pathlib import Path
 
 
 now = datetime.datetime.now()
@@ -488,13 +489,13 @@ class ControllerPanel(ttk.Frame):
         kd_selection = self.turbidity_options[kd_ind]
 
         # CREATE OBSERVATION EQUATIONS
-        S = SensorModel(self.controller.controller_configuration['sensor_model'])
+        sensor_model = SensorModel(self.controller.controller_configuration['sensor_model'])
 
         # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
-        J = Jacobian(S)
+        jacobian = Jacobian(sensor_model)
 
         # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
-        M = Merge()
+        merge = Merge()
 
         multiprocess = self.controller.controller_configuration['multiprocess']
 
@@ -522,6 +523,34 @@ class ControllerPanel(ttk.Frame):
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
 
+        las_files = [Path(l) for l in las_files]
+        lasses_to_process = [
+            '2017_3805000e_42195000n_las',
+            '2017_3805000e_42205000n_las',
+            '2017_3805000e_42200000n_las',
+            '2017_3805000e_42210000n_las',
+            '2017_3810000e_42195000n_las',
+            '2017_3810000e_42200000n_las',
+            '2017_3810000e_42210000n_las',
+            '2017_3810000e_42205000n_las',
+            '2017_3815000e_42195000n_las',
+            '2017_3815000e_42205000n_las',
+            '2017_3815000e_42200000n_las',
+            '2017_3815000e_42210000n_las',
+            '2017_3820000e_42195000n_las',
+            '2017_3820000e_42205000n_las',
+            '2017_3820000e_42210000n_las',
+            '2017_3820000e_42200000n_las',
+            '2017_3825000e_42195000n_las',
+            '2017_3825000e_42200000n_las',
+            '2017_3825000e_42205000n_las',
+            '2017_3825000e_42210000n_las',
+            '2017_3830000e_42195000n_las',
+            '2017_3830000e_42200000n_las',
+            '2017_3830000e_42205000n_las',
+            '2017_3830000e_42210000n_las']
+        las_files = [str(l) for l in las_files if l.stem in lasses_to_process]
+
         num_las = len(las_files)
 
         def signal_completion():
@@ -546,7 +575,7 @@ class ControllerPanel(ttk.Frame):
                 north = inFile.reader.get_header_property('y_max')
                 south = inFile.reader.get_header_property('y_min')
 
-                yield self.sbet.get_tile_data(north, south, east, west), las_file, J, M
+                yield self.sbet.get_tile_data(north, south, east, west), las_file, jacobian, merge
 
         logging.info('processing {} las file(s) ({})...'.format(num_las, cpu_process_info[0]))
 

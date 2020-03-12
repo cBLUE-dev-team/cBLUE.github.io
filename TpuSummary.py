@@ -8,16 +8,20 @@ import numpy as np
 
 
 def get_directories():
-    #in_dir = Path(input('Enter tpu las directory:  '))
-    #out_dir = Path(input('Enter results diretory:  '))
-
-    in_dir = Path(r'C:\QAQC_contract\marco_island\tpu_output')
-    out_dir = Path(r'Z:\cBLUE\summary_test')
+    in_dir = Path(r'D:\04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc\MarcoIsland\tpu_outdir\u2_extrabytes')
+    out_dir = Path(r'D:\04_FL1604-TB-N-880_g_gpsa_rf_ip_wsf_r_adj_qc\MarcoIsland\tpu_outdir\tDEMs')
 
     return in_dir, out_dir
 
 
-def gen_pipline(tpu, gtiff_path):
+def gen_pipeline(tpu, gtiff_path):
+    '''"limits":"Z[-50:0],Classification[26:26]"'''
+            #{
+            #    "type":"filters.range",
+            #    "limits":"Z[-50:0]",
+            #    "tag": "A"
+            #},
+                #"inputs": ["A"],
     pdal_json = """{
         "pipeline":[
             {
@@ -26,32 +30,27 @@ def gen_pipline(tpu, gtiff_path):
                 "filename": """ + '"{}"'.format(las_str) + """
             },
             {
-                "type":"filters.range",
-                "limits":"Z[-50:0],Classification[26:26]",
-                "tag": "A"
-            },
-            {
-                "inputs": ["A"],
                 "dimension": """ + '"total_{}"'.format(tpu) + """,
                 "filename": """ + '"{}"'.format(gtiff_path) + """,
                 "gdaldriver": "GTiff",
                 "output_type": "mean",
-                "resolution": "1.0",
+                "resolution": "1",
                 "type": "writers.gdal"
             }
         ]
     }"""
 
-    print(pdal_json)
-
     return pdal_json
 
 
 def create_tpu_dem(tpu):
-    gtiff_path = out_dir / '{}_{}.tif'.format(las.stem, tpu.upper())
-    gtiff_path = str(gtiff_path).replace('\\', '/')
-    pipeline = pdal.Pipeline(gen_pipline(tpu, gtiff_path))
-    count = pipeline.execute()
+    try:
+        gtiff_path = out_dir / '{}_{}_ALLCLASSES.tif'.format(las.stem, tpu.upper())
+        gtiff_path = str(gtiff_path).replace('\\', '/')
+        pipeline = pdal.Pipeline(gen_pipeline(tpu, gtiff_path))
+        count = pipeline.execute()
+    except Exception as e:
+        print(e)
 
 
 def gen_summary_graphic(mosaics):
@@ -118,15 +117,15 @@ if __name__ == '__main__':
     mosaics = {'thu': None, 'tvu': None}
     out_trans = {'thu': None, 'tvu': None}
 
-    ## generate individual tile DEMs
-    #for las in list(las_dir.glob('*.las')):
-    #    las_str = str(las).replace('\\', '/')
-    #    for tpu in ['thu', 'tvu']:
-    #         create_tpu_dem(tpu)
+    # generate individual tile DEMs
+    for las in list(las_dir.glob('*.las')):
+        las_str = str(las).replace('\\', '/')
+        for tpu in ['thu', 'tvu']:
+             create_tpu_dem(tpu)
 
     # mosaic TPU DEMs
     for tpu in ['thu', 'tvu']:
-        for tpu_dem in list(out_dir.glob('*_{}.tif'.format(tpu.upper()))):
+        for tpu_dem in list(out_dir.glob('*_{}_ALLCLASSES.tif'.format(tpu.upper()))):
             src = rasterio.open(tpu_dem)
             tpu_dems_to_mosaic[tpu].append(src)    
 
@@ -141,7 +140,7 @@ if __name__ == '__main__':
             "transform": out_trans[tpu]})
 
         # save TPU mosaic DEMs
-        with rasterio.open(str(out_dir / '{}_DEM.tif'.format(tpu.upper())), 'w', **out_meta) as dest:
+        with rasterio.open(str(out_dir / '{}_DEM_ALLCLASSES.tif'.format(tpu.upper())), 'w', **out_meta) as dest:
             dest.write(mosaics[tpu])
 
     gen_summary_graphic(mosaics)
