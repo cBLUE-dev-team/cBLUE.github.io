@@ -66,15 +66,11 @@ from Datum import Datum
 from Las import Las
 from Tpu import Tpu
 
-#from matplotlib import style
-
 
 LARGE_FONT = ('Verdanna', 12)
 NORM_FONT = ('Verdanna', 10)
 NORM_FONT_BOLD = ('Verdanna', 10, 'bold')
 SMALL_FONT = ('Verdanna', 8)
-
-#style.use('ggplot')  # 'dark_background'
 
 
 class CBlueApp(tk.Tk):
@@ -524,33 +520,6 @@ class ControllerPanel(ttk.Frame):
                      if l.endswith('.las')]
 
         las_files = [Path(l) for l in las_files]
-        lasses_to_process = [
-            '2017_3805000e_42195000n_las',
-            '2017_3805000e_42205000n_las',
-            '2017_3805000e_42200000n_las',
-            '2017_3805000e_42210000n_las',
-            '2017_3810000e_42195000n_las',
-            '2017_3810000e_42200000n_las',
-            '2017_3810000e_42210000n_las',
-            '2017_3810000e_42205000n_las',
-            '2017_3815000e_42195000n_las',
-            '2017_3815000e_42205000n_las',
-            '2017_3815000e_42200000n_las',
-            '2017_3815000e_42210000n_las',
-            '2017_3820000e_42195000n_las',
-            '2017_3820000e_42205000n_las',
-            '2017_3820000e_42210000n_las',
-            '2017_3820000e_42200000n_las',
-            '2017_3825000e_42195000n_las',
-            '2017_3825000e_42200000n_las',
-            '2017_3825000e_42205000n_las',
-            '2017_3825000e_42210000n_las',
-            '2017_3830000e_42195000n_las',
-            '2017_3830000e_42200000n_las',
-            '2017_3830000e_42205000n_las',
-            '2017_3830000e_42210000n_las']
-        las_files = [str(l) for l in las_files if l.stem in lasses_to_process]
-
         num_las = len(las_files)
 
         def signal_completion():
