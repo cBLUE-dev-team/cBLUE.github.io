@@ -519,7 +519,6 @@ class ControllerPanel(ttk.Frame):
                      for l in os.listdir(self.lasInput.directoryName)
                      if l.endswith('.las')]
 
-        las_files = [Path(l) for l in las_files]
         num_las = len(las_files)
 
         def signal_completion():
