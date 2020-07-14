@@ -59,7 +59,10 @@ hidden_imports = [
     'numpy',
     'tkinter',
     'pyinstaller',
-    'pysimplegui'
+    'pysimplegui',
+    'Subaerial',
+    'Subaqueous',
+    'Merge'
 ]
 
 a = Analysis(['CBlueApp.py'],

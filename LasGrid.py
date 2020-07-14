@@ -4,6 +4,7 @@ import pdal
 import rasterio
 import rasterio.merge
 from tqdm import tqdm
+import pathos
 import pathos.pools as pp
 
 
@@ -117,7 +118,6 @@ def set_env_vars(env_name):
 
 
 def main():
-
     set_env_vars('cblue_diag')
 
     las_dir = Path(r'D:\JeromesCreek\tpu_dir')
@@ -132,4 +132,7 @@ def main():
 
 
 if __name__ == '__main__':
+    # Required for pyinstaller support of multiprocessing
+    pathos.helpers.freeze_support()
+
     main()

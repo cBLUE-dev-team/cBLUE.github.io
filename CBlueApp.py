@@ -36,6 +36,7 @@ import logging
 import tkinter as tk
 from tkinter import ttk
 import os
+import sys
 import time
 import datetime
 import json
@@ -43,7 +44,7 @@ import webbrowser
 import laspy
 import cProfile
 from pathlib import Path
-
+import pathos
 
 now = datetime.datetime.now()
 log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year, 
@@ -114,7 +115,7 @@ class CBlueApp(tk.Tk):
         filemenu.add_command(label='Save settings',
                              command=lambda: self.save_config())
         filemenu.add_separator()
-        filemenu.add_command(label='Exit', command=quit)
+        filemenu.add_command(label='Exit', command=sys.exit)
         menubar.add_cascade(label='File', menu=filemenu)
 
         sensor_model_msg = '''
@@ -548,7 +549,8 @@ class ControllerPanel(ttk.Frame):
         logging.info('processing {} las file(s) ({})...'.format(num_las, cpu_process_info[0]))
 
         if multiprocess:
-            p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
+            p = tpu.run_tpu_multiprocess(num_las, self.sbet, las_files,
+                                         self.controller.controller_configuration['sensor_model'])
             signal_completion()
             p.close()
             p.join()
@@ -565,6 +567,9 @@ class ControllerPanel(ttk.Frame):
 
 
 if __name__ == "__main__":
+    # Required for pyinstaller support of multiprocessing
+    pathos.helpers.freeze_support()
+
     app = CBlueApp()
     app.geometry('225x515')
     app.mainloop()

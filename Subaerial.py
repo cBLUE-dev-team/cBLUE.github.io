@@ -31,7 +31,6 @@ christopher.parrish@oregonstate.edu
 """
 
 import logging
-from Merge import Merge
 from sympy import lambdify, symbols, Matrix, cos, sin
 import numpy as np
 import numexpr as ne

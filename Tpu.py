@@ -44,11 +44,16 @@ import pandas as pd
 import progressbar
 from tqdm import tqdm
 from collections import OrderedDict
-from Subaerial import Subaerial
+from Subaerial import Subaerial, SensorModel, Jacobian
 from Subaqueous import Subaqueous
 from Las import Las
 import datetime
 import cProfile
+import pathos
+import PySimpleGUI as sg
+from functools import partial
+
+from Merge import Merge
 
 
 class Tpu:
@@ -124,14 +129,22 @@ class Tpu:
         fl_header_str = f'{fl} ({fl_tpu_count}/{num_fl_points} points with TPU)'
         self.flight_line_stats.update({fl_header_str: fl_stats_strs})
 
-    def calc_tpu(self, sbet_las_files):
+    def calc_tpu(self, sbetC, sensor_model_name, las_file):
         """
 
-        :param sbet_las_tile: generator yielding sbet data and las tile name for each las tile
+        :param sbetC: sbet object passsed from CBlueApp
+        :param sensor_model_name: string name representation of chosen sensor model
+        :param las_file: the las file we are calculating tpu for
         :return:
         """
+        sbet = self.sbet_get_las_tile(sbetC, las_file)
 
-        sbet, las_file, jacobian, merge = sbet_las_files
+        merge = Merge()
+
+        # CREATE OBSERVATION EQUATIONS
+        sensor_model = SensorModel(sensor_model_name)
+
+        jacobian = Jacobian(sensor_model)
 
         data_to_output = []
 
@@ -334,7 +347,42 @@ class Tpu:
             logging.error(e)
             print(e)
 
-    def run_tpu_multiprocess(self, num_las, sbet_las_generator):
+    def sbet_las_tiles_generator(self, sbet, las_files, jacobian, merge):
+        """This generator is the 2nd argument for the
+        run_tpu_multiprocessing method, to avoid
+        passing entire sbet or list of tiled
+        sbets to the calc_tpu() method
+        """
+
+        for las_file in las_files:
+            logging.debug('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
+
+            inFile = laspy.file.File(las_file, mode='r')
+
+            west = inFile.reader.get_header_property('x_min')
+            east = inFile.reader.get_header_property('x_max')
+            north = inFile.reader.get_header_property('y_max')
+            south = inFile.reader.get_header_property('y_min')
+
+            yield sbet.get_tile_data(north, south, east, west), las_file, jacobian, merge
+
+    def sbet_get_las_tile(self, sbet, las_file):
+        """Replaces generator function for multiprocessing, exe version
+        """
+
+        logging.debug('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
+
+        inFile = laspy.file.File(las_file, mode='r')
+
+        west = inFile.reader.get_header_property('x_min')
+        east = inFile.reader.get_header_property('x_max')
+        north = inFile.reader.get_header_property('y_max')
+        south = inFile.reader.get_header_property('y_min')
+
+        return sbet.get_tile_data(north, south, east, west)
+
+
+    def run_tpu_multiprocess(self, num_las, sbet, las_files, sensor_model):
         """runs the tpu calculations using multiprocessing
 
         This methods initiates the tpu calculations using the pathos multiprocessing
@@ -344,18 +392,30 @@ class Tpu:
         method of the CBlueApp class.  TODO: Include
         a user option to select single processing or multiprocessing
 
-        :param sbet_las_generator:
+        :param num_las: 
+        :param sbet: sbet object passsed from CBlueApp
+        :param las_files: list of las files to process
+        :param sensor_model: string name representation of chosen sensor model
         :return:
         """
 
         print('Calculating TPU (multi-processing)...')
         p = pp.ProcessPool(2)
 
-        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True):
+        #for _ in tqdm(p.imap(self.calc_tpu, self.sbet_las_tiles_generator(sbet, las_files, jacobian, merge)), total=num_las, ascii=True):
+        #    pass
+
+        func = partial(self.calc_tpu, sbet, sensor_model)
+
+        for _ in tqdm(p.imap(func, las_files), total=num_las, ascii=True):
             pass
 
-        return p
+        # Initialize progress bar so that it shows from onset
+        # sg.OneLineProgressMeter('Calculating TPU (multi-processing)...', 0, num_las, "pbar")
+        # for num in enumerate(p.imap(func, las_files)):
+        #    sg.OneLineProgressMeter('Calculating TPU (multi-processing)...', num[0] + 1, num_las, "pbar")
 
+        return p
 
     def run_tpu_singleprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using a single processing
@@ -378,4 +438,7 @@ class Tpu:
 
 
 if __name__ == '__main__':
+    # Required for pyinstaller support of multiprocessing
+    pathos.helpers.freeze_support()
+
     pass
