@@ -392,7 +392,7 @@ class Tpu:
         method of the CBlueApp class.  TODO: Include
         a user option to select single processing or multiprocessing
 
-        :param num_las: 
+        :param num_las:
         :param sbet: sbet object passsed from CBlueApp
         :param las_files: list of las files to process
         :param sensor_model: string name representation of chosen sensor model

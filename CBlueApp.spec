@@ -7,8 +7,6 @@ sys.setrecursionlimit(5000)
 
 import os
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_data_files
-from PyInstaller.utils.hooks import copy_metadata
 
 home = Path.home()
 
@@ -42,18 +40,16 @@ static_resources = [
 ]
 
 lookup_tables = [
-    (str(cwd / 'lookup_tables' / 'ECKV_look_up_fit_HG0995_1sig_JALBTCX_temp.csv'), 'lookup_tables'),
-    (str(cwd / 'lookup_tables' / 'ECKV_look_up_fit_HG0995_1sig_old.csv'), 'lookup_tables'),
-    (str(cwd / 'lookup_tables' / 'ECKV_LUT_HG0995_1sig.csv'), 'lookup_tables'),
-    (str(cwd / 'lookup_tables' / 'look_up_fit.csv'), 'lookup_tables'),
-    (str(cwd / 'lookup_tables' / 'Riegl_look_up_fit.csv'), 'lookup_tables'),
-    (str(cwd / 'lookup_tables' / 'Riegl_look_up_fit_HG0995_1sig.csv'), 'lookup_tables'),
-    (str(cwd / 'lookup_tables' / 'THU.csv'), 'lookup_tables'),
-    (str(cwd / 'lookup_tables' / 'V_Datum_MCU_Values.txt'), 'lookup_tables')
+    (str(cwd / 'lookup_tables/*'), 'lookup_tables'),
+]
+
+docs = [
+    (str(cwd / 'docs/*'), 'docs')
 ]
 
 datas = static_resources \
-        + lookup_tables
+        + lookup_tables \
+        + docs
 
 hidden_imports = [
     'numpy',
@@ -67,7 +63,7 @@ hidden_imports = [
 
 a = Analysis(['CBlueApp.py'],
              pathex=paths,
-             binaries=[],
+             binaries=binaries,
              datas=datas,
              hiddenimports=hidden_imports,
              hookspath=[],
@@ -89,7 +85,8 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=True,
-          icon=str(cwd / 'cBlue_icon.ico'))
+          icon=str(cwd / 'cBlue_icon.ico'),
+          version='CI\\version.py')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
