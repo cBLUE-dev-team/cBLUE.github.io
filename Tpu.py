@@ -269,15 +269,28 @@ class Tpu:
             extra_byte_df = pd.DataFrame(tpu_data[:, 0:num_extra_bytes], 
                                          index=tpu_data[:, num_extra_bytes], 
                                          columns=extra_byte_dimensions.keys())
+
+            print(f'extra_byte_df')
+            print(extra_byte_df)
+
+            print(f'las.num_file_points')
+            print(las.num_file_points)
+
+            print('las.t_argsort')
+            print(las.t_argsort)
       
             if extra_byte_df.shape[0] == las.num_file_points:
                 extra_byte_df = extra_byte_df.sort_index()
+                print(f'extra_byte_df --------- sort.index()')
+                print(extra_byte_df)
             else:
-                '''fill data points for which TPU was not calculated 
-                with no_data_value (also sorts by index, or t_idx)'''
+                logging.info("""
+                filling data points for which TPU was not calculated 
+                with no_data_value (also sorting by index, or t_idx)
+                """)
                 no_data_value = -1
-                extra_byte_df = extra_byte_df.reindex(las.t_argsort, 
-                                                      fill_value=no_data_value)
+                extra_byte_df = extra_byte_df.reindex(las.t_argsort,
+                                                      fill_value=no_data_value).sort_index()
 
             logging.debug('populating extra byte data for total_thu...')
             out_las.total_thu = extra_byte_df['total_thu']
@@ -337,12 +350,13 @@ class Tpu:
     def run_tpu_multiprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using multiprocessing
 
-        This methods initiates the tpu calculations using the pathos multiprocessing
-        framework (https://pypi.org/project/pathos/).  Whether the tpu calculations
-        are done with multiprocessing or not is currently determined by which
-        "run_tpu_*" method is manually specified in the tpu_process_callback()
-        method of the CBlueApp class.  TODO: Include
-        a user option to select single processing or multiprocessing
+        This methods initiates the tpu calculations using the pathos
+        multiprocessing framework (https://pypi.org/project/pathos/).  
+        Whether the tpu calculations are done with multiprocessing or not is 
+        currently determined by which "run_tpu_*" method is manually specified 
+        in the tpu_process_callback() method of the CBlueApp class.  
+        
+        TODO: Include user option to select single processing or multiprocessing
 
         :param sbet_las_generator:
         :return:
@@ -351,7 +365,8 @@ class Tpu:
         print('Calculating TPU (multi-processing)...')
         p = pp.ProcessPool(2)
 
-        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True):
+        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), 
+                      total=num_las, ascii=True):
             pass
 
         return p
