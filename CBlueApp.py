@@ -267,6 +267,9 @@ class ControllerPanel(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
+        # Default region is no region
+        self.mcu = 0
+
         #  Build the control panel
         self.control_panel_width = 30
         self.build_control_panel()
