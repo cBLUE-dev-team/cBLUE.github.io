@@ -29,16 +29,16 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 """
+import os
 
 class Datum:
     def __init__(self):
         pass
 
     def get_vdatum_region_mcus(self):
-        vdatum_regions_MCU_file = r'.\lookup_tables\V_Datum_MCU_Values.txt'
-        vdatum_regions_file_obj = open(vdatum_regions_MCU_file, 'r')
-        vdatum_regions = vdatum_regions_file_obj.readlines()
-        vdatum_regions_file_obj.close()
+        vdatum_regions_MCU_file = os.path.join('.', 'lookup_tables', 'V_Datum_MCU_Values.txt')
+        with open(vdatum_regions_MCU_file, 'r') as vdatum_regions_file_obj:
+            vdatum_regions = vdatum_regions_file_obj.readlines()
 
         # clean up vdatum file; when copying table from internet, some dashes
         # are 'regular dashes' and others are \x96; get rid of quotes and \n
