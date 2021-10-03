@@ -290,6 +290,7 @@ class ControllerPanel(ttk.Frame):
         self.build_directories_input()
         self.build_subaqueous_input()
         self.build_vdatum_input()
+        self.build_sensor_input()
         self.build_process_buttons()
         self.update_button_enable()
 
@@ -393,9 +394,35 @@ class ControllerPanel(ttk.Frame):
         self.vdatum_region_option_menu.config(width=self.control_panel_width, anchor='w')
         self.vdatum_region_option_menu.grid(sticky=tk.EW)
 
+    def build_sensor_input(self):
+
+        self.sensor_models = (
+                "Riegl VQ-880-G",
+                "Leica Chiroptera 4x",
+                "HawkEye 4x"
+        )
+
+        sensor_frame = tk.Frame(self.controller_panel)
+        sensor_frame.columnconfigure(0, weight=1)
+        sensor_frame.grid(row=4, sticky=tk.EW)
+        tk.Label(sensor_frame,
+                 text="Sensor Model",
+                 font='Helvetica 10 bold').grid(row=0, columnspan=1, pady=(10, 0), sticky=tk.EW)
+
+        self.selected_sensor = tk.StringVar(self)
+
+        self.sensor_option_menu = tk.OptionMenu(
+                        sensor_frame,
+                        self.selected_sensor,
+                        *self.sensor_models,
+                        command=None
+                )
+        self.sensor_option_menu.config(width=self.control_panel_width, anchor='w')
+        self.sensor_option_menu.grid(sticky=tk.EW)
+
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
-        process_frame.grid(row=4, sticky=tk.NSEW)
+        process_frame.grid(row=5, sticky=tk.NSEW)
         process_frame.columnconfigure(0, weight=0)
 
         label = tk.Label(process_frame, text='Process Buttons', font=NORM_FONT_BOLD)
