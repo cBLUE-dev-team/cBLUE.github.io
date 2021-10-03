@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -46,15 +46,15 @@ from pathlib import Path
 
 
 now = datetime.datetime.now()
-log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year, 
-                                            str(now.month).zfill(2), 
+log_file = 'cBLUE_{}{}{}_{}{}{}.log'.format(now.year,
+                                            str(now.month).zfill(2),
                                             str(now.day).zfill(2),
                                             str(now.hour).zfill(2),
                                             str(now.minute).zfill(2),
                                             str(now.second).zfill(2))
 
 logging.basicConfig(filename=log_file,
-                    format='%(asctime)s:%(message)s', 
+                    format='%(asctime)s:%(message)s',
                     level=logging.DEBUG)
 
 from Subaerial import SensorModel, Jacobian
@@ -121,14 +121,22 @@ class CBlueApp(tk.Tk):
         sensor_model_msg = '''
         Currently, this is only a dummy menu option.  The senor model
         configuration for the Reigl VQ-880-G is hard-coded into cBLUE.
-        Development plans include refactoring the code to read sensor 
-        model information from a separate file and extending support 
+        Development plans include refactoring the code to read sensor
+        model information from a separate file and extending support
         to other lidar systems, including Leica Chiroptera 4X.
         '''
 
         sensor_model_choice = tk.Menu(menubar, tearoff=0)
-        sensor_model_choice.add_command(label=u'Reigl VQ-880-G'.format(u'\u2713'),
+
+        sensor_model_choice.add_command(label='Reigl VQ-880-G',
                                         command=lambda: self.popupmsg(sensor_model_msg))
+
+        sensor_model_choice.add_command(label='Leica Chiroptera 4X',
+                                        command=lambda: self.popupmsg(sensor_model_msg))
+
+        sensor_model_choice.add_command(label='HawkEye 4X',
+                                        command=lambda: self.popupmsg(sensor_model_msg))
+
         menubar.add_cascade(label='Sensor Model', menu=sensor_model_choice)
 
         about_menu = tk.Menu(menubar, tearoff=0)
@@ -181,7 +189,7 @@ class CBlueApp(tk.Tk):
 
         license_msg = r'''
         cBLUE {}
-        Copyright (C) 2019 
+        Copyright (C) 2019
         Oregon State University (OSU)
         Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
         NOAA Remote Sensing Division (NOAA RSD)
@@ -506,16 +514,16 @@ class ControllerPanel(ttk.Frame):
             cpu_process_info = ('singleprocess', )
 
         tpu = Tpu(surface_selection, surface_ind,
-                  wind_selection, 
-                  self.wind_vals[wind_ind][1], 
+                  wind_selection,
+                  self.wind_vals[wind_ind][1],
                   kd_selection,
-                  self.kd_vals[kd_ind][1], 
-                  self.vdatum_region.get(), 
+                  self.kd_vals[kd_ind][1],
+                  self.vdatum_region.get(),
                   self.mcu,
-                  self.tpuOutput.directoryName, 
-                  self.controller.controller_configuration['cBLUE_version'], 
+                  self.tpuOutput.directoryName,
+                  self.controller.controller_configuration['cBLUE_version'],
                   self.controller.controller_configuration['sensor_model'],
-                  cpu_process_info, 
+                  cpu_process_info,
                   self.controller.controller_configuration['subaqueous_LUTs'],
                   self.controller.controller_configuration['water_surface_ellipsoid_height'])
 
@@ -572,4 +580,3 @@ if __name__ == "__main__":
     app = CBlueApp()
     app.geometry('225x515')
     app.mainloop()
-
