@@ -38,9 +38,9 @@ import numexpr as ne
 
 
 class SensorModel:
-    """This class is used to define and access the sensor model of a particular 
+    """This class is used to define and access the sensor model of a particular
     lidar sensor, including the laser geolocation equation and any
-    supporting information or parameters.  Currently, only a single 
+    supporting information or parameters.  Currently, only a single
     sensor, the Riegl VQ-880-G, is supported, but development plans
     include extending support to the Chiroptera II (or III or IV).
 
@@ -48,11 +48,11 @@ class SensorModel:
 
     """
 
-    eval_type = 'numexpr'
+    eval_type = "numexpr"
 
     def __init__(self, sensor):
         self.sensor = sensor
-        self.R, self.fR = self.set_rotation_matrix_airplane() 
+        self.R, self.fR = self.set_rotation_matrix_airplane()
         self.M = self.set_rotation_matrix_scanning_sensor()
         self.obs_eq, self.obs_eq_pre_poly = self.define_obseration_equation()
         self.rho_est = None
@@ -88,8 +88,8 @@ class SensorModel:
             cblue_aer_pos[2],
             cblue_aer_pos_err[0],
             cblue_aer_pos_err[1],
-            cblue_aer_pos_err[2]
-            )
+            cblue_aer_pos_err[2],
+        )
 
     def set_rotation_matrix_airplane(self):
         """define rotation matrix for airplane
@@ -119,18 +119,12 @@ class SensorModel:
         :return: List[lambdify functions]
         """
 
-        r, p, h = symbols('r p h')
-        R1 = Matrix([[1, 0, 0],
-                     [0, cos(r), -sin(r)],
-                     [0, sin(r), cos(r)]])
+        r, p, h = symbols("r p h")
+        R1 = Matrix([[1, 0, 0], [0, cos(r), -sin(r)], [0, sin(r), cos(r)]])
 
-        R2 = Matrix([[cos(p), 0, sin(p)],
-                     [0, 1, 0],
-                     [-sin(p), 0, cos(p)]])
+        R2 = Matrix([[cos(p), 0, sin(p)], [0, 1, 0], [-sin(p), 0, cos(p)]])
 
-        R3 = Matrix([[cos(h), -sin(h), 0],
-                     [sin(h), cos(h), 0],
-                     [0, 0, 1]])
+        R3 = Matrix([[cos(h), -sin(h), 0], [sin(h), cos(h), 0], [0, 0, 1]])
 
         R = R3 * R2 * R1
 
@@ -142,10 +136,8 @@ class SensorModel:
         r20 = lambdify(p, R[6], self.eval_type)
         r21 = lambdify((r, p), R[7], self.eval_type)
 
-        fR = [r00, r01, None,
-              r10, r11, None,
-              r20, r21, None]
-        
+        fR = [r00, r01, None, r10, r11, None, r20, r21, None]
+
         return R, fR
 
     @staticmethod
@@ -170,17 +162,13 @@ class SensorModel:
 
         :return Matrix M: the scanning sensor rotation matrix
         """
-        a, b = symbols('a b')
-        M1 = Matrix([[1, 0, 0],
-                     [0, cos(a), -sin(a)],
-                     [0, sin(a), cos(a)]])
+        a, b = symbols("a b")
+        M1 = Matrix([[1, 0, 0], [0, cos(a), -sin(a)], [0, sin(a), cos(a)]])
 
-        M2 = Matrix([[cos(b), 0, sin(b)],
-                     [0, 1, 0],
-                     [-sin(b), 0, cos(b)]])
+        M2 = Matrix([[cos(b), 0, sin(b)], [0, 1, 0], [-sin(b), 0, cos(b)]])
 
         M = M2 * M1
-        
+
         return M
 
     def define_obseration_equation(self):
@@ -190,9 +178,9 @@ class SensorModel:
 
         .. image:: ../images/eq_OriginalObsEq.png
 
-        However, to account for the differences between the assumed sensor 
-        model and the proprietary sensor model, the initial observation equation 
-        is modified to include terms derived from polynomial surface fitting of 
+        However, to account for the differences between the assumed sensor
+        model and the proprietary sensor model, the initial observation equation
+        is modified to include terms derived from polynomial surface fitting of
         differences in the X, Y, and Z components of the LAS positions and the
         positions calculated from the intial cBLUE observation equation.
 
@@ -202,16 +190,40 @@ class SensorModel:
         """
 
         # create variables for symbolic computations
-        a, b, r, p, h, x, y, z, rho, p00, p10, p01, p20, p11, p02, p21, p12, p03 \
-            = symbols('a b r p h x y z rho p00 p10 p01 p20 p11 p02 p21 p12 p03')
+        (
+            a,
+            b,
+            r,
+            p,
+            h,
+            x,
+            y,
+            z,
+            rho,
+            p00,
+            p10,
+            p01,
+            p20,
+            p11,
+            p02,
+            p21,
+            p12,
+            p03,
+        ) = symbols("a b r p h x y z rho p00 p10 p01 p20 p11 p02 p21 p12 p03")
 
         # define observation equations
         # [00, 01, 02      matrix       [0 1 2
         #  10, 11, 12   ---indices-->    3 4 5
         #  20, 21, 22]                   6 7 8]
-        F1 = x - rho * (self.R[0] * self.M[2] + self.R[1] * self.M[5] + self.R[2] * self.M[8])
-        F2 = y - rho * (self.R[3] * self.M[2] + self.R[4] * self.M[5] + self.R[5] * self.M[8])
-        F3 = z - rho * (self.R[6] * self.M[2] + self.R[7] * self.M[5] + self.R[8] * self.M[8])
+        F1 = x - rho * (
+            self.R[0] * self.M[2] + self.R[1] * self.M[5] + self.R[2] * self.M[8]
+        )
+        F2 = y - rho * (
+            self.R[3] * self.M[2] + self.R[4] * self.M[5] + self.R[5] * self.M[8]
+        )
+        F3 = z - rho * (
+            self.R[6] * self.M[2] + self.R[7] * self.M[5] + self.R[8] * self.M[8]
+        )
 
         # converting symbolic to function (for faster computations)
         fF1 = lambdify((a, b, h, p, r, rho, x), F1, self.eval_type)
@@ -220,22 +232,28 @@ class SensorModel:
         fF_orig = [fF1, fF2, fF3]
 
         # least squares adjustment mimics the Matlab "fit (poly23)" function
-        polysurfcorr = p00 + \
-                       p10 * a + \
-                       p01 * b + \
-                       p20 * a ** 2 + \
-                       p11 * a * b + \
-                       p02 * b ** 2 + \
-                       p21 * a ** 2 * b + \
-                       p12 * a * b ** 2 + \
-                       p03 * b ** 3
+        polysurfcorr = (
+            p00
+            + p10 * a
+            + p01 * b
+            + p20 * a ** 2
+            + p11 * a * b
+            + p02 * b ** 2
+            + p21 * a ** 2 * b
+            + p12 * a * b ** 2
+            + p03 * b ** 3
+        )
 
         # Redefine obs eqs by adding polynomial surface fitting eq
         F1 += polysurfcorr
         F2 += polysurfcorr
         F3 += polysurfcorr
-        
-        return (F1, F2, F3,),  fF_orig
+
+        return (
+            F1,
+            F2,
+            F3,
+        ), fF_orig
 
     def estimate_rho_a_b(self, data):
         """calculates estimates for rho, alpha, and beta
@@ -255,16 +273,16 @@ class SensorModel:
         :return: (list[], list[], list[])
 
         #0       t_sbet
-        #1       t_las 
-        #2       x_las 
-        #3       y_las 
-        #4       z_las 
+        #1       t_las
+        #2       x_las
+        #3       y_las
+        #4       z_las
         #5       x_sbet
         #6       y_sbet
         #7       z_sbet
-        #8       r     
-        #9       p     
-        #10      h   
+        #8       r
+        #9       p
+        #10      h
 
         # TODO: only pass needed columns
         """
@@ -289,11 +307,15 @@ class SensorModel:
 
         self.rho_est = ne.evaluate("sqrt(rho_x**2 + rho_y**2 + rho_z**2)")
         rho_est = self.rho_est
-                
-        self.b_est = ne.evaluate("arcsin(((fR0 * rho_x) + (fR3 * rho_y) + (fR6 * rho_z)) / (-rho_est))")
-        b_est = self.b_est      
-        
-        self.a_est = ne.evaluate("arcsin(((fR1 * rho_x) + (fR4 * rho_y) + (fR7 * rho_z)) / (rho_est * cos(b_est)))")
+
+        self.b_est = ne.evaluate(
+            "arcsin(((fR0 * rho_x) + (fR3 * rho_y) + (fR6 * rho_z)) / (-rho_est))"
+        )
+        b_est = self.b_est
+
+        self.a_est = ne.evaluate(
+            "arcsin(((fR1 * rho_x) + (fR4 * rho_y) + (fR7 * rho_z)) / (rho_est * cos(b_est)))"
+        )
 
     def calc_poly_surf_coeffs(self, itv=10):
         """estimates error model using polynomial surface fitting
@@ -308,7 +330,7 @@ class SensorModel:
         with terms for a, b, a^2, ab, b^2, a^2b, ab^2, and b^3.
 
         Only every itv-th point is used to calculate the polynomial surface
-        coefficients, for small speed gains in the calculations of the 
+        coefficients, for small speed gains in the calculations of the
         coefficients.
 
         :param a_est:
@@ -323,20 +345,29 @@ class SensorModel:
         B0 = self.b_est[::itv]
         A0 = self.a_est[::itv]
 
-        A = np.vstack((
-            ne.evaluate('A0 * 0 + 1'),
-            ne.evaluate('A0'),
-            ne.evaluate('B0'),
-            ne.evaluate('A0 ** 2'),
-            ne.evaluate('A0 * B0'),
-            ne.evaluate('B0 ** 2'),
-            ne.evaluate('A0 ** 2 * B0'),
-            ne.evaluate('A0 * B0 ** 2'),
-            ne.evaluate('B0 ** 3'))).T
+        A = np.vstack(
+            (
+                ne.evaluate("A0 * 0 + 1"),
+                ne.evaluate("A0"),
+                ne.evaluate("B0"),
+                ne.evaluate("A0 ** 2"),
+                ne.evaluate("A0 * B0"),
+                ne.evaluate("B0 ** 2"),
+                ne.evaluate("A0 ** 2 * B0"),
+                ne.evaluate("A0 * B0 ** 2"),
+                ne.evaluate("B0 ** 3"),
+            )
+        ).T
 
-        (self.poly_err_surf_coeffs_x, __, __, __) = np.linalg.lstsq(A, self.dx[::itv], rcond=None)
-        (self.poly_err_surf_coeffs_y, __, __, __) = np.linalg.lstsq(A, self.dy[::itv], rcond=None)
-        (self.poly_err_surf_coeffs_z, __, __, __) = np.linalg.lstsq(A, self.dz[::itv], rcond=None)
+        (self.poly_err_surf_coeffs_x, __, __, __) = np.linalg.lstsq(
+            A, self.dx[::itv], rcond=None
+        )
+        (self.poly_err_surf_coeffs_y, __, __, __) = np.linalg.lstsq(
+            A, self.dy[::itv], rcond=None
+        )
+        (self.poly_err_surf_coeffs_z, __, __, __) = np.linalg.lstsq(
+            A, self.dz[::itv], rcond=None
+        )
 
     @staticmethod
     def calcRMSE(data):
@@ -345,13 +376,15 @@ class SensorModel:
         num_coords, num_points = data.shape
         AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
         RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
-        
-        logging.info('Mean Difference:\n'
-                     'X: {:.3f}\n'
-                     'Y: {:.3f}\n'
-                     'Z: {:.3f}'.format(AMDE[0], AMDE[1], AMDE[2]))
 
-        logging.info('RMSE: {:.3f}\n'.format(RMSE))
+        logging.info(
+            "Mean Difference:\n"
+            "X: {:.3f}\n"
+            "Y: {:.3f}\n"
+            "Z: {:.3f}".format(AMDE[0], AMDE[1], AMDE[2])
+        )
+
+        logging.info("RMSE: {:.3f}\n".format(RMSE))
 
     def calc_diff(self, x_las, y_las, z_las):
         """calculate the difference between the las position and the initial cBLUE position
@@ -369,9 +402,9 @@ class SensorModel:
         """
 
         # calc diff between true and est las xyz (aer_pos = Laser Estimates)
-        #aer_x_pre = self.subaer_pos_pre[0]
-        #aer_y_pre = self.subaer_pos_pre[1]
-        #aer_z_pre = self.subaer_pos_pre[2]
+        # aer_x_pre = self.subaer_pos_pre[0]
+        # aer_y_pre = self.subaer_pos_pre[1]
+        # aer_z_pre = self.subaer_pos_pre[2]
 
         aer_x_pre = self.aer_x_pre_poly
         aer_y_pre = self.aer_y_pre_poly
@@ -412,9 +445,15 @@ class SensorModel:
         :return:
         """
 
-        self.aer_x_pre_poly = self.obs_eq_pre_poly[0](self.a_est, self.b_est, data[10], data[9], data[8], self.rho_est, data[5])
-        self.aer_y_pre_poly = self.obs_eq_pre_poly[1](self.a_est, self.b_est, data[10], data[9], data[8], self.rho_est, data[6])
-        self.aer_z_pre_poly = self.obs_eq_pre_poly[2](self.a_est, self.b_est, data[9], data[8], self.rho_est, data[7])
+        self.aer_x_pre_poly = self.obs_eq_pre_poly[0](
+            self.a_est, self.b_est, data[10], data[9], data[8], self.rho_est, data[5]
+        )
+        self.aer_y_pre_poly = self.obs_eq_pre_poly[1](
+            self.a_est, self.b_est, data[10], data[9], data[8], self.rho_est, data[6]
+        )
+        self.aer_z_pre_poly = self.obs_eq_pre_poly[2](
+            self.a_est, self.b_est, data[9], data[8], self.rho_est, data[7]
+        )
 
     def calc_cblue_aer_pos(self):
         """calculates the final cBLUE subearial position
@@ -432,16 +471,19 @@ class SensorModel:
         a_est = self.a_est
         b_est = self.b_est
 
-        A = np.vstack((
-            ne.evaluate('a_est * 0 + 1'),
-            ne.evaluate('a_est'),
-            ne.evaluate('b_est'),
-            ne.evaluate('a_est ** 2'),
-            ne.evaluate('a_est * b_est'),
-            ne.evaluate('b_est ** 2'),
-            ne.evaluate('a_est ** 2 * b_est'),
-            ne.evaluate('a_est * b_est ** 2'),
-            ne.evaluate('b_est ** 3'))).T
+        A = np.vstack(
+            (
+                ne.evaluate("a_est * 0 + 1"),
+                ne.evaluate("a_est"),
+                ne.evaluate("b_est"),
+                ne.evaluate("a_est ** 2"),
+                ne.evaluate("a_est * b_est"),
+                ne.evaluate("b_est ** 2"),
+                ne.evaluate("a_est ** 2 * b_est"),
+                ne.evaluate("a_est * b_est ** 2"),
+                ne.evaluate("b_est ** 3"),
+            )
+        ).T
 
         aer_x_pre = self.aer_x_pre_poly
         aer_y_pre = self.aer_y_pre_poly
@@ -455,11 +497,15 @@ class SensorModel:
         err_y = np.sum(A * coeffs_y, axis=1)
         err_z = np.sum(A * coeffs_z, axis=1)
 
-        aer_pos_x = ne.evaluate('aer_x_pre + err_x')
-        aer_pos_y = ne.evaluate('aer_y_pre + err_y')
-        aer_pos_z = ne.evaluate('aer_z_pre + err_z')
+        aer_pos_x = ne.evaluate("aer_x_pre + err_x")
+        aer_pos_y = ne.evaluate("aer_y_pre + err_y")
+        aer_pos_z = ne.evaluate("aer_z_pre + err_z")
 
-        return (aer_pos_x, aer_pos_y, aer_pos_z, )
+        return (
+            aer_pos_x,
+            aer_pos_y,
+            aer_pos_z,
+        )
 
     @staticmethod
     def calc_aer_pos_err(aer_pos, las_pox_xyz):
@@ -499,40 +545,44 @@ class SensorModel:
         y_las = las_pox_xyz[1]
         z_las = las_pox_xyz[2]
 
-        aer_x_err = ne.evaluate('aer_x - x_las')
-        aer_y_err = ne.evaluate('aer_y - y_las')
-        aer_z_err = ne.evaluate('aer_z - z_las')
+        aer_x_err = ne.evaluate("aer_x - x_las")
+        aer_y_err = ne.evaluate("aer_y - y_las")
+        aer_z_err = ne.evaluate("aer_z - z_las")
 
-        return (aer_x_err, aer_y_err, aer_z_err, )
+        return (
+            aer_x_err,
+            aer_y_err,
+            aer_z_err,
+        )
 
 
 class Jacobian:
     """This class is used to calculate and evaluate the Jacobian of a
     sensor model's laser geolocation equation.  The class Jacobian attempts
-    to decouple a Jacobian and the data used to evaluate it.  For example, 
-    the inputs to the lambdified Jacobian components are not hard-coded in 
-    the function call, but are determined from accessing the 
-    .__code__.co_varnames attribute of the Jacobian component and then 
+    to decouple a Jacobian and the data used to evaluate it.  For example,
+    the inputs to the lambdified Jacobian components are not hard-coded in
+    the function call, but are determined from accessing the
+    .__code__.co_varnames attribute of the Jacobian component and then
     looking up the corresponding values in a dict.  Although this somewhat
-    decouples the Jacobian from the data used to evaluate it, the dict 
+    decouples the Jacobian from the data used to evaluate it, the dict
     containing the corresponding values is manually created, separate from
     the sensor model.  Development plans for future versions include
-    decoupling the Jacobian and the data to evaluate it even more, by 
+    decoupling the Jacobian and the data to evaluate it even more, by
     creating the dict based on the sensor model.
 
     Two key modules that are used throughout are sympy and numexpr:
 
     The module sympy is used to symbolically define the laser geolocation
     equation and the corresponding Jacobian and to numerically evalulate
-    the Jacobian.  
-    
-    The module numexpr is used to accelerate calculations using large 
-    numpy arrays (https://github.com/pydata/numexpr).  One characteristic 
-    of numexpr is that numexpr expressions do not allow indexing of 
+    the Jacobian.
+
+    The module numexpr is used to accelerate calculations using large
+    numpy arrays (https://github.com/pydata/numexpr).  One characteristic
+    of numexpr is that numexpr expressions do not allow indexing of
     variables, so what might normally be coded as, for example,
-    *var = data[1] * 3* would require something like *data1 = data[1]* 
+    *var = data[1] * 3* would require something like *data1 = data[1]*
     before executing the numexpr expression *"var = data1 * 3"*.
-   
+
     """
 
     def __init__(self, sensor_model):
@@ -540,9 +590,15 @@ class Jacobian:
         self.OEx = sensor_model.obs_eq[0]
         self.OEy = sensor_model.obs_eq[1]
         self.OEz = sensor_model.obs_eq[2]
-        self.Jx, self.Jy, self.Jz  = self.form_jacobian()
-        self.lJx, self.lJy, self.lJz, \
-            self.jx_vars, self.jy_vars, self.jz_vars = self.lambdify_jacobian()
+        self.Jx, self.Jy, self.Jz = self.form_jacobian()
+        (
+            self.lJx,
+            self.lJy,
+            self.lJz,
+            self.jx_vars,
+            self.jy_vars,
+            self.jz_vars,
+        ) = self.lambdify_jacobian()
 
     def form_jacobian(self):
         """generate the jacobian of the specified geolocation equation
@@ -556,7 +612,7 @@ class Jacobian:
         :return (Matrix, Matrix, Matrix): sympy matrices for x, y, and z J components
         """
 
-        a, b, r, p, h, x, y, z, rho = symbols('a b r p h x y z rho')
+        a, b, r, p, h, x, y, z, rho = symbols("a b r p h x y z rho")
 
         v = Matrix([a, b, r, p, h, x, y, z, rho])  # vector of unknowns
 
@@ -566,7 +622,7 @@ class Jacobian:
 
         return Jx, Jy, Jz
 
-    def lambdify_jacobian(self, eval_type='numexpr'):
+    def lambdify_jacobian(self, eval_type="numexpr"):
         """turn the symbolic Jacobian into a function for faster computation
 
         This method "lambdifies" (or "functionizes") the Jacobian components, for
@@ -583,14 +639,38 @@ class Jacobian:
         """
 
         # create variables for symbolic computations
-        a, b, r, p, h, rho, \
-        p00, p10, p01, p20, p11, p02, p21, p12, p03, \
-        sin_a, sin_b, sin_r, sin_p, sin_h, \
-        cos_a, cos_b, cos_r, cos_p, cos_h \
-            = symbols('a b r p h rho '
-                      'p00 p10 p01 p20 p11 p02 p21 p12 p03 '
-                      'sin_a sin_b sin_r sin_p sin_h '
-                      'cos_a cos_b cos_r cos_p cos_h')
+        (
+            a,
+            b,
+            r,
+            p,
+            h,
+            rho,
+            p00,
+            p10,
+            p01,
+            p20,
+            p11,
+            p02,
+            p21,
+            p12,
+            p03,
+            sin_a,
+            sin_b,
+            sin_r,
+            sin_p,
+            sin_h,
+            cos_a,
+            cos_b,
+            cos_r,
+            cos_p,
+            cos_h,
+        ) = symbols(
+            "a b r p h rho "
+            "p00 p10 p01 p20 p11 p02 p21 p12 p03 "
+            "sin_a sin_b sin_r sin_p sin_h "
+            "cos_a cos_b cos_r cos_p cos_h"
+        )
 
         trig_substitutions = [
             (sin(a), sin_a),
@@ -602,7 +682,8 @@ class Jacobian:
             (cos(b), cos_b),
             (cos(r), cos_r),
             (cos(p), cos_p),
-            (cos(h), cos_h)]
+            (cos(h), cos_h),
+        ]
 
         # functionize the trig terms of the Jacobian components
         Jxsub = [j.subs(trig_substitutions) for j in self.Jx]
@@ -610,14 +691,14 @@ class Jacobian:
         Jzsub = [j.subs(trig_substitutions) for j in self.Jz]
 
         # functionize the Jacobian x, y, and z components
-        # (9 terms in each Jacobian component correspond to a, b, r, p, h, x, y, z, and rho 
+        # (9 terms in each Jacobian component correspond to a, b, r, p, h, x, y, z, and rho
         jx_vars = [list(jx.free_symbols) for jx in Jxsub]
         jy_vars = [list(jy.free_symbols) for jy in Jysub]
         jz_vars = [list(jz.free_symbols) for jz in Jzsub]
 
-        lJx = [lambdify(jx_vars[i], jx, eval_type) for i, jx in enumerate(Jxsub)]  
-        lJy = [lambdify(jy_vars[i], jy, eval_type) for i, jy in enumerate(Jysub)]  
-        lJz = [lambdify(jz_vars[i], jz, eval_type) for i, jz in enumerate(Jzsub)]  
+        lJx = [lambdify(jx_vars[i], jx, eval_type) for i, jx in enumerate(Jxsub)]
+        lJy = [lambdify(jy_vars[i], jy, eval_type) for i, jy in enumerate(Jysub)]
+        lJz = [lambdify(jz_vars[i], jz, eval_type) for i, jz in enumerate(Jzsub)]
 
         return lJx, lJy, lJz, jx_vars, jy_vars, jz_vars
 
@@ -651,13 +732,23 @@ class Jacobian:
         cos_p = ne.evaluate("cos(p)")
         cos_h = ne.evaluate("cos(h)")
 
-        return (sin_a, sin_b, sin_r, sin_p, sin_h,
-                cos_a, cos_b, cos_r, cos_p, cos_h, )
+        return (
+            sin_a,
+            sin_b,
+            sin_r,
+            sin_p,
+            sin_h,
+            cos_a,
+            cos_b,
+            cos_r,
+            cos_p,
+            cos_h,
+        )
 
     def get_calc_vals_for_J_eval(self, data):
         """calculatse and assembles the values needed to evaluate the Jacobian
 
-        This methods calculates and assembles the values needed to evaluate the Jacobian.  
+        This methods calculates and assembles the values needed to evaluate the Jacobian.
 
         1. estimate rho, a, and b from data
         2. use rho, a, and b estimates to calculate initial X, Y, and Z
@@ -688,70 +779,81 @@ class Jacobian:
 
         :param data
         :return dict: calcualted values used to evaluate Jacobian
-        
+
         """
 
         # estimate rho, a, and b from data
         self.sensor_model.estimate_rho_a_b(data)
-        
+
         # use rho, a, and b estimates to calculate initial estimate of X, Y, Z
         self.sensor_model.calc_aer_pos_pre(data)
-        
+
         # calculate differece between initial X, Y, and Z estimates and las X, Y, and Z
         self.sensor_model.calc_diff(data[2], data[3], data[4])
-        
+
         # calculate polynomial surface coefficients to account for differences dx, dy, and dz
         self.sensor_model.calc_poly_surf_coeffs()
-        
-        # precalculate sin and cos of attitude data to simplify evaluation of Jacobian
-        trig_subs = self.calc_trig_terms(self.sensor_model.a_est, self.sensor_model.b_est, data[8], data[9], data[10]) 
 
-        p_coeffs_vars = ['p00', 'p10', 'p01', 'p20', 'p11', 'p02', 'p21', 'p12', 'p03']
+        # precalculate sin and cos of attitude data to simplify evaluation of Jacobian
+        trig_subs = self.calc_trig_terms(
+            self.sensor_model.a_est, self.sensor_model.b_est, data[8], data[9], data[10]
+        )
+
+        p_coeffs_vars = ["p00", "p10", "p01", "p20", "p11", "p02", "p21", "p12", "p03"]
 
         J_params = {
-            'a': self.sensor_model.a_est,
-            'b': self.sensor_model.b_est,
-            'rho': self.sensor_model.rho_est,
-            'p_coeffs': {
-                'x': {k: self.sensor_model.poly_err_surf_coeffs_x[i] for i, k in enumerate(p_coeffs_vars)},  # e.g., {'p00': p00x, ...}
-                'y': {k: self.sensor_model.poly_err_surf_coeffs_y[i] for i, k in enumerate(p_coeffs_vars)},
-                'z': {k: self.sensor_model.poly_err_surf_coeffs_z[i] for i, k in enumerate(p_coeffs_vars)},
+            "a": self.sensor_model.a_est,
+            "b": self.sensor_model.b_est,
+            "rho": self.sensor_model.rho_est,
+            "p_coeffs": {
+                "x": {
+                    k: self.sensor_model.poly_err_surf_coeffs_x[i]
+                    for i, k in enumerate(p_coeffs_vars)
+                },  # e.g., {'p00': p00x, ...}
+                "y": {
+                    k: self.sensor_model.poly_err_surf_coeffs_y[i]
+                    for i, k in enumerate(p_coeffs_vars)
                 },
-            'sin_a': trig_subs[0],
-            'sin_b': trig_subs[1],
-            'sin_r': trig_subs[2],
-            'sin_p': trig_subs[3],
-            'sin_h': trig_subs[4],
-            'cos_a': trig_subs[5],
-            'cos_b': trig_subs[6],
-            'cos_r': trig_subs[7],
-            'cos_p': trig_subs[8],
-            'cos_h': trig_subs[9],
-            }        
+                "z": {
+                    k: self.sensor_model.poly_err_surf_coeffs_z[i]
+                    for i, k in enumerate(p_coeffs_vars)
+                },
+            },
+            "sin_a": trig_subs[0],
+            "sin_b": trig_subs[1],
+            "sin_r": trig_subs[2],
+            "sin_p": trig_subs[3],
+            "sin_h": trig_subs[4],
+            "cos_a": trig_subs[5],
+            "cos_b": trig_subs[6],
+            "cos_r": trig_subs[7],
+            "cos_p": trig_subs[8],
+            "cos_h": trig_subs[9],
+        }
 
         return J_params
 
-    def get_J_term_values(self, J_comp, j_vars, values_for_J_eval): 
+    def get_J_term_values(self, J_comp, j_vars, values_for_J_eval):
         """gets the calculated values needed to evaluate the specified Jacobian component
 
         This method retrieves from the passed 'values_for_J_eval parameter the
-        calculated values needed to evaluate the specified Jacobian component (i.e., 
+        calculated values needed to evaluate the specified Jacobian component (i.e.,
         the x, y, or z component).
 
         :param J_comp:
         :param J_term:
         :param values_for_J_eval:
         :return vals:
-        
+
         """
 
         vals = []
         for var in j_vars:
-            if str(var)[0] == 'p':  # e.g., 'p00'
-                vals.append(values_for_J_eval['p_coeffs'][J_comp][str(var)])
+            if str(var)[0] == "p":  # e.g., 'p00'
+                vals.append(values_for_J_eval["p_coeffs"][J_comp][str(var)])
             else:
                 vals.append(values_for_J_eval[str(var)])
-        
+
         return vals
 
     def eval_jacobian(self, data):
@@ -761,7 +863,7 @@ class Jacobian:
         to the lambdified functions representing the x, y, and z components
         of the Jacobian.
 
-        To simplify the Jacobian evaluation, only the non-zero terms are kept.  
+        To simplify the Jacobian evaluation, only the non-zero terms are kept.
         Accordingly, the rows of variance/covariance matrix corresponding to the
         Jacobian zero terms are deleted.  Additionally, the Jacobian evaluation
         is simplied further by not calling get_J_term_values() for Jacobian
@@ -775,41 +877,88 @@ class Jacobian:
         J_param_values = self.get_calc_vals_for_J_eval(data)
 
         Jx = np.vstack(
-            (self.lJx[0](*self.get_J_term_values('x', self.jx_vars[0], J_param_values)),
-             self.lJx[1](*self.get_J_term_values('x', self.jx_vars[1], J_param_values)),
-             self.lJx[2](*self.get_J_term_values('x', self.jx_vars[2], J_param_values)),
-             self.lJx[3](*self.get_J_term_values('x', self.jx_vars[3], J_param_values)),
-             self.lJx[4](*self.get_J_term_values('x', self.jx_vars[4], J_param_values)),
-             np.ones(data[0].size),
-             self.lJx[8](*self.get_J_term_values('x', self.jx_vars[8], J_param_values))))
+            (
+                self.lJx[0](
+                    *self.get_J_term_values("x", self.jx_vars[0], J_param_values)
+                ),
+                self.lJx[1](
+                    *self.get_J_term_values("x", self.jx_vars[1], J_param_values)
+                ),
+                self.lJx[2](
+                    *self.get_J_term_values("x", self.jx_vars[2], J_param_values)
+                ),
+                self.lJx[3](
+                    *self.get_J_term_values("x", self.jx_vars[3], J_param_values)
+                ),
+                self.lJx[4](
+                    *self.get_J_term_values("x", self.jx_vars[4], J_param_values)
+                ),
+                np.ones(data[0].size),
+                self.lJx[8](
+                    *self.get_J_term_values("x", self.jx_vars[8], J_param_values)
+                ),
+            )
+        )
 
         Jy = np.vstack(
-            (self.lJy[0](*self.get_J_term_values('y', self.jy_vars[0], J_param_values)),
-             self.lJy[1](*self.get_J_term_values('y', self.jy_vars[1], J_param_values)),
-             self.lJy[2](*self.get_J_term_values('y', self.jy_vars[2], J_param_values)),
-             self.lJy[3](*self.get_J_term_values('y', self.jy_vars[3], J_param_values)),
-             self.lJy[4](*self.get_J_term_values('y', self.jy_vars[4], J_param_values)),
-             np.ones(data[0].size),
-             self.lJy[8](*self.get_J_term_values('y', self.jy_vars[8], J_param_values))))
+            (
+                self.lJy[0](
+                    *self.get_J_term_values("y", self.jy_vars[0], J_param_values)
+                ),
+                self.lJy[1](
+                    *self.get_J_term_values("y", self.jy_vars[1], J_param_values)
+                ),
+                self.lJy[2](
+                    *self.get_J_term_values("y", self.jy_vars[2], J_param_values)
+                ),
+                self.lJy[3](
+                    *self.get_J_term_values("y", self.jy_vars[3], J_param_values)
+                ),
+                self.lJy[4](
+                    *self.get_J_term_values("y", self.jy_vars[4], J_param_values)
+                ),
+                np.ones(data[0].size),
+                self.lJy[8](
+                    *self.get_J_term_values("y", self.jy_vars[8], J_param_values)
+                ),
+            )
+        )
 
         Jz = np.vstack(
-            (self.lJz[0](*self.get_J_term_values('z', self.jz_vars[0], J_param_values)),
-             self.lJz[1](*self.get_J_term_values('z', self.jz_vars[1], J_param_values)),
-             self.lJz[2](*self.get_J_term_values('z', self.jz_vars[2], J_param_values)),
-             self.lJz[3](*self.get_J_term_values('z', self.jz_vars[3], J_param_values)),
-             np.ones(data[0].size),
-             self.lJz[8](*self.get_J_term_values('z', self.jz_vars[8], J_param_values))))
+            (
+                self.lJz[0](
+                    *self.get_J_term_values("z", self.jz_vars[0], J_param_values)
+                ),
+                self.lJz[1](
+                    *self.get_J_term_values("z", self.jz_vars[1], J_param_values)
+                ),
+                self.lJz[2](
+                    *self.get_J_term_values("z", self.jz_vars[2], J_param_values)
+                ),
+                self.lJz[3](
+                    *self.get_J_term_values("z", self.jz_vars[3], J_param_values)
+                ),
+                np.ones(data[0].size),
+                self.lJz[8](
+                    *self.get_J_term_values("z", self.jz_vars[8], J_param_values)
+                ),
+            )
+        )
 
-        return (Jx, Jy, Jz, )
+        return (
+            Jx,
+            Jy,
+            Jz,
+        )
 
 
 class Subaerial:
     """
     This class provides the functionality to calculate the subaerial
-    portion of the total propagated uncertainty (TPU), given the Jacobian 
-    of a laser geolocation equation, merged lidar/trajectory 
-    data, and the standard deviations of the provided data.  
-    
+    portion of the total propagated uncertainty (TPU), given the Jacobian
+    of a laser geolocation equation, merged lidar/trajectory
+    data, and the standard deviations of the provided data.
+
     The following table lists the contents of merged lidar/trajectory
     data array:
 
@@ -828,7 +977,7 @@ class Subaerial:
     9       p           sbet pitch
     10      h           sbet heading
     =====   =========   =======================
-        
+
     The following table lists the contents of the array of standard
     deviations corresponding to the variables of the merged data
     array:
@@ -884,10 +1033,10 @@ class Subaerial:
         2       r           .   .   .
         3       p           .   .   .
         4       h           .   .   0
-        5       x           1   0   0       
-        6       y           0   1   0 
+        5       x           1   0   0
+        6       y           0   1   0
         7       z           0   0   1
-        8       rho         .   .   .   
+        8       rho         .   .   .
         =====   ========    ==  ==  ==
 
         :param tuple(ndarray) J_eval:  evaluated Jacobian values for X, Y, and Z components
@@ -923,7 +1072,7 @@ class Subaerial:
         sy = ne.evaluate("sqrt(sum_Jy)")
 
         self.tvu = ne.evaluate("sqrt(sum_Jz)")
-        self.thu = ne.evaluate('sqrt(sx**2 + sy**2)')
+        self.thu = ne.evaluate("sqrt(sx**2 + sy**2)")
 
     def calc_subaerial_tpu(self):
         """calculates the subaerial uncertainty
@@ -943,8 +1092,8 @@ class Subaerial:
 
             Once the Jacobian is evaluated, uncertainty is progagated by multiplying the
             square of the Jacobian with the squares of the standard deviations defined in the
-            stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is 
-            implemented differently than shown by the propagation equation because the covariances are 
+            stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is
+            implemented differently than shown by the propagation equation because the covariances are
             assumed to be 0.
 
         :return: (ndarray, ndarray, list[str])
@@ -959,5 +1108,5 @@ class Subaerial:
         return self.thu, self.tvu
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

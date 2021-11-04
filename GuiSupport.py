@@ -55,9 +55,10 @@ class DirectorySelectButton(object):
         self.width = width
         self.button = Button(
             frame,
-            text='Choose {} Directory'.format(self.directType),
+            text="Choose {} Directory".format(self.directType),
             command=self.callback,
-            width=width)
+            width=width,
+        )
         self.directoryName = dir_path
         self.extraCallback = callback
 
@@ -65,7 +66,7 @@ class DirectorySelectButton(object):
         """Wrapper function for self.button.grid."""
 
         self.button.grid(**args)
-    
+
     def set_state(self, state):
         """Sets the state of the button."""
 
@@ -80,15 +81,16 @@ class DirectorySelectButton(object):
 
         directoryName = filedialog.askdirectory(
             initialdir=self.master.lastFileLoc,
-            title="Select {} File".format(self.directType))
+            title="Select {} File".format(self.directType),
+        )
 
-        if directoryName == '':
+        if directoryName == "":
             return
 
         self.directoryName = directoryName
         self.master.lastFileLoc = self.directoryName
-        
-        #update the Gui
+
+        # update the Gui
         directoryRoots = self.directoryName.split("/")
         displayDirectory = str()
 
@@ -101,11 +103,13 @@ class DirectorySelectButton(object):
 
                     if len(directoryRoots) == 0:
                         break
-            
+
             displayDirectory = "{}{}".format(displayDirectory, currentLine)
-        
-        self.button.config(text="{} Directory Set".format(self.directType), fg='darkgreen')
-        
+
+        self.button.config(
+            text="{} Directory Set".format(self.directType), fg="darkgreen"
+        )
+
         if self.extraCallback is not None:
             self.extraCallback()
 
@@ -116,9 +120,17 @@ class RadioFrame:
     @author: Timothy Kammerer
     """
 
-    def __init__(self, root, radioName, radioOptions,
-                 startSelect=0, background=None, foreground=None,
-                 callback=None, width=40):
+    def __init__(
+        self,
+        root,
+        radioName,
+        radioOptions,
+        startSelect=0,
+        background=None,
+        foreground=None,
+        callback=None,
+        width=40,
+    ):
         self.frame = Frame(root, background=background)
 
         if radioName != None:
@@ -127,22 +139,26 @@ class RadioFrame:
                 text=radioName,
                 width=width,
                 background=background,
-                foreground=foreground).grid(row=0)
+                foreground=foreground,
+            ).grid(row=0)
 
         self.selection = IntVar(self.frame)
         self.buttons = list()
 
         for i, opt in enumerate(radioOptions):
-            self.buttons.append(Radiobutton(
-                self.frame,
-                text=opt,
-                variable=self.selection,
-                value=i,
-                command=callback,
-                background=background,
-                activebackground=background,
-                foreground=foreground,
-                activeforeground=foreground))
+            self.buttons.append(
+                Radiobutton(
+                    self.frame,
+                    text=opt,
+                    variable=self.selection,
+                    value=i,
+                    command=callback,
+                    background=background,
+                    activebackground=background,
+                    foreground=foreground,
+                    activeforeground=foreground,
+                )
+            )
             self.buttons[i].grid(row=i + 1, sticky=W)
         self.buttons[startSelect].select()
 
@@ -154,5 +170,5 @@ class RadioFrame:
             button.config(state=state)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
