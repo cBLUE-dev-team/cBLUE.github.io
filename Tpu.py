@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -54,7 +54,7 @@ import cProfile
 class Tpu:
     """
     TODO:  rework...becasue J & M moved to CBlueApp.py
-    This class coordinates the TPU workflow.  Beginning when the user 
+    This class coordinates the TPU workflow.  Beginning when the user
     hits *Compute TPU*, the general workflow is summarized below:
 
     1. Form observation equation (SensorModel class)
@@ -66,15 +66,15 @@ class Tpu:
         * Calculate subaqueous thu and tvu (Subaqueous class)
         * Combine subaerial and subaqueous TPU
         * Export TPU (either as Python "pickle' or as Las extra bytes)
-    
+
     """
 
     def __init__(self, surface_select, surface_ind,
                  wind_selection, wind_val,
                  kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output, cblue_version, 
-                 sensor_model, cpu_process_info, subaqueous_luts,
-                 water_surface_ellipsoid_height):
+                 vdatum_region_mcu, tpu_output, cblue_version,
+                 sensor_model, cpu_process_info, selected_sensor,
+				 subaqueous_luts,water_surface_ellipsoid_height):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
         self.surface_select = surface_select
@@ -89,6 +89,7 @@ class Tpu:
         self.cblue_version = cblue_version
         self.sensor_model = sensor_model
         self.cpu_process_info = cpu_process_info
+		self.selected_sensor = selected_sensor
         self.subaqueous_luts = subaqueous_luts
         self.water_surface_ellipsoid_height = water_surface_ellipsoid_height
 
@@ -113,11 +114,11 @@ class Tpu:
         fl_stats_strs = []
         for fl_stat, ind in fl_stat_indx.items():
             fl_stats_vals = (fl_stat,
-                             fl_tpu_min[ind], 
+                             fl_tpu_min[ind],
                              fl_tpu_max[ind],
-                             fl_tpu_mean[ind], 
+                             fl_tpu_mean[ind],
                              fl_tpu_stddev[ind])
-        
+
             fl_stats_str = '{}: {:6.3f}{:6.3f}{:6.3f}{:6.3f}'.format(*fl_stats_vals)
             fl_stats_strs.append(fl_stats_str)
 
@@ -137,7 +138,7 @@ class Tpu:
 
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
-        
+
         diag_dfs = []
 
         if las.num_file_points:  # i.e., if las had data points
@@ -172,8 +173,9 @@ class Tpu:
                     depth = merged_data[4] - self.water_surface_ellipsoid_height
 
                     logging.debug('({}) calculating subaqueous thu/tvu...'.format(las.las_short_name))
-                    subaqu_obj = Subaqueous(self.surface_ind, self.wind_val, 
-                                            self.kd_val, depth, self.subaqueous_luts)
+                    subaqu_obj = Subaqueous(self.surface_ind, self.wind_val,
+                                            self.kd_val, depth, self.selected_sensor,
+											self.subaqueous_luts)
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
                     self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
@@ -260,14 +262,14 @@ class Tpu:
         # define new extrabyte dimensions
         for dimension, dtype in extra_byte_dimensions.items():
             logging.debug('creating extra byte dimension for {}...'.format(dimension))
-            out_las.define_new_dimension(name=dimension, 
+            out_las.define_new_dimension(name=dimension,
                                          data_type=dtype,
                                          description=dimension)
 
         if len(data_to_output) != 0:
             tpu_data = np.vstack(data_to_output)
-            extra_byte_df = pd.DataFrame(tpu_data[:, 0:num_extra_bytes], 
-                                         index=tpu_data[:, num_extra_bytes], 
+            extra_byte_df = pd.DataFrame(tpu_data[:, 0:num_extra_bytes],
+                                         index=tpu_data[:, num_extra_bytes],
                                          columns=extra_byte_dimensions.keys())
 
             print(f'extra_byte_df')
@@ -278,14 +280,14 @@ class Tpu:
 
             print('las.t_argsort')
             print(las.t_argsort)
-      
+
             if extra_byte_df.shape[0] == las.num_file_points:
                 extra_byte_df = extra_byte_df.sort_index()
                 print(f'extra_byte_df --------- sort.index()')
                 print(extra_byte_df)
             else:
                 logging.info("""
-                filling data points for which TPU was not calculated 
+                filling data points for which TPU was not calculated
                 with no_data_value (also sorting by index, or t_idx)
                 """)
                 no_data_value = -1
@@ -294,14 +296,14 @@ class Tpu:
 
             logging.debug('populating extra byte data for total_thu...')
             out_las.total_thu = extra_byte_df['total_thu']
-        
+
             logging.debug('populating extra byte data for total_tvu...')
             out_las.total_tvu = extra_byte_df['total_tvu']
-        
+
         else:
             logging.debug('populating extra byte data for total_thu...')
             out_las.total_thu = np.zeros(las.num_file_points)
-        
+
             logging.debug('populating extra byte data for total_tvu...')
             out_las.total_tvu = np.zeros(las.num_file_points)
 
@@ -335,7 +337,7 @@ class Tpu:
             'flight line stats (min max mean stddev)': self.flight_line_stats,
             'sensor model': self.sensor_model,
             'cBLUE version': self.cblue_version,
-            'cpu_processing_info': self.cpu_process_info, 
+            'cpu_processing_info': self.cpu_process_info,
             'water_surface_ellipsoid_height': self.water_surface_ellipsoid_height,
         })
 
@@ -351,11 +353,11 @@ class Tpu:
         """runs the tpu calculations using multiprocessing
 
         This methods initiates the tpu calculations using the pathos
-        multiprocessing framework (https://pypi.org/project/pathos/).  
-        Whether the tpu calculations are done with multiprocessing or not is 
-        currently determined by which "run_tpu_*" method is manually specified 
-        in the tpu_process_callback() method of the CBlueApp class.  
-        
+        multiprocessing framework (https://pypi.org/project/pathos/).
+        Whether the tpu calculations are done with multiprocessing or not is
+        currently determined by which "run_tpu_*" method is manually specified
+        in the tpu_process_callback() method of the CBlueApp class.
+
         TODO: Include user option to select single processing or multiprocessing
 
         :param sbet_las_generator:
@@ -365,7 +367,7 @@ class Tpu:
         print('Calculating TPU (multi-processing)...')
         p = pp.ProcessPool(2)
 
-        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator), 
+        for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator),
                       total=num_las, ascii=True):
             pass
 

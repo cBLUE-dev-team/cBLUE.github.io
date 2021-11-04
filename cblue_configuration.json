@@ -7,7 +7,7 @@
 	"subaqueous_LUTs": {
 		"RIEGL": "./lookup_tables/Riegl_look_up_fit_HG0995_1sig.csv",
 		"ECKV": "./lookup_tables/ECKV_LUT_HG0995_1sig.csv",
-		"CHIROPTERA": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv"
+		"CHIRO": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv"
 	},
 	"multiprocess": true,
 	"number_cores": 4,

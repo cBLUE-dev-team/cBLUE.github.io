@@ -552,6 +552,7 @@ class ControllerPanel(ttk.Frame):
                   self.controller.controller_configuration['sensor_model'],
                   cpu_process_info,
                   self.controller.controller_configuration['subaqueous_LUTs'],
+				  self.selected_sensor,
                   self.controller.controller_configuration['water_surface_ellipsoid_height'])
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
@@ -605,5 +606,5 @@ class ControllerPanel(ttk.Frame):
 
 if __name__ == "__main__":
     app = CBlueApp()
-    app.geometry('225x515')
+    app.geometry('515x615')
     app.mainloop()
