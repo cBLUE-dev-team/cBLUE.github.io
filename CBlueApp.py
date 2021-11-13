@@ -344,7 +344,7 @@ class ControllerPanel(ttk.Frame):
         water_surface_subframe.grid(row=1, column=0)
 
         self.water_surface_options = [
-            "Riegl VQ-880-G",
+            "Direct From Point Cloud",
             "Model (ECKV spectrum)"]
 
         self.windOptions = [w[0] for w in self.wind_vals.values()]
@@ -398,8 +398,8 @@ class ControllerPanel(ttk.Frame):
 
         self.sensor_models = (
                 "Riegl VQ-880-G",
-                "Leica Chiroptera 4x",
-                "HawkEye 4x"
+                "Leica Chiroptera 4X",
+                "HawkEye 4X"
         )
 
         sensor_frame = tk.Frame(self.controller_panel)
