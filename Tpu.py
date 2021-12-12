@@ -74,7 +74,7 @@ class Tpu:
                  kd_selection, kd_val, vdatum_region,
                  vdatum_region_mcu, tpu_output, cblue_version,
                  sensor_model, cpu_process_info, selected_sensor,
-				 subaqueous_luts,water_surface_ellipsoid_height):
+                 subaqueous_luts, water_surface_ellipsoid_height):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
         self.surface_select = surface_select
@@ -109,7 +109,7 @@ class Tpu:
         fl_stat_indx = {
             'total_thu': 0,
             'total_tvu': 1,
-            }
+        }
 
         fl_stats_strs = []
         for fl_stat, ind in fl_stat_indx.items():
@@ -163,7 +163,7 @@ class Tpu:
                 # CREATE MERGED-DATA OBJECT M
                 logging.debug('({}) merging trajectory and las data...'.format(las.las_short_name))
                 merged_data, stddev, unsort_idx, raw_class = merge.merge(las.las_short_name, fl, sbet.values,
-                                                                   fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx)
+                                                                         fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx)
 
                 if merged_data is not False:  # i.e., las and sbet is merged
 
@@ -175,7 +175,7 @@ class Tpu:
                     logging.debug('({}) calculating subaqueous thu/tvu...'.format(las.las_short_name))
                     subaqu_obj = Subaqueous(self.surface_ind, self.wind_val,
                                             self.kd_val, depth, self.selected_sensor,
-											self.subaqueous_luts)
+                                            self.subaqueous_luts)
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
                     self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = float(self.vdatum_region_mcu) / 100.0  # file is in cm (1-sigma)
@@ -190,7 +190,7 @@ class Tpu:
                         total_thu,
                         total_tvu,
                         unsort_idx
-                        )).T
+                    )).T
 
                     data_to_output.append(fl_tpu_data)
 
@@ -255,7 +255,7 @@ class Tpu:
         extra_byte_dimensions = OrderedDict([
             ('total_thu', tpu_data_type),
             ('total_tvu', tpu_data_type)
-            ])
+        ])
 
         num_extra_bytes = len(extra_byte_dimensions.keys())
 
@@ -342,7 +342,7 @@ class Tpu:
         })
 
         try:
-            #self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
+            # self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
             with open(os.path.join(self.tpu_output, '{}.json'.format(las.las_base_name)), 'w') as outfile:
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
         except Exception as e:
@@ -375,7 +375,6 @@ class Tpu:
             pass
 
         return p
-
 
     def run_tpu_singleprocess(self, num_las, sbet_las_generator):
         """runs the tpu calculations using a single processing
