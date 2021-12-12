@@ -40,14 +40,14 @@ class Subaqueous:
     To be used in conjunction with the associated Gui.py.
     """
 
-
-    sensor_aliases = {
-        "Riegel VQ-880-G":"RIEGL",
-        "Leica Chiroptera 4x":"CHIRO",
-        "Hawkeye 4x":"HAWK"
-    }
-
     def __init__(self, surface, wind_par, kd_par, depth, sensor, subaqueous_luts):
+        
+        sensor_aliases = {
+            "Riegel VQ-880-G":"RIEGL",
+            "Leica Chiroptera 4X":"CHIRO",
+            "Hawkeye 4X":"HAWK"
+        }
+
         self.surface = surface
         self.wind_par = wind_par
         self.kd_par = kd_par

@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -38,9 +38,9 @@ import numexpr as ne
 
 
 class SensorModel:
-    """This class is used to define and access the sensor model of a particular 
+    """This class is used to define and access the sensor model of a particular
     lidar sensor, including the laser geolocation equation and any
-    supporting information or parameters.  Currently, only a single 
+    supporting information or parameters.  Currently, only a single
     sensor, the Riegl VQ-880-G, is supported, but development plans
     include extending support to the Chiroptera II (or III or IV).
 
@@ -51,8 +51,8 @@ class SensorModel:
     eval_type = 'numexpr'
 
     def __init__(self, sensor):
-        self.sensor = sensor
-        self.R, self.fR = self.set_rotation_matrix_airplane() 
+        self.sensor = sensor #Doesn't appear to do anything (variable never used)
+        self.R, self.fR = self.set_rotation_matrix_airplane()
         self.M = self.set_rotation_matrix_scanning_sensor()
         self.obs_eq, self.obs_eq_pre_poly = self.define_obseration_equation()
         self.rho_est = None
@@ -145,7 +145,7 @@ class SensorModel:
         fR = [r00, r01, None,
               r10, r11, None,
               r20, r21, None]
-        
+
         return R, fR
 
     @staticmethod
@@ -180,7 +180,7 @@ class SensorModel:
                      [-sin(b), 0, cos(b)]])
 
         M = M2 * M1
-        
+
         return M
 
     def define_obseration_equation(self):
@@ -190,9 +190,9 @@ class SensorModel:
 
         .. image:: ../images/eq_OriginalObsEq.png
 
-        However, to account for the differences between the assumed sensor 
-        model and the proprietary sensor model, the initial observation equation 
-        is modified to include terms derived from polynomial surface fitting of 
+        However, to account for the differences between the assumed sensor
+        model and the proprietary sensor model, the initial observation equation
+        is modified to include terms derived from polynomial surface fitting of
         differences in the X, Y, and Z components of the LAS positions and the
         positions calculated from the intial cBLUE observation equation.
 
@@ -234,7 +234,7 @@ class SensorModel:
         F1 += polysurfcorr
         F2 += polysurfcorr
         F3 += polysurfcorr
-        
+
         return (F1, F2, F3,),  fF_orig
 
     def estimate_rho_a_b(self, data):
@@ -255,16 +255,16 @@ class SensorModel:
         :return: (list[], list[], list[])
 
         #0       t_sbet
-        #1       t_las 
-        #2       x_las 
-        #3       y_las 
-        #4       z_las 
+        #1       t_las
+        #2       x_las
+        #3       y_las
+        #4       z_las
         #5       x_sbet
         #6       y_sbet
         #7       z_sbet
-        #8       r     
-        #9       p     
-        #10      h   
+        #8       r
+        #9       p
+        #10      h
 
         # TODO: only pass needed columns
         """
@@ -289,10 +289,10 @@ class SensorModel:
 
         self.rho_est = ne.evaluate("sqrt(rho_x**2 + rho_y**2 + rho_z**2)")
         rho_est = self.rho_est
-                
+
         self.b_est = ne.evaluate("arcsin(((fR0 * rho_x) + (fR3 * rho_y) + (fR6 * rho_z)) / (-rho_est))")
-        b_est = self.b_est      
-        
+        b_est = self.b_est
+
         self.a_est = ne.evaluate("arcsin(((fR1 * rho_x) + (fR4 * rho_y) + (fR7 * rho_z)) / (rho_est * cos(b_est)))")
 
     def calc_poly_surf_coeffs(self, itv=10):
@@ -308,7 +308,7 @@ class SensorModel:
         with terms for a, b, a^2, ab, b^2, a^2b, ab^2, and b^3.
 
         Only every itv-th point is used to calculate the polynomial surface
-        coefficients, for small speed gains in the calculations of the 
+        coefficients, for small speed gains in the calculations of the
         coefficients.
 
         :param a_est:
@@ -345,7 +345,7 @@ class SensorModel:
         num_coords, num_points = data.shape
         AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
         RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
-        
+
         logging.info('Mean Difference:\n'
                      'X: {:.3f}\n'
                      'Y: {:.3f}\n'
@@ -509,30 +509,30 @@ class SensorModel:
 class Jacobian:
     """This class is used to calculate and evaluate the Jacobian of a
     sensor model's laser geolocation equation.  The class Jacobian attempts
-    to decouple a Jacobian and the data used to evaluate it.  For example, 
-    the inputs to the lambdified Jacobian components are not hard-coded in 
-    the function call, but are determined from accessing the 
-    .__code__.co_varnames attribute of the Jacobian component and then 
+    to decouple a Jacobian and the data used to evaluate it.  For example,
+    the inputs to the lambdified Jacobian components are not hard-coded in
+    the function call, but are determined from accessing the
+    .__code__.co_varnames attribute of the Jacobian component and then
     looking up the corresponding values in a dict.  Although this somewhat
-    decouples the Jacobian from the data used to evaluate it, the dict 
+    decouples the Jacobian from the data used to evaluate it, the dict
     containing the corresponding values is manually created, separate from
     the sensor model.  Development plans for future versions include
-    decoupling the Jacobian and the data to evaluate it even more, by 
+    decoupling the Jacobian and the data to evaluate it even more, by
     creating the dict based on the sensor model.
 
     Two key modules that are used throughout are sympy and numexpr:
 
     The module sympy is used to symbolically define the laser geolocation
     equation and the corresponding Jacobian and to numerically evalulate
-    the Jacobian.  
-    
-    The module numexpr is used to accelerate calculations using large 
-    numpy arrays (https://github.com/pydata/numexpr).  One characteristic 
-    of numexpr is that numexpr expressions do not allow indexing of 
+    the Jacobian.
+
+    The module numexpr is used to accelerate calculations using large
+    numpy arrays (https://github.com/pydata/numexpr).  One characteristic
+    of numexpr is that numexpr expressions do not allow indexing of
     variables, so what might normally be coded as, for example,
-    *var = data[1] * 3* would require something like *data1 = data[1]* 
+    *var = data[1] * 3* would require something like *data1 = data[1]*
     before executing the numexpr expression *"var = data1 * 3"*.
-   
+
     """
 
     def __init__(self, sensor_model):
@@ -610,14 +610,14 @@ class Jacobian:
         Jzsub = [j.subs(trig_substitutions) for j in self.Jz]
 
         # functionize the Jacobian x, y, and z components
-        # (9 terms in each Jacobian component correspond to a, b, r, p, h, x, y, z, and rho 
+        # (9 terms in each Jacobian component correspond to a, b, r, p, h, x, y, z, and rho
         jx_vars = [list(jx.free_symbols) for jx in Jxsub]
         jy_vars = [list(jy.free_symbols) for jy in Jysub]
         jz_vars = [list(jz.free_symbols) for jz in Jzsub]
 
-        lJx = [lambdify(jx_vars[i], jx, eval_type) for i, jx in enumerate(Jxsub)]  
-        lJy = [lambdify(jy_vars[i], jy, eval_type) for i, jy in enumerate(Jysub)]  
-        lJz = [lambdify(jz_vars[i], jz, eval_type) for i, jz in enumerate(Jzsub)]  
+        lJx = [lambdify(jx_vars[i], jx, eval_type) for i, jx in enumerate(Jxsub)]
+        lJy = [lambdify(jy_vars[i], jy, eval_type) for i, jy in enumerate(Jysub)]
+        lJz = [lambdify(jz_vars[i], jz, eval_type) for i, jz in enumerate(Jzsub)]
 
         return lJx, lJy, lJz, jx_vars, jy_vars, jz_vars
 
@@ -657,7 +657,7 @@ class Jacobian:
     def get_calc_vals_for_J_eval(self, data):
         """calculatse and assembles the values needed to evaluate the Jacobian
 
-        This methods calculates and assembles the values needed to evaluate the Jacobian.  
+        This methods calculates and assembles the values needed to evaluate the Jacobian.
 
         1. estimate rho, a, and b from data
         2. use rho, a, and b estimates to calculate initial X, Y, and Z
@@ -688,23 +688,23 @@ class Jacobian:
 
         :param data
         :return dict: calcualted values used to evaluate Jacobian
-        
+
         """
 
         # estimate rho, a, and b from data
         self.sensor_model.estimate_rho_a_b(data)
-        
+
         # use rho, a, and b estimates to calculate initial estimate of X, Y, Z
         self.sensor_model.calc_aer_pos_pre(data)
-        
+
         # calculate differece between initial X, Y, and Z estimates and las X, Y, and Z
         self.sensor_model.calc_diff(data[2], data[3], data[4])
-        
+
         # calculate polynomial surface coefficients to account for differences dx, dy, and dz
         self.sensor_model.calc_poly_surf_coeffs()
-        
+
         # precalculate sin and cos of attitude data to simplify evaluation of Jacobian
-        trig_subs = self.calc_trig_terms(self.sensor_model.a_est, self.sensor_model.b_est, data[8], data[9], data[10]) 
+        trig_subs = self.calc_trig_terms(self.sensor_model.a_est, self.sensor_model.b_est, data[8], data[9], data[10])
 
         p_coeffs_vars = ['p00', 'p10', 'p01', 'p20', 'p11', 'p02', 'p21', 'p12', 'p03']
 
@@ -727,22 +727,22 @@ class Jacobian:
             'cos_r': trig_subs[7],
             'cos_p': trig_subs[8],
             'cos_h': trig_subs[9],
-            }        
+            }
 
         return J_params
 
-    def get_J_term_values(self, J_comp, j_vars, values_for_J_eval): 
+    def get_J_term_values(self, J_comp, j_vars, values_for_J_eval):
         """gets the calculated values needed to evaluate the specified Jacobian component
 
         This method retrieves from the passed 'values_for_J_eval parameter the
-        calculated values needed to evaluate the specified Jacobian component (i.e., 
+        calculated values needed to evaluate the specified Jacobian component (i.e.,
         the x, y, or z component).
 
         :param J_comp:
         :param J_term:
         :param values_for_J_eval:
         :return vals:
-        
+
         """
 
         vals = []
@@ -751,7 +751,7 @@ class Jacobian:
                 vals.append(values_for_J_eval['p_coeffs'][J_comp][str(var)])
             else:
                 vals.append(values_for_J_eval[str(var)])
-        
+
         return vals
 
     def eval_jacobian(self, data):
@@ -761,7 +761,7 @@ class Jacobian:
         to the lambdified functions representing the x, y, and z components
         of the Jacobian.
 
-        To simplify the Jacobian evaluation, only the non-zero terms are kept.  
+        To simplify the Jacobian evaluation, only the non-zero terms are kept.
         Accordingly, the rows of variance/covariance matrix corresponding to the
         Jacobian zero terms are deleted.  Additionally, the Jacobian evaluation
         is simplied further by not calling get_J_term_values() for Jacobian
@@ -806,10 +806,10 @@ class Jacobian:
 class Subaerial:
     """
     This class provides the functionality to calculate the subaerial
-    portion of the total propagated uncertainty (TPU), given the Jacobian 
-    of a laser geolocation equation, merged lidar/trajectory 
-    data, and the standard deviations of the provided data.  
-    
+    portion of the total propagated uncertainty (TPU), given the Jacobian
+    of a laser geolocation equation, merged lidar/trajectory
+    data, and the standard deviations of the provided data.
+
     The following table lists the contents of merged lidar/trajectory
     data array:
 
@@ -828,7 +828,7 @@ class Subaerial:
     9       p           sbet pitch
     10      h           sbet heading
     =====   =========   =======================
-        
+
     The following table lists the contents of the array of standard
     deviations corresponding to the variables of the merged data
     array:
@@ -884,10 +884,10 @@ class Subaerial:
         2       r           .   .   .
         3       p           .   .   .
         4       h           .   .   0
-        5       x           1   0   0       
-        6       y           0   1   0 
+        5       x           1   0   0
+        6       y           0   1   0
         7       z           0   0   1
-        8       rho         .   .   .   
+        8       rho         .   .   .
         =====   ========    ==  ==  ==
 
         :param tuple(ndarray) J_eval:  evaluated Jacobian values for X, Y, and Z components
@@ -943,8 +943,8 @@ class Subaerial:
 
             Once the Jacobian is evaluated, uncertainty is progagated by multiplying the
             square of the Jacobian with the squares of the standard deviations defined in the
-            stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is 
-            implemented differently than shown by the propagation equation because the covariances are 
+            stddev parameter.  The covariances are assumed to be zero.  TODO:  explain how this is
+            implemented differently than shown by the propagation equation because the covariances are
             assumed to be 0.
 
         :return: (ndarray, ndarray, list[str])

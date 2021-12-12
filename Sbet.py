@@ -58,7 +58,7 @@ class Sbet:
         """
 
         self.sbet_dir = sbet_dir
-        self.sbet_files = sorted(['{}\{}'.format(sbet_dir, f) for f in os.listdir(sbet_dir)
+        self.sbet_files = sorted([os.path.join(sbet_dir, f) for f in os.listdir(sbet_dir)
                                   if f.endswith('.txt')])
         self.data = None
         self.SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
@@ -73,9 +73,11 @@ class Sbet:
         :param str sbet: ASCII sbet filename
         :return: List[int]
         """
-
-        sbet_parts = sbet.split('\\')
+        sbet_path = os.path.normpath(sbet)
+        sbet_parts = os.path.split(sbet_path)
+        logging.debug(f"SBET Parts : {sbet_parts}")
         sbet_name = sbet_parts[-1]
+        logging.debug(f"SBET Name : {sbet_name}")
         year = int(sbet_name[0:4])
         month = int(sbet_name[4:6])
         day = int(sbet_name[6:8])

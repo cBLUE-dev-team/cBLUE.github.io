@@ -415,10 +415,14 @@ class ControllerPanel(ttk.Frame):
                         sensor_frame,
                         self.selected_sensor,
                         *self.sensor_models,
-                        command=None
+                        command=self.update_selected_sensor
                 )
         self.sensor_option_menu.config(width=self.control_panel_width, anchor='w')
         self.sensor_option_menu.grid(sticky=tk.EW)
+
+    def update_selected_sensor(self, sensor):
+        self.selected_sensor = sensor
+        logging.info('The selected sensor is {}.'.format(sensor))
 
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
@@ -551,8 +555,8 @@ class ControllerPanel(ttk.Frame):
                   self.controller.controller_configuration['cBLUE_version'],
                   self.controller.controller_configuration['sensor_model'],
                   cpu_process_info,
+                  self.selected_sensor,
                   self.controller.controller_configuration['subaqueous_LUTs'],
-				  self.selected_sensor,
                   self.controller.controller_configuration['water_surface_ellipsoid_height'])
 
         las_files = [os.path.join(self.lasInput.directoryName, l)
@@ -577,7 +581,6 @@ class ControllerPanel(ttk.Frame):
                 logging.debug('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
 
                 inFile = laspy.file.File(las_file, mode='r')
-
                 west = inFile.reader.get_header_property('x_min')
                 east = inFile.reader.get_header_property('x_max')
                 north = inFile.reader.get_header_property('y_max')

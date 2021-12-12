@@ -89,7 +89,7 @@ class Tpu:
         self.cblue_version = cblue_version
         self.sensor_model = sensor_model
         self.cpu_process_info = cpu_process_info
-		self.selected_sensor = selected_sensor
+        self.selected_sensor = selected_sensor
         self.subaqueous_luts = subaqueous_luts
         self.water_surface_ellipsoid_height = water_surface_ellipsoid_height
 
@@ -366,6 +366,9 @@ class Tpu:
 
         print('Calculating TPU (multi-processing)...')
         p = pp.ProcessPool(2)
+
+        logging.debug("calc_tpu:",type(self.calc_tpu))
+        logging.debug("sbet_las_generator:",type(sbet_las_generator))
 
         for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator),
                       total=num_las, ascii=True):
