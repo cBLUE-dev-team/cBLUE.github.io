@@ -41,7 +41,7 @@ class Subaqueous:
     """
 
     def __init__(self, surface, wind_par, kd_par, depth, sensor, subaqueous_luts):
-        
+
         sensor_aliases = {
             "Riegel VQ-880-G":"RIEGL",
             "Leica Chiroptera 4X":"CHIRO",

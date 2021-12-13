@@ -367,9 +367,6 @@ class Tpu:
         print('Calculating TPU (multi-processing)...')
         p = pp.ProcessPool(2)
 
-        logging.debug("calc_tpu:",type(self.calc_tpu))
-        logging.debug("sbet_las_generator:",type(sbet_las_generator))
-
         for _ in tqdm(p.imap(self.calc_tpu, sbet_las_generator),
                       total=num_las, ascii=True):
             pass
