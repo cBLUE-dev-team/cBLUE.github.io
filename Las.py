@@ -44,29 +44,28 @@ is created for each loaded las file.
 
 
 class Las:
-
     def __init__(self, las):
         self.las = las
-        self.las_short_name = las.split('\\')[-1]
-        self.las_base_name = self.las_short_name.replace('.las', '')
+        self.las_short_name = las.split("\\")[-1]
+        self.las_base_name = self.las_short_name.replace(".las", "")
         self.inFile = laspy.file.File(self.las, mode="r")
-        self.points_to_process = self.inFile.points['point']
-        #self.points_to_process = self.get_bathy_points()
+        self.points_to_process = self.inFile.points["point"]
+        # self.points_to_process = self.get_bathy_points()
         self.unq_flight_lines = self.get_flight_line_ids()
-        #self.num_file_points = self.inFile.__len__()
+        # self.num_file_points = self.inFile.__len__()
         self.num_file_points = self.points_to_process.shape[0]
 
-        '''index list that would sort gps_time (to be used to
+        """index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
         file
-        '''
+        """
         self.t_argsort = None
 
     def get_bathy_points(self):
-        class_codes = {'BATHYMETRY': 26}
-        bathy_inds = self.inFile.raw_classification == class_codes['BATHYMETRY']
-        return self.inFile.points[bathy_inds]['point']
-        
+        class_codes = {"BATHYMETRY": 26}
+        bathy_inds = self.inFile.raw_classification == class_codes["BATHYMETRY"]
+        return self.inFile.points[bathy_inds]["point"]
+
     def get_flight_line_ids(self):
         """generates a list of unique flight line ids
 
@@ -76,7 +75,7 @@ class Las:
         """
 
         # pandas' unique faster than numpy's ?
-        return pd.unique(self.points_to_process['pt_src_id'])
+        return pd.unique(self.points_to_process["pt_src_id"])
 
     def get_flight_line_txyz(self):
         """retrieves the x, y, z, and timestamp data from the las data points
@@ -97,15 +96,15 @@ class Las:
         offset_y = np.asarray(self.inFile.header.offset[1])
         offset_z = np.asarray(self.inFile.header.offset[2])
 
-        t = self.points_to_process['gps_time']
-        X = self.points_to_process['X']
-        Y = self.points_to_process['Y']
-        Z = self.points_to_process['Z']
+        t = self.points_to_process["gps_time"]
+        X = self.points_to_process["X"]
+        Y = self.points_to_process["Y"]
+        Z = self.points_to_process["Z"]
 
-        if 'raw_classification' in self.points_to_process.dtype.names:
-            c = self.points_to_process['raw_classification']
-        elif 'classification_byte' in self.points_to_process.dtype.names:
-            c = self.points_to_process['classification_byte']
+        if "raw_classification" in self.points_to_process.dtype.names:
+            c = self.points_to_process["raw_classification"]
+        elif "classification_byte" in self.points_to_process.dtype.names:
+            c = self.points_to_process["classification_byte"]
         else:
             raise Exception("Unknown las version or missing classification attribute.")
 
@@ -117,10 +116,10 @@ class Las:
 
         xyztc = np.vstack([x, y, z, t, c]).T
 
-        flight_lines = self.points_to_process['pt_src_id']
+        flight_lines = self.points_to_process["pt_src_id"]
 
         return xyztc, self.t_argsort, flight_lines
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -6,29 +6,17 @@ channels:
 dependencies:
   - ca-certificates=2019.11.28=hecc5488_0
   - certifi=2019.11.28=py37_0
-  - fastcache=1.1.0=py37hfa6e2cd_0
-  - intel-openmp=2019.4=245
   - libblas=3.8.0=14_mkl
   - libcblas=3.8.0=14_mkl
   - liblapack=3.8.0=14_mkl
-  - mkl=2019.4=245
   - mpmath=1.1.0=py_0
-  - numexpr=2.7.1=py37h6538335_0
-  - numpy=1.18.1=py37hc71023c_0
-  - openssl=1.1.1d=hfa6e2cd_0
-  - pandas=1.0.1=py37he350917_0
   - pip=20.0.2=py37_1
-  - python=3.7.6=h60c2a47_2
   - python-dateutil=2.8.1=py_0
   - pytz=2019.3=py_0
   - setuptools=45.2.0=py37_0
   - six=1.14.0=py37_0
-  - sqlite=3.31.1=he774522_0
   - sympy=1.5.1=py37_1
-  - vc=14.1=h0510ff6_4
-  - vs2015_runtime=14.16.27012=hf0eaf9b_1
   - wheel=0.34.2=py37_0
-  - wincertstore=0.2=py37_0
   - pip:
     - dill==0.3.1.1
     - laspy==1.6.0
@@ -39,5 +27,11 @@ dependencies:
     - progressbar2==3.47.0
     - python-utils==2.3.0
     - tqdm==4.42.1
-prefix: C:\Users\Nick.Forfinski-Sarko\AppData\Local\Continuum\anaconda3\envs\cblue
-
+    - numexpr==2.7.1=py37h6538335_0
+    - sqlite==3.31.1=he774522_0
+    - pandas==1.0.1=py37he350917_0
+    - numpy==1.18.1=py37hc71023c_0
+    - fastcache==1.1.0=py37hfa6e2cd_0
+    - wincertstore==0.2=py37_0
+    - python==3.7.6=h60c2a47_2
+    - intel-openmp==2019.4=245
