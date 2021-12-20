@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -40,11 +40,19 @@ class Subaqueous:
     To be used in conjunction with the associated Gui.py.
     """
 
-    def __init__(self, surface, wind_par, kd_par, depth, subaqueous_luts):
+    def __init__(self, surface, wind_par, kd_par, depth, sensor, subaqueous_luts):
+
+        sensor_aliases = {
+            "Riegel VQ-880-G":"RIEGL",
+            "Leica Chiroptera 4X":"CHIRO",
+            "Hawkeye 4X":"HAWK"
+        }
+
         self.surface = surface
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
+        self.sensor = sensor_aliases[sensor] #get sensor alias as shown in config
         self.subaqueous_luts = subaqueous_luts
         self.curr_lut = None
         self.thu = None
@@ -55,7 +63,7 @@ class Subaqueous:
         """
 
         if self.surface == 0:
-            self.curr_lut = self.subaqueous_luts['Reigl']
+            self.curr_lut = self.subaqueous_luts[self.sensor]
             fit_tvu = self.riegl_process(self.curr_lut)
         else:
             self.curr_lut = self.subaqueous_luts['ECKV']

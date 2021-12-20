@@ -134,8 +134,12 @@ class CBlueApp(tk.Tk):
         sensor_model_choice.add_command(label='Leica Chiroptera 4X',
                                         command=lambda: self.popupmsg(sensor_model_msg))
 
-        sensor_model_choice.add_command(label='HawkEye 4X',
-                                        command=lambda: self.popupmsg(sensor_model_msg))
+        """
+        Removed for Stable Release
+        Will be added back when beam divergence is known
+        """
+        # sensor_model_choice.add_command(label='HawkEye 4X',
+        #                                 command=lambda: self.popupmsg(sensor_model_msg))
 
         menubar.add_cascade(label='Sensor Model', menu=sensor_model_choice)
 
@@ -290,6 +294,7 @@ class ControllerPanel(ttk.Frame):
         self.build_directories_input()
         self.build_subaqueous_input()
         self.build_vdatum_input()
+        self.build_sensor_input()
         self.build_process_buttons()
         self.update_button_enable()
 
@@ -343,7 +348,7 @@ class ControllerPanel(ttk.Frame):
         water_surface_subframe.grid(row=1, column=0)
 
         self.water_surface_options = [
-            "Riegl VQ-880-G",
+            "Direct From Point Cloud",
             "Model (ECKV spectrum)"]
 
         self.windOptions = [w[0] for w in self.wind_vals.values()]
@@ -393,9 +398,39 @@ class ControllerPanel(ttk.Frame):
         self.vdatum_region_option_menu.config(width=self.control_panel_width, anchor='w')
         self.vdatum_region_option_menu.grid(sticky=tk.EW)
 
+    def build_sensor_input(self):
+
+        self.sensor_models = (
+                "Riegl VQ-880-G",
+                "Leica Chiroptera 4X",
+                #"HawkEye 4X" -- removed for stable release
+        )
+
+        sensor_frame = tk.Frame(self.controller_panel)
+        sensor_frame.columnconfigure(0, weight=1)
+        sensor_frame.grid(row=4, sticky=tk.EW)
+        tk.Label(sensor_frame,
+                 text="Sensor Model",
+                 font='Helvetica 10 bold').grid(row=0, columnspan=1, pady=(10, 0), sticky=tk.EW)
+
+        self.selected_sensor = tk.StringVar(self)
+
+        self.sensor_option_menu = tk.OptionMenu(
+                        sensor_frame,
+                        self.selected_sensor,
+                        *self.sensor_models,
+                        command=self.update_selected_sensor
+                )
+        self.sensor_option_menu.config(width=self.control_panel_width, anchor='w')
+        self.sensor_option_menu.grid(sticky=tk.EW)
+
+    def update_selected_sensor(self, sensor):
+        self.selected_sensor = sensor
+        logging.info('The selected sensor is {}.'.format(sensor))
+
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
-        process_frame.grid(row=4, sticky=tk.NSEW)
+        process_frame.grid(row=5, sticky=tk.NSEW)
         process_frame.columnconfigure(0, weight=0)
 
         label = tk.Label(process_frame, text='Process Buttons', font=NORM_FONT_BOLD)
@@ -524,6 +559,7 @@ class ControllerPanel(ttk.Frame):
                   self.controller.controller_configuration['cBLUE_version'],
                   self.controller.controller_configuration['sensor_model'],
                   cpu_process_info,
+                  self.selected_sensor,
                   self.controller.controller_configuration['subaqueous_LUTs'],
                   self.controller.controller_configuration['water_surface_ellipsoid_height'])
 
@@ -549,7 +585,6 @@ class ControllerPanel(ttk.Frame):
                 logging.debug('({}) generating SBET tile...'.format(las_file.split('\\')[-1]))
 
                 inFile = laspy.file.File(las_file, mode='r')
-
                 west = inFile.reader.get_header_property('x_min')
                 east = inFile.reader.get_header_property('x_max')
                 north = inFile.reader.get_header_property('y_max')
@@ -578,5 +613,5 @@ class ControllerPanel(ttk.Frame):
 
 if __name__ == "__main__":
     app = CBlueApp()
-    app.geometry('225x515')
+    app.geometry('515x615')
     app.mainloop()
