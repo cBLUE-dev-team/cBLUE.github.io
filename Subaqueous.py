@@ -43,30 +43,29 @@ class Subaqueous:
     def __init__(self, surface, wind_par, kd_par, depth, sensor, subaqueous_luts):
 
         sensor_aliases = {
-            "Riegel VQ-880-G":"RIEGL",
-            "Leica Chiroptera 4X":"CHIRO",
-            "Hawkeye 4X":"HAWK"
+            "Riegel VQ-880-G": "RIEGL",
+            "Leica Chiroptera 4X": "CHIRO",
+            "Hawkeye 4X": "HAWK",
         }
 
         self.surface = surface
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
-        self.sensor = sensor_aliases[sensor] #get sensor alias as shown in config
+        self.sensor = sensor_aliases[sensor]  # get sensor alias as shown in config
         self.subaqueous_luts = subaqueous_luts
         self.curr_lut = None
         self.thu = None
         self.tvu = None
 
     def fit_lut(self):
-        """Called to begin the SubAqueous processing.
-        """
+        """Called to begin the SubAqueous processing."""
 
         if self.surface == 0:
             self.curr_lut = self.subaqueous_luts[self.sensor]
             fit_tvu = self.riegl_process(self.curr_lut)
         else:
-            self.curr_lut = self.subaqueous_luts['ECKV']
+            self.curr_lut = self.subaqueous_luts["ECKV"]
             fit_thu, fit_tvu = self.model_process(self.curr_lut)
 
         res_thu = fit_thu[0] * self.depth ** 2 + fit_thu[1] * self.depth + fit_thu[2]
@@ -96,16 +95,20 @@ class Subaqueous:
 
         for w in self.wind_par:
             for k in self.kd_par:
-                fit_par_tvu_strings = look_up_tvu_data[31 * (w - 1) + k - 6].split(",")[:-1]  # exclude trailing \n
+                fit_par_tvu_strings = look_up_tvu_data[31 * (w - 1) + k - 6].split(",")[
+                    :-1
+                ]  # exclude trailing \n
                 fit_par_tvu = np.asarray(fit_par_tvu_strings).astype(np.float64)
                 fit_tvu += fit_par_tvu  # adding two 3-element arrays
 
-                fit_par_thu_strings = look_up_thu_data[31 * (w - 1) + k - 6].split(",")[:-1]  # exclude trailing \n
+                fit_par_thu_strings = look_up_thu_data[31 * (w - 1) + k - 6].split(",")[
+                    :-1
+                ]  # exclude trailing \n
                 fit_par_thu = np.asarray(fit_par_thu_strings).astype(np.float64)
                 fit_thu += fit_par_thu  # adding two 3-element arrays
 
-        fit_tvu /= len(self.kd_par)*len(self.wind_par)
-        fit_thu /= len(self.kd_par)*len(self.wind_par)
+        fit_tvu /= len(self.kd_par) * len(self.wind_par)
+        fit_thu /= len(self.kd_par) * len(self.wind_par)
         return fit_thu, fit_tvu
 
     def riegl_process(self, lut):
@@ -118,7 +121,7 @@ class Subaqueous:
         look_up.close()
         fit = np.asarray([0, 0, 0])
         for k in self.kd_par:
-            fit_par_str = look_up_data[k-6].split(",")
+            fit_par_str = look_up_data[k - 6].split(",")
             fit_par = np.asarray(fit_par_str)[:-1].astype(np.float64)
             fit += fit_par  # adding two 3-element arrays
 
@@ -127,12 +130,15 @@ class Subaqueous:
         return fit
 
     def get_subaqueous_meta_data(self):
-        subaqueous_f = open(self.curr_lut, 'r')
-        subaqueous_metadata = subaqueous_f.readline().split(',')
+        subaqueous_f = open(self.curr_lut, "r")
+        subaqueous_metadata = subaqueous_f.readline().split(",")
         subaqueous_f.close()
-        subaqueous_metadata = {k: v.strip() for (k, v) in [n.split(':') for n in subaqueous_metadata]}
+        subaqueous_metadata = {
+            k: v.strip() for (k, v) in [n.split(":") for n in subaqueous_metadata]
+        }
         return subaqueous_metadata
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
+# dummy comment

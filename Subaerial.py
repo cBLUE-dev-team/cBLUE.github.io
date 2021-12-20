@@ -51,7 +51,7 @@ class SensorModel:
     eval_type = "numexpr"
 
     def __init__(self, sensor):
-        self.sensor = sensor #Doesn't appear to do anything (variable never used)
+        self.sensor = sensor  # Doesn't appear to do anything (variable never used)
 
         self.R, self.fR = self.set_rotation_matrix_airplane()
         self.M = self.set_rotation_matrix_scanning_sensor()
@@ -136,7 +136,6 @@ class SensorModel:
         r11 = lambdify((r, p, h), R[4], self.eval_type)
         r20 = lambdify(p, R[6], self.eval_type)
         r21 = lambdify((r, p), R[7], self.eval_type)
-
 
         fR = [r00, r01, None, r10, r11, None, r20, r21, None]
 
@@ -250,7 +249,6 @@ class SensorModel:
         F1 += polysurfcorr
         F2 += polysurfcorr
         F3 += polysurfcorr
-
 
         return (
             F1,
@@ -1114,3 +1112,4 @@ class Subaerial:
 
 if __name__ == "__main__":
     pass
+# dummy comment

@@ -69,13 +69,24 @@ class Tpu:
 
     """
 
-    def __init__(self, surface_select, surface_ind,
-                 wind_selection, wind_val,
-                 kd_selection, kd_val, vdatum_region,
-                 vdatum_region_mcu, tpu_output, cblue_version,
-                 sensor_model, cpu_process_info, selected_sensor,
-                 subaqueous_luts, water_surface_ellipsoid_height):
-
+    def __init__(
+        self,
+        surface_select,
+        surface_ind,
+        wind_selection,
+        wind_val,
+        kd_selection,
+        kd_val,
+        vdatum_region,
+        vdatum_region_mcu,
+        tpu_output,
+        cblue_version,
+        sensor_model,
+        cpu_process_info,
+        selected_sensor,
+        subaqueous_luts,
+        water_surface_ellipsoid_height,
+    ):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
         self.surface_select = surface_select
@@ -189,10 +200,19 @@ class Tpu:
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
                     depth = merged_data[4] - self.water_surface_ellipsoid_height
 
-                    logging.debug('({}) calculating subaqueous thu/tvu...'.format(las.las_short_name))
-                    subaqu_obj = Subaqueous(self.surface_ind, self.wind_val,
-                                            self.kd_val, depth, self.selected_sensor,
-                                            self.subaqueous_luts)
+                    logging.debug(
+                        "({}) calculating subaqueous thu/tvu...".format(
+                            las.las_short_name
+                        )
+                    )
+                    subaqu_obj = Subaqueous(
+                        self.surface_ind,
+                        self.wind_val,
+                        self.kd_val,
+                        depth,
+                        self.selected_sensor,
+                        self.subaqueous_luts,
+                    )
 
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
                     self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
@@ -336,7 +356,6 @@ class Tpu:
             logging.debug("populating extra byte data for total_thu...")
             out_las.total_thu = np.zeros(las.num_file_points)
 
-
             logging.debug("populating extra byte data for total_tvu...")
             out_las.total_tvu = np.zeros(las.num_file_points)
 
@@ -359,24 +378,28 @@ class Tpu:
         :return: n/a
         """
 
-        logging.debug('({}) creating TPU meta data file...'.format(las.las_short_name))
-        self.metadata.update({
-            'subaqueous lookup params': self.subaqu_lookup_params,
-            'water surface': self.surface_select,
-            'wind': self.wind_selection,
-            'kd': self.kd_selection,
-            'VDatum region': self.vdatum_region,
-            'VDatum region MCU': self.vdatum_region_mcu,
-            'flight line stats (min max mean stddev)': self.flight_line_stats,
-            'sensor model': self.sensor_model,
-            'cBLUE version': self.cblue_version,
-            'cpu_processing_info': self.cpu_process_info,
-            'water_surface_ellipsoid_height': self.water_surface_ellipsoid_height,
-        })
+        logging.debug("({}) creating TPU meta data file...".format(las.las_short_name))
+        self.metadata.update(
+            {
+                "subaqueous lookup params": self.subaqu_lookup_params,
+                "water surface": self.surface_select,
+                "wind": self.wind_selection,
+                "kd": self.kd_selection,
+                "VDatum region": self.vdatum_region,
+                "VDatum region MCU": self.vdatum_region_mcu,
+                "flight line stats (min max mean stddev)": self.flight_line_stats,
+                "sensor model": self.sensor_model,
+                "cBLUE version": self.cblue_version,
+                "cpu_processing_info": self.cpu_process_info,
+                "water_surface_ellipsoid_height": self.water_surface_ellipsoid_height,
+            }
+        )
 
         try:
             # self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
-            with open(os.path.join(self.tpu_output, '{}.json'.format(las.las_base_name)), 'w') as outfile:
+            with open(
+                os.path.join(self.tpu_output, "{}.json".format(las.las_base_name)), "w"
+            ) as outfile:
 
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
         except Exception as e:
@@ -400,7 +423,6 @@ class Tpu:
 
         print("Calculating TPU (multi-processing)...")
         p = pp.ProcessPool(2)
-
 
         for _ in tqdm(
             p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True
@@ -431,3 +453,4 @@ class Tpu:
 
 if __name__ == "__main__":
     pass
+# dummy comment

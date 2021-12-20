@@ -66,7 +66,7 @@ class Sbet:
                 if f.endswith(".txt")
             ]
         )
-        
+
         self.data = None
         self.SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
         self.SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
@@ -253,4 +253,4 @@ class Sbet:
             ne.evaluate("(y >= south) & (y <= north) & (x >= west) & (x <= east)")
         ]
 
-        return data
+        return data  # dummy comment
