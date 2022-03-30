@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -40,9 +40,9 @@ import numexpr as ne
 
 
 """
-This class provides the functionality to load trajectory data into 
+This class provides the functionality to load trajectory data into
 cBLUE.  Currently, the sbet files are expected to be ASCII files
-that are exported from Applanix's PosPac software.  
+that are exported from Applanix's PosPac software.
 """
 
 
@@ -61,7 +61,7 @@ class Sbet:
 
         self.sbet_files = sorted(
             [
-                "{}\{}".format(sbet_dir, f)
+                os.path.join(sbet_dir, f)
                 for f in os.listdir(sbet_dir)
                 if f.endswith(".txt")
             ]
@@ -253,4 +253,4 @@ class Sbet:
             ne.evaluate("(y >= south) & (y <= north) & (x >= west) & (x <= east)")
         ]
 
-        return data  # dummy comment
+        return data

@@ -28,6 +28,10 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
+Last Edited By:
+Forrest Corcoran (OSU)
+3/28/2022
+
 """
 
 import logging
@@ -215,7 +219,7 @@ class Tpu:
                     )
 
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
-                    self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
+                    # self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = (
                         float(self.vdatum_region_mcu) / 100.0
                     )  # file is in cm (1-sigma)
@@ -295,11 +299,13 @@ class Tpu:
         in_las = laspy.file.File(las.las, mode="r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        tpu_data_type = 9  # float
+        # tpu_data_type = 9  # float
+        #
+        # extra_byte_dimensions = OrderedDict(
+        #     [("total_thu", tpu_data_type), ("total_tvu", tpu_data_type)]
+        # )
 
-        extra_byte_dimensions = OrderedDict(
-            [("total_thu", tpu_data_type), ("total_tvu", tpu_data_type)]
-        )
+        extra_byte_dimensions = {"total_thu": 9, "total_tvu": 9}
 
         num_extra_bytes = len(extra_byte_dimensions.keys())
 
@@ -336,7 +342,7 @@ class Tpu:
 
                 logging.info(
                     """
-                filling data points for which TPU was not calculated 
+                filling data points for which TPU was not calculated
                 with no_data_value (also sorting by index, or t_idx)
                 """
                 )
@@ -453,4 +459,3 @@ class Tpu:
 
 if __name__ == "__main__":
     pass
-# dummy comment

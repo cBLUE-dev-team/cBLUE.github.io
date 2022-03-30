@@ -28,6 +28,12 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
+Last Edited By:
+Forrest Corcoran (OSU)
+3/28/2022
+
+THINGS TO DO:
+HOW DOES THIS FILE HAVE NO FRIGGIN COMMENTS?!?!?!
 """
 
 # -*- coding: utf-8 -*-
@@ -173,7 +179,7 @@ class CBlueApp(tk.Tk):
             with open(self.config_file) as cf:
                 self.controller_configuration = json.load(cf)
 
-            print(json.dumps(self.controller_configuration, indent=1, sort_keys=True))
+            # print(json.dumps(self.controller_configuration, indent=1, sort_keys=True))
         else:
             logging.info("configuration file doesn't exist")
 
@@ -258,6 +264,7 @@ class ControllerPanel(ttk.Frame):
         self.lastFileLoc = os.getcwd()
 
         # TODO:  get from separate text file
+        # WHY IS THIS An ENUMERATED DICT AND NOT JUST AN ARRAY?!?
         self.kd_vals = {
             0: ("Clear", range(6, 11)),
             1: ("Clear-Moderate", range(11, 18)),
@@ -267,6 +274,7 @@ class ControllerPanel(ttk.Frame):
         }
 
         # TODO:  get from separate text file
+        # WHY IS THIS An ENUMERATED DICT AND NOT JUST AN ARRAY?!?
         self.wind_vals = {
             0: ("Calm-light air (0-2 kts)", [1]),
             1: ("Light Breeze (3-6 kts)", [2, 3]),
@@ -429,7 +437,7 @@ class ControllerPanel(ttk.Frame):
             datum_frame,
             self.vdatum_region,
             *sorted(self.vdatum_regions.keys()),
-            command=self.update_vdatum_mcu_value
+            command=self.update_vdatum_mcu_value,
         )
         self.vdatum_region_option_menu.config(
             width=self.control_panel_width, anchor="w"
@@ -457,13 +465,14 @@ class ControllerPanel(ttk.Frame):
             sensor_frame,
             self.selected_sensor,
             *self.sensor_models,
-            command=self.update_selected_sensor
+            command=self.update_selected_sensor,
         )
         self.sensor_option_menu.config(width=self.control_panel_width, anchor="w")
         self.sensor_option_menu.grid(sticky=tk.EW)
 
     def update_selected_sensor(self, sensor):
         self.selected_sensor = sensor
+        self.controller.controller_configuration["sensor_model"] = sensor
         logging.info("The selected sensor is {}.".format(sensor))
 
     def build_process_buttons(self):
@@ -534,6 +543,11 @@ class ControllerPanel(ttk.Frame):
             self.tpuProcess.config(state=tk.ACTIVE)
 
     def sbet_process_callback(self):
+        print(
+            json.dumps(
+                self.controller.controller_configuration, indent=1, sort_keys=True
+            )
+        )
         self.sbet = Sbet(self.sbetInput.directoryName)
         self.sbet.set_data()
         self.is_sbet_loaded = True
@@ -582,6 +596,7 @@ class ControllerPanel(ttk.Frame):
 
     def begin_tpu_calc(self):
         surface_ind = self.waterSurfaceRadio.selection.get()
+        print(f"Surface IND = {surface_ind}")
         surface_selection = self.water_surface_options[surface_ind]
 
         wind_ind = self.windRadio.selection.get()
@@ -687,4 +702,3 @@ if __name__ == "__main__":
     app = CBlueApp()
     app.geometry("515x615")
     app.mainloop()
-# dummy comment
