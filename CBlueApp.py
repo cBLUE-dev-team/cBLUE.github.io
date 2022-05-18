@@ -50,19 +50,11 @@ import laspy
 import cProfile
 from pathlib import Path
 
-
-now = datetime.datetime.now()
-log_file = "cBLUE_{}{}{}_{}{}{}.log".format(
-    now.year,
-    str(now.month).zfill(2),
-    str(now.day).zfill(2),
-    str(now.hour).zfill(2),
-    str(now.minute).zfill(2),
-    str(now.second).zfill(2),
-)
-
 logging.basicConfig(
-    filename=log_file, format="%(asctime)s:%(message)s", level=logging.DEBUG
+    filename="CBlue.log",
+    format="%(asctime)s %(levelname)-8s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
 )
 
 from Subaerial import SensorModel, Jacobian
@@ -506,7 +498,7 @@ class ControllerPanel(ttk.Frame):
         self.tpuProcess.grid(row=2, column=0, padx=(3, 0), sticky=tk.EW)
 
     def update_vdatum_mcu_value(self, region):
-        logging.info(self.vdatum_region.get())
+        logging.info("Using VDatum Region {}".format(self.vdatum_region.get()))
         self.mcu = self.vdatum_regions[region]
         logging.info("The MCU for {} is {} cm.".format(region, self.mcu))
 
@@ -610,12 +602,6 @@ class ControllerPanel(ttk.Frame):
             self.controller.controller_configuration["sensor_model"]
         )
 
-        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
-        jacobian = Jacobian(sensor_model)
-
-        # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
-        merge = Merge()
-
         multiprocess = self.controller.controller_configuration["multiprocess"]
 
         if multiprocess:
@@ -649,6 +635,12 @@ class ControllerPanel(ttk.Frame):
         ]
 
         num_las = len(las_files)
+
+        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
+        jacobian = Jacobian(sensor_model)
+
+        # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
+        merge = Merge()
 
         def signal_completion():
             self.tpu_btn_text.set("TPU Calculated")
