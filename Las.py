@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -29,7 +29,7 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 """
-
+import os
 import pandas as pd
 import logging
 import numpy as np
@@ -38,15 +38,15 @@ import laspy
 
 
 """
-This class provides the functionality to load las files into cBLUE.  One Las object 
-is created for each loaded las file.  
+This class provides the functionality to load las files into cBLUE.  One Las object
+is created for each loaded las file.
 """
 
 
 class Las:
     def __init__(self, las):
         self.las = las
-        self.las_short_name = las.split("\\")[-1]
+        self.las_short_name = os.path.split(las)[-1]
         self.las_base_name = self.las_short_name.replace(".las", "")
         self.inFile = laspy.file.File(self.las, mode="r")
         self.points_to_process = self.inFile.points["point"]

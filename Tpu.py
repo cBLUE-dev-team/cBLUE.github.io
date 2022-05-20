@@ -54,6 +54,8 @@ from Las import Las
 import datetime
 import cProfile
 
+logger = logging.getLogger(__name__)
+
 
 class Tpu:
     """
@@ -161,16 +163,16 @@ class Tpu:
         diag_dfs = []
 
         if las.num_file_points:  # i.e., if las had data points
-            logging.info(
+            logger.tpu(
                 "{} ({:,} points)".format(las.las_short_name, las.num_file_points)
             )
-            logging.debug("flight lines {}".format(las.unq_flight_lines))
+            logger.tpu("flight lines {}".format(las.unq_flight_lines))
             unsorted_las_xyzt, t_argsort, flight_lines = las.get_flight_line_txyz()
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
 
-                logging.debug("flight line {} {}".format(fl, "-" * 50))
+                logger.tpu("flight line {} \n{}\n".format(fl, "-" * 50))
 
                 # las_xyzt has the same order as points in las (i.e., unordered)
                 fl_idx = flight_lines == fl
@@ -179,11 +181,11 @@ class Tpu:
                 fl_las_idx = t_argsort.argsort()[fl_idx]
 
                 num_fl_points = np.sum(fl_idx)  # count Trues
-                logging.debug(f"{las.las_short_name} fl {fl}: {num_fl_points} points")
+                logger.tpu(f"{las.las_short_name} fl {fl}: {num_fl_points} points")
 
                 # CREATE MERGED-DATA OBJECT M
 
-                logging.debug(
+                logger.tpu(
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
                 merged_data, stddev, unsort_idx, raw_class = merge.merge(
@@ -197,14 +199,18 @@ class Tpu:
 
                 if merged_data is not False:  # i.e., las and sbet is merged
 
-                    logging.debug(
+                    logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
                     )
                     subaer_obj = Subaerial(jacobian, merged_data, stddev)
+
+                    logger.tpu("\n" + ("_" * 50) + "\nSUBAQUEOUS COEFFS:\n")
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
+                    logger.tpu("_" * 50)
+
                     depth = merged_data[4] - self.water_surface_ellipsoid_height
 
-                    logging.debug(
+                    logger.tpu(
                         "({}) calculating subaqueous thu/tvu...".format(
                             las.las_short_name
                         )
@@ -217,19 +223,20 @@ class Tpu:
                         self.selected_sensor,
                         self.subaqueous_luts,
                     )
-
+                    logger.tpu("\n" + ("_" * 50) + "\nSUBAQUEOUS COEFFS:\n")
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
+                    logger.tpu("_" * 50)
                     # self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = (
                         float(self.vdatum_region_mcu) / 100.0
                     )  # file is in cm (1-sigma)
 
-                    logging.debug(
+                    logger.tpu(
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
                     total_thu = ne.evaluate("sqrt(subaer_thu**2 + subaqu_thu**2)")
 
-                    logging.debug(
+                    logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
                     )
                     total_tvu = ne.evaluate(
@@ -243,7 +250,7 @@ class Tpu:
                     self.update_fl_stats(fl, num_fl_points, fl_tpu_data)
 
                 else:
-                    logging.warning(
+                    logger.warning(
                         "SBET and LAS not merged because max delta "
                         "time exceeded acceptable threshold of {} "
                         "sec(s).".format(merge.max_allowable_dt)
@@ -257,7 +264,7 @@ class Tpu:
             self.output_tpu_to_las_extra_bytes(las, data_to_output)
 
         else:
-            logging.warning("WARNING: {} has no data points".format(las.las_short_name))
+            logger.warning("WARNING: {} has no data points".format(las.las_short_name))
 
     def output_tpu_to_las_extra_bytes(self, las, data_to_output):
         """output the calculated tpu to a las file
@@ -295,7 +302,7 @@ class Tpu:
         """
 
         out_las_name = os.path.join(self.tpu_output, las.las_base_name) + "_TPU.las"
-        logging.debug("logging las and tpu results to {}".format(out_las_name))
+        logger.tpu("writing las and tpu results to {}".format(out_las_name))
         in_las = laspy.file.File(las.las, mode="r")  # las is Las object
         out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
@@ -312,7 +319,7 @@ class Tpu:
         # define new extrabyte dimensions
         for dimension, dtype in extra_byte_dimensions.items():
 
-            logging.debug("creating extra byte dimension for {}...".format(dimension))
+            logger.tpu("creating extra byte dimension for {}...".format(dimension))
             out_las.define_new_dimension(
                 name=dimension, data_type=dtype, description=dimension
             )
@@ -340,7 +347,7 @@ class Tpu:
                 print(extra_byte_df)
             else:
 
-                logging.info(
+                logger.tpu(
                     """
                 filling data points for which TPU was not calculated
                 with no_data_value (also sorting by index, or t_idx)
@@ -352,22 +359,22 @@ class Tpu:
                     las.t_argsort, fill_value=no_data_value
                 ).sort_index()
 
-            logging.debug("populating extra byte data for total_thu...")
+            logger.tpu("populating extra byte data for total_thu...")
             out_las.total_thu = extra_byte_df["total_thu"]
 
-            logging.debug("populating extra byte data for total_tvu...")
+            logger.tpu("populating extra byte data for total_tvu...")
             out_las.total_tvu = extra_byte_df["total_tvu"]
 
         else:
-            logging.debug("populating extra byte data for total_thu...")
+            logger.tpu("populating extra byte data for total_thu...")
             out_las.total_thu = np.zeros(las.num_file_points)
 
-            logging.debug("populating extra byte data for total_tvu...")
+            logger.tpu("populating extra byte data for total_tvu...")
             out_las.total_tvu = np.zeros(las.num_file_points)
 
         # copy data from in_las
         for field in in_las.point_format:
-            logging.debug("writing {} to {} ...".format(field.name, out_las))
+            logger.tpu("writing {} to {} ...".format(field.name, out_las))
             las_data = in_las.reader.get_dimension(field.name)
             out_las.writer.set_dimension(field.name, las_data[las.t_argsort])
 
@@ -384,7 +391,7 @@ class Tpu:
         :return: n/a
         """
 
-        logging.debug("({}) creating TPU meta data file...".format(las.las_short_name))
+        logger.tpu("({}) creating TPU meta data file...".format(las.las_short_name))
         self.metadata.update(
             {
                 "subaqueous lookup params": self.subaqu_lookup_params,
@@ -409,7 +416,7 @@ class Tpu:
 
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             print(e)
 
     def run_tpu_multiprocess(self, num_las, sbet_las_generator):

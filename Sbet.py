@@ -38,6 +38,7 @@ import progressbar
 import logging
 import numexpr as ne
 
+logger = logging.getLogger(__name__)
 
 """
 This class provides the functionality to load trajectory data into
@@ -82,10 +83,10 @@ class Sbet:
         """
         sbet_path = os.path.normpath(sbet)
         sbet_parts = os.path.split(sbet_path)
-        logging.debug(f"SBET Parts : {sbet_parts}")
+        logger.sbet(f"SBET Parts : {sbet_parts}")
 
         sbet_name = sbet_parts[-1]
-        logging.debug(f"SBET Name : {sbet_name}")
+        logger.sbet(f"SBET Name : {sbet_name}")
         year = int(sbet_name[0:4])
         month = int(sbet_name[4:6])
         day = int(sbet_name[6:8])
@@ -106,7 +107,7 @@ class Sbet:
         :return: float
         """
 
-        logging.debug("converting GPS week seconds to GPS adjusted standard time..."),
+        logger.sbet("converting GPS week seconds to GPS adjusted standard time..."),
 
         year = gps_date[0]
         month = gps_date[1]
@@ -121,7 +122,7 @@ class Sbet:
         return gps_time_adj
 
     def check_if_sow(self, time):
-        logging.debug("checking if timestamps are GPS week seconds...")
+        logger.sbet("checking if timestamps are GPS week seconds...")
         if time <= self.SECS_PER_GPS_WK:
             return True
         else:
@@ -174,12 +175,12 @@ class Sbet:
             "stdheading",
         ]
         print(r"Loading trajectory files...")
-        logging.info("loading {} trajectory files...".format(len(self.sbet_files)))
+        logger.sbet("loading {} trajectory files...".format(len(self.sbet_files)))
         for sbet in progressbar.progressbar(
             sorted(self.sbet_files), redirect_stdout=True
         ):
-            logging.debug("-" * 50)
-            logging.info("{}...".format(sbet))
+            logger.sbet("-" * 50)
+            logger.sbet("{}...".format(os.path.split(sbet)[-1]))
             sbet_df = pd.read_csv(
                 sbet,
                 skip_blank_lines=True,
@@ -189,7 +190,7 @@ class Sbet:
                 names=header_sbet,
                 index_col=False,
             )
-            logging.debug("({} trajectory points)".format(sbet_df.shape[0]))
+            logger.sbet("({} trajectory points)".format(sbet_df.shape[0]))
             sbet_date = self.get_sbet_date(sbet)
 
             is_sow = self.check_if_sow(sbet_df["time"][0])
@@ -213,7 +214,7 @@ class Sbet:
         sbet_tic = time.process_time()
         self.data = self.build_sbets_data()  # df
         sbet_toc = time.process_time()
-        logging.debug(
+        logger.sbet(
             "It took {:.1f} mins to load the trajectory data.".format(
                 (sbet_toc - sbet_tic) / 60
             )

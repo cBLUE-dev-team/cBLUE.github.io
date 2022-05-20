@@ -43,12 +43,12 @@ import pandas as pd
 import numpy as np
 from os.path import join
 
+logger = logging.getLogger(__name__)
+
 
 class Subaqueous:
     """Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
-    To be used in conjunction with the associated Gui.py.
-
-    ...So glad we're keeping docstrings up to date... that file doesn't exist
+    To be used in conjunction with the associated
     """
 
     def __init__(self, surface, wind_par, kd_par, depth, sensor, subaqueous_luts):
@@ -75,38 +75,36 @@ class Subaqueous:
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
 
-        # what the 4letterword is 'surface'? Where does it come from?
-        # I guess it needs to be 1 not 0? (*shrugging emoji*)
         if self.surface == 1:
-            print(f"using model {self.subaqueous_luts[self.sensor]}")
+            logger.subaqueous(f"using model {self.subaqueous_luts[self.sensor]}")
 
-            # not sure who thought this was a good design...
-            # self = self[self]... lawdamercy
             self.curr_lut = self.subaqueous_luts[self.sensor]
 
             fit_tvu, fit_thu = self.riegl_process(self.curr_lut, self.thu_path)
 
         else:
-            print(f"using model {self.subaqueous_luts[self.sensor]}")
+            logger.subaqueous(f"using model {self.subaqueous_luts[self.sensor]}")
             self.curr_lut = self.subaqueous_luts["ECKV"]
             fit_tvu, fit_thu = self.model_process(self.curr_lut, self.thu_path)
 
         # horizontal uncertainty always quadratic (why? IDK... sorry)
         res_thu = fit_thu[0] * self.depth**2 + fit_thu[1] * self.depth + fit_thu[2]
 
-        # if coeff length = 3, run quadratic model
+        # if coeff length = 3, run quadratic model (ax2+bx+c)
         if len(fit_tvu) == 3:
             res_tvu = (
                 fit_tvu[0] * self.depth**2 + fit_tvu[1] * self.depth + fit_tvu[2]
             )
+            logger.subaqueous(f"subaqueous coeffs: \n tvu:{fit_tvu}, \n thu:{fit_thu}")
 
-        # if coeff length = 2, run linear model
+        # if coeff length = 2, run linear model (ax+b)
         elif len(fit_tvu) == 2:
             res_tvu = fit_tvu[0] * self.depth + fit_tvu[1]
+            logger.subaqueous(f"subaqueous coeffs tvu:{fit_tvu}, thu:{fit_thu}")
 
         # otherwise, something is wrong
         else:
-            logging.error(f"model return coeffs tvu:{fit_tvu}, thu:{fit_thu}")
+            logger.subaqueous(f"subaqueous coeffs tvu:{fit_tvu}, thu:{fit_thu}")
             raise ValueError(
                 "Model generated wrong number of coefficients. 3 coeffs needed for quadratic model, 2 for linear. All other values are incorrect. Check log for details."
             )
@@ -135,18 +133,21 @@ class Subaqueous:
             # (this is a potential pain point, wrapping in exception handler and logger)
             indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
 
+            logger.subaqueous(f"Wind:{self.wind_par}, Kd:{self.kd_par}")
+
             # ensure integer indices
             if np.array(indices).dtype != int:
                 raise Exception
+
         except Exception as e:
-            logging.error(f"Wind:{self.wind_par}, Kd:{self.kd_par}")
+            logger.subaqueous(f"Wind:{self.wind_par}, Kd:{self.kd_par}")
             print(e)
             raise Exception(
                 "Could not generate LUT indices for given wind, kd values. Check log for details"
             )
 
         # read tables, select rows, take column-wise mean
-        fit_tvu = pd.read_csv(v_lut).iloc[indices].mean()
+        fit_tvu = pd.read_csv(v_lut, names=None).iloc[indices].mean()
         fit_thu = pd.read_csv(h_lut, names=None).iloc[indices].mean()
 
         # metadata in the header - need to drop last column (all nans)

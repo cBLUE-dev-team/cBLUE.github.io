@@ -36,6 +36,8 @@ from sympy import lambdify, symbols, Matrix, cos, sin
 import numpy as np
 import numexpr as ne
 
+logger = logging.getLogger(__name__)
+
 
 class SensorModel:
     """This class is used to define and access the sensor model of a particular
@@ -237,12 +239,12 @@ class SensorModel:
             p00
             + p10 * a
             + p01 * b
-            + p20 * a ** 2
+            + p20 * a**2
             + p11 * a * b
-            + p02 * b ** 2
-            + p21 * a ** 2 * b
-            + p12 * a * b ** 2
-            + p03 * b ** 3
+            + p02 * b**2
+            + p21 * a**2 * b
+            + p12 * a * b**2
+            + p03 * b**3
         )
 
         # Redefine obs eqs by adding polynomial surface fitting eq
@@ -378,14 +380,14 @@ class SensorModel:
         AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
         RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
 
-        logging.info(
+        logger.subaerial(
             "Mean Difference:\n"
             "X: {:.3f}\n"
             "Y: {:.3f}\n"
             "Z: {:.3f}".format(AMDE[0], AMDE[1], AMDE[2])
         )
 
-        logging.info("RMSE: {:.3f}\n".format(RMSE))
+        logger.subaerial("RMSE: {:.3f}\n".format(RMSE))
 
     def calc_diff(self, x_las, y_las, z_las):
         """calculate the difference between the las position and the initial cBLUE position
@@ -1106,6 +1108,8 @@ class Subaerial:
 
         # PROPAGATE UNCERTAINTY
         self.propogate_uncertainty(J_eval)
+
+        logger.subaerial(f"subaerial coeffs tvu:{self.tvu}, thu:{self.thu}")
 
         return self.thu, self.tvu
 

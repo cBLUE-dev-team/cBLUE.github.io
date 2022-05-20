@@ -38,6 +38,7 @@ HOW DOES THIS FILE HAVE NO FRIGGIN COMMENTS?!?!?!
 
 # -*- coding: utf-8 -*-
 import logging
+from pprint import pformat
 
 import tkinter as tk
 from tkinter import ttk
@@ -50,13 +51,6 @@ import laspy
 import cProfile
 from pathlib import Path
 
-logging.basicConfig(
-    filename="CBlue.log",
-    format="%(asctime)s %(levelname)-8s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO,
-)
-
 from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
 from Merge import Merge
@@ -66,6 +60,11 @@ from Sbet import Sbet
 from Datum import Datum
 from Las import Las
 from Tpu import Tpu
+
+# Customize logging
+import utils
+
+utils.CustomLogger(filename="CBlue.log")
 
 
 LARGE_FONT = ("Verdanna", 12)
@@ -173,11 +172,15 @@ class CBlueApp(tk.Tk):
 
             # print(json.dumps(self.controller_configuration, indent=1, sort_keys=True))
         else:
-            logging.info("configuration file doesn't exist")
+            logging.cblue("configuration file doesn't exist")
 
     def save_config(self):
         config = "cblue_configuration.json"
-        logging.info("saving {}...\n{}".format(config, self.controller_configuration))
+        logging.cblue(
+            "saving {}...\n \033[34m {} \033[0m".format(
+                config, pformat(self.controller_configuration)
+            )
+        )
         with open(config, "w") as fp:
             json.dump(self.controller_configuration, fp)
 
@@ -465,7 +468,7 @@ class ControllerPanel(ttk.Frame):
     def update_selected_sensor(self, sensor):
         self.selected_sensor = sensor
         self.controller.controller_configuration["sensor_model"] = sensor
-        logging.info("The selected sensor is {}.".format(sensor))
+        logging.cblue("The selected sensor is {}.".format(sensor))
 
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
@@ -498,9 +501,9 @@ class ControllerPanel(ttk.Frame):
         self.tpuProcess.grid(row=2, column=0, padx=(3, 0), sticky=tk.EW)
 
     def update_vdatum_mcu_value(self, region):
-        logging.info("Using VDatum Region {}".format(self.vdatum_region.get()))
+        logging.cblue("Using VDatum Region {}".format(self.vdatum_region.get()))
         self.mcu = self.vdatum_regions[region]
-        logging.info("The MCU for {} is {} cm.".format(region, self.mcu))
+        logging.cblue("The MCU for {} is {} cm.".format(region, self.mcu))
 
     def update_button_enable(self):
         if self.sbetInput.directoryName != "":
@@ -655,8 +658,8 @@ class ControllerPanel(ttk.Frame):
             """
 
             for las_file in las_files:
-                logging.debug(
-                    "({}) generating SBET tile...".format(las_file.split("\\")[-1])
+                logging.cblue(
+                    "({}) generating SBET tile...".format(os.path.split(las_file)[-1])
                 )
 
                 inFile = laspy.file.File(las_file, mode="r")
@@ -669,7 +672,7 @@ class ControllerPanel(ttk.Frame):
                     north, south, east, west
                 ), las_file, jacobian, merge
 
-        logging.info(
+        logging.cblue(
             "processing {} las file(s) ({})...".format(num_las, cpu_process_info[0])
         )
 
