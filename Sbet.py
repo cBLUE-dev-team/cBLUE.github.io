@@ -83,7 +83,6 @@ class Sbet:
         """
         sbet_path = os.path.normpath(sbet)
         sbet_parts = os.path.split(sbet_path)
-        logger.sbet(f"SBET Parts : {sbet_parts}")
 
         sbet_name = sbet_parts[-1]
         logger.sbet(f"SBET Name : {sbet_name}")

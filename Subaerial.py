@@ -1109,8 +1109,6 @@ class Subaerial:
         # PROPAGATE UNCERTAINTY
         self.propogate_uncertainty(J_eval)
 
-        logger.subaerial(f"subaerial coeffs tvu:{self.tvu}, thu:{self.thu}")
-
         return self.thu, self.tvu
 
 

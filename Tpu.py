@@ -77,8 +77,6 @@ class Tpu:
 
     def __init__(
         self,
-        surface_select,
-        surface_ind,
         wind_selection,
         wind_val,
         kd_selection,
@@ -95,10 +93,12 @@ class Tpu:
     ):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
-        self.surface_select = surface_select
-        self.surface_ind = surface_ind
         self.wind_selection = wind_selection
         self.wind_val = wind_val
+
+        logging.tpu(f"self.wind_selection (line 100) set to: {wind_selection}")
+        logging.tpu(f"self.wind_val (line 101) set to: {wind_val}")
+
         self.kd_selection = kd_selection
         self.kd_val = kd_val
         self.vdatum_region = vdatum_region
@@ -204,9 +204,7 @@ class Tpu:
                     )
                     subaer_obj = Subaerial(jacobian, merged_data, stddev)
 
-                    logger.tpu("\n" + ("_" * 50) + "\nSUBAQUEOUS COEFFS:\n")
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
-                    logger.tpu("_" * 50)
 
                     depth = merged_data[4] - self.water_surface_ellipsoid_height
 
@@ -216,16 +214,13 @@ class Tpu:
                         )
                     )
                     subaqu_obj = Subaqueous(
-                        self.surface_ind,
                         self.wind_val,
                         self.kd_val,
                         depth,
                         self.selected_sensor,
                         self.subaqueous_luts,
                     )
-                    logger.tpu("\n" + ("_" * 50) + "\nSUBAQUEOUS COEFFS:\n")
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
-                    logger.tpu("_" * 50)
                     # self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
                     vdatum_mcu = (
                         float(self.vdatum_region_mcu) / 100.0
@@ -395,7 +390,6 @@ class Tpu:
         self.metadata.update(
             {
                 "subaqueous lookup params": self.subaqu_lookup_params,
-                "water surface": self.surface_select,
                 "wind": self.wind_selection,
                 "kd": self.kd_selection,
                 "VDatum region": self.vdatum_region,

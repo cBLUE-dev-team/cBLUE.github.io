@@ -51,7 +51,7 @@ class Subaqueous:
     To be used in conjunction with the associated
     """
 
-    def __init__(self, surface, wind_par, kd_par, depth, sensor, subaqueous_luts):
+    def __init__(self, wind_par, kd_par, depth, sensor, subaqueous_luts):
 
         sensor_aliases = {
             "Riegl VQ-880-G": "RIEGL",
@@ -59,58 +59,40 @@ class Subaqueous:
             "Hawkeye 4X": "HAWK",
         }
 
-        self.thu_path = join(".", "lookup_tables", "THU.csv")
-
-        print("surface:", surface)
-        self.surface = surface
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
-        self.sensor = sensor_aliases[sensor]  # get sensor alias as shown in config
-        self.subaqueous_luts = subaqueous_luts
-        self.curr_lut = None
-        self.thu = None
-        self.tvu = None
+        self.sensor = sensor_aliases[sensor]
+        self.vert_lut = subaqueous_luts[self.sensor]["vertical"]
+        self.horz_lut = subaqueous_luts[self.sensor]["horizontal"]
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
 
-        if self.surface == 1:
-            logger.subaqueous(f"using model {self.subaqueous_luts[self.sensor]}")
+        # query coefficients from look up tables
+        fit_tvu, fit_thu = self.model_process(self.vert_lut, self.horz_lut)
 
-            self.curr_lut = self.subaqueous_luts[self.sensor]
+        # a_h := horizontal linear coeffs
+        # b_h := horizontal linear offsets
+        # reshape to column vector
+        a_h = fit_thu["a"].values.reshape(-1, 1)
+        b_h = fit_thu["b"].values.reshape(-1, 1)
 
-            fit_tvu, fit_thu = self.riegl_process(self.curr_lut, self.thu_path)
+        # inner product of coeffs w/ depths + offsets
+        # gives matrix of dims (#coeffs, #las points)
+        res_thu = a_h @ self.depth.reshape(1, -1) + b_h
 
-        else:
-            logger.subaqueous(f"using model {self.subaqueous_luts[self.sensor]}")
-            self.curr_lut = self.subaqueous_luts["ECKV"]
-            fit_tvu, fit_thu = self.model_process(self.curr_lut, self.thu_path)
+        # a_z := vertical linear coeffs
+        # b_z := vertical linear offsets
+        a_z = fit_tvu["a"].values.reshape(-1, 1)
+        b_z = fit_tvu["b"].values.reshape(-1, 1)
 
-        # horizontal uncertainty always quadratic (why? IDK... sorry)
-        res_thu = fit_thu[0] * self.depth**2 + fit_thu[1] * self.depth + fit_thu[2]
+        res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
 
-        # if coeff length = 3, run quadratic model (ax2+bx+c)
-        if len(fit_tvu) == 3:
-            res_tvu = (
-                fit_tvu[0] * self.depth**2 + fit_tvu[1] * self.depth + fit_tvu[2]
-            )
-            logger.subaqueous(f"subaqueous coeffs: \n tvu:{fit_tvu}, \n thu:{fit_thu}")
-
-        # if coeff length = 2, run linear model (ax+b)
-        elif len(fit_tvu) == 2:
-            res_tvu = fit_tvu[0] * self.depth + fit_tvu[1]
-            logger.subaqueous(f"subaqueous coeffs tvu:{fit_tvu}, thu:{fit_thu}")
-
-        # otherwise, something is wrong
-        else:
-            logger.subaqueous(f"subaqueous coeffs tvu:{fit_tvu}, thu:{fit_thu}")
-            raise ValueError(
-                "Model generated wrong number of coefficients. 3 coeffs needed for quadratic model, 2 for linear. All other values are incorrect. Check log for details."
-            )
-
-        self.thu = res_thu.T
-        self.tvu = res_tvu.T
+        # compute average over columns
+        # (i.e. average over coeffs for each las point)
+        self.thu = res_thu.mean(axis=0)
+        self.tvu = res_tvu.mean(axis=0)
 
         return self.thu, self.tvu
 
@@ -133,6 +115,7 @@ class Subaqueous:
             # (this is a potential pain point, wrapping in exception handler and logger)
             indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
 
+            logger.subaqueous(f"Using Indices: {indices}")
             logger.subaqueous(f"Wind:{self.wind_par}, Kd:{self.kd_par}")
 
             # ensure integer indices
@@ -140,41 +123,17 @@ class Subaqueous:
                 raise Exception
 
         except Exception as e:
-            logger.subaqueous(f"Wind:{self.wind_par}, Kd:{self.kd_par}")
             print(e)
             raise Exception(
                 "Could not generate LUT indices for given wind, kd values. Check log for details"
             )
 
         # read tables, select rows, take column-wise mean
-        fit_tvu = pd.read_csv(v_lut, names=None).iloc[indices].mean()
-        fit_thu = pd.read_csv(h_lut, names=None).iloc[indices].mean()
+        fit_tvu = pd.read_csv(v_lut, names=["a", "b"]).iloc[indices]
+        fit_thu = pd.read_csv(h_lut, names=["a", "b"]).iloc[indices]
 
         # metadata in the header - need to drop last column (all nans)
-        return fit_tvu.to_numpy()[:-1], fit_thu.to_numpy()[:-1]
-
-    def riegl_process(self, v_lut, h_lut):
-        """Retrieves the average fit for all kd given from reigl_look_up_fit.csv.
-        reigl_look_up_fit.csv uses precalculated uncertainties based on riegl models.
-
-        :param v_lut: The vertical Look Up Table used for modeling
-        :param h_lut: The horizontal Look Up Table used for modeling
-        :param kd: The turbidity values passed from the GUI
-
-        :return: TVU and THU obs. equation coefficients
-        :rtype: (ndarray, ndarray)
-        """
-
-        # ensure numpy typing
-        if type(self.kd_par) != np.ndarray:
-            self.kd_par = np.array(self.kd_par)
-
-        # read tables, select rows, take column-wise mean
-        fit_tvu = pd.read_csv(v_lut).iloc[self.kd_par - 6].mean()
-        fit_thu = pd.read_csv(h_lut, names=None).iloc[self.kd_par - 6].mean()
-
-        # metadata in the header - need to drop last column (all nans)
-        return fit_tvu.to_numpy(), fit_thu.to_numpy()[:-1]
+        return fit_tvu, fit_thu
 
     def get_subaqueous_meta_data(self):
         """I haven't the patience to figure out why we need the MC ray tracing

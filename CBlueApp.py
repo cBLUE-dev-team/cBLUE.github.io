@@ -169,18 +169,12 @@ class CBlueApp(tk.Tk):
         if os.path.isfile(self.config_file):
             with open(self.config_file) as cf:
                 self.controller_configuration = json.load(cf)
-
-            # print(json.dumps(self.controller_configuration, indent=1, sort_keys=True))
         else:
             logging.cblue("configuration file doesn't exist")
 
     def save_config(self):
         config = "cblue_configuration.json"
-        logging.cblue(
-            "saving {}...\n \033[34m {} \033[0m".format(
-                config, pformat(self.controller_configuration)
-            )
-        )
+
         with open(config, "w") as fp:
             json.dump(self.controller_configuration, fp)
 
@@ -350,6 +344,13 @@ class ControllerPanel(ttk.Frame):
         self.tpuOutput.grid(row=3, column=0)
 
     def build_subaqueous_input(self):
+        """
+        This function builds the frame and tab toggle for
+        selecting wind/kd ranges.
+        Inputs: None
+        Returns: Void
+        """
+        ### Frame layout (contains parameter widgets) ###
         subaqueous_frame = tk.Frame(self.controller_panel)
         subaqueous_frame.grid(row=1, sticky=tk.EW)
         subaqueous_frame.columnconfigure(0, weight=1)
@@ -358,31 +359,21 @@ class ControllerPanel(ttk.Frame):
             subaqueous_frame, text="Environmental Parameters", font="Helvetica 10 bold"
         ).grid(row=0, pady=(10, 0), sticky=tk.EW)
 
+        ### Toggle between Wind and Kd panel tabs ###
         subaqueous_method_tabs = ttk.Notebook(subaqueous_frame)
         subaqueous_method_tabs.grid(row=1, column=0)
+
         tab1 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab1, text="Water Surface")
+
         tab2 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab2, text="Turbidity")
+
         water_surface_subframe = tk.Frame(tab1)
         water_surface_subframe.grid(row=1, column=0)
 
-        self.water_surface_options = [
-            "Direct From Point Cloud",
-            "Model (ECKV spectrum)",
-        ]
-
+        ### Set wind ranges as radio buttons ###
         self.windOptions = [w[0] for w in self.wind_vals.values()]
-
-        self.waterSurfaceRadio = RadioFrame(
-            water_surface_subframe,
-            "Water Surface",
-            self.water_surface_options,
-            1,
-            callback=self.updateRadioEnable,
-            width=self.control_panel_width,
-        )
-        self.waterSurfaceRadio.grid(row=0, column=0, columnspan=1, sticky=tk.EW)
 
         self.windRadio = RadioFrame(
             water_surface_subframe,
@@ -393,12 +384,14 @@ class ControllerPanel(ttk.Frame):
         )
         self.windRadio.grid(row=1, column=0, sticky=tk.E)
 
+        ### Create new frame for Kd range selection ###
         turbidity_subframe = tk.Frame(tab2)
         turbidity_subframe.grid(row=2, column=0, sticky=(tk.N, tk.W, tk.E, tk.S))
         turbidity_subframe.columnconfigure(0, weight=1)
         turbidity_subframe.rowconfigure(0, weight=1)
 
-        self.turbidity_options = [
+        ### Set Kd ranges as radio buttons ###
+        self.turbidityOptions = [
             "{:s} ({:.2f}-{:.2f} m^-1)".format(k[0], k[1][0] / 100.0, k[1][-1] / 100.0)
             for k in self.kd_vals.values()
         ]
@@ -406,7 +399,7 @@ class ControllerPanel(ttk.Frame):
         self.turbidityRadio = RadioFrame(
             turbidity_subframe,
             "Turbidity (kd_490)",
-            self.turbidity_options,
+            self.turbidityOptions,
             0,
             width=self.control_panel_width,
         )
@@ -441,12 +434,14 @@ class ControllerPanel(ttk.Frame):
 
     def build_sensor_input(self):
 
+        ### Names of sensors as displayed in GUI ###
         self.sensor_models = (
             "Riegl VQ-880-G",
             "Leica Chiroptera 4X",
             # "HawkEye 4X" -- removed for stable release
         )
 
+        ### Set up frame to hold dropdown menu ###
         sensor_frame = tk.Frame(self.controller_panel)
         sensor_frame.columnconfigure(0, weight=1)
         sensor_frame.grid(row=4, sticky=tk.EW)
@@ -454,21 +449,27 @@ class ControllerPanel(ttk.Frame):
             row=0, columnspan=1, pady=(10, 0), sticky=tk.EW
         )
 
+        ### Holds the names of the selected sensor ###
         self.selected_sensor = tk.StringVar(self)
 
+        ### Add sensor dropdown menu to GUI ###
         self.sensor_option_menu = tk.OptionMenu(
             sensor_frame,
             self.selected_sensor,
             *self.sensor_models,
             command=self.update_selected_sensor,
         )
+
         self.sensor_option_menu.config(width=self.control_panel_width, anchor="w")
         self.sensor_option_menu.grid(sticky=tk.EW)
 
     def update_selected_sensor(self, sensor):
+        """
+        Callback function for the sensor option menu.
+        Updates the controller when a new sensor is selected.
+        """
         self.selected_sensor = sensor
         self.controller.controller_configuration["sensor_model"] = sensor
-        logging.cblue("The selected sensor is {}.".format(sensor))
 
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
@@ -501,9 +502,7 @@ class ControllerPanel(ttk.Frame):
         self.tpuProcess.grid(row=2, column=0, padx=(3, 0), sticky=tk.EW)
 
     def update_vdatum_mcu_value(self, region):
-        logging.cblue("Using VDatum Region {}".format(self.vdatum_region.get()))
         self.mcu = self.vdatum_regions[region]
-        logging.cblue("The MCU for {} is {} cm.".format(region, self.mcu))
 
     def update_button_enable(self):
         if self.sbetInput.directoryName != "":
@@ -590,15 +589,12 @@ class ControllerPanel(ttk.Frame):
         wseh.mainloop()
 
     def begin_tpu_calc(self):
-        surface_ind = self.waterSurfaceRadio.selection.get()
-        print(f"Surface IND = {surface_ind}")
-        surface_selection = self.water_surface_options[surface_ind]
 
         wind_ind = self.windRadio.selection.get()
         wind_selection = self.windOptions[wind_ind]
 
         kd_ind = self.turbidityRadio.selection.get()
-        kd_selection = self.turbidity_options[kd_ind]
+        kd_selection = self.turbidityOptions[kd_ind]
 
         # CREATE OBSERVATION EQUATIONS
         sensor_model = SensorModel(
@@ -614,8 +610,6 @@ class ControllerPanel(ttk.Frame):
             cpu_process_info = ("singleprocess",)
 
         tpu = Tpu(
-            surface_selection,
-            surface_ind,
             wind_selection,
             self.wind_vals[wind_ind][1],
             kd_selection,
