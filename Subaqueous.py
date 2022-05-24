@@ -69,6 +69,9 @@ class Subaqueous:
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
 
+        # tvu values below 0.03 are considered erroneous
+        min_tvu = 0.03
+
         # query coefficients from look up tables
         fit_tvu, fit_thu = self.model_process(self.vert_lut, self.horz_lut)
 
@@ -87,7 +90,13 @@ class Subaqueous:
         a_z = fit_tvu["a"].values.reshape(-1, 1)
         b_z = fit_tvu["b"].values.reshape(-1, 1)
 
+        logging.subaqueous(f"az : {a_z}")
+        logging.subaqueous(f"bz : {b_z}")
+
         res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
+
+        # enforce minimum value for tvu
+        res_tvu[res_tvu < min_tvu] = min_tvu
 
         # compute average over columns
         # (i.e. average over coeffs for each las point)
