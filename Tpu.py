@@ -90,6 +90,7 @@ class Tpu:
         selected_sensor,
         subaqueous_luts,
         water_surface_ellipsoid_height,
+        error_type,
     ):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
@@ -110,6 +111,7 @@ class Tpu:
         self.selected_sensor = selected_sensor
         self.subaqueous_luts = subaqueous_luts
         self.water_surface_ellipsoid_height = water_surface_ellipsoid_height
+        self.error_type = error_type
 
         self.subaqu_lookup_params = None
         self.metadata = {}
@@ -221,7 +223,9 @@ class Tpu:
                         self.subaqueous_luts,
                     )
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
+
                     # self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
+
                     vdatum_mcu = (
                         float(self.vdatum_region_mcu) / 100.0
                     )  # file is in cm (1-sigma)
@@ -229,14 +233,32 @@ class Tpu:
                     logger.tpu(
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
-                    total_thu = ne.evaluate("sqrt(subaer_thu**2 + subaqu_thu**2)")
+
+                    # total_thu = ne.evaluate("sqrt(subaer_thu**2 + subaqu_thu**2)")
+
+                    # sum in quadrature - get 95% confidence level
+                    total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2)
 
                     logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
                     )
-                    total_tvu = ne.evaluate(
-                        "sqrt(subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2)"
+
+                    # total_tvu = ne.evaluate(
+                    #     "sqrt(subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2)"
+                    # )
+
+                    # sum in quadrature - get 95% confidence level
+                    total_tvu = np.sqrt(
+                        subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2
                     )
+
+                    # convert to 95% conf, if requested
+                    if self.error_type == "95% confidence":
+                        logging.tpu("TPU reported at 95% confidence...")
+                        total_thu *= 1.7308
+                        total_tvu *= 1.96
+                    else:
+                        logging.tpu("TPU reported at 1 sigma...")
 
                     fl_tpu_data = np.vstack((total_thu, total_tvu, unsort_idx)).T
 
@@ -256,7 +278,11 @@ class Tpu:
                     )
 
             self.write_metadata(las)  # TODO: include as VLR?
-            self.output_tpu_to_las_extra_bytes(las, data_to_output)
+
+            try:
+                self.output_tpu_to_las_extra_bytes(las, data_to_output)
+            except ValueError as e:
+                raise ValueError("Las files already contain thu and tvu")
 
         else:
             logger.warning("WARNING: {} has no data points".format(las.las_short_name))
@@ -327,18 +353,9 @@ class Tpu:
                 columns=extra_byte_dimensions.keys(),
             )
 
-            print(f"extra_byte_df")
-            print(extra_byte_df)
-
-            print(f"las.num_file_points")
-            print(las.num_file_points)
-
-            print("las.t_argsort")
-            print(las.t_argsort)
-
             if extra_byte_df.shape[0] == las.num_file_points:
                 extra_byte_df = extra_byte_df.sort_index()
-                print(f"extra_byte_df --------- sort.index()")
+                print(f"extra_byte_df\n-------------")
                 print(extra_byte_df)
             else:
 

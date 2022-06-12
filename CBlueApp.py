@@ -40,6 +40,8 @@ HOW DOES THIS FILE HAVE NO FRIGGIN COMMENTS?!?!?!
 import logging
 from pprint import pformat
 
+import platform, multiprocessing
+
 import tkinter as tk
 from tkinter import ttk
 import os
@@ -301,6 +303,7 @@ class ControllerPanel(ttk.Frame):
         self.build_subaqueous_input()
         self.build_vdatum_input()
         self.build_sensor_input()
+        self.build_error_type_input()
         self.build_process_buttons()
         self.update_button_enable()
 
@@ -436,7 +439,10 @@ class ControllerPanel(ttk.Frame):
 
         ### Names of sensors as displayed in GUI ###
         self.sensor_models = (
-            "Riegl VQ-880-G",
+            "Riegl VQ-880-G (0.7 mrad)",
+            "Riegl VQ-880-G (1.0 mrad)",
+            "Riegl VQ-880-G (1.5 mrad)",
+            "Riegl VQ-880-G (2.0 mrad)",
             "Leica Chiroptera 4X",
             # "HawkEye 4X" -- removed for stable release
         )
@@ -471,9 +477,44 @@ class ControllerPanel(ttk.Frame):
         self.selected_sensor = sensor
         self.controller.controller_configuration["sensor_model"] = sensor
 
+    def build_error_type_input(self):
+
+        ### 95% conf or 1 sigma ###
+        self.error_types = ("1-\u03c3", "95% confidence")
+
+        ### Set up frame to hold dropdown menu ###
+        error_frame = tk.Frame(self.controller_panel)
+        error_frame.columnconfigure(0, weight=1)
+        error_frame.grid(row=5, sticky=tk.EW)
+        tk.Label(error_frame, text="TPU Metric", font="Helvetica 10 bold").grid(
+            row=0, columnspan=1, pady=(10, 0), sticky=tk.EW
+        )
+
+        ### Holds the names of the selected sensor ###
+        self.error_type = tk.StringVar(self)
+
+        ### Add sensor dropdown menu to GUI ###
+        self.error_option_menu = tk.OptionMenu(
+            error_frame,
+            self.error_type,
+            *self.error_types,
+            command=self.update_error_type,
+        )
+
+        self.error_option_menu.config(width=self.control_panel_width, anchor="w")
+        self.error_option_menu.grid(sticky=tk.EW)
+
+    def update_error_type(self, error_type):
+        """
+        Callback function for the sensor option menu.
+        Updates the controller when a new sensor is selected.
+        """
+        self.selected_error = error_type
+        self.controller.controller_configuration["error_type"] = error_type
+
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
-        process_frame.grid(row=5, sticky=tk.NSEW)
+        process_frame.grid(row=6, sticky=tk.NSEW)
         process_frame.columnconfigure(0, weight=0)
 
         label = tk.Label(process_frame, text="Process Buttons", font=NORM_FONT_BOLD)
@@ -623,6 +664,7 @@ class ControllerPanel(ttk.Frame):
             self.selected_sensor,
             self.controller.controller_configuration["subaqueous_LUTs"],
             self.controller.controller_configuration["water_surface_ellipsoid_height"],
+            self.controller.controller_configuration["error_type"],
         )
 
         las_files = [
@@ -688,6 +730,7 @@ class ControllerPanel(ttk.Frame):
 
 
 if __name__ == "__main__":
+
     app = CBlueApp()
     app.geometry("515x615")
     app.mainloop()
