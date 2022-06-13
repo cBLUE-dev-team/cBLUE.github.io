@@ -54,7 +54,10 @@ class Subaqueous:
     def __init__(self, wind_par, kd_par, depth, sensor, subaqueous_luts):
 
         sensor_aliases = {
-            "Riegl VQ-880-G": "RIEGL",
+            "Riegl VQ-880-G (0.7 mrad)": "RIEGL 0.7 mrad",
+            "Riegl VQ-880-G (1.0 mrad)": "RIEGL 1.0 mrad",
+            "Riegl VQ-880-G (1.5 mrad)": "RIEGL 1.5 mrad",
+            "Riegl VQ-880-G (2.0 mrad)": "RIEGL 2.0 mrad",
             "Leica Chiroptera 4X": "CHIRO",
             "Hawkeye 4X": "HAWK",
         }
@@ -65,6 +68,9 @@ class Subaqueous:
         self.sensor = sensor_aliases[sensor]
         self.vert_lut = subaqueous_luts[self.sensor]["vertical"]
         self.horz_lut = subaqueous_luts[self.sensor]["horizontal"]
+
+        logger.subaqueous(self.vert_lut)
+        logger.subaqueous(self.horz_lut)
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
@@ -89,9 +95,6 @@ class Subaqueous:
         # b_z := vertical linear offsets
         a_z = fit_tvu["a"].values.reshape(-1, 1)
         b_z = fit_tvu["b"].values.reshape(-1, 1)
-
-        logging.subaqueous(f"az : {a_z}")
-        logging.subaqueous(f"bz : {b_z}")
 
         res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
 
@@ -123,9 +126,6 @@ class Subaqueous:
         try:
             # (this is a potential pain point, wrapping in exception handler and logger)
             indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
-
-            logger.subaqueous(f"Using Indices: {indices}")
-            logger.subaqueous(f"Wind:{self.wind_par}, Kd:{self.kd_par}")
 
             # ensure integer indices
             if np.array(indices).dtype != int:
