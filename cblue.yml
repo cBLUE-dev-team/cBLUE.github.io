@@ -19,7 +19,7 @@ dependencies:
   - wheel=0.34.2=py37_0
   - pip:
     - dill==0.3.1.1
-    - laspy==1.7.0
+    - laspy[lazrs,laszip]
     - multiprocess==0.70.9
     - pathos==0.2.5
     - pox==0.2.7

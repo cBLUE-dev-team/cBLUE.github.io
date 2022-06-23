@@ -698,11 +698,11 @@ class ControllerPanel(ttk.Frame):
                     "({}) generating SBET tile...".format(os.path.split(las_file)[-1])
                 )
 
-                inFile = laspy.file.File(las_file, mode="r")
-                west = inFile.reader.get_header_property("x_min")
-                east = inFile.reader.get_header_property("x_max")
-                north = inFile.reader.get_header_property("y_max")
-                south = inFile.reader.get_header_property("y_min")
+                inFile = laspy.read(las_file)
+                west = inFile.header.x_min
+                east = inFile.header.x_max
+                north = inFile.header.y_max
+                south = inFile.header.y_min
 
                 yield self.sbet.get_tile_data(
                     north, south, east, west
@@ -712,14 +712,20 @@ class ControllerPanel(ttk.Frame):
             "processing {} las file(s) ({})...".format(num_las, cpu_process_info[0])
         )
 
-        if multiprocess:
+        logging.cblue(f"multiprocessing = {multiprocess} ({type(multiprocess)})")
+
+        if multiprocess == "True":
             p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
             signal_completion()
             p.close()
             p.join()
-        else:
+        elif multiprocess == "False":
             tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
             signal_completion()
+        else:
+            logging.cblue(
+                f"multiprocessing set to {multiprocess} (Must be True or False)"
+            )
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""

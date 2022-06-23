@@ -69,6 +69,8 @@ class Subaqueous:
         self.vert_lut = subaqueous_luts[self.sensor]["vertical"]
         self.horz_lut = subaqueous_luts[self.sensor]["horizontal"]
 
+        logger.subaqueous(f"kd_par {self.kd_par}")
+        logger.subaqueous(f"wind_par {self.wind_par}")
         logger.subaqueous(self.vert_lut)
         logger.subaqueous(self.horz_lut)
 

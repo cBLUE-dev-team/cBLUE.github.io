@@ -322,18 +322,28 @@ class Tpu:
         :return:
         """
 
+        # get input file name and append TPU
         out_las_name = os.path.join(self.tpu_output, las.las_base_name) + "_TPU.las"
-        logger.tpu("writing las and tpu results to {}".format(out_las_name))
-        in_las = laspy.file.File(las.las, mode="r")  # las is Las object
-        out_las = laspy.file.File(out_las_name, mode="w", header=in_las.header)
 
-        # tpu_data_type = 9  # float
-        #
-        # extra_byte_dimensions = OrderedDict(
-        #     [("total_thu", tpu_data_type), ("total_tvu", tpu_data_type)]
-        # )
+        # read las file
+        in_las = laspy.read(las.las)
 
-        extra_byte_dimensions = {"total_thu": 9, "total_tvu": 9}
+        # if TPU file already exists, overwrite it
+        if las.las_base_name + "_TPU.las" in os.listdir(self.tpu_output):
+            out_las = laspy.read(out_las_name)
+            logger.tpu(
+                "writing las and tpu results to existing file: {}".format(out_las_name)
+            )
+
+        # otherwise, create new TPU file
+        else:
+            logger.tpu(
+                "writing las and tpu results to new file: {}".format(out_las_name)
+            )
+            out_las = laspy.LasData(in_las.header)
+
+        # note '<f4' -> 32 bit floating point
+        extra_byte_dimensions = {"total_thu": "<f4", "total_tvu": "<f4"}
 
         num_extra_bytes = len(extra_byte_dimensions.keys())
 
@@ -341,8 +351,10 @@ class Tpu:
         for dimension, dtype in extra_byte_dimensions.items():
 
             logger.tpu("creating extra byte dimension for {}...".format(dimension))
-            out_las.define_new_dimension(
-                name=dimension, data_type=dtype, description=dimension
+            out_las.add_extra_dim(
+                laspy.ExtraBytesParams(
+                    name=dimension, type=dtype, description=dimension
+                )
             )
 
         if len(data_to_output) != 0:
@@ -357,6 +369,7 @@ class Tpu:
                 extra_byte_df = extra_byte_df.sort_index()
                 print(f"extra_byte_df\n-------------")
                 print(extra_byte_df)
+
             else:
 
                 logger.tpu(
@@ -387,8 +400,15 @@ class Tpu:
         # copy data from in_las
         for field in in_las.point_format:
             logger.tpu("writing {} to {} ...".format(field.name, out_las))
-            las_data = in_las.reader.get_dimension(field.name)
-            out_las.writer.set_dimension(field.name, las_data[las.t_argsort])
+
+            # cannot copy over non-standard (extrabyte) dimensions
+            dim = in_las.point_format.dimension_by_name(field.name)
+            if dim.is_standard:
+                las_data = in_las[field.name]
+                out_las[field.name] = las_data[las.t_argsort]
+
+        # write las with extrabytes to file
+        out_las.write(out_las_name)
 
     def write_metadata(self, las):
         """creates a json file with summary statistics and metedata
