@@ -91,6 +91,7 @@ class Tpu:
         subaqueous_luts,
         water_surface_ellipsoid_height,
         error_type,
+        csv_option,
     ):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
@@ -112,6 +113,7 @@ class Tpu:
         self.subaqueous_luts = subaqueous_luts
         self.water_surface_ellipsoid_height = water_surface_ellipsoid_height
         self.error_type = error_type
+        self.csv_option = csv_option
 
         self.subaqu_lookup_params = None
         self.metadata = {}
@@ -224,8 +226,6 @@ class Tpu:
                     )
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
 
-                    # self.subaqu_lookup_params = subaqu_obj.get_subaqueous_meta_data()
-
                     vdatum_mcu = (
                         float(self.vdatum_region_mcu) / 100.0
                     )  # file is in cm (1-sigma)
@@ -234,18 +234,12 @@ class Tpu:
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
 
-                    # total_thu = ne.evaluate("sqrt(subaer_thu**2 + subaqu_thu**2)")
-
                     # sum in quadrature - get 95% confidence level
                     total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2)
 
                     logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
                     )
-
-                    # total_tvu = ne.evaluate(
-                    #     "sqrt(subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2)"
-                    # )
 
                     # sum in quadrature - get 95% confidence level
                     total_tvu = np.sqrt(
@@ -367,8 +361,8 @@ class Tpu:
 
             if extra_byte_df.shape[0] == las.num_file_points:
                 extra_byte_df = extra_byte_df.sort_index()
-                print(f"extra_byte_df\n-------------")
-                print(extra_byte_df)
+                # print(f"extra_byte_df\n-------------")
+                # print(extra_byte_df)
 
             else:
 
@@ -409,6 +403,25 @@ class Tpu:
 
         # write las with extrabytes to file
         out_las.write(out_las_name)
+
+        if self.csv_option:
+            logger.tpu(f"Saving CSV as {las.las_base_name}_TPU.csv")
+
+            # get name of csv from las file
+            out_csv_name = os.path.join(self.tpu_output, las.las_base_name) + "_TPU.csv"
+
+            # Save relevant data to csv
+            pd.DataFrame.from_dict(
+                {
+                    "GPS Time": out_las.gps_time,
+                    "X": out_las.X,
+                    "Y": out_las.Y,
+                    "Z": out_las.Z,
+                    "THU": out_las.total_thu,
+                    "TVU": out_las.total_tvu,
+                    "Classification": out_las.classification,
+                }
+            ).to_csv(out_csv_name, index=False)
 
     def write_metadata(self, las):
         """creates a json file with summary statistics and metedata

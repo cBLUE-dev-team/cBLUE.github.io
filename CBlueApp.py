@@ -79,7 +79,7 @@ class CBlueApp(tk.Tk):
     """Gui used to determine the total propagated
     uncertainty of Lidar Topobathymetry measurements.
 
-    Created: 2017-12-07
+    Created: 2017-12-0
 
     @original author: Timothy Kammerer
     @modified by: Nick Forfinski-Sarkozi
@@ -304,6 +304,7 @@ class ControllerPanel(ttk.Frame):
         self.build_vdatum_input()
         self.build_sensor_input()
         self.build_error_type_input()
+        self.build_output_csv()
         self.build_process_buttons()
         self.update_button_enable()
 
@@ -443,7 +444,7 @@ class ControllerPanel(ttk.Frame):
             "Riegl VQ-880-G (1.0 mrad)",
             "Riegl VQ-880-G (1.5 mrad)",
             "Riegl VQ-880-G (2.0 mrad)",
-            "Leica Chiroptera 4X",
+            "Leica Chiroptera 4X (HawkEye 4X Shallow)",
             # "HawkEye 4X" -- removed for stable release
         )
 
@@ -512,9 +513,40 @@ class ControllerPanel(ttk.Frame):
         self.selected_error = error_type
         self.controller.controller_configuration["error_type"] = error_type
 
+    def build_output_csv(self):
+        """
+        Callback function to output points as csv_option
+        """
+
+        ### Set up frame to hold radio buttons ###
+        csv_frame = tk.Frame(self.controller_panel)
+        csv_frame.columnconfigure(0, weight=1)
+        csv_frame.columnconfigure(1, weight=0)
+        csv_frame.grid(row=6, sticky=tk.EW)
+        tk.Label(csv_frame, text="Output Options", font="Helvetica 10 bold").grid(
+            row=0, columnspan=2, pady=(10, 0), sticky=tk.EW
+        )
+
+        self.csv_option = tk.BooleanVar()
+
+        self.extrabyte_button = ttk.Radiobutton(
+            csv_frame, text="ExtraBytes", value=False, variable=self.csv_option
+        )
+
+        self.csv_button = ttk.Radiobutton(
+            csv_frame, text="ExtraBytes + CSV", value=True, variable=self.csv_option
+        )
+
+        self.extrabyte_button.grid(row=1, column=0, sticky=tk.W, padx=30)
+
+        self.csv_button.grid(row=2, column=0, sticky=tk.W, padx=30)
+
+    def update_output_csv(self, csv_option):
+        pass
+
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
-        process_frame.grid(row=6, sticky=tk.NSEW)
+        process_frame.grid(row=7, sticky=tk.NSEW)
         process_frame.columnconfigure(0, weight=0)
 
         label = tk.Label(process_frame, text="Process Buttons", font=NORM_FONT_BOLD)
@@ -665,6 +697,7 @@ class ControllerPanel(ttk.Frame):
             self.controller.controller_configuration["subaqueous_LUTs"],
             self.controller.controller_configuration["water_surface_ellipsoid_height"],
             self.controller.controller_configuration["error_type"],
+            self.csv_option.get(),
         )
 
         las_files = [
@@ -738,5 +771,5 @@ class ControllerPanel(ttk.Frame):
 if __name__ == "__main__":
 
     app = CBlueApp()
-    app.geometry("515x615")
+    app.geometry("350x650")
     app.mainloop()
