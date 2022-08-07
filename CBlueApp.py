@@ -138,12 +138,9 @@ class CBlueApp(tk.Tk):
             label="Leica Chiroptera 4X", command=lambda: self.popupmsg(sensor_model_msg)
         )
 
-        """
-        Removed for Stable Release
-        Will be added back when beam divergence is known
-        """
-        # sensor_model_choice.add_command(label='HawkEye 4X',
-        #                                 command=lambda: self.popupmsg(sensor_model_msg))
+        sensor_model_choice.add_command(
+            label="HawkEye 4X", command=lambda: self.popupmsg(sensor_model_msg)
+        )
 
         menubar.add_cascade(label="Sensor Model", menu=sensor_model_choice)
 
@@ -445,7 +442,7 @@ class ControllerPanel(ttk.Frame):
             "Riegl VQ-880-G (1.5 mrad)",
             "Riegl VQ-880-G (2.0 mrad)",
             "Leica Chiroptera 4X (HawkEye 4X Shallow)",
-            # "HawkEye 4X" -- removed for stable release
+            "HawkEye 4X",
         )
 
         ### Set up frame to hold dropdown menu ###

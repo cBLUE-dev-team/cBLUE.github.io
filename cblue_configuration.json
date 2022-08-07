@@ -1,1 +1,39 @@
-{"directories": {"tpu": "/Users/forrest/Desktop/OSU_Research/cBLUE/cBLUE.github.io/integration_test/nv5/cBLUE_troubleshoot_data/00_LAZ/crossModelTesting", "sbet": "/Users/forrest/Desktop/OSU_Research/cBLUE/cBLUE.github.io/integration_test/nv5/cBLUE_troubleshoot_data/01_traj", "las": "/Users/forrest/Desktop/OSU_Research/cBLUE/cBLUE.github.io/integration_test/nv5/cBLUE_troubleshoot_data/00_LAZ/Leica"}, "subaqueous_LUTs": {"RIEGL 0.7 mrad": {"vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad.csv", "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad_hz.csv"}, "RIEGL 1.0 mrad": {"vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad.csv", "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad_hz.csv"}, "RIEGL 1.5 mrad": {"vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad.csv", "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad_hz.csv"}, "RIEGL 2.0 mrad": {"vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad.csv", "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad_hz.csv"}, "CHIRO": {"vertical": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv", "horizontal": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"}}, "multiprocess": "False", "number_cores": 4, "cBLUE_version": "v2.2.3", "sensor_model": "Riegl VQ-880-G (0.7 mrad)", "water_surface_ellipsoid_height": -38.09, "error_type": "1-\u03c3"}
+{
+  "directories": {
+    "tpu": "/Users/forrest/Desktop/OSU_Research/cBLUE/cBLUE.github.io/integration_test/nv5/cBLUE_troubleshoot_data/02_cBLUE_output",
+    "sbet": "/Users/forrest/Desktop/OSU_Research/cBLUE/cBLUE.github.io/integration_test/nv5/cBLUE_troubleshoot_data/01_traj",
+    "las": "/Users/forrest/Desktop/OSU_Research/cBLUE/cBLUE.github.io/integration_test/nv5/cBLUE_troubleshoot_data/00_LAZ/Leica"
+  },
+  "subaqueous_LUTs": {
+    "RIEGL 0.7 mrad": {
+      "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad.csv",
+      "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad_hz.csv"
+    },
+    "RIEGL 1.0 mrad": {
+      "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad.csv",
+      "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad_hz.csv"
+    },
+    "RIEGL 1.5 mrad": {
+      "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad.csv",
+      "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad_hz.csv"
+    },
+    "RIEGL 2.0 mrad": {
+      "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad.csv",
+      "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad_hz.csv"
+    },
+    "CHIRO": {
+      "vertical": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
+      "horizontal": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
+    },
+    "HAWK": {
+      "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad.csv",
+      "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad_hz.csv"
+    }
+  },
+  "multiprocess": "False",
+  "number_cores": 4,
+  "cBLUE_version": "v3.0",
+  "sensor_model": "Leica Chiroptera 4X (HawkEye 4X Shallow)",
+  "water_surface_ellipsoid_height": -38.09,
+  "error_type": "1-σ"
+}
