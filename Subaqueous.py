@@ -59,7 +59,8 @@ class Subaqueous:
             "Riegl VQ-880-G (1.5 mrad)": "RIEGL 1.5 mrad",
             "Riegl VQ-880-G (2.0 mrad)": "RIEGL 2.0 mrad",
             "Leica Chiroptera 4X (HawkEye 4X Shallow)": "CHIRO",
-            "Hawkeye 4X": "HAWK",
+            "Hawkeye 4X 400m AGL": "HAWK400",
+            "Hawkeye 4X 500m AGL": "HAWK500",
         }
 
         self.wind_par = wind_par

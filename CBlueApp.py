@@ -120,30 +120,6 @@ class CBlueApp(tk.Tk):
         filemenu.add_command(label="Exit", command=quit)
         menubar.add_cascade(label="File", menu=filemenu)
 
-        sensor_model_msg = """
-        Currently, this is only a dummy menu option.  The senor model
-        configuration for the Reigl VQ-880-G is hard-coded into cBLUE.
-        Development plans include refactoring the code to read sensor
-        model information from a separate file and extending support
-        to other lidar systems, including Leica Chiroptera 4X.
-        """
-
-        sensor_model_choice = tk.Menu(menubar, tearoff=0)
-
-        sensor_model_choice.add_command(
-            label="Reigl VQ-880-G", command=lambda: self.popupmsg(sensor_model_msg)
-        )
-
-        sensor_model_choice.add_command(
-            label="Leica Chiroptera 4X", command=lambda: self.popupmsg(sensor_model_msg)
-        )
-
-        sensor_model_choice.add_command(
-            label="HawkEye 4X", command=lambda: self.popupmsg(sensor_model_msg)
-        )
-
-        menubar.add_cascade(label="Sensor Model", menu=sensor_model_choice)
-
         about_menu = tk.Menu(menubar, tearoff=0)
         about_menu.add_command(label="Documentation", command=self.show_docs)
         about_menu.add_command(label="About", command=self.show_about)
@@ -442,7 +418,8 @@ class ControllerPanel(ttk.Frame):
             "Riegl VQ-880-G (1.5 mrad)",
             "Riegl VQ-880-G (2.0 mrad)",
             "Leica Chiroptera 4X (HawkEye 4X Shallow)",
-            "HawkEye 4X",
+            "HawkEye 4X 400m AGL",
+            "HawkEye 4X 500m AGL",
         )
 
         ### Set up frame to hold dropdown menu ###
