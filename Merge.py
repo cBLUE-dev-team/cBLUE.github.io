@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -165,4 +165,3 @@ class Merge:
 
 if __name__ == "__main__":
     pass
-# dummy comment

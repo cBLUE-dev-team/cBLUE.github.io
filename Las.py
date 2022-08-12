@@ -1,6 +1,6 @@
 """
 cBLUE (comprehensive Bathymetric Lidar Uncertainty Estimator)
-Copyright (C) 2019 
+Copyright (C) 2019
 Oregon State University (OSU)
 Center for Coastal and Ocean Mapping/Joint Hydrographic Center, University of New Hampshire (CCOM/JHC, UNH)
 NOAA Remote Sensing Division (NOAA RSD)
@@ -29,7 +29,7 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 """
-
+import os
 import pandas as pd
 import logging
 import numpy as np
@@ -38,22 +38,20 @@ import laspy
 
 
 """
-This class provides the functionality to load las files into cBLUE.  One Las object 
-is created for each loaded las file.  
+This class provides the functionality to load las files into cBLUE.  One Las object
+is created for each loaded las file.
 """
 
 
 class Las:
     def __init__(self, las):
         self.las = las
-        self.las_short_name = las.split("\\")[-1]
+        self.las_short_name = os.path.split(las)[-1]
         self.las_base_name = self.las_short_name.replace(".las", "")
-        self.inFile = laspy.file.File(self.las, mode="r")
-        self.points_to_process = self.inFile.points["point"]
-        # self.points_to_process = self.get_bathy_points()
+        self.inFile = laspy.read(self.las)
+        self.points_to_process = self.inFile.points
         self.unq_flight_lines = self.get_flight_line_ids()
-        # self.num_file_points = self.inFile.__len__()
-        self.num_file_points = self.points_to_process.shape[0]
+        self.num_file_points = self.points_to_process.array.shape[0]
 
         """index list that would sort gps_time (to be used to
         later when exporting las data and calculated tpu to a las
@@ -64,7 +62,7 @@ class Las:
     def get_bathy_points(self):
         class_codes = {"BATHYMETRY": 26}
         bathy_inds = self.inFile.raw_classification == class_codes["BATHYMETRY"]
-        return self.inFile.points[bathy_inds]["point"]
+        return self.inFile.points.array[bathy_inds]["point"]
 
     def get_flight_line_ids(self):
         """generates a list of unique flight line ids
@@ -88,23 +86,23 @@ class Las:
         :return: np.array, np.array, np.array, np.array
         """
 
-        scale_x = np.asarray(self.inFile.header.scale[0])
-        scale_y = np.asarray(self.inFile.header.scale[1])
-        scale_z = np.asarray(self.inFile.header.scale[2])
+        scale_x = np.asarray(self.inFile.header.scales[0])
+        scale_y = np.asarray(self.inFile.header.scales[1])
+        scale_z = np.asarray(self.inFile.header.scales[2])
 
-        offset_x = np.asarray(self.inFile.header.offset[0])
-        offset_y = np.asarray(self.inFile.header.offset[1])
-        offset_z = np.asarray(self.inFile.header.offset[2])
+        offset_x = np.asarray(self.inFile.header.offsets[0])
+        offset_y = np.asarray(self.inFile.header.offsets[1])
+        offset_z = np.asarray(self.inFile.header.offsets[2])
 
         t = self.points_to_process["gps_time"]
         X = self.points_to_process["X"]
         Y = self.points_to_process["Y"]
         Z = self.points_to_process["Z"]
 
-        if "raw_classification" in self.points_to_process.dtype.names:
-            c = self.points_to_process["raw_classification"]
-        elif "classification_byte" in self.points_to_process.dtype.names:
-            c = self.points_to_process["classification_byte"]
+        if "classification" in self.points_to_process.array.dtype.names:
+            c = self.points_to_process["classification"]
+        elif "classification_flags" in self.points_to_process.array.dtype.names:
+            c = self.points_to_process["classification_flags"]
         else:
             raise Exception("Unknown las version or missing classification attribute.")
 

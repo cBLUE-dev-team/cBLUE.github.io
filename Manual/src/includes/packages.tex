@@ -1,0 +1,73 @@
+%----------------------------------------------------
+% The following is a list of LaTeX packages imports |
+%------->------>------>------>------>------>---->---|
+%
+
+% The margins at the bottom of the page has been reduced.
+% this allows for a slim footer.
+\usepackage[left=1in,right=1in,top=1in,bottom=0.7in]{geometry}
+% Original size:
+%\usepackage[inner=1.5cm,outer=1.5cm,top=1.5cm,bottom=.5cm,margin=1in]{geometry}
+\usepackage[
+    colorlinks,
+    pagebackref,
+    pdfusetitle,
+    urlcolor=blue,
+    citecolor=blue,
+    linkcolor=blue,    
+    plainpages=false]
+{hyperref}            
+% ftp://ftp.dante.de/tex-archive/fonts/bbding/bbding.pdf
+%https://ctan.math.illinois.edu/fonts/bbding/bbding.pdf
+\usepackage{fancyhdr, lastpage, bbding, pmboxdraw}
+\usepackage{fancyvrb}
+\PassOptionsToPackage{usenames,dvipsnames}{xcolor}
+\usepackage{acronym}
+\usepackage{amsthm}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{sectsty}
+\sectionfont{\LARGE\raggedright}
+\subsectionfont{\Large\raggedright}
+\subsubsectionfont{\large\raggedright}
+% pifont package doc at: https://ctan.math.ca/tex-archive/macros/latex/required/psnfss/psnfss2e.pdf
+% pifont is used to define custom list and style list items using the \ding command. 
+\usepackage{pifont} 
+% bclogo used for making a colored box for notes. 
+% @see: https://ctan.org/pkg/bclogo?lang=en
+\usepackage[tikz]{bclogo} 
+\usepackage{titlesec}  
+\usepackage[open,openlevel=1]{bookmark}
+
+%-- @see http://ctan.sharelatex.com/tex-archive/fonts/fontawesome/doc/fontawesome.pdf
+% Font Awesome  http://ctan.math.washington.edu/tex-archive/fonts/fontawesome5/doc/fontawesome5.pdf
+% https://muug.ca/mirror/ctan/fonts/fontawesome5/doc/fontawesome5.pdf
+\usepackage{fontawesome5}
+\usepackage{fontawesome}
+%---------------------------------
+% ==== Font setup.
+% Load any of the following fonts.
+%---------------------------------
+%\usepackage{lmodern}
+%\usepackage{mathptmx}
+%\usepackage{times}
+%\usepackage[sc]{mathpazo} % Palatino font.
+%\linespread{1.05} % Palatino needs more leading (space between lines)
+\usepackage{tgbonum} % For Bonum/Bookman font.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%---------------------------------
+\usepackage{booktabs} 
+
+\pagestyle{empty}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{blindtext}  
+\usepackage{vhistory} % for making a table for the revision history.
+\usepackage{float}
+\usepackage{amsmath}
+
+%dummy text - delete me later - no problem!
+\usepackage{lipsum}

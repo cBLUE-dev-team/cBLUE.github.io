@@ -28,10 +28,19 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
+Last Edited By:
+Forrest Corcoran (OSU)
+3/28/2022
+
+THINGS TO DO:
+HOW DOES THIS FILE HAVE NO FRIGGIN COMMENTS?!?!?!
 """
 
 # -*- coding: utf-8 -*-
 import logging
+from pprint import pformat
+
+import platform, multiprocessing
 
 import tkinter as tk
 from tkinter import ttk
@@ -44,21 +53,6 @@ import laspy
 import cProfile
 from pathlib import Path
 
-
-now = datetime.datetime.now()
-log_file = "cBLUE_{}{}{}_{}{}{}.log".format(
-    now.year,
-    str(now.month).zfill(2),
-    str(now.day).zfill(2),
-    str(now.hour).zfill(2),
-    str(now.minute).zfill(2),
-    str(now.second).zfill(2),
-)
-
-logging.basicConfig(
-    filename=log_file, format="%(asctime)s:%(message)s", level=logging.DEBUG
-)
-
 from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
 from Merge import Merge
@@ -68,6 +62,11 @@ from Sbet import Sbet
 from Datum import Datum
 from Las import Las
 from Tpu import Tpu
+
+# Customize logging
+import utils
+
+utils.CustomLogger(filename="CBlue.log")
 
 
 LARGE_FONT = ("Verdanna", 12)
@@ -80,7 +79,7 @@ class CBlueApp(tk.Tk):
     """Gui used to determine the total propagated
     uncertainty of Lidar Topobathymetry measurements.
 
-    Created: 2017-12-07
+    Created: 2017-12-0
 
     @original author: Timothy Kammerer
     @modified by: Nick Forfinski-Sarkozi
@@ -121,33 +120,6 @@ class CBlueApp(tk.Tk):
         filemenu.add_command(label="Exit", command=quit)
         menubar.add_cascade(label="File", menu=filemenu)
 
-        sensor_model_msg = """
-        Currently, this is only a dummy menu option.  The senor model
-        configuration for the Reigl VQ-880-G is hard-coded into cBLUE.
-        Development plans include refactoring the code to read sensor
-        model information from a separate file and extending support
-        to other lidar systems, including Leica Chiroptera 4X.
-        """
-
-        sensor_model_choice = tk.Menu(menubar, tearoff=0)
-
-        sensor_model_choice.add_command(
-            label="Reigl VQ-880-G", command=lambda: self.popupmsg(sensor_model_msg)
-        )
-
-        sensor_model_choice.add_command(
-            label="Leica Chiroptera 4X", command=lambda: self.popupmsg(sensor_model_msg)
-        )
-
-        """
-        Removed for Stable Release
-        Will be added back when beam divergence is known
-        """
-        # sensor_model_choice.add_command(label='HawkEye 4X',
-        #                                 command=lambda: self.popupmsg(sensor_model_msg))
-
-        menubar.add_cascade(label="Sensor Model", menu=sensor_model_choice)
-
         about_menu = tk.Menu(menubar, tearoff=0)
         about_menu.add_command(label="Documentation", command=self.show_docs)
         about_menu.add_command(label="About", command=self.show_about)
@@ -172,14 +144,12 @@ class CBlueApp(tk.Tk):
         if os.path.isfile(self.config_file):
             with open(self.config_file) as cf:
                 self.controller_configuration = json.load(cf)
-
-            print(json.dumps(self.controller_configuration, indent=1, sort_keys=True))
         else:
-            logging.info("configuration file doesn't exist")
+            logging.cblue("configuration file doesn't exist")
 
     def save_config(self):
         config = "cblue_configuration.json"
-        logging.info("saving {}...\n{}".format(config, self.controller_configuration))
+
         with open(config, "w") as fp:
             json.dump(self.controller_configuration, fp)
 
@@ -258,6 +228,7 @@ class ControllerPanel(ttk.Frame):
         self.lastFileLoc = os.getcwd()
 
         # TODO:  get from separate text file
+        # WHY IS THIS An ENUMERATED DICT AND NOT JUST AN ARRAY?!?
         self.kd_vals = {
             0: ("Clear", range(6, 11)),
             1: ("Clear-Moderate", range(11, 18)),
@@ -267,6 +238,7 @@ class ControllerPanel(ttk.Frame):
         }
 
         # TODO:  get from separate text file
+        # WHY IS THIS An ENUMERATED DICT AND NOT JUST AN ARRAY?!?
         self.wind_vals = {
             0: ("Calm-light air (0-2 kts)", [1]),
             1: ("Light Breeze (3-6 kts)", [2, 3]),
@@ -304,6 +276,8 @@ class ControllerPanel(ttk.Frame):
         self.build_subaqueous_input()
         self.build_vdatum_input()
         self.build_sensor_input()
+        self.build_error_type_input()
+        self.build_output_csv()
         self.build_process_buttons()
         self.update_button_enable()
 
@@ -347,6 +321,13 @@ class ControllerPanel(ttk.Frame):
         self.tpuOutput.grid(row=3, column=0)
 
     def build_subaqueous_input(self):
+        """
+        This function builds the frame and tab toggle for
+        selecting wind/kd ranges.
+        Inputs: None
+        Returns: Void
+        """
+        ### Frame layout (contains parameter widgets) ###
         subaqueous_frame = tk.Frame(self.controller_panel)
         subaqueous_frame.grid(row=1, sticky=tk.EW)
         subaqueous_frame.columnconfigure(0, weight=1)
@@ -355,31 +336,21 @@ class ControllerPanel(ttk.Frame):
             subaqueous_frame, text="Environmental Parameters", font="Helvetica 10 bold"
         ).grid(row=0, pady=(10, 0), sticky=tk.EW)
 
+        ### Toggle between Wind and Kd panel tabs ###
         subaqueous_method_tabs = ttk.Notebook(subaqueous_frame)
         subaqueous_method_tabs.grid(row=1, column=0)
+
         tab1 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab1, text="Water Surface")
+
         tab2 = ttk.Frame(subaqueous_method_tabs)
         subaqueous_method_tabs.add(tab2, text="Turbidity")
+
         water_surface_subframe = tk.Frame(tab1)
         water_surface_subframe.grid(row=1, column=0)
 
-        self.water_surface_options = [
-            "Direct From Point Cloud",
-            "Model (ECKV spectrum)",
-        ]
-
+        ### Set wind ranges as radio buttons ###
         self.windOptions = [w[0] for w in self.wind_vals.values()]
-
-        self.waterSurfaceRadio = RadioFrame(
-            water_surface_subframe,
-            "Water Surface",
-            self.water_surface_options,
-            1,
-            callback=self.updateRadioEnable,
-            width=self.control_panel_width,
-        )
-        self.waterSurfaceRadio.grid(row=0, column=0, columnspan=1, sticky=tk.EW)
 
         self.windRadio = RadioFrame(
             water_surface_subframe,
@@ -390,12 +361,14 @@ class ControllerPanel(ttk.Frame):
         )
         self.windRadio.grid(row=1, column=0, sticky=tk.E)
 
+        ### Create new frame for Kd range selection ###
         turbidity_subframe = tk.Frame(tab2)
         turbidity_subframe.grid(row=2, column=0, sticky=(tk.N, tk.W, tk.E, tk.S))
         turbidity_subframe.columnconfigure(0, weight=1)
         turbidity_subframe.rowconfigure(0, weight=1)
 
-        self.turbidity_options = [
+        ### Set Kd ranges as radio buttons ###
+        self.turbidityOptions = [
             "{:s} ({:.2f}-{:.2f} m^-1)".format(k[0], k[1][0] / 100.0, k[1][-1] / 100.0)
             for k in self.kd_vals.values()
         ]
@@ -403,7 +376,7 @@ class ControllerPanel(ttk.Frame):
         self.turbidityRadio = RadioFrame(
             turbidity_subframe,
             "Turbidity (kd_490)",
-            self.turbidity_options,
+            self.turbidityOptions,
             0,
             width=self.control_panel_width,
         )
@@ -429,7 +402,7 @@ class ControllerPanel(ttk.Frame):
             datum_frame,
             self.vdatum_region,
             *sorted(self.vdatum_regions.keys()),
-            command=self.update_vdatum_mcu_value
+            command=self.update_vdatum_mcu_value,
         )
         self.vdatum_region_option_menu.config(
             width=self.control_panel_width, anchor="w"
@@ -438,12 +411,19 @@ class ControllerPanel(ttk.Frame):
 
     def build_sensor_input(self):
 
+        ### Names of sensors as displayed in GUI ###
         self.sensor_models = (
-            "Riegl VQ-880-G",
-            "Leica Chiroptera 4X",
-            # "HawkEye 4X" -- removed for stable release
+            "Riegl VQ-880-G (0.7 mrad)",
+            "Riegl VQ-880-G (1.0 mrad)",
+            "Riegl VQ-880-G (1.5 mrad)",
+            "Riegl VQ-880-G (2.0 mrad)",
+            "Leica Chiroptera 4X (HawkEye 4X Shallow)",
+            "HawkEye 4X 400m AGL",
+            "HawkEye 4X 500m AGL",
+            "HawkEye 4X 600m AGL",
         )
 
+        ### Set up frame to hold dropdown menu ###
         sensor_frame = tk.Frame(self.controller_panel)
         sensor_frame.columnconfigure(0, weight=1)
         sensor_frame.grid(row=4, sticky=tk.EW)
@@ -451,24 +431,97 @@ class ControllerPanel(ttk.Frame):
             row=0, columnspan=1, pady=(10, 0), sticky=tk.EW
         )
 
+        ### Holds the names of the selected sensor ###
         self.selected_sensor = tk.StringVar(self)
 
+        ### Add sensor dropdown menu to GUI ###
         self.sensor_option_menu = tk.OptionMenu(
             sensor_frame,
             self.selected_sensor,
             *self.sensor_models,
-            command=self.update_selected_sensor
+            command=self.update_selected_sensor,
         )
+
         self.sensor_option_menu.config(width=self.control_panel_width, anchor="w")
         self.sensor_option_menu.grid(sticky=tk.EW)
 
     def update_selected_sensor(self, sensor):
+        """
+        Callback function for the sensor option menu.
+        Updates the controller when a new sensor is selected.
+        """
         self.selected_sensor = sensor
-        logging.info("The selected sensor is {}.".format(sensor))
+        self.controller.controller_configuration["sensor_model"] = sensor
+
+    def build_error_type_input(self):
+
+        ### 95% conf or 1 sigma ###
+        self.error_types = ("1-\u03c3", "95% confidence")
+
+        ### Set up frame to hold dropdown menu ###
+        error_frame = tk.Frame(self.controller_panel)
+        error_frame.columnconfigure(0, weight=1)
+        error_frame.grid(row=5, sticky=tk.EW)
+        tk.Label(error_frame, text="TPU Metric", font="Helvetica 10 bold").grid(
+            row=0, columnspan=1, pady=(10, 0), sticky=tk.EW
+        )
+
+        ### Holds the names of the selected sensor ###
+        self.error_type = tk.StringVar(self)
+
+        ### Add sensor dropdown menu to GUI ###
+        self.error_option_menu = tk.OptionMenu(
+            error_frame,
+            self.error_type,
+            *self.error_types,
+            command=self.update_error_type,
+        )
+
+        self.error_option_menu.config(width=self.control_panel_width, anchor="w")
+        self.error_option_menu.grid(sticky=tk.EW)
+
+    def update_error_type(self, error_type):
+        """
+        Callback function for the sensor option menu.
+        Updates the controller when a new sensor is selected.
+        """
+        self.selected_error = error_type
+        self.controller.controller_configuration["error_type"] = error_type
+
+    def build_output_csv(self):
+        """
+        Callback function to output points as csv_option
+        """
+
+        ### Set up frame to hold radio buttons ###
+        csv_frame = tk.Frame(self.controller_panel)
+        csv_frame.columnconfigure(0, weight=1)
+        csv_frame.columnconfigure(1, weight=0)
+        csv_frame.grid(row=6, sticky=tk.EW)
+        tk.Label(csv_frame, text="Output Options", font="Helvetica 10 bold").grid(
+            row=0, columnspan=2, pady=(10, 0), sticky=tk.EW
+        )
+
+        self.csv_option = tk.BooleanVar()
+
+        self.extrabyte_button = ttk.Radiobutton(
+            csv_frame, text="ExtraBytes", value=False, variable=self.csv_option
+        )
+
+        self.csv_button = ttk.Radiobutton(
+            csv_frame, text="ExtraBytes + CSV", value=True, variable=self.csv_option
+        )
+
+        self.extrabyte_button.grid(row=1, column=0, sticky=tk.W, padx=30)
+
+        self.csv_button.grid(row=2, column=0, sticky=tk.W, padx=30)
+
+    def update_output_csv(self, csv_option):
+        pass
 
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
-        process_frame.grid(row=5, sticky=tk.NSEW)
+        process_frame.grid(row=7, sticky=tk.NSEW)
         process_frame.columnconfigure(0, weight=0)
 
         label = tk.Label(process_frame, text="Process Buttons", font=NORM_FONT_BOLD)
@@ -497,9 +550,7 @@ class ControllerPanel(ttk.Frame):
         self.tpuProcess.grid(row=2, column=0, padx=(3, 0), sticky=tk.EW)
 
     def update_vdatum_mcu_value(self, region):
-        logging.info(self.vdatum_region.get())
         self.mcu = self.vdatum_regions[region]
-        logging.info("The MCU for {} is {} cm.".format(region, self.mcu))
 
     def update_button_enable(self):
         if self.sbetInput.directoryName != "":
@@ -534,6 +585,11 @@ class ControllerPanel(ttk.Frame):
             self.tpuProcess.config(state=tk.ACTIVE)
 
     def sbet_process_callback(self):
+        print(
+            json.dumps(
+                self.controller.controller_configuration, indent=1, sort_keys=True
+            )
+        )
         self.sbet = Sbet(self.sbetInput.directoryName)
         self.sbet.set_data()
         self.is_sbet_loaded = True
@@ -581,25 +637,17 @@ class ControllerPanel(ttk.Frame):
         wseh.mainloop()
 
     def begin_tpu_calc(self):
-        surface_ind = self.waterSurfaceRadio.selection.get()
-        surface_selection = self.water_surface_options[surface_ind]
 
         wind_ind = self.windRadio.selection.get()
         wind_selection = self.windOptions[wind_ind]
 
         kd_ind = self.turbidityRadio.selection.get()
-        kd_selection = self.turbidity_options[kd_ind]
+        kd_selection = self.turbidityOptions[kd_ind]
 
         # CREATE OBSERVATION EQUATIONS
         sensor_model = SensorModel(
             self.controller.controller_configuration["sensor_model"]
         )
-
-        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
-        jacobian = Jacobian(sensor_model)
-
-        # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
-        merge = Merge()
 
         multiprocess = self.controller.controller_configuration["multiprocess"]
 
@@ -610,8 +658,6 @@ class ControllerPanel(ttk.Frame):
             cpu_process_info = ("singleprocess",)
 
         tpu = Tpu(
-            surface_selection,
-            surface_ind,
             wind_selection,
             self.wind_vals[wind_ind][1],
             kd_selection,
@@ -625,15 +671,23 @@ class ControllerPanel(ttk.Frame):
             self.selected_sensor,
             self.controller.controller_configuration["subaqueous_LUTs"],
             self.controller.controller_configuration["water_surface_ellipsoid_height"],
+            self.controller.controller_configuration["error_type"],
+            self.csv_option.get(),
         )
 
         las_files = [
             os.path.join(self.lasInput.directoryName, l)
             for l in os.listdir(self.lasInput.directoryName)
-            if l.endswith(".las")
+            if l.endswith(".las") | l.endswith(".laz")
         ]
 
         num_las = len(las_files)
+
+        # GENERATE JACOBIAN FOR SENSOR MODEL OBSVERVATION EQUATIONS
+        jacobian = Jacobian(sensor_model)
+
+        # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
+        merge = Merge()
 
         def signal_completion():
             self.tpu_btn_text.set("TPU Calculated")
@@ -648,32 +702,38 @@ class ControllerPanel(ttk.Frame):
             """
 
             for las_file in las_files:
-                logging.debug(
-                    "({}) generating SBET tile...".format(las_file.split("\\")[-1])
+                logging.cblue(
+                    "({}) generating SBET tile...".format(os.path.split(las_file)[-1])
                 )
 
-                inFile = laspy.file.File(las_file, mode="r")
-                west = inFile.reader.get_header_property("x_min")
-                east = inFile.reader.get_header_property("x_max")
-                north = inFile.reader.get_header_property("y_max")
-                south = inFile.reader.get_header_property("y_min")
+                inFile = laspy.read(las_file)
+                west = inFile.header.x_min
+                east = inFile.header.x_max
+                north = inFile.header.y_max
+                south = inFile.header.y_min
 
                 yield self.sbet.get_tile_data(
                     north, south, east, west
                 ), las_file, jacobian, merge
 
-        logging.info(
+        logging.cblue(
             "processing {} las file(s) ({})...".format(num_las, cpu_process_info[0])
         )
 
-        if multiprocess:
+        logging.cblue(f"multiprocessing = {multiprocess} ({type(multiprocess)})")
+
+        if multiprocess == "True":
             p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
             signal_completion()
             p.close()
             p.join()
-        else:
+        elif multiprocess == "False":
             tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
             signal_completion()
+        else:
+            logging.cblue(
+                f"multiprocessing set to {multiprocess} (Must be True or False)"
+            )
 
     def updateRadioEnable(self):
         """Updates the state of the windRadio, depending on waterSurfaceRadio."""
@@ -684,7 +744,7 @@ class ControllerPanel(ttk.Frame):
 
 
 if __name__ == "__main__":
+
     app = CBlueApp()
-    app.geometry("515x615")
+    app.geometry("350x650")
     app.mainloop()
-# dummy comment
