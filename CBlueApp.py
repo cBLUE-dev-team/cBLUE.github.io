@@ -38,29 +38,31 @@ HOW DOES THIS FILE HAVE NO FRIGGIN COMMENTS?!?!?!
 
 # -*- coding: utf-8 -*-
 import logging
-from pprint import pformat
 
-import platform, multiprocessing
+# from pprint import pformat
+
+# import platform, multiprocessing
 
 import tkinter as tk
 from tkinter import ttk
 import os
 import time
-import datetime
+
+# import datetime
 import json
 import webbrowser
 import laspy
-import cProfile
-from pathlib import Path
+
+# import cProfile
+# from pathlib import Path
 
 from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
 from Merge import Merge
-from Las import Las
-
 from Sbet import Sbet
 from Datum import Datum
-from Las import Las
+
+# from Las import Las
 from Tpu import Tpu
 
 # Customize logging
@@ -86,12 +88,14 @@ class CBlueApp(tk.Tk):
     """
 
     def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+        super().__init__(self, *args, **kwargs)
 
+        # print console splash message
         with open("cBLUE_ASCII_splash.txt", "r") as f:
             message = f.readlines()
             print("".join(message))
 
+        # define configuration file
         self.config_file = "cblue_configuration.json"
 
         print(
@@ -148,9 +152,7 @@ class CBlueApp(tk.Tk):
             logging.cblue("configuration file doesn't exist")
 
     def save_config(self):
-        config = "cblue_configuration.json"
-
-        with open(config, "w") as fp:
+        with open(self.config, "w") as fp:
             json.dump(self.controller_configuration, fp)
 
     def show_docs(self):
