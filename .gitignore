@@ -145,3 +145,4 @@ Thumbs.db
 *.pyproj
 *.sln
 *.log
+*.vs

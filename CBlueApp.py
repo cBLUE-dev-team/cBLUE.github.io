@@ -56,17 +56,18 @@ import laspy
 # import cProfile
 # from pathlib import Path
 
-from Subaerial import SensorModel, Jacobian
-from GuiSupport import DirectorySelectButton, RadioFrame
-from Merge import Merge
-from Sbet import Sbet
-from Datum import Datum
+from code.Subaerial import SensorModel, Jacobian
+from code.GuiSupport import DirectorySelectButton, RadioFrame
+
+# from code.Merge import Merge
+from code.Sbet import Sbet
+from code.Datum import Datum
 
 # from Las import Las
-from Tpu import Tpu
+from code.Tpu import Tpu
 
 # Customize logging
-import utils
+import code.utils as utils
 
 utils.CustomLogger(filename="CBlue.log")
 
@@ -88,10 +89,10 @@ class CBlueApp(tk.Tk):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+        tk.Tk.__init__(self, *args, **kwargs)
 
         # print console splash message
-        with open("cBLUE_ASCII_splash.txt", "r") as f:
+        with open(os.path.join("code", "cBLUE_ASCII_splash.txt"), "r") as f:
             message = f.readlines()
             print("".join(message))
 
@@ -217,7 +218,8 @@ class CBlueApp(tk.Tk):
 class Splash(tk.Toplevel):
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
-        splash_img = tk.PhotoImage(file="cBLUE_splash.gif", master=self)
+        impath = os.path.join("images", "cBLUE_splash.gif")
+        splash_img = tk.PhotoImage(file=impath, master=self)
         label = tk.Label(self, image=splash_img)
         label.pack()
         self.update()
