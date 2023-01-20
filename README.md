@@ -4,7 +4,7 @@
 
 ### Documentation
 
-To view cBLUE documentation, including installation instructions, click https://noaa-rsd.github.io/cBLUE.github.io/.
+To view cBLUE documentation, including installation instructions, click https://htmlpreview.github.io/?https://github.com/parrishOSU/cBLUE.github.io/blob/master/docs/CBlueApp.html 
 
 ### Note for Contributors:
 
