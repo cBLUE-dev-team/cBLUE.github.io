@@ -77,9 +77,7 @@ class Tpu:
 
     def __init__(
         self,
-        wind_selection,
         wind_val,
-        kd_selection,
         kd_val,
         vdatum_region,
         vdatum_region_mcu,
@@ -95,13 +93,7 @@ class Tpu:
     ):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
-        self.wind_selection = wind_selection
         self.wind_val = wind_val
-
-        logging.tpu(f"self.wind_selection (line 100) set to: {wind_selection}")
-        logging.tpu(f"self.wind_val (line 101) set to: {wind_val}")
-
-        self.kd_selection = kd_selection
         self.kd_val = kd_val
         self.vdatum_region = vdatum_region
         self.vdatum_region_mcu = vdatum_region_mcu
@@ -440,8 +432,6 @@ class Tpu:
         self.metadata.update(
             {
                 "subaqueous lookup params": self.subaqu_lookup_params,
-                "wind": self.wind_selection,
-                "kd": self.kd_selection,
                 "VDatum region": self.vdatum_region,
                 "VDatum region MCU": self.vdatum_region_mcu,
                 "flight line stats (min max mean stddev)": self.flight_line_stats,

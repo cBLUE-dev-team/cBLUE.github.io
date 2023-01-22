@@ -35,9 +35,6 @@ Forrest Corcoran
 3/30/2022
 """
 
-# -*- coding: utf-8 -*-
-# Oh, good. Thanks for the character encoding. That's what I really need to know...
-
 import logging
 import pandas as pd
 import numpy as np
@@ -53,6 +50,7 @@ class Subaqueous:
 
     def __init__(self, wind_par, kd_par, depth, sensor, subaqueous_luts):
 
+        logging.subaqueous(f"sensor - {sensor} of type {type(sensor)}")
         sensor_aliases = {
             "Riegl VQ-880-G (0.7 mrad)": "RIEGL 0.7 mrad",
             "Riegl VQ-880-G (1.0 mrad)": "RIEGL 1.0 mrad",
@@ -64,8 +62,8 @@ class Subaqueous:
             "HawkEye 4X 600m AGL": "HAWK600",
         }
 
-        self.wind_par = wind_par
-        self.kd_par = kd_par
+        self.wind_par = wind_par[1]
+        self.kd_par = kd_par[1]
         self.depth = depth
         self.sensor = sensor_aliases[sensor]
         self.vert_lut = subaqueous_luts[self.sensor]["vertical"]

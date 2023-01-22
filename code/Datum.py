@@ -38,7 +38,7 @@ class Datum:
 
     def get_vdatum_region_mcus(self):
         vdatum_regions_MCU_file = os.path.join(
-            "code", "lookup_tables", "V_Datum_MCU_Values.txt"
+            "lookup_tables", "V_Datum_MCU_Values.txt"
         )
         with open(vdatum_regions_MCU_file, "r") as vdatum_regions_file_obj:
             vdatum_regions = vdatum_regions_file_obj.readlines()
