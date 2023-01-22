@@ -70,7 +70,7 @@ class CBlueApp(tk.Tk):
             print("".join(message))
 
         # define configuration file
-        self.config_file = "cblue_configuration.json"
+        self.config_file = os.path.join("configs", "cblue_configuration.json")
 
         print(
             "Be sure to verify the settings in {}\n"
