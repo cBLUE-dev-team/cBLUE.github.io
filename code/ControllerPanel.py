@@ -24,6 +24,9 @@ class ControllerPanel(ttk.Frame):
         self.parent = parent
         self.controller = controller
 
+        # I don't like this line of code!
+        self.lastFileLoc = os.getcwd()
+
         ### Kd Labels and Indices ###
         self.kd_vals = [
             ("Clear", range(6, 11)),
@@ -262,19 +265,19 @@ class ControllerPanel(ttk.Frame):
             error_frame,
             self.error_type,
             *self.error_types,
-            command=self.update_error_type,
+            command=None,  # self.update_error_type,
         )
 
         self.error_option_menu.config(width=self.control_panel_width, anchor="w")
         self.error_option_menu.grid(sticky=tk.EW)
 
-    def update_error_type(self, error_type):
-        """
-        Callback function for the sensor option menu.
-        Updates the controller when a new sensor is selected.
-        """
-        self.selected_error = error_type
-        self.controller.controller_config["error_type"] = error_type
+    # def update_error_type(self, error_type):
+    #     """
+    #     Callback function for the sensor option menu.
+    #     Updates the controller when a new sensor is selected.
+    #     """
+    #     self.selected_error = error_type
+    #     self.controller.controller_config["error_type"] = error_type
 
     def build_output_csv(self):
         """
@@ -290,22 +293,18 @@ class ControllerPanel(ttk.Frame):
             row=0, columnspan=2, pady=(10, 0), sticky=tk.EW
         )
 
+        # Link buttons to bool variable to store csv option
         self.csv_option = tk.BooleanVar()
-
         self.extrabyte_button = ttk.Radiobutton(
             csv_frame, text="ExtraBytes", value=False, variable=self.csv_option
         )
-
         self.csv_button = ttk.Radiobutton(
             csv_frame, text="ExtraBytes + CSV", value=True, variable=self.csv_option
         )
 
+        # Place buttons on grid
         self.extrabyte_button.grid(row=1, column=0, sticky=tk.W, padx=30)
-
         self.csv_button.grid(row=2, column=0, sticky=tk.W, padx=30)
-
-    def update_output_csv(self, csv_option):
-        pass
 
     def build_process_buttons(self):
         process_frame = tk.Frame(self.controller_panel)
@@ -447,7 +446,8 @@ class ControllerPanel(ttk.Frame):
             "water_surface_ellipsoid_height": self.controller.controller_config[
                 "water_surface_ellipsoid_height"
             ],
-            "error_type": self.controller.controller_config["error_type"],
+            # "error_type": self.controller.controller_config["error_type"],
+            "error_type": self.error_type.get(),
             "csv_option": self.csv_option.get(),
         }
 

@@ -31,9 +31,10 @@ christopher.parrish@oregonstate.edu
 """
 
 import numpy as np
-import numexpr as ne
 from math import radians
 import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Merge:
@@ -98,6 +99,7 @@ class Merge:
 
         # sort xyzt array based on t_idx column
         idx = fl_t_argsort.argsort()
+
         fl_las_data = fl_unsorted_las_xyzt[idx]
         fl_las_idx = fl_las_idx[idx]
 
@@ -105,13 +107,13 @@ class Merge:
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
 
         # don't use las points outside range of sbet points
-        mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
+        mask = (0 < idx) & (idx < num_sbet_pts)
 
         t_sbet_masked = sbet_data[:, 0][idx[mask]]
         t_las_masked = fl_las_data[:, 3][mask]
 
-        dt = ne.evaluate("t_sbet_masked - t_las_masked")
-        max_dt = ne.evaluate("max(dt)")  # may be empty
+        dt = t_sbet_masked - t_las_masked
+        max_dt = np.max(dt)  # may be empty
 
         if max_dt > self.max_allowable_dt or max_dt.size == 0:
             data = False
