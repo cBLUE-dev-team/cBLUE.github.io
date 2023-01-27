@@ -35,6 +35,7 @@ import time
 import pandas as pd
 from datetime import datetime
 import progressbar
+from .sbet_utils import get_date, sow_to_adj, read_sbet
 import logging
 
 logger = logging.getLogger(__name__)
@@ -44,12 +45,6 @@ This class provides the functionality to load trajectory data into
 cBLUE.  Currently, the sbet files are expected to be ASCII files
 that are exported from Applanix's PosPac software.
 """
-
-# Static Globals
-SECS_PER_GPS_WK = 7 * 24 * 60 * 60  # 604800 sec
-SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
-GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
-GPS_ADJUSTED_OFFSET = 1e9
 
 
 class Sbet:
@@ -74,49 +69,6 @@ class Sbet:
                 if f.endswith(".txt")
             ]
         )
-
-    @staticmethod
-    def get_sbet_date(sbet):
-        """parses year, month, and day from ASCII sbet filename
-
-        :param str sbet: ASCII sbet filename
-        :return: List[int]
-        """
-        # normalize path and split on dir seperator
-        sbet_path = os.path.normpath(sbet)
-        sbet_parts = os.path.split(sbet_path)
-
-        sbet_name = sbet_parts[-1]
-        logger.sbet(f"SBET Name : {sbet_name}")
-
-        # Sbet date embedded in file name by convention
-        year = int(sbet_name[0:4])
-        month = int(sbet_name[4:6])
-        day = int(sbet_name[6:8])
-        return (year, month, day)
-
-    def gps_sow_to_gps_adj(self, gps_date, gps_wk_sec):
-        """converts GPS seconds-of-week timestamp to GPS adjusted standard time
-
-        In the case that the timestamps in the sbet files are GPS week seconds,
-        this method is called to convert the timestamps to GPS adjusted standard
-        time, which is what the las file timestamps are.  The timestamps in the
-        sbet and las files need to be the same format, because the merging process
-        merges the data in the sbet and las files based on timestamps.
-
-        :param ? gps_date: (year, month, day)
-        :param ? gps_wk_sec: GPS seconds-of-week timestamp
-        :return: float
-        """
-
-        logger.sbet("converting GPS week seconds to GPS adjusted standard time..."),
-
-        dt = datetime(*gps_date) - GPS_EPOCH
-        gps_wk = int((dt.days * SECS_PER_DAY + dt.seconds) / SECS_PER_GPS_WK)
-        gps_time = gps_wk * SECS_PER_GPS_WK + gps_wk_sec
-        gps_time_adj = gps_time - GPS_ADJUSTED_OFFSET
-
-        return gps_time_adj
 
     def build_sbets_data(self):
         """builds 1 pandas dataframe from all ASCII sbet files
@@ -146,55 +98,17 @@ class Sbet:
         =====   =============================================================
         """
 
-        # Define sbet column headers
-        header_sbet = [
-            "time",
-            "lon",
-            "lat",
-            "X",
-            "Y",
-            "Z",
-            "roll",
-            "pitch",
-            "heading",
-            "stdX",
-            "stdY",
-            "stdZ",
-            "stdroll",
-            "stdpitch",
-            "stdheading",
-        ]
-
         print(r"Loading trajectory files...")
         logger.sbet(f"loading {len(self.sbet_files)} trajectory files...")
 
-        # Set up dataframe to hold all trajectories from sbet files
-        sbets_df = pd.DataFrame()
-        for sbet in progressbar.progressbar(
-            sorted(self.sbet_files), redirect_stdout=True
-        ):
-            logger.sbet("-" * 50)
-            logger.sbet(f"{os.path.split(sbet)[-1]}...")
-
-            # Load sbet trajectories
-            sbet_df = pd.read_csv(
-                sbet,
-                delim_whitespace=True,
-                header=None,
-                names=header_sbet,
-            )
-
-            logger.sbet("({} trajectory points)".format(sbet_df.shape[0]))
-            sbet_date = self.get_sbet_date(sbet)
-
-            # Check GPS time format for week seconds
-            logger.sbet("checking if timestamps are GPS week seconds...")
-            if sbet_df["time"][0] <= SECS_PER_GPS_WK:
-                # Reset time to adjusted standard time
-                sbet_df["time"] = self.gps_sow_to_gps_adj(sbet_date, sbet_df["time"])
-
-            # Append the sbet to the full trajectory dataframe
-            sbets_df = sbets_df.append(sbet_df, ignore_index=True)
+        sbets_df = pd.concat(
+            [
+                read_sbet(fname)
+                for fname in progressbar.progressbar(
+                    sorted(self.sbet_files), redirect_stdout=True
+                )
+            ]
+        )
 
         sbets_data = sbets_df.sort_values(["time"], ascending=True)
 
