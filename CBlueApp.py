@@ -85,7 +85,7 @@ class CBlueApp(tk.Tk):
         splash = Splash(self)
 
         tk.Tk.wm_title(self, "cBLUE")
-        tk.Tk.iconbitmap(self, "cBLUE_icon.ico")
+        tk.Tk.iconbitmap(self, os.path.join("images", "cBLUE_icon.ico"))
 
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
