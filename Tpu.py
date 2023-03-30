@@ -210,7 +210,7 @@ class Tpu:
 
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
 
-                    depth = merged_data[4] - self.water_surface_ellipsoid_height
+                    depth = self.water_surface_ellipsoid_height - merged_data[4]
 
                     logger.tpu(
                         "({}) calculating subaqueous thu/tvu...".format(
