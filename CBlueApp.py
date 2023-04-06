@@ -29,43 +29,35 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Forrest Corcoran (OSU)
-3/28/2022
+Keana Kief (OSU)
+April 4th, 2023
 
 THINGS TO DO:
-HOW DOES THIS FILE HAVE NO FRIGGIN COMMENTS?!?!?!
+Add comments
 """
 
 # -*- coding: utf-8 -*-
 import logging
-from pprint import pformat
-
-import platform, multiprocessing
+# Customize logging
+import utils
 
 import tkinter as tk
 from tkinter import ttk
 import os
 import time
-import datetime
 import json
 import webbrowser
 import laspy
-import cProfile
-from pathlib import Path
 
 from Subaerial import SensorModel, Jacobian
 from GuiSupport import DirectorySelectButton, RadioFrame
 from Merge import Merge
-from Las import Las
 
 from Sbet import Sbet
 from Datum import Datum
-from Las import Las
 from Tpu import Tpu
 
-# Customize logging
-import utils
-
+#Create a logging file named CBlue.log stored in the current working directory
 utils.CustomLogger(filename="CBlue.log")
 
 
