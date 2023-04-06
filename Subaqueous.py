@@ -148,14 +148,9 @@ class Subaqueous:
         #  and add it to the indices array. 
         indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
 
-        logger.subaqueous(f"indices {indices}")
-
         # read tables, select rows, take column-wise mean
         fit_tvu = pd.read_csv(self.vert_lut, names=["a", "b"]).iloc[indices]
         fit_thu = pd.read_csv(self.horz_lut, names=["a", "b"]).iloc[indices]
-
-        logger.subaqueous(f"tvu {fit_tvu}")
-        logger.subaqueous(f"thu {fit_thu}")
 
         # metadata in the header - need to drop last column (all nans)
         return fit_tvu, fit_thu
