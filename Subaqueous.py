@@ -148,11 +148,11 @@ class Subaqueous:
         #  and add it to the indices array. 
         indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
 
-        # read tables, select rows, take column-wise mean
+        # Read tables, select rows
         fit_tvu = pd.read_csv(self.vert_lut, names=["a", "b"]).iloc[indices]
         fit_thu = pd.read_csv(self.horz_lut, names=["a", "b"]).iloc[indices]
 
-        # metadata in the header - need to drop last column (all nans)
+        # Return TVU and THU observation equation coefficients DataFrames. 
         return fit_tvu, fit_thu
 
     def get_subaqueous_meta_data(self):
