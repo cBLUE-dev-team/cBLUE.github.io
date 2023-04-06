@@ -115,7 +115,7 @@ class Subaqueous:
 
     def model_process(self):
         """Retrieves TVU and THU observation equation coefficients based on the linear regression of precalculated uncertainties
-            from Monte Carlo simulations for all given combinations of wind and kd given from the vertical and horizontal lookup
+            from Monte Carlo simulations for all given permutations of wind and kd from the vertical and horizontal lookup
             tables for the sensor used. 
 
         :return: TVU and THU observation equation coefficients
@@ -139,12 +139,12 @@ class Subaqueous:
         #               16-20 kts == [8, 9, 10]
 
         # self.kd_par and self.wind_par are used to get the right indices for the lookup table.
-        # The lookup table rows are ordered by wind speed (low to high) and then turbidity (low to high).
+        # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
 
-        # ex: row 0 represents TVU and THU observation equation coefficients for wind speed 1 and kd 6, 
-        #       row 278 represents wind speed 8 and kd 36, etc.  
+        # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
+        #       row 1 represents wind speed 1 and kd 7, [...], row 278 represents wind speed 8 and kd 36, etc.  
 
-        # For every combination of values from the wind_par and kd_par arrays, get an index
+        # For every permutation of values from the wind_par and kd_par arrays, get an index
         #  and add it to the indices array. 
         indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
 
