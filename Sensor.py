@@ -50,6 +50,7 @@ logger = logging.getLogger(__name__)
 """
 
 #TODO: Add PILLS TPU Model
+#TODO: Add sensor scan angle and range uncertainties
 
 class Sensor: 
 
@@ -209,40 +210,3 @@ class Sensor:
         self.vert_lut = "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad.csv"
         #The horizontal Look Up Table used for modeling
         self.horz_lut = "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad_hz.csv"
-
-
-
-#Lookup table file paths
-"""
-RIEGL 0.7 mrad:
-    "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad.csv"
-    "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad_hz.csv"
-
-RIEGL 1.0 mrad:
-    "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad.csv"
-    "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad_hz.csv"
-
-RIEGL 1.5 mrad:
-    "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad.csv"
-    "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad_hz.csv"
-    
-RIEGL 2.0 mrad:
-    "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad.csv"
-    "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad_hz.csv"
-    
-CHIRO:
-    "vertical": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv"
-    "horizontal": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
-
-HAWK400:
-    "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad.csv"
-    "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad_hz.csv"
-
-HAWK500:
-    "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad.csv"
-    "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad_hz.csv"
-
-HAWK600:
-    "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad.csv"
-    "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad_hz.csv"
-"""
