@@ -143,7 +143,7 @@ class CBlueApp(tk.Tk):
         config = "cblue_configuration.json"
 
         with open(config, "w") as fp:
-            json.dump(self.controller_configuration, fp)
+            json.dump(self.controller_configuration, fp, indent=4)
 
     def show_docs(self):
         webbrowser.open(r"file://" + os.path.realpath("docs/html/index.html"), new=True)
