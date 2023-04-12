@@ -56,6 +56,7 @@ from Merge import Merge
 from Sbet import Sbet
 from Datum import Datum
 from Tpu import Tpu
+from Sensor import Sensor
 
 #Create a logging file named CBlue.log stored in the current working directory
 utils.CustomLogger(filename="CBlue.log")
@@ -641,6 +642,9 @@ class ControllerPanel(ttk.Frame):
         sensor_model = SensorModel(
             self.controller.controller_configuration["sensor_model"]
         )
+
+        #Create a sensor object initialized to the user's selected sensor
+        sensor_object = Sensor(self.selected_sensor)
 
         multiprocess = self.controller.controller_configuration["multiprocess"]
 
