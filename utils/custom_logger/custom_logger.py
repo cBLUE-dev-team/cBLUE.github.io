@@ -44,6 +44,7 @@ class CustomLogger:
         "Merge": 27,
         "Datum": 28,
         "LasGrid": 29,
+        "Sensor": 31
     }
 
     def __init__(self, filename=None):
