@@ -118,7 +118,7 @@ class Subaqueous:
             from Monte Carlo simulations for all given permutations of wind and kd from the vertical and horizontal lookup
             tables for the sensor used. 
 
-        :return: TVU and THU observation equation coefficients
+        :return: (fit_tvu, fit_thu) TVU and THU observation equation coefficients
         :rtype: (DataFrame, DataFrame)
         """
 
