@@ -207,21 +207,14 @@ class Tpu:
                             las.las_short_name
                         )
                     )
-                    #New Subaqueous call with sensor_object
+
+                    #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
                         self.wind_val,
                         self.kd_val,
                         depth,
                         self.sensor_object
                     )
-                    #Previous Subaqueous call
-                    # subaqu_obj = Subaqueous(
-                    #     self.wind_val,
-                    #     self.kd_val,
-                    #     depth,
-                    #     self.selected_sensor,
-                    #     self.subaqueous_luts,
-                    # )
 
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
 

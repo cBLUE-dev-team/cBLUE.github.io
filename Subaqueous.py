@@ -28,15 +28,10 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
-WHY WERE THERE 0 COMMENTS IN THIS WHOLE FILE!?!?! (AAAAARGGGH!!!)
-
 Last Edited:
-Keana Kief
-April 5th, 2023
+Keana Kief (OSU)
+April 12th, 2023
 """
-
-# -*- coding: utf-8 -*-
-# Oh, good. Thanks for the character encoding. That's what I really need to know...
 
 import logging
 import pandas as pd
@@ -51,17 +46,6 @@ class Subaqueous:
 
     def __init__(self, wind_par, kd_par, depth, sensor_object):
 
-        # sensor_aliases = {
-        #     "Riegl VQ-880-G (0.7 mrad)": "RIEGL 0.7 mrad",
-        #     "Riegl VQ-880-G (1.0 mrad)": "RIEGL 1.0 mrad",
-        #     "Riegl VQ-880-G (1.5 mrad)": "RIEGL 1.5 mrad",
-        #     "Riegl VQ-880-G (2.0 mrad)": "RIEGL 2.0 mrad",
-        #     "Leica Chiroptera 4X (HawkEye 4X Shallow)": "CHIRO",
-        #     "HawkEye 4X 400m AGL": "HAWK400",
-        #     "HawkEye 4X 500m AGL": "HAWK500",
-        #     "HawkEye 4X 600m AGL": "HAWK600",
-        # }
-
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
@@ -69,8 +53,8 @@ class Subaqueous:
 
         logger.subaqueous(f"kd_par {self.kd_par}")
         logger.subaqueous(f"wind_par {self.wind_par}")
-        logger.subaqueous(self.sensor_object.vert_lut)
-        logger.subaqueous(self.sensor_object.horz_lut)
+        logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
+        logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
@@ -149,20 +133,3 @@ class Subaqueous:
 
         # Return TVU and THU observation equation coefficients DataFrames. 
         return fit_tvu, fit_thu
-
-#     def get_subaqueous_meta_data(self):
-#         """I haven't the patience to figure out why we need the MC ray tracing
-#         metadata or if it's ever even used.
-#         """
-#         subaqueous_f = open(self.curr_lut, "r")
-#         subaqueous_metadata = subaqueous_f.readline().split(",")
-#         subaqueous_f.close()
-#         subaqueous_metadata = {
-#             k: v.strip() for (k, v) in [n.split(":") for n in subaqueous_metadata]
-#         }
-#         return subaqueous_metadata
-
-
-# # Why? When are you gonna use this by itself? This will never me a __main__
-# if __name__ == "__main__":
-#     pass
