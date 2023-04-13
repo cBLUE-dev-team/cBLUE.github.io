@@ -654,6 +654,14 @@ class ControllerPanel(ttk.Frame):
         else:
             cpu_process_info = ("singleprocess",)
 
+        #TODO: Pass sensor_object into Tpu instead of self.controller.controller_configuration["sensor_model"],
+        #       self.selected_sensor, and self.controller.controller_configuration["subaqueous_LUTs"].
+        #TODO: Create GUI object to hold wind_selection, self.wind_vals[wind_ind][1], kd_selection, self.kd_vals[kd_ind][1],
+        #           self.vdatum_region.get(), self.mcu, self.tpuOutput.directoryName, self.controller.controller_configuration["cBLUE_version"],
+        #           cpu_process_info, self.selected_sensor, self.controller.controller_configuration["water_surface_ellipsoid_height"],
+        #           self.controller.controller_configuration["error_type"], and self.csv_option.get(). 
+
+        #New tpu call with sensor_object
         tpu = Tpu(
             wind_selection,
             self.wind_vals[wind_ind][1],
@@ -663,14 +671,31 @@ class ControllerPanel(ttk.Frame):
             self.mcu,
             self.tpuOutput.directoryName,
             self.controller.controller_configuration["cBLUE_version"],
-            self.controller.controller_configuration["sensor_model"],
             cpu_process_info,
-            self.selected_sensor,
-            self.controller.controller_configuration["subaqueous_LUTs"],
             self.controller.controller_configuration["water_surface_ellipsoid_height"],
             self.controller.controller_configuration["error_type"],
             self.csv_option.get(),
+            sensor_object
         )
+
+        #Previous tpu call
+        # tpu = Tpu(
+        #     wind_selection,
+        #     self.wind_vals[wind_ind][1],
+        #     kd_selection,
+        #     self.kd_vals[kd_ind][1],
+        #     self.vdatum_region.get(),
+        #     self.mcu,
+        #     self.tpuOutput.directoryName,
+        #     self.controller.controller_configuration["cBLUE_version"],
+        #     self.controller.controller_configuration["sensor_model"],
+        #     cpu_process_info,
+        #     self.selected_sensor,
+        #     self.controller.controller_configuration["subaqueous_LUTs"],
+        #     self.controller.controller_configuration["water_surface_ellipsoid_height"],
+        #     self.controller.controller_configuration["error_type"],
+        #     self.csv_option.get(),
+        # )
 
         las_files = [
             os.path.join(self.lasInput.directoryName, l)
