@@ -79,21 +79,19 @@ class Tpu:
         vdatum_region_mcu,
         tpu_output,
         cblue_version,
-        sensor_model,
         cpu_process_info,
-        selected_sensor,
-        subaqueous_luts,
         water_surface_ellipsoid_height,
         error_type,
         csv_option,
+        sensor_object
     ):
 
         # TODO: refactor to pass the GUI object, not individual variables (with controller?)
         self.wind_selection = wind_selection
         self.wind_val = wind_val
 
-        logging.tpu(f"self.wind_selection (line 100) set to: {wind_selection}")
-        logging.tpu(f"self.wind_val (line 101) set to: {wind_val}")
+        logging.tpu(f"self.wind_selection (line 91) set to: {self.wind_selection}")
+        logging.tpu(f"self.wind_val (line 92) set to: {self.wind_val}")
 
         self.kd_selection = kd_selection
         self.kd_val = kd_val
@@ -101,13 +99,11 @@ class Tpu:
         self.vdatum_region_mcu = vdatum_region_mcu
         self.tpu_output = tpu_output
         self.cblue_version = cblue_version
-        self.sensor_model = sensor_model
         self.cpu_process_info = cpu_process_info
-        self.selected_sensor = selected_sensor
-        self.subaqueous_luts = subaqueous_luts
         self.water_surface_ellipsoid_height = water_surface_ellipsoid_height
         self.error_type = error_type
         self.csv_option = csv_option
+        self.sensor_object = sensor_object
 
         self.subaqu_lookup_params = None
         self.metadata = {}
@@ -158,7 +154,7 @@ class Tpu:
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
 
-        diag_dfs = []
+        #diag_dfs = []
 
         if las.num_file_points:  # i.e., if las had data points
             logger.tpu(
@@ -211,13 +207,22 @@ class Tpu:
                             las.las_short_name
                         )
                     )
+                    #New Subaqueous call with sensor_object
                     subaqu_obj = Subaqueous(
                         self.wind_val,
                         self.kd_val,
                         depth,
-                        self.selected_sensor,
-                        self.subaqueous_luts,
+                        self.sensor_object
                     )
+                    #Previous Subaqueous call
+                    # subaqu_obj = Subaqueous(
+                    #     self.wind_val,
+                    #     self.kd_val,
+                    #     depth,
+                    #     self.selected_sensor,
+                    #     self.subaqueous_luts,
+                    # )
+
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
 
                     vdatum_mcu = (
@@ -439,7 +444,7 @@ class Tpu:
                 "VDatum region": self.vdatum_region,
                 "VDatum region MCU": self.vdatum_region_mcu,
                 "flight line stats (min max mean stddev)": self.flight_line_stats,
-                "sensor model": self.sensor_model,
+                "sensor model": self.sensor_object.name,
                 "cBLUE version": self.cblue_version,
                 "cpu_processing_info": self.cpu_process_info,
                 "water_surface_ellipsoid_height": self.water_surface_ellipsoid_height,
