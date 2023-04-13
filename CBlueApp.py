@@ -414,7 +414,7 @@ class ControllerPanel(ttk.Frame):
             "HawkEye 4X 400m AGL",
             "HawkEye 4X 500m AGL",
             "HawkEye 4X 600m AGL",
-            "PILLS"
+            # "PILLS"
         )
 
         ### Set up frame to hold dropdown menu ###
