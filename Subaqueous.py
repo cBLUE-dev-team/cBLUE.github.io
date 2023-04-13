@@ -49,33 +49,28 @@ class Subaqueous:
     To be used in conjunction with the associated
     """
 
-    def __init__(self, wind_par, kd_par, depth, sensor, subaqueous_luts):
+    def __init__(self, wind_par, kd_par, depth, sensor_object):
 
-        sensor_aliases = {
-            "Riegl VQ-880-G (0.7 mrad)": "RIEGL 0.7 mrad",
-            "Riegl VQ-880-G (1.0 mrad)": "RIEGL 1.0 mrad",
-            "Riegl VQ-880-G (1.5 mrad)": "RIEGL 1.5 mrad",
-            "Riegl VQ-880-G (2.0 mrad)": "RIEGL 2.0 mrad",
-            "Leica Chiroptera 4X (HawkEye 4X Shallow)": "CHIRO",
-            "HawkEye 4X 400m AGL": "HAWK400",
-            "HawkEye 4X 500m AGL": "HAWK500",
-            "HawkEye 4X 600m AGL": "HAWK600",
-        }
+        # sensor_aliases = {
+        #     "Riegl VQ-880-G (0.7 mrad)": "RIEGL 0.7 mrad",
+        #     "Riegl VQ-880-G (1.0 mrad)": "RIEGL 1.0 mrad",
+        #     "Riegl VQ-880-G (1.5 mrad)": "RIEGL 1.5 mrad",
+        #     "Riegl VQ-880-G (2.0 mrad)": "RIEGL 2.0 mrad",
+        #     "Leica Chiroptera 4X (HawkEye 4X Shallow)": "CHIRO",
+        #     "HawkEye 4X 400m AGL": "HAWK400",
+        #     "HawkEye 4X 500m AGL": "HAWK500",
+        #     "HawkEye 4X 600m AGL": "HAWK600",
+        # }
 
         self.wind_par = wind_par
         self.kd_par = kd_par
         self.depth = depth
-        self.sensor = sensor_aliases[sensor]
-
-        #The vertical Look Up Table used for modeling
-        self.vert_lut = subaqueous_luts[self.sensor]["vertical"]
-        #The horizontal Look Up Table used for modeling
-        self.horz_lut = subaqueous_luts[self.sensor]["horizontal"]
+        self.sensor_object = sensor_object
 
         logger.subaqueous(f"kd_par {self.kd_par}")
         logger.subaqueous(f"wind_par {self.wind_par}")
-        logger.subaqueous(self.vert_lut)
-        logger.subaqueous(self.horz_lut)
+        logger.subaqueous(self.sensor_object.vert_lut)
+        logger.subaqueous(self.sensor_object.horz_lut)
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
@@ -149,25 +144,25 @@ class Subaqueous:
         indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
 
         # Read tables, select rows
-        fit_tvu = pd.read_csv(self.vert_lut, names=["a", "b"]).iloc[indices]
-        fit_thu = pd.read_csv(self.horz_lut, names=["a", "b"]).iloc[indices]
+        fit_tvu = pd.read_csv(self.sensor_object.vert_lut, names=["a", "b"]).iloc[indices]
+        fit_thu = pd.read_csv(self.sensor_object.horz_lut, names=["a", "b"]).iloc[indices]
 
         # Return TVU and THU observation equation coefficients DataFrames. 
         return fit_tvu, fit_thu
 
-    def get_subaqueous_meta_data(self):
-        """I haven't the patience to figure out why we need the MC ray tracing
-        metadata or if it's ever even used.
-        """
-        subaqueous_f = open(self.curr_lut, "r")
-        subaqueous_metadata = subaqueous_f.readline().split(",")
-        subaqueous_f.close()
-        subaqueous_metadata = {
-            k: v.strip() for (k, v) in [n.split(":") for n in subaqueous_metadata]
-        }
-        return subaqueous_metadata
+#     def get_subaqueous_meta_data(self):
+#         """I haven't the patience to figure out why we need the MC ray tracing
+#         metadata or if it's ever even used.
+#         """
+#         subaqueous_f = open(self.curr_lut, "r")
+#         subaqueous_metadata = subaqueous_f.readline().split(",")
+#         subaqueous_f.close()
+#         subaqueous_metadata = {
+#             k: v.strip() for (k, v) in [n.split(":") for n in subaqueous_metadata]
+#         }
+#         return subaqueous_metadata
 
 
-# Why? When are you gonna use this by itself? This will never me a __main__
-if __name__ == "__main__":
-    pass
+# # Why? When are you gonna use this by itself? This will never me a __main__
+# if __name__ == "__main__":
+#     pass
