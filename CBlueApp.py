@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 12th, 2023
+April 18th, 2023
 
 THINGS TO DO:
 Add comments
@@ -688,7 +688,7 @@ class ControllerPanel(ttk.Frame):
         jacobian = Jacobian(sensor_model)
 
         # CREATE OBJECT THAT PROVIDES FUNCTIONALITY TO MERGE LAS AND TRAJECTORY DATA
-        merge = Merge()
+        merge = Merge(sensor_object)
 
         def signal_completion():
             self.tpu_btn_text.set("TPU Calculated")
