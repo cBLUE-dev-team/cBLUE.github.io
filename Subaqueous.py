@@ -100,24 +100,23 @@ class Subaqueous:
         :return: (fit_tvu, fit_thu) TVU and THU observation equation coefficients
         :rtype: (DataFrame, DataFrame)
         """
+        # wind_par values range from 0-20 kts, represented as integers 1-10.
+        # cBLUE gives users four options for Wind Speed:
+        #   Wind Speed: Calm-light air (0-2 kts) == [1]
+        #               Light Breeze (3-6 kts) == [2,3]
+        #               Gentle Breeze (7-10 kts) == [4,5]
+        #               Moderate Breeze (11-15 kts) == [6,7]
+        #               Fresh Breeze (16-20 kts) == [8, 9, 10]
 
         # Turbidity (kd_par) values range from 0.06-0.36 (m^-1) and are represented as integers 6-36.
         # cBLUE gives users five options for Turbidity:
-        #   kd: 0.06-0.10 m^-1 == [6-10]
-        #       0.11-0.17 m^-1 == [11-17]
-        #       0.18-0.25 m^-1 == [18-25]
-        #       0.26-0.32 m^-1 == [26-32]
-        #       0.33-0.36 m^-1 == [33-36]
+        #   kd: Clear (0.06-0.10 m^-1) == [6-10]
+        #       Clear-Moderate (0.11-0.17 m^-1) == [11-17]
+        #       Moderate (0.18-0.25 m^-1) == [18-25]
+        #       Moderate-High (0.26-0.32 m^-1) == [26-32]
+        #       High (0.33-0.36 m^-1) == [33-36]
 
-        # wind_par values range from 0-20 kts, represented as integers 1-10.
-        # cBLUE gives users four options for Wind Speed:
-        #   Wind Speed: 0-2 kts == [1]
-        #               3-6 kts == [2,3]
-        #               7-10 kts == [4,5]
-        #               11-15 kts == [6,7]
-        #               16-20 kts == [8, 9, 10]
-
-        # self.kd_par and self.wind_par are used to get the right indices for the lookup table.
+        # self.wind_par and self.kd_par are used to get the right indices for the lookup table.
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
 
         # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
