@@ -2,6 +2,9 @@
 Summary:    This file contains the custom logging functionality.
 Author:     Forrest Corcoran
 Date:       5/20/2022
+
+Last Edited by: Keana Kief
+Last Edited: April 11th, 2023
 """
 import logging
 
@@ -44,6 +47,7 @@ class CustomLogger:
         "Merge": 27,
         "Datum": 28,
         "LasGrid": 29,
+        "Sensor": 31
     }
 
     def __init__(self, filename=None):

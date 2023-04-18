@@ -378,7 +378,7 @@ class SensorModel:
 
         num_coords, num_points = data.shape
         AMDE = np.mean(np.abs(data), axis=1)  # average mean distance error
-        RMSE = sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
+        RMSE = np.sqrt(sum(sum(np.square(data))) / num_points)  # root mean squares error
 
         logger.subaerial(
             "Mean Difference:\n"

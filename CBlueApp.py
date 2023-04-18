@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 4th, 2023
+April 12th, 2023
 
 THINGS TO DO:
 Add comments
@@ -56,6 +56,7 @@ from Merge import Merge
 from Sbet import Sbet
 from Datum import Datum
 from Tpu import Tpu
+from Sensor import Sensor
 
 #Create a logging file named CBlue.log stored in the current working directory
 utils.CustomLogger(filename="CBlue.log")
@@ -143,7 +144,7 @@ class CBlueApp(tk.Tk):
         config = "cblue_configuration.json"
 
         with open(config, "w") as fp:
-            json.dump(self.controller_configuration, fp)
+            json.dump(self.controller_configuration, fp, indent=4)
 
     def show_docs(self):
         webbrowser.open(r"file://" + os.path.realpath("docs/html/index.html"), new=True)
@@ -413,6 +414,7 @@ class ControllerPanel(ttk.Frame):
             "HawkEye 4X 400m AGL",
             "HawkEye 4X 500m AGL",
             "HawkEye 4X 600m AGL",
+            # "PILLS"
         )
 
         ### Set up frame to hold dropdown menu ###
@@ -641,6 +643,9 @@ class ControllerPanel(ttk.Frame):
             self.controller.controller_configuration["sensor_model"]
         )
 
+        #Create a sensor object initialized to the user's selected sensor
+        sensor_object = Sensor(self.selected_sensor)
+
         multiprocess = self.controller.controller_configuration["multiprocess"]
 
         if multiprocess:
@@ -649,6 +654,12 @@ class ControllerPanel(ttk.Frame):
         else:
             cpu_process_info = ("singleprocess",)
 
+        #TODO: Create GUI object to hold wind_selection, self.wind_vals[wind_ind][1], kd_selection, self.kd_vals[kd_ind][1],
+        #           self.vdatum_region.get(), self.mcu, self.tpuOutput.directoryName, self.controller.controller_configuration["cBLUE_version"],
+        #           cpu_process_info, self.selected_sensor, self.controller.controller_configuration["water_surface_ellipsoid_height"],
+        #           self.controller.controller_configuration["error_type"], and self.csv_option.get(). 
+
+        #Initalize the tpu object
         tpu = Tpu(
             wind_selection,
             self.wind_vals[wind_ind][1],
@@ -658,13 +669,11 @@ class ControllerPanel(ttk.Frame):
             self.mcu,
             self.tpuOutput.directoryName,
             self.controller.controller_configuration["cBLUE_version"],
-            self.controller.controller_configuration["sensor_model"],
             cpu_process_info,
-            self.selected_sensor,
-            self.controller.controller_configuration["subaqueous_LUTs"],
             self.controller.controller_configuration["water_surface_ellipsoid_height"],
             self.controller.controller_configuration["error_type"],
             self.csv_option.get(),
+            sensor_object
         )
 
         las_files = [
