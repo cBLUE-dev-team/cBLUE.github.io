@@ -2,6 +2,9 @@
 Summary:    This file contains the custom logging functionality.
 Author:     Forrest Corcoran
 Date:       5/20/2022
+
+Last Edited by: Keana Kief
+Last Edited: April 11th, 2023
 """
 import logging
 

@@ -1,26 +1,110 @@
 {
-  "Reigl VQ-880-G": {
-    "sensor_model": {
-      "sensor_type": "cBLUE (generic with polynomial error correction)",
-      "a_std_dev": 0.02,
-      "b_std_dev": 0.02,
-      "std_rho": 0.025
+    "Riegl VQ-880-G (0.7 mrad)": {
+        "sensor_model": {
+            "sensor_type": "cBLUE (generic with polynomial error correction)",
+            "a_std_dev": 0.02,
+            "b_std_dev": 0.02,
+            "std_rho": 0.025
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad.csv",
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad_hz.csv"
+        }
     },
-    "subaqueous_LUTs": {
-      "RIEGL": "./lookup_tables/Riegl_look_up_fit_HG0995_1sig.csv",
-      "ECKV": "./lookup_tables/ECKV_LUT_HG0995_1sig.csv"
-    }
-  },
-  "Leica Chiroptera 4X": {
-    "sensor_model": {
-      "sensor_type": "cBLUE (generic with polynomial error correction)",
-      "a_std_dev": 0.02,
-      "b_std_dev": 0.02,
-      "std_rho": 0.025
+    "Riegl VQ-880-G (1.0 mrad)": {
+        "sensor_model": {
+            "sensor_type": "cBLUE (generic with polynomial error correction)",
+            "a_std_dev": 0.02,
+            "b_std_dev": 0.02,
+            "std_rho": 0.025
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad.csv",
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad_hz.csv"
+        }
     },
-    "subaqueous_LUTs": {
-      "RIEGL": "",
-      "ECKV": ""
+    "Riegl VQ-880-G (1.5 mrad)": {
+        "sensor_model": {
+            "sensor_type": "cBLUE (generic with polynomial error correction)",
+            "a_std_dev": 0.02,
+            "b_std_dev": 0.02,
+            "std_rho": 0.025
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad.csv",
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad_hz.csv"
+        }
+    },
+    "Riegl VQ-880-G (2.0 mrad)": {
+        "sensor_model": {
+            "sensor_type": "cBLUE (generic with polynomial error correction)",
+            "a_std_dev": 0.02,
+            "b_std_dev": 0.02,
+            "std_rho": 0.025
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad.csv",
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad_hz.csv"
+        }
+    },
+    "Leica Chiroptera 4X (HawkEye 4X Shallow)": {
+        "sensor_model": {
+            "sensor_type": "",
+            "a_std_dev": 0.25,
+            "b_std_dev": 0.25,
+            "std_rho": 0.020
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
+            "horizontal": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
+        }
+    },
+    "HawkEye 4X 400m AGL": {
+        "sensor_model": {
+            "sensor_type": "",
+            "a_std_dev": 0.25,
+            "b_std_dev": 0.25,
+            "std_rho": 0.020
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad.csv",
+            "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad_hz.csv"
+        }
+    },
+    "HawkEye 4X 500m AGL": {
+        "sensor_model": {
+            "sensor_type": "",
+            "a_std_dev": 0.25,
+            "b_std_dev": 0.25,
+            "std_rho": 0.020
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad.csv",
+            "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad_hz.csv"
+        }
+    },
+    "HawkEye 4X 600m AGL": {
+        "sensor_model": {
+            "sensor_type": "",
+            "a_std_dev": 0.25,
+            "b_std_dev": 0.25,
+            "std_rho": 0.020
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad.csv",
+            "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad_hz.csv"
+        }
+    },
+    "PILLS": {
+        "sensor_model": {
+            "sensor_type": "",
+            "a_std_dev": 0.015,
+            "b_std_dev": 0.00,
+            "std_rho": 0.033
+        },
+        "subaqueous_LUTs": {
+            "vertical": "",
+            "horizontal": ""
+        }
     }
-  }
 }
