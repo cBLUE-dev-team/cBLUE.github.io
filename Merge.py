@@ -28,6 +28,10 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
+Last Edited By:
+Keana Kief (OSU)
+April 18th, 2023
+
 """
 
 import numpy as np
@@ -35,16 +39,24 @@ import numexpr as ne
 from math import radians
 import logging
 
+logger = logging.getLogger(__name__)
 
 class Merge:
 
     max_allowable_dt = 1.0  # second
 
-    def __init__(self):
-        self.a_std_dev = 0.02  # degrees
-        self.b_std_dev = 0.02  # degrees
-        self.std_rho = 0.025
+    def __init__(self, sensor_object):
 
+        self.a_std_dev = sensor_object.a_std_dev  # degrees
+        self.b_std_dev = sensor_object.b_std_dev  # degrees
+        self.std_rho = sensor_object.std_rho
+
+        # logger.merge(f"a std dev: {self.a_std_dev}")
+        # logger.merge(f"b std dev: {self.b_std_dev}")
+        # logger.merge(f"std rho: {self.std_rho}")
+
+
+    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx):
         """returns sbet & las data merged based on timestamps
 
         The cBLUE TPU calculations require the sbet and las data to be in
@@ -91,9 +103,6 @@ class Merge:
         18      stdz_sbet   sbet z uncertainty
         =====   =========   ========================    =======
         """
-
-    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx):
-
         num_sbet_pts = sbet_data.shape[0]
 
         # sort xyzt array based on t_idx column
