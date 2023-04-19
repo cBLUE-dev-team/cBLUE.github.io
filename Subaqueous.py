@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-April 18th, 2023
+April 19th, 2023
 """
 
 import logging
@@ -89,10 +89,9 @@ class Subaqueous:
 
     def model_process(self):
         """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
-            precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd
-            from the vertical and horizontal lookup tables for the sensor used. 
+            precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
 
-        :return: (fit_tvu, fit_thu) TVU and THU observation equation coefficients
+        :return: (mean_fit_tvu, mean_fit_thu) Averaged TVU and THU observation equation coefficients.
         :rtype: (DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 1-10.
