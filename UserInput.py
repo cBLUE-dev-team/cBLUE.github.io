@@ -53,7 +53,7 @@ class UserInput:
         
         #Get the string name of the vdatum region
         self.vdatum_region = controller_panel.vdatum_region.get()
-        #Get the maximum cumulative error related to the vdatum region
+        #Get the float value for the maximum cumulative error related to the vdatum region
         self.mcu = controller_panel.mcu
 
         #Get the file path of the TPU output directory
@@ -77,10 +77,10 @@ class UserInput:
         else:
             self.cpu_process_info = ("singleprocess",)
 
-        #Get the water surface ellipsoid height. In meters, positive up. 
+        #Get the float value for water surface ellipsoid height. In meters, positive up. 
         self.water_surface_ellipsoid_height = controller_panel.controller.controller_configuration["water_surface_ellipsoid_height"]
 
-        #Get the error type requested by the user. Either "1-\u03c3" or "95% confidence".
+        #A string holding the error type requested by the user. Either "1-\u03c3" or "95% confidence".
         self.error_type = controller_panel.controller.controller_configuration["error_type"]
 
         #Get if the user wants a csv output file. True or False boolean value.
