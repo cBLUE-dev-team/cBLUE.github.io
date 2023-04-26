@@ -194,7 +194,7 @@ class Subaqueous:
         # Get the sheet number for this combination of wind_ind and kd_ind. 
         sheet = (5 * self.gui_object.kd_ind) + self.gui_object.wind_ind
 
-        logger.subaqueous(f"wind_ind: {self.gui_object.wind_ind}, kd_ind: {self.gui_object.kd_ind}")
+        logger.subaqueous(f"kd_ind: {self.gui_object.kd_ind}, wind_ind: {self.gui_object.wind_ind}")
         logger.subaqueous(f"PILLS look up table sheet number: {sheet}")
 
         # Read look up tables, select rows
