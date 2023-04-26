@@ -187,11 +187,11 @@ class Tpu:
                     )
 
                     if(self.sensor_object.name == "PILLS"):
-                        logger.tpu("PILLS Sensor: Sending to pills_fit_lut()") 
+                        #PILLS Sensor: Sending to pills_fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut() 
                     
                     else:
-                        logger.tpu("Not PILLS Sensor: Sending to fit_lut()") 
+                        #Not PILLS Sensor: Sending to fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
                     
                     
