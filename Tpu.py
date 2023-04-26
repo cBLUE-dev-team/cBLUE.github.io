@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 12th, 2023
+April 25th, 2023
 
 """
 
@@ -69,40 +69,11 @@ class Tpu:
 
     """
 
-    def __init__(
-        self,
-        wind_selection,
-        wind_val,
-        kd_selection,
-        kd_val,
-        vdatum_region,
-        vdatum_region_mcu,
-        tpu_output,
-        cblue_version,
-        cpu_process_info,
-        water_surface_ellipsoid_height,
-        error_type,
-        csv_option,
-        sensor_object
-    ):
+    def __init__(self, gui_object, sensor_object):
 
-        # TODO: refactor to pass the GUI object, not individual variables (with controller?)
-        self.wind_selection = wind_selection
-        self.wind_val = wind_val
-
-        logging.tpu(f"self.wind_selection (line 91) set to: {self.wind_selection}")
-        logging.tpu(f"self.wind_val (line 92) set to: {self.wind_val}")
-
-        self.kd_selection = kd_selection
-        self.kd_val = kd_val
-        self.vdatum_region = vdatum_region
-        self.vdatum_region_mcu = vdatum_region_mcu
-        self.tpu_output = tpu_output
-        self.cblue_version = cblue_version
-        self.cpu_process_info = cpu_process_info
-        self.water_surface_ellipsoid_height = water_surface_ellipsoid_height
-        self.error_type = error_type
-        self.csv_option = csv_option
+        #Store the gui_object information
+        self.gui_object = gui_object
+        #Store the sensor_obejct information          
         self.sensor_object = sensor_object
 
         self.subaqu_lookup_params = None
@@ -200,7 +171,7 @@ class Tpu:
 
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
 
-                    depth = self.water_surface_ellipsoid_height - merged_data[4]
+                    depth = self.gui_object.water_surface_ellipsoid_height - merged_data[4]
 
                     logger.tpu(
                         "({}) calculating subaqueous thu/tvu...".format(
@@ -210,8 +181,8 @@ class Tpu:
 
                     #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
-                        self.wind_val,
-                        self.kd_val,
+                        self.gui_object.wind_vals,
+                        self.gui_object.kd_vals,
                         depth,
                         self.sensor_object
                     )
@@ -219,7 +190,7 @@ class Tpu:
                     subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
 
                     vdatum_mcu = (
-                        float(self.vdatum_region_mcu) / 100.0
+                        float(self.gui_object.mcu) / 100.0
                     )  # file is in cm (1-sigma)
 
                     logger.tpu(
@@ -239,7 +210,7 @@ class Tpu:
                     )
 
                     # convert to 95% conf, if requested
-                    if self.error_type == "95% confidence":
+                    if self.gui_object.error_type == "95% confidence":
                         logging.tpu("TPU reported at 95% confidence...")
                         total_thu *= 1.7308
                         total_tvu *= 1.96
@@ -309,13 +280,13 @@ class Tpu:
         """
 
         # get input file name and append TPU
-        out_las_name = os.path.join(self.tpu_output, las.las_base_name) + "_TPU.las"
+        out_las_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.las"
 
         # read las file
         in_las = laspy.read(las.las)
 
         # if TPU file already exists, overwrite it
-        if las.las_base_name + "_TPU.las" in os.listdir(self.tpu_output):
+        if las.las_base_name + "_TPU.las" in os.listdir(self.gui_object.output_directory):
             out_las = laspy.read(out_las_name)
             logger.tpu(
                 "writing las and tpu results to existing file: {}".format(out_las_name)
@@ -396,11 +367,11 @@ class Tpu:
         # write las with extrabytes to file
         out_las.write(out_las_name)
 
-        if self.csv_option:
+        if self.gui_object.csv_option:
             logger.tpu(f"Saving CSV as {las.las_base_name}_TPU.csv")
 
             # get name of csv from las file
-            out_csv_name = os.path.join(self.tpu_output, las.las_base_name) + "_TPU.csv"
+            out_csv_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.csv"
 
             # Save relevant data to csv
             pd.DataFrame.from_dict(
@@ -432,22 +403,22 @@ class Tpu:
         self.metadata.update(
             {
                 "subaqueous lookup params": self.subaqu_lookup_params,
-                "wind": self.wind_selection,
-                "kd": self.kd_selection,
-                "VDatum region": self.vdatum_region,
-                "VDatum region MCU": self.vdatum_region_mcu,
+                "wind": self.gui_object.wind_selection,
+                "kd": self.gui_object.kd_selection,
+                "VDatum region": self.gui_object.vdatum_region,
+                "VDatum region MCU": self.gui_object.mcu,
                 "flight line stats (min max mean stddev)": self.flight_line_stats,
                 "sensor model": self.sensor_object.name,
-                "cBLUE version": self.cblue_version,
-                "cpu_processing_info": self.cpu_process_info,
-                "water_surface_ellipsoid_height": self.water_surface_ellipsoid_height,
+                "cBLUE version": self.gui_object.cblue_version,
+                "cpu_processing_info": self.gui_object.cpu_process_info,
+                "water_surface_ellipsoid_height": self.gui_object.water_surface_ellipsoid_height
             }
         )
 
         try:
             # self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
             with open(
-                os.path.join(self.tpu_output, "{}.json".format(las.las_base_name)), "w"
+                os.path.join(self.gui_object.output_directory, "{}.json".format(las.las_base_name)), "w"
             ) as outfile:
 
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)

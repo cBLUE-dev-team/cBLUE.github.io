@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-April 18th, 2023
+April 19th, 2023
 """
 
 import logging
@@ -58,7 +58,7 @@ class Subaqueous:
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
-
+    
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
@@ -67,9 +67,8 @@ class Subaqueous:
 
         # a_h := horizontal linear coeffs
         # b_h := horizontal linear offsets
-        # reshape to column vector
-        a_h = fit_thu["a"].values.reshape(-1, 1)
-        b_h = fit_thu["b"].values.reshape(-1, 1)
+        a_h = fit_thu["a"].to_numpy()
+        b_h = fit_thu["b"].to_numpy()
 
         # inner product of coeffs w/ depths + offsets
         # gives matrix of dims (#coeffs, #las points)
@@ -77,27 +76,21 @@ class Subaqueous:
 
         # a_z := vertical linear coeffs
         # b_z := vertical linear offsets
-        a_z = fit_tvu["a"].values.reshape(-1, 1)
-        b_z = fit_tvu["b"].values.reshape(-1, 1)
+        a_z = fit_tvu["a"].to_numpy()
+        b_z = fit_tvu["b"].to_numpy()
 
         res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
 
         # enforce minimum value for tvu
         res_tvu[res_tvu < min_tvu] = min_tvu
 
-        # compute average over columns
-        # (i.e. average over coeffs for each las point)
-        self.thu = res_thu.mean(axis=0)
-        self.tvu = res_tvu.mean(axis=0)
-
-        return self.thu, self.tvu
+        return res_thu, res_tvu
 
     def model_process(self):
-        """Retrieves TVU and THU observation equation coefficients based on the linear regression of precalculated uncertainties
-            from Monte Carlo simulations for all given permutations of wind and kd from the vertical and horizontal lookup
-            tables for the sensor used. 
+        """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
+            precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
 
-        :return: (fit_tvu, fit_thu) TVU and THU observation equation coefficients
+        :return: (mean_fit_tvu, mean_fit_thu) Averaged TVU and THU observation equation coefficients.
         :rtype: (DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 1-10.
@@ -126,9 +119,13 @@ class Subaqueous:
         #  and add it to the indices array. 
         indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
 
-        # Read tables, select rows
+        # Read look up tables, select rows
         fit_tvu = pd.read_csv(self.sensor_object.vert_lut, names=["a", "b"]).iloc[indices]
         fit_thu = pd.read_csv(self.sensor_object.horz_lut, names=["a", "b"]).iloc[indices]
 
-        # Return TVU and THU observation equation coefficients DataFrames. 
-        return fit_tvu, fit_thu
+        #Take mean result of the indicies returned
+        mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b"])
+        mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b"])
+
+        # Return averaged TVU and THU observation equation coefficient DataFrames. 
+        return mean_fit_tvu, mean_fit_thu
