@@ -35,7 +35,6 @@ April 19th, 2023
 
 import logging
 import pandas as pd
-import time
 
 logger = logging.getLogger(__name__)
 
