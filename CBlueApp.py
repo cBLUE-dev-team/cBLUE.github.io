@@ -228,7 +228,7 @@ class ControllerPanel(ttk.Frame):
             1: ("Clear-Moderate (0.11-0.17 m^-1)", range(11, 18)),
             2: ("Moderate (0.18-0.25 m^-1)", range(18, 26)),
             3: ("Moderate-High (0.26-0.32 m^-1)", range(26, 33)),
-            4: ("High (0.33-0.36 m^-1)", range(33, 37)),
+            4: ("High (0.33-0.36 m^-1)", range(33, 37))
         }
 
         # TODO:  get from separate text file
@@ -238,7 +238,7 @@ class ControllerPanel(ttk.Frame):
             1: ("Light Breeze (3-6 kts)", [2, 3]),
             2: ("Gentle Breeze (7-10 kts)", [4, 5]),
             3: ("Moderate Breeze (11-15 kts)", [6, 7]),
-            4: ("Fresh Breeze (16-20 kts)", [8, 9, 10]),
+            4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
         }
 
         self.is_sbet_dir_set = False
