@@ -38,14 +38,14 @@ class UserInput:
     def __init__(self, controller_panel):
 
         #Get the index of the wind selection from the controller panel
-        wind_ind = controller_panel.windRadio.selection.get()
+        self.wind_ind = controller_panel.windRadio.selection.get()
         #Use the wind index to get the string name describing the wind selection
         self.wind_selection = controller_panel.wind_vals[wind_ind][0]
         #Use the wind index get the array holding integer values representing the wind selection
         self.wind_vals = controller_panel.wind_vals[wind_ind][1]
 
         #Get the index of the turbidity selection from the controller panel
-        kd_ind = controller_panel.turbidityRadio.selection.get()
+        self.kd_ind = controller_panel.turbidityRadio.selection.get()
         #Use the kd index to get the string name describing the turbidity selection
         self.kd_selection = controller_panel.kd_vals[kd_ind][0]
         #Use the kd index get the array holding integer values representing the turbidity selection
