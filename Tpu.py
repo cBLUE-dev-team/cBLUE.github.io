@@ -186,14 +186,14 @@ class Tpu:
                         self.sensor_object
                     )
 
-                    if(self.sensor_object.name == "PILLS"){
+                    if(self.sensor_object.name == "PILLS"):
                         logger.tpu("PILLS Sensor: Sending to pills_fit_lut()") 
                         subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut() 
-                    }
-                    else{
+                    
+                    else:
                         logger.tpu("Not PILLS Sensor: Sending to fit_lut()") 
                         subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
-                    }
+                    
                     
 
                     vdatum_mcu = (
