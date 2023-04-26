@@ -181,13 +181,20 @@ class Tpu:
 
                     #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
-                        self.gui_object.wind_vals,
-                        self.gui_object.kd_vals,
+                        self.gui_object,
                         depth,
                         self.sensor_object
                     )
 
-                    subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
+                    if(self.sensor_object.name == "PILLS"){
+                        logger.tpu("PILLS Sensor: Sending to pills_fit_lut()") 
+                        subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut() 
+                    }
+                    else{
+                        logger.tpu("Not PILLS Sensor: Sending to fit_lut()") 
+                        subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
+                    }
+                    
 
                     vdatum_mcu = (
                         float(self.gui_object.mcu) / 100.0
