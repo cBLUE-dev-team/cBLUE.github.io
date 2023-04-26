@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 18th, 2023
+April 25th, 2023
 
 THINGS TO DO:
 Add comments
@@ -57,6 +57,7 @@ from Sbet import Sbet
 from Datum import Datum
 from Tpu import Tpu
 from Sensor import Sensor
+from UserInput import UserInput
 
 #Create a logging file named CBlue.log stored in the current working directory
 utils.CustomLogger(filename="CBlue.log")
@@ -223,11 +224,11 @@ class ControllerPanel(ttk.Frame):
         # TODO:  get from separate text file
         # WHY IS THIS An ENUMERATED DICT AND NOT JUST AN ARRAY?!?
         self.kd_vals = {
-            0: ("Clear", range(6, 11)),
-            1: ("Clear-Moderate", range(11, 18)),
-            2: ("Moderate", range(18, 26)),
-            3: ("Moderate-High", range(26, 33)),
-            4: ("High", range(33, 37)),
+            0: ("Clear (0.06-0.10 m^-1)", range(6, 11)),
+            1: ("Clear-Moderate (0.11-0.17 m^-1)", range(11, 18)),
+            2: ("Moderate (0.18-0.25 m^-1)", range(18, 26)),
+            3: ("Moderate-High (0.26-0.32 m^-1)", range(26, 33)),
+            4: ("High (0.33-0.36 m^-1)", range(33, 37)),
         }
 
         # TODO:  get from separate text file
@@ -361,10 +362,7 @@ class ControllerPanel(ttk.Frame):
         turbidity_subframe.rowconfigure(0, weight=1)
 
         ### Set Kd ranges as radio buttons ###
-        self.turbidityOptions = [
-            "{:s} ({:.2f}-{:.2f} m^-1)".format(k[0], k[1][0] / 100.0, k[1][-1] / 100.0)
-            for k in self.kd_vals.values()
-        ]
+        self.turbidityOptions = [k[0] for k in self.kd_vals.values()]
 
         self.turbidityRadio = RadioFrame(
             turbidity_subframe,
@@ -632,49 +630,17 @@ class ControllerPanel(ttk.Frame):
 
     def begin_tpu_calc(self):
 
-        wind_ind = self.windRadio.selection.get()
-        wind_selection = self.windOptions[wind_ind]
-
-        kd_ind = self.turbidityRadio.selection.get()
-        kd_selection = self.turbidityOptions[kd_ind]
-
         # CREATE OBSERVATION EQUATIONS
-        sensor_model = SensorModel(
-            self.controller.controller_configuration["sensor_model"]
-        )
+        sensor_model = SensorModel(self.controller.controller_configuration["sensor_model"])
+         
+        #Create a gui object initialized to the user's selections from the GUI
+        gui_object = UserInput(self)
 
         #Create a sensor object initialized to the user's selected sensor
         sensor_object = Sensor(self.selected_sensor)
 
-        multiprocess = self.controller.controller_configuration["multiprocess"]
-
-        if multiprocess:
-            num_cores = self.controller.controller_configuration["number_cores"]
-            cpu_process_info = ("multiprocess", num_cores)
-        else:
-            cpu_process_info = ("singleprocess",)
-
-        #TODO: Create GUI object to hold wind_selection, self.wind_vals[wind_ind][1], kd_selection, self.kd_vals[kd_ind][1],
-        #           self.vdatum_region.get(), self.mcu, self.tpuOutput.directoryName, self.controller.controller_configuration["cBLUE_version"],
-        #           cpu_process_info, self.selected_sensor, self.controller.controller_configuration["water_surface_ellipsoid_height"],
-        #           self.controller.controller_configuration["error_type"], and self.csv_option.get(). 
-
         #Initalize the tpu object
-        tpu = Tpu(
-            wind_selection,
-            self.wind_vals[wind_ind][1],
-            kd_selection,
-            self.kd_vals[kd_ind][1],
-            self.vdatum_region.get(),
-            self.mcu,
-            self.tpuOutput.directoryName,
-            self.controller.controller_configuration["cBLUE_version"],
-            cpu_process_info,
-            self.controller.controller_configuration["water_surface_ellipsoid_height"],
-            self.controller.controller_configuration["error_type"],
-            self.csv_option.get(),
-            sensor_object
-        )
+        tpu = Tpu(gui_object, sensor_object)
 
         las_files = [
             os.path.join(self.lasInput.directoryName, l)
@@ -718,22 +684,22 @@ class ControllerPanel(ttk.Frame):
                 ), las_file, jacobian, merge
 
         logging.cblue(
-            "processing {} las file(s) ({})...".format(num_las, cpu_process_info[0])
+            "processing {} las file(s) ({})...".format(num_las, gui_object.cpu_process_info[0])
         )
 
-        logging.cblue(f"multiprocessing = {multiprocess} ({type(multiprocess)})")
+        logging.cblue(f"multiprocessing = {gui_object.multiprocess}")
 
-        if multiprocess == "True":
+        if gui_object.multiprocess == "True":
             p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
             signal_completion()
             p.close()
             p.join()
-        elif multiprocess == "False":
+        elif gui_object.multiprocess == "False":
             tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
             signal_completion()
         else:
             logging.cblue(
-                f"multiprocessing set to {multiprocess} (Must be True or False)"
+                f"multiprocessing set to {gui_object.multiprocess} (Must be True or False)"
             )
 
     def updateRadioEnable(self):
