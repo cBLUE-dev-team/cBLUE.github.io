@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-April 19th, 2023
+April 26th, 2023
 """
 
 import logging
@@ -44,15 +44,14 @@ class Subaqueous:
     To be used in conjunction with the associated
     """
 
-    def __init__(self, wind_par, kd_par, depth, sensor_object):
+    def __init__(self, gui_object, depth, sensor_object):
 
-        self.wind_par = wind_par
-        self.kd_par = kd_par
+        self.gui_object = gui_object
         self.depth = depth
         self.sensor_object = sensor_object
 
-        logger.subaqueous(f"kd_par {self.kd_par}")
-        logger.subaqueous(f"wind_par {self.wind_par}")
+        logger.subaqueous(f"kd_par {self.gui_object.kd_vals}")
+        logger.subaqueous(f"wind_par {self.gui_object.wind_vals}")
         logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
         logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
 
@@ -109,7 +108,7 @@ class Subaqueous:
         #       Moderate-High (0.26-0.32 m^-1) == [26-32]
         #       High (0.33-0.36 m^-1) == [33-36]
 
-        # self.wind_par and self.kd_par are used to get the right indices for the lookup table.
+        # self.gui_object.wind_vals and self.gui_object.kd_vals are used to get the right indices for the lookup table.
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
 
         # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
@@ -117,7 +116,81 @@ class Subaqueous:
 
         # For every permutation of values from the wind_par and kd_par arrays, get an index
         #  and add it to the indices array. 
-        indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
+        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
+
+        # Read look up tables, select rows
+        fit_tvu = pd.read_csv(self.sensor_object.vert_lut, names=["a", "b"]).iloc[indices]
+        fit_thu = pd.read_csv(self.sensor_object.horz_lut, names=["a", "b"]).iloc[indices]
+
+        #Take mean result of the indicies returned
+        mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b"])
+        mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b"])
+
+        # Return averaged TVU and THU observation equation coefficient DataFrames. 
+        return mean_fit_tvu, mean_fit_thu
+    
+    def pills_fit_lut(self):
+        """Called to begin the SubAqueous processing for the PILLS sensor"""
+    
+        # tvu values below 0.03 are considered erroneous
+        min_tvu = 0.03
+
+        # query coefficients from look up tables
+        fit_tvu, fit_thu = self.pills_model_process()
+
+        # # a_h := horizontal linear coeffs
+        # # b_h := horizontal linear offsets
+        # a_h = fit_thu["a"].to_numpy()
+        # b_h = fit_thu["b"].to_numpy()
+
+        # inner product of coeffs w/ depths + offsets
+        # gives matrix of dims (#coeffs, #las points)
+        res_thu = a_h @ self.depth.reshape(1, -1) + b_h
+
+        # a_z := vertical linear coeffs
+        # b_z := vertical linear offsets
+        a_z = fit_tvu["a"].to_numpy()
+        b_z = fit_tvu["b"].to_numpy()
+
+        res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
+
+        # enforce minimum value for tvu
+        res_tvu[res_tvu < min_tvu] = min_tvu
+
+        return res_thu, res_tvu
+    
+    def pills_model_process(self):
+        """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
+            precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
+
+        :return: (mean_fit_tvu, mean_fit_thu) Averaged TVU and THU observation equation coefficients.
+        :rtype: (DataFrame, DataFrame)
+        """
+        # wind_par values range from 0-20 kts, represented as integers 1-10.
+        # cBLUE gives users four options for Wind Speed:
+        #   Wind Speed: Calm-light air (0-2 kts) == [1]
+        #               Light Breeze (3-6 kts) == [2,3]
+        #               Gentle Breeze (7-10 kts) == [4,5]
+        #               Moderate Breeze (11-15 kts) == [6,7]
+        #               Fresh Breeze (16-20 kts) == [8, 9, 10]
+
+        # Turbidity (kd_par) values range from 0.06-0.36 (m^-1) and are represented as integers 6-36.
+        # cBLUE gives users five options for Turbidity:
+        #   kd: Clear (0.06-0.10 m^-1) == [6-10]
+        #       Clear-Moderate (0.11-0.17 m^-1) == [11-17]
+        #       Moderate (0.18-0.25 m^-1) == [18-25]
+        #       Moderate-High (0.26-0.32 m^-1) == [26-32]
+        #       High (0.33-0.36 m^-1) == [33-36]
+
+        # self.gui_object.wind_vals and self.gui_object.kd_vals are used to get the right indices for the lookup table.
+        # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+
+        # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
+        #       row 1 represents wind speed 1 and kd 7, [...], row 278 represents wind speed 8 and kd 36, etc.  
+
+        # For every permutation of values from the wind_par and kd_par arrays, get an index
+        #  and add it to the indices array. 
+        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
 
         # Read look up tables, select rows
         fit_tvu = pd.read_csv(self.sensor_object.vert_lut, names=["a", "b"]).iloc[indices]
