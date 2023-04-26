@@ -35,6 +35,7 @@ April 19th, 2023
 
 import logging
 import pandas as pd
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class Subaqueous:
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
-
+    
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
@@ -79,7 +80,6 @@ class Subaqueous:
         a_z = fit_tvu["a"].to_numpy()
         b_z = fit_tvu["b"].to_numpy()
 
-        # res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
         res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
 
         # enforce minimum value for tvu
