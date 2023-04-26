@@ -136,7 +136,7 @@ class Subaqueous:
         # min_tvu = 0.03
 
         # # query coefficients from look up tables
-        # fit_tvu, fit_thu = self.pills_model_process()
+        fit_tvu, fit_thu = self.pills_model_process()
 
         # # # a_h := horizontal linear coeffs
         # # # b_h := horizontal linear offsets
@@ -167,13 +167,6 @@ class Subaqueous:
         :return: (fit_tvu, fit_thu) TVU and THU observation equation coefficients for each fan angle.
         :rtype: (DataFrame, DataFrame)
         """
-        # wind_ind are index values that range from 0-4 and represent the user's selection for wind speed.
-        # cBLUE gives users five options for Wind Speed:
-        #   Wind Speed: 0: ("Calm-light air (0-2 kts)", [1]),
-        #               1: ("Light Breeze (3-6 kts)", [2, 3]),
-        #               2: ("Gentle Breeze (7-10 kts)", [4, 5]),
-        #               3: ("Moderate Breeze (11-15 kts)", [6, 7]),
-        #               4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
 
         # kd_ind are index values that range from 0-4 and represent the user's selection for Turbidity.
         # cBLUE gives users five options for Turbidity:
@@ -183,25 +176,33 @@ class Subaqueous:
         #       3: ("Moderate-High (0.26-0.32 m^-1)", range(26, 33)),
         #       4: ("High (0.33-0.36 m^-1)", range(33, 37))
 
-        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the PILLS lookup table.
-        # The excel sheets are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+        # wind_ind are index values that range from 0-4 and represent the user's selection for wind speed.
+        # cBLUE gives users five options for Wind Speed:
+        #   Wind Speed: 0: ("Calm-light air (0-2 kts)", [1]),
+        #               1: ("Light Breeze (3-6 kts)", [2, 3]),
+        #               2: ("Gentle Breeze (7-10 kts)", [4, 5]),
+        #               3: ("Moderate Breeze (11-15 kts)", [6, 7]),
+        #               4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
 
-        # ex: sheet 0 represents fan angle observation equation coefficients for wind speed selection 0 and kd selection 0, 
-        #       sheet 1 represents wind speed selection 1 and kd selection 0, [...],
-        #       sheet 29 represents wind speed selection 4 and kd selection 4, etc.  
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the PILLS lookup table.
+        # The excel sheets are ordered by the permutations of turbidity (low to high) with wind speed (low to high).
+
+        # ex: sheet 0 represents fan angle observation equation coefficients for kd selection 0 and wind speed selection 0, 
+        #       sheet 1 represents kd selection 0 and wind speed selection 1, [...],
+        #       sheet 24 represents kd selection 4 and wind speed selection 4, etc.  
 
         # Get the sheet number for this combination of wind_ind and kd_ind. 
-        sheet = (5 * self.gui_object.wind_ind) + self.gui_object.kd_ind
+        sheet = (5 * self.gui_object.kd_ind) + self.gui_object.wind_ind
 
         logger.subaqueous(f"wind_ind: {self.gui_object.wind_ind}, kd_ind: {self.gui_object.kd_ind}")
-        logger.subaqueous(f"Sheet number: {sheet}")
+        logger.subaqueous(f"PILLS look up table sheet number: {sheet}")
 
         # Read look up tables, select rows
-        fit_tvu = pd.read_excel(self.sensor_object.vert_lut, sheet_name=sheet)
-        fit_thu = pd.read_excel(self.sensor_object.horz_lut, sheet_name=sheet)
+        fit_tvu = pd.read_excel(self.sensor_object.vert_lut, sheet_name=sheet, header=None, names=["a", "b"])
+        fit_thu = pd.read_excel(self.sensor_object.horz_lut, sheet_name=sheet, header=None, names=["a", "b"])
 
-        logger.subaqueous(f"fit_tvu: {fit_tvu}")
-        logger.subaqueous(f"fit_thu: {fit_thu}")
+        # logger.subaqueous(f"PILLS fit_tvu: {fit_tvu}")
+        # logger.subaqueous(f"PILLS fit_thu: {fit_thu}")
 
-        # Return averaged TVU and THU observation equation coefficient DataFrames. 
+        # Return DataFrames of TVU and THU observation equation coefficients for each fan angle. 
         return fit_tvu, fit_thu
