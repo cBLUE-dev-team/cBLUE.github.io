@@ -103,8 +103,8 @@
             "std_rho": 0.033
         },
         "subaqueous_LUTs": {
-            "vertical": "",
-            "horizontal": ""
+            "vertical": "./lookup_tables/PILLS_Test_Lookup_Results_Vertical.xlsx",
+            "horizontal": "./lookup_tables/PILLS_Test_Lookup_Results_Horizontal.xlsx"
         }
     }
 }
