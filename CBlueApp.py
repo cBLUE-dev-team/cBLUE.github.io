@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 26th, 2023
+May 2nd, 2023
 
 THINGS TO DO:
 Add comments
@@ -413,7 +413,7 @@ class ControllerPanel(ttk.Frame):
         else:
             logging.cblue("Sensor file doesn't exist")
 
-        logging.cblue(f"Sensor names: {list(sensor_names.keys())}")        
+        # logging.cblue(f"Sensor names: {list(sensor_names.keys())}")        
 
         ### Names of sensors as displayed in GUI ###
         self.sensor_models = list(sensor_names.keys())
