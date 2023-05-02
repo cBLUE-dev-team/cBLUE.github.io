@@ -402,18 +402,21 @@ class ControllerPanel(ttk.Frame):
 
     def build_sensor_input(self):
 
+        #JSON file containing lidar sensor configurations for cBLUE
+        sensor_file = "lidar_sensors.json"
+
+        #Check if the lidar sensor config file exists
+        if os.path.isfile(sensor_file):
+            with open(sensor_file) as sf:
+                #If the file exists load the information into self.sensor_config
+                sensor_names = json.load(sf)
+        else:
+            logging.cblue("Sensor file doesn't exist")
+
+        logging.cblue(f"Sensor names: {list(sensor_names.keys())}")        
+
         ### Names of sensors as displayed in GUI ###
-        self.sensor_models = (
-            "Riegl VQ-880-G (0.7 mrad)",
-            "Riegl VQ-880-G (1.0 mrad)",
-            "Riegl VQ-880-G (1.5 mrad)",
-            "Riegl VQ-880-G (2.0 mrad)",
-            "Leica Chiroptera 4X (HawkEye 4X Shallow)",
-            "HawkEye 4X 400m AGL",
-            "HawkEye 4X 500m AGL",
-            "HawkEye 4X 600m AGL",
-            "PILLS"
-        )
+        self.sensor_models = list(sensor_names.keys())
 
         ### Set up frame to hold dropdown menu ###
         sensor_frame = tk.Frame(self.controller_panel)
