@@ -28,6 +28,10 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
+Last Edited By:
+Keana Kief (OSU)
+May 3rd, 2023
+
 """
 
 import os
@@ -48,7 +52,7 @@ that are exported from Applanix's PosPac software.
 
 
 class Sbet:
-    def __init__(self, sbet_dir):
+    def __init__(self, sbet_dir, sensor_name):
         """
         The data from all of the loaded sbet files are represented by
         a single Sbet object.  When the Sbet class is instantiated,
@@ -59,6 +63,8 @@ class Sbet:
         """
 
         self.sbet_dir = sbet_dir
+
+        self.sensor_name = sensor_name
 
         self.sbet_files = sorted(
             [
@@ -180,6 +186,14 @@ class Sbet:
         ):
             logger.sbet("-" * 50)
             logger.sbet("{}...".format(os.path.split(sbet)[-1]))
+            sbet_date = self.get_sbet_date(sbet)
+            #If this is the PILLS sensor, pre-process the sbet data
+            if(self.sensor_name == "PILLS"):
+                logger.sbet("PILLS Sensor, pre-processing sbet file")
+                modified_sbet_file = "modified_pills_sbet.txt"
+                self.preprocess_pills_sbet(sbet, modified_sbet_file)
+                #change the sbet to be the modified file name
+                sbet = modified_sbet_file
             sbet_df = pd.read_csv(
                 sbet,
                 skip_blank_lines=True,
@@ -190,7 +204,7 @@ class Sbet:
                 index_col=False,
             )
             logger.sbet("({} trajectory points)".format(sbet_df.shape[0]))
-            sbet_date = self.get_sbet_date(sbet)
+
 
             is_sow = self.check_if_sow(sbet_df["time"][0])
             if is_sow:
@@ -254,3 +268,44 @@ class Sbet:
         ]
 
         return data
+    
+    def preprocess_pills_sbet(self, sbet_file, modified_sbet_file):
+        # The first 26 rows of a PILLS sbet file are descrptions of the data
+        n = 26
+        #List of column indexes to drop from the PILLS sbet file
+        drop_columns = [1, 7, 11, 12, 13]
+        #Column index to reorder the sbet columns after the unneeded columns have been dropped
+        new_order = [0, 4, 5, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+        # We want to get rid of the first 26 lines of the file
+        # open the sbet file with read and write permissions
+        with open(sbet_file, 'r') as fp:
+            #read in the lines of the sbet file
+            lines = fp.readlines()
+
+            with open(modified_sbet_file, 'w') as modified_fp:
+                #write the lines to the modified file without the first 26 lines
+                modified_fp.writelines(lines[n:])
+
+                modified_fp.close()
+
+            fp.close()
+
+        # Read in the sbet_file and save it to a DataFrame
+        sbet_df = pd.read_csv(modified_sbet_file, delim_whitespace=True, header=None, index_col=False, dtype=float)
+
+        # Drop the unneeded columns
+        new_sbet_df = sbet_df.drop(sbet_df.columns[drop_columns], axis = 1)
+
+        # Rearrange the column order to match expected column order
+        new_sbet_df = new_sbet_df.reindex(new_order)
+
+        logger.sbet(f"new sbet: {new_sbet_df}")
+
+        new_sbet_df.to_csv(modified_sbet_file, index=False, index_label=False, sep=" ")
+
+
+
+
+
+
