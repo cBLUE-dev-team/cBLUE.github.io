@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 2nd, 2023
+May 3rd, 2023
 
 THINGS TO DO:
 Add comments
@@ -402,13 +402,13 @@ class ControllerPanel(ttk.Frame):
 
     def build_sensor_input(self):
 
-        #JSON file containing lidar sensor configurations for cBLUE
+        # JSON file containing lidar sensor configurations for cBLUE
         sensor_file = "lidar_sensors.json"
 
-        #Check if the lidar sensor config file exists
+        # Check if the lidar sensor config file exists
         if os.path.isfile(sensor_file):
             with open(sensor_file) as sf:
-                #If the file exists load the information into self.sensor_config
+                # If the file exists load the information into sensor_names
                 sensor_names = json.load(sf)
         else:
             logging.cblue("Sensor file doesn't exist")
@@ -585,7 +585,7 @@ class ControllerPanel(ttk.Frame):
                 self.controller.controller_configuration, indent=1, sort_keys=True
             )
         )
-        self.sbet = Sbet(self.sbetInput.directoryName)
+        self.sbet = Sbet(self.sbetInput.directoryName, self.selected_sensor)
         self.sbet.set_data()
         self.is_sbet_loaded = True
         self.sbet_btn_text.set("Trajectory Loaded")
