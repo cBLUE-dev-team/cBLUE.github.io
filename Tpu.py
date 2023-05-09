@@ -193,8 +193,6 @@ class Tpu:
                     else:
                         #Not PILLS Sensor: Sending to fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
-                    
-                    
 
                     vdatum_mcu = (
                         float(self.gui_object.mcu) / 100.0
