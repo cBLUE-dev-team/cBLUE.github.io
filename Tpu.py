@@ -154,12 +154,13 @@ class Tpu:
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
                 merged_data, stddev, unsort_idx, raw_class = merge.merge(
-                    las.las_short_name,
+                    las,
                     fl,
                     sbet.values,
                     fl_unsorted_las_xyzt,
                     fl_t_argsort,
                     fl_las_idx,
+                    self.sensor_object
                 )
 
                 if merged_data is not False:  # i.e., las and sbet is merged
