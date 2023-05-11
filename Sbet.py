@@ -80,6 +80,7 @@ class Sbet:
         self.GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
         self.GPS_ADJUSTED_OFFSET = 1e9
 
+
     @staticmethod
     def get_sbet_date(sbet):
         """parses year, month, and day from ASCII sbet filename
@@ -206,7 +207,7 @@ class Sbet:
                 index_col=False,
             )
             logger.sbet("({} trajectory points)".format(sbet_df.shape[0]))
-
+            
             is_sow = self.check_if_sow(sbet_df["time"][0])
             if is_sow:
                 gps_time_adj = self.gps_sow_to_gps_adj(sbet_date, sbet_df["time"])
@@ -300,8 +301,8 @@ class Sbet:
             :param string sbet_file: SBET File name selected by the user
             :param string modified_sbet_fil: File name that the processed SBET data will be written to
         """
-        # The first 26 rows of a PILLS sbet file are descrptions of the data
-        n = 26
+        # The first 28 rows of a PILLS sbet file are descrptions of the data
+        n = 28
         # List of column indicies to drop from the PILLS sbet file
         drop_columns = [1, 7, 11, 12, 13]
         # Column index to reorder the sbet columns after the unneeded columns have been dropped
@@ -330,7 +331,8 @@ class Sbet:
         
         # Drop the unneeded columns
         new_sbet_df = sbet_df.drop(sbet_df.columns[drop_columns], axis = 1)
-        #Rename column labels
+
+        #Rename column labels to make it easier to reorder them
         new_sbet_df.columns = range(0,15)
 
         # logger.sbet(f"sbet dropped columns: {new_sbet_df}")
