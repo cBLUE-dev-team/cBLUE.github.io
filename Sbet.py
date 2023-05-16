@@ -281,7 +281,7 @@ class Sbet:
         """Pre-process the given PILLS SBET data into the expected cBLUE format so that build_sbets_data()
             will run as expected. 
 
-            The PILLS SBET file has 26 lines of text describing the data in the file preceeding the SBET data.
+            The PILLS SBET file has a varying number of lines of text describing the data in the file preceeding the SBET data.
             The PILLS SBET data has 20 columns in the order:
                 TIME, DISTANCE, EASTING, NORTHING, ELLIPSOID HEIGHT, LATITUDE, LONGITUDE,
                 ELLIPSOID HEIGHT, ROLL, PITCH, HEADING, EAST VELOCITY, NORTH VELOCITY,
@@ -301,8 +301,11 @@ class Sbet:
             :param string sbet_file: SBET File name selected by the user
             :param string modified_sbet_fil: File name that the processed SBET data will be written to
         """
-        # The first 28 rows of a PILLS sbet file are descrptions of the data
-        n = 28
+        # The first 26-28 rows of a PILLS sbet file are descrptions of the data.
+        #   Drop the first 100 lines (header lines and time when plane is on the ground)
+        #   to ensure that all extra header lines are dropped.
+        n = 100
+        
         # List of column indicies to drop from the PILLS sbet file
         drop_columns = [1, 7, 11, 12, 13]
         # Column index to reorder the sbet columns after the unneeded columns have been dropped
