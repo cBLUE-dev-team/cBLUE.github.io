@@ -56,7 +56,7 @@ class Merge:
         # logger.merge(f"std rho: {self.std_rho}")
 
 
-    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx):
+    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx, sensor_object):
         """returns sbet & las data merged based on timestamps
 
         The cBLUE TPU calculations require the sbet and las data to be in
@@ -105,16 +105,35 @@ class Merge:
         """
         num_sbet_pts = sbet_data.shape[0]
 
+        logger.merge(f"Num SBET points: {num_sbet_pts}")
+
         # sort xyzt array based on t_idx column
         idx = fl_t_argsort.argsort()
         fl_las_data = fl_unsorted_las_xyzt[idx]
         fl_las_idx = fl_las_idx[idx]
 
+        logger.merge(f"idx before: {idx}")
+        logger.merge(f"fl_las_data: {fl_las_data}")
+        logger.merge(f"fl_las_idx: {fl_las_idx}")
+        logger.merge(f"LAS Point Format ID: {las.inFile.point_format.id}")
+        logger.merge(f"Las Dimension Names: {list(las.inFile.point_format.dimension_names)}")
+        logger.merge(f"sbet_data[:,0]: {sbet_data[:, 0]}")
+        logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+
+        if(sensor_object.name == "PILLS"):
+            fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
+
+        logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
 
+        logger.merge(f"idx after: {idx}")
+
         # don't use las points outside range of sbet points
         mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
+
+        logger.merge(f"mask: {mask}")
 
         t_sbet_masked = sbet_data[:, 0][idx[mask]]
         t_las_masked = fl_las_data[:, 3][mask]
@@ -128,7 +147,7 @@ class Merge:
             raw_class = False
 
             logging.warning("trajectory and LAS data NOT MERGED")
-            logging.warning("({} FL {}) max_dt: {}".format(las, fl, max_dt))
+            logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
         else:
             data = np.asarray(
                 [
