@@ -50,8 +50,8 @@
     "Leica Chiroptera 4X (HawkEye 4X Shallow)": {
         "sensor_model": {
             "sensor_type": "",
-            "a_std_dev": 0.25,
-            "b_std_dev": 0.25,
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
             "std_rho": 0.020
         },
         "subaqueous_LUTs": {
@@ -62,8 +62,8 @@
     "HawkEye 4X 400m AGL": {
         "sensor_model": {
             "sensor_type": "",
-            "a_std_dev": 0.25,
-            "b_std_dev": 0.25,
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
             "std_rho": 0.020
         },
         "subaqueous_LUTs": {
@@ -74,8 +74,8 @@
     "HawkEye 4X 500m AGL": {
         "sensor_model": {
             "sensor_type": "",
-            "a_std_dev": 0.25,
-            "b_std_dev": 0.25,
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
             "std_rho": 0.020
         },
         "subaqueous_LUTs": {
@@ -86,8 +86,8 @@
     "HawkEye 4X 600m AGL": {
         "sensor_model": {
             "sensor_type": "",
-            "a_std_dev": 0.25,
-            "b_std_dev": 0.25,
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
             "std_rho": 0.020
         },
         "subaqueous_LUTs": {
