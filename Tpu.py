@@ -124,8 +124,17 @@ class Tpu:
 
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
-
         #diag_dfs = []
+
+        #learning about the PILLS las file
+        las_check = laspy.read(las_file)
+        fan_angle = las_check.scan_angle
+        logger.tpu(f"Fan angle: {fan_angle*0.006}")
+        # point_format = las_check.point_format
+        # logger.tpu(f"LAS Dimensions: {list(point_format.dimension_names)}")
+        # df = pd.DataFrame(las_check.scan_angle)
+        # df.to_csv("scan_angle.csv")
+
 
         if las.num_file_points:  # i.e., if las had data points
             logger.tpu(
@@ -148,7 +157,7 @@ class Tpu:
                 num_fl_points = np.sum(fl_idx)  # count Trues
                 logger.tpu(f"{las.las_short_name} fl {fl}: {num_fl_points} points")
 
-                # CREATE MERGED-DATA OBJECT M
+                # CREATE MERGED-DATA OBJECT
 
                 logger.tpu(
                     "({}) merging trajectory and las data...".format(las.las_short_name)

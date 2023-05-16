@@ -324,7 +324,7 @@ class Sbet:
             fp.close()
 
         # Read in the sbet_file and save it to a DataFrame
-        sbet_df = pd.read_csv(modified_sbet_file, delim_whitespace=True, header=None, index_col=False, dtype=float)
+        sbet_df = pd.read_csv(modified_sbet_file, delim_whitespace=True, header=None, index_col=False)
 
         # logger.sbet(f"sbet df: {sbet_df}")
         
