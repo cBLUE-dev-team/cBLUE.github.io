@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 18th, 2023
+May 16th, 2023
 
 """
 
@@ -112,28 +112,16 @@ class Merge:
         fl_las_data = fl_unsorted_las_xyzt[idx]
         fl_las_idx = fl_las_idx[idx]
 
-        logger.merge(f"idx before: {idx}")
-        logger.merge(f"fl_las_data: {fl_las_data}")
-        logger.merge(f"fl_las_idx: {fl_las_idx}")
-        logger.merge(f"LAS Point Format ID: {las.inFile.point_format.id}")
-        logger.merge(f"Las Dimension Names: {list(las.inFile.point_format.dimension_names)}")
-        logger.merge(f"sbet_data[:,0]: {sbet_data[:, 0]}")
-        logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
-
+        #TODO: Only for testing. Remove this if statement before merging with master branch. 
         if(sensor_object.name == "PILLS"):
+            #Convert gps time to gps standard adjusted time
             fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
-
-        logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
 
-        logger.merge(f"idx after: {idx}")
-
         # don't use las points outside range of sbet points
         mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
-
-        logger.merge(f"mask: {mask}")
 
         t_sbet_masked = sbet_data[:, 0][idx[mask]]
         t_las_masked = fl_las_data[:, 3][mask]
