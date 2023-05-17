@@ -375,8 +375,8 @@ class Tpu:
 
             csv_las = Las(out_las_name)
 
-            #xyz_to_decimal converts the x, y, z integer values to decimal values
-            x, y, z = csv_las.xyz_to_decimal()
+            #xyz_to_coordinate converts the x, y, z integer values to decimal values
+            x, y, z = csv_las.xyz_to_coordinate()
 
             # Save relevant data to csv
             pd.DataFrame.from_dict(
