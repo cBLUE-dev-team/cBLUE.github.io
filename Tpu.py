@@ -388,13 +388,18 @@ class Tpu:
             # get name of csv from las file
             out_csv_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.csv"
 
+            csv_las = Las(out_las_name)
+
+            #xyz_to_decimal converts the x, y, z integer values to decimal values
+            x, y, z = csv_las.xyz_to_decimal()
+
             # Save relevant data to csv
             pd.DataFrame.from_dict(
                 {
                     "GPS Time": out_las.gps_time,
-                    "X": out_las.X,
-                    "Y": out_las.Y,
-                    "Z": out_las.Z,
+                    "X": x,
+                    "Y": y,
+                    "Z": z,
                     "THU": out_las.total_thu,
                     "TVU": out_las.total_tvu,
                     "Classification": out_las.classification,
