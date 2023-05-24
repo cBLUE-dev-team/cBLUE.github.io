@@ -28,6 +28,10 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
+Last Edited By:
+Keana Kief (OSU)
+May 16th, 2023
+
 """
 import os
 import pandas as pd
@@ -86,18 +90,10 @@ class Las:
         :return: np.array, np.array, np.array, np.array
         """
 
-        scale_x = np.asarray(self.inFile.header.scales[0])
-        scale_y = np.asarray(self.inFile.header.scales[1])
-        scale_z = np.asarray(self.inFile.header.scales[2])
-
-        offset_x = np.asarray(self.inFile.header.offsets[0])
-        offset_y = np.asarray(self.inFile.header.offsets[1])
-        offset_z = np.asarray(self.inFile.header.offsets[2])
+        #xyz_to_coordinate converts the x, y, z integer values to coordinate values
+        x, y, z = self.xyz_to_coordinate()
 
         t = self.points_to_process["gps_time"]
-        X = self.points_to_process["X"]
-        Y = self.points_to_process["Y"]
-        Z = self.points_to_process["Z"]
 
         if "classification" in self.points_to_process.array.dtype.names:
             c = self.points_to_process["classification"]
@@ -106,10 +102,6 @@ class Las:
         else:
             raise Exception("Unknown las version or missing classification attribute.")
 
-        x = ne.evaluate("X * scale_x + offset_x")
-        y = ne.evaluate("Y * scale_y + offset_y")
-        z = ne.evaluate("Z * scale_z + offset_z")
-
         self.t_argsort = t.argsort()
 
         xyztc = np.vstack([x, y, z, t, c]).T
@@ -117,8 +109,26 @@ class Las:
         flight_lines = self.points_to_process["pt_src_id"]
 
         return xyztc, self.t_argsort, flight_lines
+    
+    def xyz_to_coordinate(self):
+        """The x, y, and z values in the las file are stored as integers.  The
+        scale and offset values in the las file header are used to convert
+        the integer values to decimal values with centimeter precision."""
 
+        scale_x = np.asarray(self.inFile.header.scales[0])
+        scale_y = np.asarray(self.inFile.header.scales[1])
+        scale_z = np.asarray(self.inFile.header.scales[2])
 
-if __name__ == "__main__":
-    pass
-# dummy comment
+        offset_x = np.asarray(self.inFile.header.offsets[0])
+        offset_y = np.asarray(self.inFile.header.offsets[1])
+        offset_z = np.asarray(self.inFile.header.offsets[2])
+
+        X = self.points_to_process["X"]
+        Y = self.points_to_process["Y"]
+        Z = self.points_to_process["Z"]
+
+        x = ne.evaluate("X * scale_x + offset_x")
+        y = ne.evaluate("Y * scale_y + offset_y")
+        z = ne.evaluate("Z * scale_z + offset_z")
+
+        return x, y, z
