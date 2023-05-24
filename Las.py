@@ -90,8 +90,8 @@ class Las:
         :return: np.array, np.array, np.array, np.array
         """
 
-        #xyz_to_decimal converts the x, y, z integer values to decimal values
-        x, y, z = self.xyz_to_decimal()
+        #xyz_to_coordinate converts the x, y, z integer values to decimal values
+        x, y, z = self.xyz_to_coordinate()
 
         t = self.points_to_process["gps_time"]
 
@@ -110,7 +110,7 @@ class Las:
 
         return xyztc, self.t_argsort, flight_lines
     
-    def xyz_to_decimal(self):
+    def xyz_to_coordinate(self):
         """The x, y, and z values in the las file are stored as integers.  The
         scale and offset values in the las file header are used to convert
         the integer values to decimal values with centimeter precision."""
