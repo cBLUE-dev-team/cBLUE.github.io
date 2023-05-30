@@ -131,8 +131,7 @@ class Tpu:
             )
             logger.tpu("flight lines {}".format(las.unq_flight_lines))
 
-            #TODO: unsorted_las_xyzt, t_argsort, flight_lines, scan_angle() = las.get_flight_line(sensor_object.name)
-            unsorted_las_xyzt, t_argsort, flight_lines = las.get_flight_line()
+            unsorted_las_xyzt, t_argsort, flight_lines, fan_angle = las.get_flight_line(self.sensor_object.name)
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
