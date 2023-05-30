@@ -114,7 +114,7 @@ class Merge:
 
         #TODO: Only for testing. Remove this if statement before merging with master branch. 
         if(sensor_object.name == "PILLS"):
-            #Convert gps time to gps standard adjusted time
+            #Convert gps time to Adjusted Standard GPS time
             fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
 
         # match sbet and las dfs based on timestamps
@@ -170,6 +170,11 @@ class Merge:
             )
 
             raw_class = fl_las_data[:, 4][mask]
+
+            #TODO: If PILLS scan_angle_masked = scan_angle[mask]
+            #       Else scan_angle_masked = []
+
+            # Add scan_angle_masked to return tuple
 
         return (
             data,

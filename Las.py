@@ -108,6 +108,11 @@ class Las:
 
         flight_lines = self.points_to_process["pt_src_id"]
 
+        #TODO:  Pass in the sensor name
+        #       Check if PILLS
+        #       scan_angle = [] for not PILLS
+        #       scan_angle = self.inFile.scan_angle*0.006 for PILLS
+        #       return xyztc, self.t_argsort, flight_lines, scan_angle
         return xyztc, self.t_argsort, flight_lines
     
     def xyz_to_coordinate(self):

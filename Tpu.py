@@ -124,24 +124,15 @@ class Tpu:
 
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
-        #diag_dfs = []
-
-        #learning about the PILLS las file
-        las_check = laspy.read(las_file)
-        fan_angle = las_check.scan_angle
-        logger.tpu(f"Fan angle: {fan_angle*0.006}")
-        # point_format = las_check.point_format
-        # logger.tpu(f"LAS Dimensions: {list(point_format.dimension_names)}")
-        # df = pd.DataFrame(las_check.scan_angle)
-        # df.to_csv("scan_angle.csv")
-
 
         if las.num_file_points:  # i.e., if las had data points
             logger.tpu(
                 "{} ({:,} points)".format(las.las_short_name, las.num_file_points)
             )
             logger.tpu("flight lines {}".format(las.unq_flight_lines))
-            unsorted_las_xyzt, t_argsort, flight_lines = las.get_flight_line_txyz()
+
+            #TODO: unsorted_las_xyzt, t_argsort, flight_lines, scan_angle() = las.get_flight_line(sensor_object.name)
+            unsorted_las_xyzt, t_argsort, flight_lines = las.get_flight_line()
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
@@ -162,6 +153,8 @@ class Tpu:
                 logger.tpu(
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
+                #TODO: Pass scan_angle into merge.merge()
+                #       Get masked_scan_angle back
                 merged_data, stddev, unsort_idx, raw_class = merge.merge(
                     las,
                     fl,
@@ -198,6 +191,7 @@ class Tpu:
 
                     if(self.sensor_object.name == "PILLS"):
                         #PILLS Sensor: Sending to pills_fit_lut() 
+                        #TODO: Change to subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut(masked_scan_angle) 
                         subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut() 
                     
                     else:
