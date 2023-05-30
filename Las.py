@@ -79,7 +79,7 @@ class Las:
         # pandas' unique faster than numpy's ?
         return pd.unique(self.points_to_process["pt_src_id"])
 
-    def get_flight_line_txyz(self):
+    def get_flight_line(self):
         """retrieves the x, y, z, and timestamp data from the las data points
 
         The x, y, and z values in the las file are stored as integers.  The
