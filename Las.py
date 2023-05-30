@@ -40,6 +40,7 @@ import numpy as np
 import numexpr as ne
 import laspy
 
+logger = logging.getLogger(__name__)
 
 """
 This class provides the functionality to load las files into cBLUE.  One Las object
@@ -79,7 +80,7 @@ class Las:
         # pandas' unique faster than numpy's ?
         return pd.unique(self.points_to_process["pt_src_id"])
 
-    def get_flight_line(self):
+    def get_flight_line(self, sensor_name):
         """retrieves the x, y, z, and timestamp data from the las data points
 
         The x, y, and z values in the las file are stored as integers.  The
@@ -108,12 +109,16 @@ class Las:
 
         flight_lines = self.points_to_process["pt_src_id"]
 
-        #TODO:  Pass in the sensor name
-        #       Check if PILLS
-        #       scan_angle = [] for not PILLS
-        #       scan_angle = self.inFile.scan_angle*0.006 for PILLS
-        #       return xyztc, self.t_argsort, flight_lines, scan_angle
-        return xyztc, self.t_argsort, flight_lines
+        # Check if this is the PILLS sensor
+        if(sensor_name == "PILLS"):
+            #Get the fan angle and multiply it by 0.006 to convert to degrees
+            fan_angle = self.inFile.scan_angle*0.006
+            # logger.las(f"{sensor_name} Fan Angle: {fan_angle}")
+        else:
+            fan_angle = []
+            # logger.las(f"{sensor_name} Fan Angle: {fan_angle}")
+
+        return xyztc, self.t_argsort, flight_lines, fan_angle
     
     def xyz_to_coordinate(self):
         """The x, y, and z values in the las file are stored as integers.  The
