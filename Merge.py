@@ -56,7 +56,7 @@ class Merge:
         # logger.merge(f"std rho: {self.std_rho}")
 
 
-    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx, sensor_object):
+    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx, sensor_name, fan_angle):
         """returns sbet & las data merged based on timestamps
 
         The cBLUE TPU calculations require the sbet and las data to be in
@@ -113,7 +113,7 @@ class Merge:
         fl_las_idx = fl_las_idx[idx]
 
         #TODO: Only for testing. Remove this if statement before merging with master branch. 
-        if(sensor_object.name == "PILLS"):
+        if(sensor_name == "PILLS"):
             #Convert gps time to Adjusted Standard GPS time
             fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
 
@@ -171,9 +171,11 @@ class Merge:
 
             raw_class = fl_las_data[:, 4][mask]
 
-            #TODO: If PILLS scan_angle_masked = scan_angle[mask]
-            #       Else scan_angle_masked = []
-
+            # If this is the PILLS sensor, use the mask on the fan angle array 
+            if(sensor_name == "PILLS"):
+                masked_fan_angle = fan_angle[mask]
+            else:
+                masked_fan_angle = []
             # Add scan_angle_masked to return tuple
 
         return (
@@ -181,6 +183,7 @@ class Merge:
             stddev,
             fl_las_idx[mask],
             raw_class,
+            masked_fan_angle
         )  # 2nd to last array is masked t_idx
 
 
