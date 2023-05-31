@@ -152,16 +152,16 @@ class Tpu:
                 logger.tpu(
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
-                #TODO: Pass scan_angle into merge.merge()
-                #       Get masked_scan_angle back
-                merged_data, stddev, unsort_idx, raw_class = merge.merge(
+
+                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle = merge.merge(
                     las,
                     fl,
                     sbet.values,
                     fl_unsorted_las_xyzt,
                     fl_t_argsort,
                     fl_las_idx,
-                    self.sensor_object
+                    self.sensor_object,
+                    fan_angle
                 )
 
                 if merged_data is not False:  # i.e., las and sbet is merged
