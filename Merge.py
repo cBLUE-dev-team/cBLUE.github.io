@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 16th, 2023
+May 30th, 2023
 
 """
 
@@ -184,7 +184,7 @@ class Merge:
             fl_las_idx[mask],
             raw_class,
             masked_fan_angle
-        )  # 2nd to last array is masked t_idx
+        )  # 3rd to last array is masked t_idx
 
 
 if __name__ == "__main__":
