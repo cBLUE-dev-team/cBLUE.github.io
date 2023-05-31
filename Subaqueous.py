@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-April 26th, 2023
+May 30th, 2023
 """
 
 import logging
@@ -129,7 +129,7 @@ class Subaqueous:
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return mean_fit_tvu, mean_fit_thu
     
-    def pills_fit_lut(self):
+    def pills_fit_lut(self, masked_fan_angle):
         """Called to begin the SubAqueous processing for the PILLS sensor"""
     
         # # tvu values below 0.03 are considered erroneous

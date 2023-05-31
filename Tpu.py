@@ -190,8 +190,7 @@ class Tpu:
 
                     if(self.sensor_object.name == "PILLS"):
                         #PILLS Sensor: Sending to pills_fit_lut() 
-                        #TODO: Change to subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut(masked_scan_angle) 
-                        subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut() 
+                        subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut(masked_fan_angle) 
                     
                     else:
                         #Not PILLS Sensor: Sending to fit_lut() 
