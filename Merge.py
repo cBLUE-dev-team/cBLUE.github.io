@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 30th, 2023
+May 31th, 2023
 
 """
 
@@ -56,7 +56,7 @@ class Merge:
         # logger.merge(f"std rho: {self.std_rho}")
 
 
-    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx, sensor_name, fan_angle):
+    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyztcf, fl_t_argsort, fl_las_idx, sensor_object):
         """returns sbet & las data merged based on timestamps
 
         The cBLUE TPU calculations require the sbet and las data to be in
@@ -107,13 +107,13 @@ class Merge:
 
         logger.merge(f"Num SBET points: {num_sbet_pts}")
 
-        # sort xyzt array based on t_idx column
+        # sort xyztcf array based on t_idx column
         idx = fl_t_argsort.argsort()
-        fl_las_data = fl_unsorted_las_xyzt[idx]
+        fl_las_data = fl_unsorted_las_xyztcf[idx]
         fl_las_idx = fl_las_idx[idx]
 
         #TODO: Only for testing. Remove this if statement before merging with master branch. 
-        if(sensor_name == "PILLS"):
+        if(sensor_object.name == "PILLS"):
             #Convert gps time to Adjusted Standard GPS time
             fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
 
@@ -133,6 +133,7 @@ class Merge:
             data = False
             stddev = False
             raw_class = False
+            masked_fan_angle = False
 
             logging.warning("trajectory and LAS data NOT MERGED")
             logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
@@ -171,12 +172,20 @@ class Merge:
 
             raw_class = fl_las_data[:, 4][mask]
 
+            masked_fan_angle = []
+
             # If this is the PILLS sensor, use the mask on the fan angle array 
-            if(sensor_name == "PILLS"):
-                masked_fan_angle = fan_angle[mask]
-            else:
-                masked_fan_angle = []
-            # Add scan_angle_masked to return tuple
+            if(sensor_object.name == "PILLS"):
+                masked_fan_angle = fl_las_data[:, 5][mask]
+                #Take the absolute value of the fan angle
+                masked_fan_angle = np.absolute(masked_fan_angle)
+                #Round fan angle to the nearest integer
+                #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
+                #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
+                masked_fan_angle = np.floor(masked_fan_angle + 0.5)
+
+        # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
+        # logger.merge(f"processed fan angle: {masked_fan_angle}")
 
         return (
             data,
