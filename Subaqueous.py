@@ -30,11 +30,12 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-May 30th, 2023
+May 31th, 2023
 """
 
 import logging
 import pandas as pd
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -132,32 +133,60 @@ class Subaqueous:
     def pills_fit_lut(self, masked_fan_angle):
         """Called to begin the SubAqueous processing for the PILLS sensor"""
     
-        # # tvu values below 0.03 are considered erroneous
-        # min_tvu = 0.03
+        # tvu values below 0.03 are considered erroneous
+        min_tvu = 0.03
 
-        # # query coefficients from look up tables
+        # query coefficients from look up tables
         fit_tvu, fit_thu = self.pills_model_process()
 
-        # # # a_h := horizontal linear coeffs
-        # # # b_h := horizontal linear offsets
-        # # a_h = fit_thu["a"].to_numpy()
-        # # b_h = fit_thu["b"].to_numpy()
+        # a_h := horizontal linear coeffs
+        # b_h := horizontal linear offsets
+        a_h = fit_thu["a"].to_numpy()
+        b_h = fit_thu["b"].to_numpy()
 
-        # # inner product of coeffs w/ depths + offsets
-        # # gives matrix of dims (#coeffs, #las points)
-        # res_thu = a_h @ self.depth.reshape(1, -1) + b_h
+        # a_z := vertical linear coeffs
+        # b_z := vertical linear offsets
+        a_z = fit_tvu["a"].to_numpy()
+        b_z = fit_tvu["b"].to_numpy()
 
-        # # a_z := vertical linear coeffs
-        # # b_z := vertical linear offsets
-        # a_z = fit_tvu["a"].to_numpy()
-        # b_z = fit_tvu["b"].to_numpy()
+        # logger.subaqueous(f"Horizontal coefficents: {a_h}")
+        # logger.subaqueous(f"Horizontal offsets: {b_h}")
+        # logger.subaqueous(f"Vertical coefficents: {a_z}")
+        # logger.subaqueous(f"Vertical offsets: {b_z}")
 
-        # res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
+        res_thu = []
+        res_tvu = []
 
-        # # enforce minimum value for tvu
-        # res_tvu[res_tvu < min_tvu] = min_tvu
+        #Loop through the depth and the masked fan angle
+        for depth_point, fan_angle_point in zip(self.depth, masked_fan_angle):
+            
+            #Use the fan angle at this point an an index to get the
+            #  horizontal coefficent and offset for this depth point
+            a_h_point = a_h[fan_angle_point]
+            b_h_point = b_h[fan_angle_point]
 
-        # return res_thu, res_tvu
+            # Product of coeffs w/ depths + offsets
+            thu_point = a_h_point * depth_point + b_h_point
+
+            #Add the subaqueous thu at this point to the list of result thu values
+            res_thu.append(thu_point)
+
+            #Use the fan angle at this point an an index to get the
+            #  vertical coefficent and offset for this depth point
+            a_z_point = a_z[fan_angle_point]
+            b_z_point = b_z[fan_angle_point]
+
+            # Product of coeffs w/ depths + offsets
+            tvu_point = a_z_point * depth_point + b_z_point
+
+            # enforce minimum value for tvu
+            if(tvu_point < min_tvu):
+                tvu_point = min_tvu
+
+            #Add the subaqueous tvu at this point to the list of result thu values
+            res_tvu.append(tvu_point)
+
+        return np.asarray(res_thu), np.asarray(res_tvu)
     
     def pills_model_process(self):
         """Retrieves the page of TVU and THU observation equation coefficients for all fan angles for the given combination
