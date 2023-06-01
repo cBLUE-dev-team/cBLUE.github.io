@@ -102,13 +102,7 @@ class Las:
             c = self.points_to_process["classification_flags"]
         else:
             raise Exception("Unknown las version or missing classification attribute.")
-
-        self.t_argsort = t.argsort()
-
-        xyztc = np.vstack([x, y, z, t, c]).T
-
-        flight_lines = self.points_to_process["pt_src_id"]
-
+        
         # Check if this is the PILLS sensor
         if(sensor_name == "PILLS"):
             #Get the fan angle and multiply it by 0.006 to convert to degrees
@@ -118,7 +112,14 @@ class Las:
             fan_angle = []
             # logger.las(f"{sensor_name} Fan Angle: {fan_angle}")
 
-        return xyztc, self.t_argsort, flight_lines, fan_angle
+
+        self.t_argsort = t.argsort()
+
+        xyztcf = np.vstack([x, y, z, t, c, fan_angle]).T
+
+        flight_lines = self.points_to_process["pt_src_id"]
+
+        return xyztcf, self.t_argsort, flight_lines
     
     def xyz_to_coordinate(self):
         """The x, y, and z values in the las file are stored as integers.  The
