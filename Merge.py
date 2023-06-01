@@ -182,7 +182,7 @@ class Merge:
                 #Round fan angle to the nearest integer
                 #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
                 #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
-                masked_fan_angle = np.floor(masked_fan_angle + 0.5)
+                masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
 
         # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
         # logger.merge(f"processed fan angle: {masked_fan_angle}")
