@@ -102,20 +102,20 @@ class Las:
             c = self.points_to_process["classification_flags"]
         else:
             raise Exception("Unknown las version or missing classification attribute.")
-        
+
+        self.t_argsort = t.argsort()
+
         # Check if this is the PILLS sensor
         if(sensor_name == "PILLS"):
             #Get the fan angle and multiply it by 0.006 to convert to degrees
             fan_angle = self.inFile.scan_angle*0.006
+            #Add xyztcf to an array together
+            xyztcf = np.vstack([x, y, z, t, c, fan_angle]).T
             # logger.las(f"{sensor_name} Fan Angle: {fan_angle}")
         else:
-            fan_angle = []
-            # logger.las(f"{sensor_name} Fan Angle: {fan_angle}")
-
-
-        self.t_argsort = t.argsort()
-
-        xyztcf = np.vstack([x, y, z, t, c, fan_angle]).T
+            #Fan angle is not used by the other sensors
+            #Add xyztc to an array together
+            xyztcf = np.vstack([x, y, z, t, c]).T
 
         flight_lines = self.points_to_process["pt_src_id"]
 
