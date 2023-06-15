@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 3rd, 2023
+June 15th, 2023
 
 THINGS TO DO:
 Add comments
@@ -158,7 +158,7 @@ class CBlueApp(tk.Tk):
 
         canvas = tk.Canvas(about, width=615, height=371)
         splash_img = tk.PhotoImage(file="cBLUE_splash.gif", master=canvas)
-        canvas.pack(fill="both", expand="yes")
+        canvas.pack(fill="both", expand=True)
 
         license_msg = r"""
         cBLUE {}
@@ -716,5 +716,5 @@ class ControllerPanel(ttk.Frame):
 if __name__ == "__main__":
 
     app = CBlueApp()
-    app.geometry("350x650")
+    app.geometry("250x675")
     app.mainloop()
