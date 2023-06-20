@@ -112,19 +112,29 @@ class Merge:
         fl_las_data = fl_unsorted_las_xyztcf[idx]
         fl_las_idx = fl_las_idx[idx]
 
+        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
+
         #TODO: Only for testing. Remove this if statement before merging with master branch. 
-        if(sensor_object.name == "PILLS"):
-            #Convert gps time to Adjusted Standard GPS time
-            fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
+        # if(sensor_object.name == "PILLS"):
+        #     #Convert gps time to Adjusted Standard GPS time
+        #     # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
+        #     fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
+
+        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
 
         # don't use las points outside range of sbet points
         mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
 
         t_sbet_masked = sbet_data[:, 0][idx[mask]]
         t_las_masked = fl_las_data[:, 3][mask]
+
+        # logger.merge(f"t_las_masked: {t_las_masked}")
+        # logger.merge(f"t_sbet_masked: {t_sbet_masked}")
 
         dt = ne.evaluate("t_sbet_masked - t_las_masked")
         max_dt = ne.evaluate("max(dt)")  # may be empty
