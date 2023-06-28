@@ -32,6 +32,7 @@ Last Edited By:
 Keana Kief (OSU)
 May 30th, 2023
 
+
 """
 import os
 import pandas as pd
@@ -91,7 +92,7 @@ class Las:
         :return: np.array, np.array, np.array, np.array
         """
 
-        #xyz_to_coordinate converts the x, y, z integer values to decimal values
+        #xyz_to_coordinate converts the x, y, z integer values to coordinate values
         x, y, z = self.xyz_to_coordinate()
 
         t = self.points_to_process["gps_time"]
@@ -120,6 +121,7 @@ class Las:
         flight_lines = self.points_to_process["pt_src_id"]
 
         return xyztcf, self.t_argsort, flight_lines
+
     
     def xyz_to_coordinate(self):
         """The x, y, and z values in the las file are stored as integers.  The
@@ -138,9 +140,9 @@ class Las:
         Y = self.points_to_process["Y"]
         Z = self.points_to_process["Z"]
 
+
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
         z = ne.evaluate("Z * scale_z + offset_z")
 
         return x, y, z
-    
