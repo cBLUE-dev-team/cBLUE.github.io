@@ -28,6 +28,10 @@ Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
+Last Edited By:
+Keana Kief (OSU)
+May 16th, 2023
+
 """
 
 import os
@@ -48,7 +52,7 @@ that are exported from Applanix's PosPac software.
 
 
 class Sbet:
-    def __init__(self, sbet_dir):
+    def __init__(self, sbet_dir, sensor_name):
         """
         The data from all of the loaded sbet files are represented by
         a single Sbet object.  When the Sbet class is instantiated,
@@ -59,6 +63,8 @@ class Sbet:
         """
 
         self.sbet_dir = sbet_dir
+
+        self.sensor_name = sensor_name
 
         self.sbet_files = sorted(
             [
@@ -73,6 +79,7 @@ class Sbet:
         self.SECS_PER_DAY = 24 * 60 * 60  # 86400 sec
         self.GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
         self.GPS_ADJUSTED_OFFSET = 1e9
+
 
     @staticmethod
     def get_sbet_date(sbet):
@@ -173,6 +180,9 @@ class Sbet:
             "stdpitch",
             "stdheading",
         ]
+        # Used for holding processed SBET data if this is the PILLS sensor
+        modified_sbet_file = "modified_pills_sbet.txt"
+
         print(r"Loading trajectory files...")
         logger.sbet("loading {} trajectory files...".format(len(self.sbet_files)))
         for sbet in progressbar.progressbar(
@@ -180,6 +190,13 @@ class Sbet:
         ):
             logger.sbet("-" * 50)
             logger.sbet("{}...".format(os.path.split(sbet)[-1]))
+            sbet_date = self.get_sbet_date(sbet)
+            # If this is the PILLS sensor, pre-process the sbet data
+            if(self.sensor_name == "PILLS"):
+                logger.sbet("PILLS Sensor, pre-processing sbet file")
+                self.preprocess_pills_sbet(sbet, modified_sbet_file)
+                # Reassign the SBET file name to the modified file
+                sbet = modified_sbet_file
             sbet_df = pd.read_csv(
                 sbet,
                 skip_blank_lines=True,
@@ -190,8 +207,7 @@ class Sbet:
                 index_col=False,
             )
             logger.sbet("({} trajectory points)".format(sbet_df.shape[0]))
-            sbet_date = self.get_sbet_date(sbet)
-
+            
             is_sow = self.check_if_sow(sbet_df["time"][0])
             if is_sow:
                 gps_time_adj = self.gps_sow_to_gps_adj(sbet_date, sbet_df["time"])
@@ -200,6 +216,12 @@ class Sbet:
             sbets_df = sbets_df.append(sbet_df, ignore_index=True)
 
         sbets_data = sbets_df.sort_values(["time"], ascending=[1])
+
+        #If this was the PILLS sensor and we created a modified SBET file.
+        #   Then clean up by deleting the modified_pills_sbet.txt
+        if os.path.isfile(modified_sbet_file):
+            logger.sbet("Cleaning up Modified SBET file")
+            os.remove(modified_sbet_file)
 
         return sbets_data
 
@@ -254,3 +276,74 @@ class Sbet:
         ]
 
         return data
+    
+    def preprocess_pills_sbet(self, sbet_file, modified_sbet_file):
+        """Pre-process the given PILLS SBET data into the expected cBLUE format so that build_sbets_data()
+            will run as expected. 
+
+            The PILLS SBET file has a varying number of lines of text describing the data in the file preceeding the SBET data.
+            The PILLS SBET data has 20 columns in the order:
+                TIME, DISTANCE, EASTING, NORTHING, ELLIPSOID HEIGHT, LATITUDE, LONGITUDE,
+                ELLIPSOID HEIGHT, ROLL, PITCH, HEADING, EAST VELOCITY, NORTH VELOCITY,
+                UP VELOCITY, EAST SD, NORTH SD, HEIGHT SD, ROLL SD, PITCH SD, HEADING SD
+ 
+            build_sbets_data() expects for the data to have 15 columns in the order:
+                timestamp (GPS seconds-of-week or GPS standard adjusted time), longitude, latitude,
+                X (easting), Y (northing), Z (ellipsoid height), roll, pitch, heading, standard deviation X,
+                standard deviation Y, standard deviation Z, standard deviation roll, standard deviation pitch,
+                standard deviation heading
+
+            The heading text is removed from the file. The 5 unneeded columns are dropped from the table. 
+            The column order is rearranged to match the expected order in build_sbets_data().
+
+            The processed data is then written to the modified_sbet_file. 
+
+            :param string sbet_file: SBET File name selected by the user
+            :param string modified_sbet_fil: File name that the processed SBET data will be written to
+        """
+        # The first 26-28 rows of a PILLS sbet file are descrptions of the data.
+        #   Drop the first 100 lines (header lines and time when plane is on the ground)
+        #   to ensure that all extra header lines are dropped.
+        n = 100
+        
+        # List of column indicies to drop from the PILLS sbet file
+        drop_columns = [1, 7, 11, 12, 13]
+        # Column index to reorder the sbet columns after the unneeded columns have been dropped
+        # Time, Longitude, Latitude, X(Easting), Y(Northing), Z(Ellipsoid Height), Roll, Pitch, Heading,
+        #   stdx(East SD), stdy(North SD), stdz(Height SD), stdroll(Roll SD), stdpitch(Pitch SD), stdheading(Heading SD)
+        new_order = [0, 5, 4, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+        # We want to get rid of the first 26 lines of the file
+        # open the sbet file with read and write permissions
+        with open(sbet_file, 'r') as fp:
+            #read in the lines of the sbet file
+            lines = fp.readlines()
+
+            with open(modified_sbet_file, 'w') as modified_fp:
+                #write the lines to the modified file without the first 26 lines
+                modified_fp.writelines(lines[n:])
+
+                modified_fp.close()
+
+            fp.close()
+
+        # Read in the sbet_file and save it to a DataFrame
+        sbet_df = pd.read_csv(modified_sbet_file, delim_whitespace=True, header=None, index_col=False)
+
+        # logger.sbet(f"sbet df: {sbet_df}")
+        
+        # Drop the unneeded columns
+        new_sbet_df = sbet_df.drop(sbet_df.columns[drop_columns], axis = 1)
+
+        #Rename column labels to make it easier to reorder them
+        new_sbet_df.columns = range(0,15)
+
+        # logger.sbet(f"sbet dropped columns: {new_sbet_df}")
+
+        # Rearrange the column order to match expected column order
+        new_sbet_df = new_sbet_df.reindex(new_order, axis =1)
+
+        # logger.sbet(f"sbet rearranged: {new_sbet_df}")
+
+        # Write the processed data to the modified sbet file
+        new_sbet_df.to_csv(modified_sbet_file, index=False, index_label=False, sep=" ", header=False)

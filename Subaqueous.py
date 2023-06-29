@@ -30,11 +30,12 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-April 19th, 2023
+May 31th, 2023
 """
 
 import logging
 import pandas as pd
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -44,15 +45,14 @@ class Subaqueous:
     To be used in conjunction with the associated
     """
 
-    def __init__(self, wind_par, kd_par, depth, sensor_object):
+    def __init__(self, gui_object, depth, sensor_object):
 
-        self.wind_par = wind_par
-        self.kd_par = kd_par
+        self.gui_object = gui_object
         self.depth = depth
         self.sensor_object = sensor_object
 
-        logger.subaqueous(f"kd_par {self.kd_par}")
-        logger.subaqueous(f"wind_par {self.wind_par}")
+        logger.subaqueous(f"kd_par {self.gui_object.kd_vals}")
+        logger.subaqueous(f"wind_par {self.gui_object.wind_vals}")
         logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
         logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
 
@@ -94,7 +94,7 @@ class Subaqueous:
         :rtype: (DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 1-10.
-        # cBLUE gives users four options for Wind Speed:
+        # cBLUE gives users five options for Wind Speed:
         #   Wind Speed: Calm-light air (0-2 kts) == [1]
         #               Light Breeze (3-6 kts) == [2,3]
         #               Gentle Breeze (7-10 kts) == [4,5]
@@ -109,7 +109,7 @@ class Subaqueous:
         #       Moderate-High (0.26-0.32 m^-1) == [26-32]
         #       High (0.33-0.36 m^-1) == [33-36]
 
-        # self.wind_par and self.kd_par are used to get the right indices for the lookup table.
+        # self.gui_object.wind_vals and self.gui_object.kd_vals are used to get the right indices for the lookup table.
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
 
         # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
@@ -117,7 +117,7 @@ class Subaqueous:
 
         # For every permutation of values from the wind_par and kd_par arrays, get an index
         #  and add it to the indices array. 
-        indices = [31 * (w - 1) + k - 6 for w in self.wind_par for k in self.kd_par]
+        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
 
         # Read look up tables, select rows
         fit_tvu = pd.read_csv(self.sensor_object.vert_lut, names=["a", "b"]).iloc[indices]
@@ -129,3 +129,109 @@ class Subaqueous:
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return mean_fit_tvu, mean_fit_thu
+    
+    def pills_fit_lut(self, masked_fan_angle):
+        """Called to begin the SubAqueous processing for the PILLS sensor"""
+    
+        # tvu values below 0.03 are considered erroneous
+        min_tvu = 0.03
+
+        # query coefficients from look up tables
+        fit_tvu, fit_thu = self.pills_model_process()
+
+        # a_h := horizontal linear coeffs
+        # b_h := horizontal linear offsets
+        a_h = fit_thu["a"].to_numpy()
+        b_h = fit_thu["b"].to_numpy()
+
+        # a_z := vertical linear coeffs
+        # b_z := vertical linear offsets
+        a_z = fit_tvu["a"].to_numpy()
+        b_z = fit_tvu["b"].to_numpy()
+
+        # logger.subaqueous(f"Horizontal coefficents: {a_h}")
+        # logger.subaqueous(f"Horizontal offsets: {b_h}")
+        # logger.subaqueous(f"Vertical coefficents: {a_z}")
+        # logger.subaqueous(f"Vertical offsets: {b_z}")
+
+        res_thu = []
+        res_tvu = []
+
+        #Loop through the depth and the masked fan angle
+        for depth_point, fan_angle_point in zip(self.depth, masked_fan_angle):
+            
+            #Use the fan angle at this point an an index to get the
+            #  horizontal coefficent and offset for this depth point
+            a_h_point = a_h[fan_angle_point]
+            b_h_point = b_h[fan_angle_point]
+
+            # Product of coeffs w/ depths + offsets
+            thu_point = a_h_point * depth_point + b_h_point
+
+            #Add the subaqueous thu at this point to the list of result thu values
+            res_thu.append(thu_point)
+
+            #Use the fan angle at this point an an index to get the
+            #  vertical coefficent and offset for this depth point
+            a_z_point = a_z[fan_angle_point]
+            b_z_point = b_z[fan_angle_point]
+
+            # Product of coeffs w/ depths + offsets
+            tvu_point = a_z_point * depth_point + b_z_point
+
+            # enforce minimum value for tvu
+            if(tvu_point < min_tvu):
+                tvu_point = min_tvu
+
+            #Add the subaqueous tvu at this point to the list of result thu values
+            res_tvu.append(tvu_point)
+
+        return np.asarray(res_thu), np.asarray(res_tvu)
+    
+    def pills_model_process(self):
+        """Retrieves the page of TVU and THU observation equation coefficients for all fan angles for the given combination
+            of wind and kd. TVU and THU observation equation coefficients are based on the linear regression of 
+            precalculated uncertainties from Monte Carlo simulations  
+
+        :return: (fit_tvu, fit_thu) TVU and THU observation equation coefficients for each fan angle.
+        :rtype: (DataFrame, DataFrame)
+        """
+
+        # kd_ind are index values that range from 0-4 and represent the user's selection for Turbidity.
+        # cBLUE gives users five options for Turbidity:
+        #   kd: 0: ("Clear (0.06-0.10 m^-1)", range(6, 11)),
+        #       1: ("Clear-Moderate (0.11-0.17 m^-1)", range(11, 18)),
+        #       2: ("Moderate (0.18-0.25 m^-1)", range(18, 26)),
+        #       3: ("Moderate-High (0.26-0.32 m^-1)", range(26, 33)),
+        #       4: ("High (0.33-0.36 m^-1)", range(33, 37))
+
+        # wind_ind are index values that range from 0-4 and represent the user's selection for wind speed.
+        # cBLUE gives users five options for Wind Speed:
+        #   Wind Speed: 0: ("Calm-light air (0-2 kts)", [1]),
+        #               1: ("Light Breeze (3-6 kts)", [2, 3]),
+        #               2: ("Gentle Breeze (7-10 kts)", [4, 5]),
+        #               3: ("Moderate Breeze (11-15 kts)", [6, 7]),
+        #               4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
+
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the PILLS lookup table.
+        # The excel sheets are ordered by the permutations of turbidity (low to high) with wind speed (low to high).
+
+        # ex: sheet 0 represents fan angle observation equation coefficients for kd selection 0 and wind speed selection 0, 
+        #       sheet 1 represents kd selection 0 and wind speed selection 1, [...],
+        #       sheet 24 represents kd selection 4 and wind speed selection 4, etc.  
+
+        # Get the sheet number for this combination of wind_ind and kd_ind. 
+        sheet = (5 * self.gui_object.kd_ind) + self.gui_object.wind_ind
+
+        logger.subaqueous(f"kd_ind: {self.gui_object.kd_ind}, wind_ind: {self.gui_object.wind_ind}")
+        logger.subaqueous(f"PILLS look up table sheet number: {sheet}")
+
+        # Read look up tables, select rows
+        fit_tvu = pd.read_excel(self.sensor_object.vert_lut, sheet_name=sheet, header=None, names=["a", "b"])
+        fit_thu = pd.read_excel(self.sensor_object.horz_lut, sheet_name=sheet, header=None, names=["a", "b"])
+
+        # logger.subaqueous(f"PILLS fit_tvu: {fit_tvu}")
+        # logger.subaqueous(f"PILLS fit_thu: {fit_thu}")
+
+        # Return DataFrames of TVU and THU observation equation coefficients for each fan angle. 
+        return fit_tvu, fit_thu

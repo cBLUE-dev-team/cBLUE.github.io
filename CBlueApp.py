@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 25th, 2023
+June 15th, 2023
 
 THINGS TO DO:
 Add comments
@@ -158,7 +158,7 @@ class CBlueApp(tk.Tk):
 
         canvas = tk.Canvas(about, width=615, height=371)
         splash_img = tk.PhotoImage(file="cBLUE_splash.gif", master=canvas)
-        canvas.pack(fill="both", expand="yes")
+        canvas.pack(fill="both", expand=True)
 
         license_msg = r"""
         cBLUE {}
@@ -228,7 +228,7 @@ class ControllerPanel(ttk.Frame):
             1: ("Clear-Moderate (0.11-0.17 m^-1)", range(11, 18)),
             2: ("Moderate (0.18-0.25 m^-1)", range(18, 26)),
             3: ("Moderate-High (0.26-0.32 m^-1)", range(26, 33)),
-            4: ("High (0.33-0.36 m^-1)", range(33, 37)),
+            4: ("High (0.33-0.36 m^-1)", range(33, 37))
         }
 
         # TODO:  get from separate text file
@@ -238,7 +238,7 @@ class ControllerPanel(ttk.Frame):
             1: ("Light Breeze (3-6 kts)", [2, 3]),
             2: ("Gentle Breeze (7-10 kts)", [4, 5]),
             3: ("Moderate Breeze (11-15 kts)", [6, 7]),
-            4: ("Fresh Breeze (16-20 kts)", [8, 9, 10]),
+            4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
         }
 
         self.is_sbet_dir_set = False
@@ -402,18 +402,21 @@ class ControllerPanel(ttk.Frame):
 
     def build_sensor_input(self):
 
+        # JSON file containing lidar sensor configurations for cBLUE
+        sensor_file = "lidar_sensors.json"
+
+        # Check if the lidar sensor config file exists
+        if os.path.isfile(sensor_file):
+            with open(sensor_file) as sf:
+                # If the file exists load the information into sensor_names
+                sensor_names = json.load(sf)
+        else:
+            logging.cblue("Sensor file doesn't exist")
+
+        # logging.cblue(f"Sensor names: {list(sensor_names.keys())}")        
+
         ### Names of sensors as displayed in GUI ###
-        self.sensor_models = (
-            "Riegl VQ-880-G (0.7 mrad)",
-            "Riegl VQ-880-G (1.0 mrad)",
-            "Riegl VQ-880-G (1.5 mrad)",
-            "Riegl VQ-880-G (2.0 mrad)",
-            "Leica Chiroptera 4X (HawkEye 4X Shallow)",
-            "HawkEye 4X 400m AGL",
-            "HawkEye 4X 500m AGL",
-            "HawkEye 4X 600m AGL",
-            # "PILLS"
-        )
+        self.sensor_models = list(sensor_names.keys())
 
         ### Set up frame to hold dropdown menu ###
         sensor_frame = tk.Frame(self.controller_panel)
@@ -582,7 +585,7 @@ class ControllerPanel(ttk.Frame):
                 self.controller.controller_configuration, indent=1, sort_keys=True
             )
         )
-        self.sbet = Sbet(self.sbetInput.directoryName)
+        self.sbet = Sbet(self.sbetInput.directoryName, self.selected_sensor)
         self.sbet.set_data()
         self.is_sbet_loaded = True
         self.sbet_btn_text.set("Trajectory Loaded")
@@ -713,5 +716,5 @@ class ControllerPanel(ttk.Frame):
 if __name__ == "__main__":
 
     app = CBlueApp()
-    app.geometry("350x650")
+    app.geometry("250x675")
     app.mainloop()

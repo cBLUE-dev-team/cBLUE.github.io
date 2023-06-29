@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 18th, 2023
+June 20th, 2023
 
 """
 
@@ -56,7 +56,7 @@ class Merge:
         # logger.merge(f"std rho: {self.std_rho}")
 
 
-    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyzt, fl_t_argsort, fl_las_idx):
+    def merge(self, las, fl, sbet_data, fl_unsorted_las_xyztcf, fl_t_argsort, fl_las_idx, sensor_object):
         """returns sbet & las data merged based on timestamps
 
         The cBLUE TPU calculations require the sbet and las data to be in
@@ -105,19 +105,39 @@ class Merge:
         """
         num_sbet_pts = sbet_data.shape[0]
 
-        # sort xyzt array based on t_idx column
+        logger.merge(f"Num SBET points: {num_sbet_pts}")
+
+        # sort xyztcf array based on t_idx column
         idx = fl_t_argsort.argsort()
-        fl_las_data = fl_unsorted_las_xyzt[idx]
+        fl_las_data = fl_unsorted_las_xyztcf[idx]
         fl_las_idx = fl_las_idx[idx]
+
+        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
+
+        #TODO: Only for testing if merging data fails, the las data might have the wrong time format.
+        #       In the future turn this into a function that checks what the las time format is and 
+        #       convert it into adjusted standard gps time.
+        # if(sensor_object.name == "PILLS"):
+        #     #Convert UTC time to Adjusted Standard GPS time (with leap seconds adjustment for data on or after Jan 1st 2017)
+        #     # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
+        #     #Convert standard gps time to Adjusted Standard GPS time
+        #     fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
+
+        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
 
         # don't use las points outside range of sbet points
         mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
 
         t_sbet_masked = sbet_data[:, 0][idx[mask]]
         t_las_masked = fl_las_data[:, 3][mask]
+
+        # logger.merge(f"t_las_masked: {t_las_masked}")
+        # logger.merge(f"t_sbet_masked: {t_sbet_masked}")
 
         dt = ne.evaluate("t_sbet_masked - t_las_masked")
         max_dt = ne.evaluate("max(dt)")  # may be empty
@@ -126,9 +146,10 @@ class Merge:
             data = False
             stddev = False
             raw_class = False
+            masked_fan_angle = False
 
             logging.warning("trajectory and LAS data NOT MERGED")
-            logging.warning("({} FL {}) max_dt: {}".format(las, fl, max_dt))
+            logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
         else:
             data = np.asarray(
                 [
@@ -164,12 +185,28 @@ class Merge:
 
             raw_class = fl_las_data[:, 4][mask]
 
+            masked_fan_angle = []
+
+            # If this is the PILLS sensor, use the mask on the fan angle array 
+            if(sensor_object.name == "PILLS"):
+                masked_fan_angle = fl_las_data[:, 5][mask]
+                #Take the absolute value of the fan angle
+                masked_fan_angle = np.absolute(masked_fan_angle)
+                #Round fan angle to the nearest integer
+                #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
+                #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
+                masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
+
+        # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
+        # logger.merge(f"processed fan angle: {masked_fan_angle}")
+
         return (
             data,
             stddev,
             fl_las_idx[mask],
             raw_class,
-        )  # 2nd to last array is masked t_idx
+            masked_fan_angle
+        )  # 3rd to last array is masked t_idx
 
 
 if __name__ == "__main__":

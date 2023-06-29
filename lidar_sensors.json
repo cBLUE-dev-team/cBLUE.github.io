@@ -1,7 +1,6 @@
 {
     "Riegl VQ-880-G (0.7 mrad)": {
         "sensor_model": {
-            "sensor_type": "cBLUE (generic with polynomial error correction)",
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
             "std_rho": 0.025
@@ -13,7 +12,6 @@
     },
     "Riegl VQ-880-G (1.0 mrad)": {
         "sensor_model": {
-            "sensor_type": "cBLUE (generic with polynomial error correction)",
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
             "std_rho": 0.025
@@ -25,7 +23,6 @@
     },
     "Riegl VQ-880-G (1.5 mrad)": {
         "sensor_model": {
-            "sensor_type": "cBLUE (generic with polynomial error correction)",
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
             "std_rho": 0.025
@@ -37,7 +34,6 @@
     },
     "Riegl VQ-880-G (2.0 mrad)": {
         "sensor_model": {
-            "sensor_type": "cBLUE (generic with polynomial error correction)",
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
             "std_rho": 0.025
@@ -49,7 +45,6 @@
     },
     "Leica Chiroptera 4X (HawkEye 4X Shallow)": {
         "sensor_model": {
-            "sensor_type": "",
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020
@@ -61,7 +56,6 @@
     },
     "HawkEye 4X 400m AGL": {
         "sensor_model": {
-            "sensor_type": "",
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020
@@ -73,7 +67,6 @@
     },
     "HawkEye 4X 500m AGL": {
         "sensor_model": {
-            "sensor_type": "",
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020
@@ -85,7 +78,6 @@
     },
     "HawkEye 4X 600m AGL": {
         "sensor_model": {
-            "sensor_type": "",
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020
@@ -97,14 +89,13 @@
     },
     "PILLS": {
         "sensor_model": {
-            "sensor_type": "",
             "a_std_dev": 0.015,
             "b_std_dev": 0.00,
             "std_rho": 0.033
         },
         "subaqueous_LUTs": {
-            "vertical": "",
-            "horizontal": ""
+            "vertical": "./lookup_tables/PILLS_Lookup_Results_Vertical.xlsx",
+            "horizontal": "./lookup_tables/PILLS_Lookup_Results_Horizontal.xlsx"
         }
     }
 }

@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 16th, 2023
+May 31th, 2023
 
 """
 
@@ -125,14 +125,13 @@ class Tpu:
         # CREATE LAS OBJECT TO ACCESS INFORMATION IN LAS FILE
         las = Las(las_file)
 
-        #diag_dfs = []
-
         if las.num_file_points:  # i.e., if las had data points
             logger.tpu(
                 "{} ({:,} points)".format(las.las_short_name, las.num_file_points)
             )
             logger.tpu("flight lines {}".format(las.unq_flight_lines))
-            unsorted_las_xyzt, t_argsort, flight_lines = las.get_flight_line_txyz()
+
+            unsorted_las_xyztcf, t_argsort, flight_lines = las.get_flight_line(self.sensor_object.name)
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
@@ -141,25 +140,27 @@ class Tpu:
 
                 # las_xyzt has the same order as points in las (i.e., unordered)
                 fl_idx = flight_lines == fl
-                fl_unsorted_las_xyzt = unsorted_las_xyzt[fl_idx]
+                fl_unsorted_las_xyztcf = unsorted_las_xyztcf[fl_idx]
                 fl_t_argsort = t_argsort[fl_idx]
                 fl_las_idx = t_argsort.argsort()[fl_idx]
 
                 num_fl_points = np.sum(fl_idx)  # count Trues
                 logger.tpu(f"{las.las_short_name} fl {fl}: {num_fl_points} points")
 
-                # CREATE MERGED-DATA OBJECT M
+                # CREATE MERGED-DATA OBJECT
 
                 logger.tpu(
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
-                merged_data, stddev, unsort_idx, raw_class = merge.merge(
-                    las.las_short_name,
+
+                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle = merge.merge(
+                    las,
                     fl,
                     sbet.values,
-                    fl_unsorted_las_xyzt,
+                    fl_unsorted_las_xyztcf,
                     fl_t_argsort,
                     fl_las_idx,
+                    self.sensor_object,
                 )
 
                 if merged_data is not False:  # i.e., las and sbet is merged
@@ -181,13 +182,18 @@ class Tpu:
 
                     #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
-                        self.gui_object.wind_vals,
-                        self.gui_object.kd_vals,
+                        self.gui_object,
                         depth,
                         self.sensor_object
                     )
 
-                    subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()
+                    if(self.sensor_object.name == "PILLS"):
+                        #PILLS Sensor: Sending to pills_fit_lut() 
+                        subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut(masked_fan_angle) 
+                    
+                    else:
+                        #Not PILLS Sensor: Sending to fit_lut() 
+                        subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
 
                     vdatum_mcu = (
                         float(self.gui_object.mcu) / 100.0

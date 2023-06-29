@@ -30,7 +30,8 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 16th, 2023
+May 30th, 2023
+
 
 """
 import os
@@ -40,6 +41,7 @@ import numpy as np
 import numexpr as ne
 import laspy
 
+logger = logging.getLogger(__name__)
 
 """
 This class provides the functionality to load las files into cBLUE.  One Las object
@@ -79,7 +81,7 @@ class Las:
         # pandas' unique faster than numpy's ?
         return pd.unique(self.points_to_process["pt_src_id"])
 
-    def get_flight_line_txyz(self):
+    def get_flight_line(self, sensor_name):
         """retrieves the x, y, z, and timestamp data from the las data points
 
         The x, y, and z values in the las file are stored as integers.  The
@@ -104,11 +106,22 @@ class Las:
 
         self.t_argsort = t.argsort()
 
-        xyztc = np.vstack([x, y, z, t, c]).T
+        # Check if this is the PILLS sensor
+        if(sensor_name == "PILLS"):
+            #Get the fan angle and multiply it by 0.006 to convert to degrees
+            fan_angle = self.inFile.scan_angle*0.006
+            #Add xyztcf to an array together
+            xyztcf = np.vstack([x, y, z, t, c, fan_angle]).T
+            # logger.las(f"{sensor_name} Fan Angle: {fan_angle}")
+        else:
+            #Fan angle is not used by the other sensors
+            #Add xyztc to an array together
+            xyztcf = np.vstack([x, y, z, t, c]).T
 
         flight_lines = self.points_to_process["pt_src_id"]
 
-        return xyztc, self.t_argsort, flight_lines
+        return xyztcf, self.t_argsort, flight_lines
+
     
     def xyz_to_coordinate(self):
         """The x, y, and z values in the las file are stored as integers.  The
@@ -126,6 +139,7 @@ class Las:
         X = self.points_to_process["X"]
         Y = self.points_to_process["Y"]
         Z = self.points_to_process["Z"]
+
 
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
