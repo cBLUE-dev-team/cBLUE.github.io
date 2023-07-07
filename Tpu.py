@@ -422,14 +422,15 @@ class Tpu:
                 "sensor model": self.sensor_object.name,
                 "cBLUE version": self.gui_object.cblue_version,
                 "cpu_processing_info": self.gui_object.cpu_process_info,
-                "water_surface_ellipsoid_height": self.gui_object.water_surface_ellipsoid_height
+                "water_surface_ellipsoid_height": self.gui_object.water_surface_ellipsoid_height,
+                "Error type": self.gui_object.error_type
             }
         )
 
         try:
             # self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
             with open(
-                os.path.join(self.gui_object.output_directory, "{}.json".format(las.las_base_name)), "w"
+                os.path.join(self.gui_object.output_directory, "{}.json".format(las.las_base_name)), "w", encoding="utf-8"
             ) as outfile:
 
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
