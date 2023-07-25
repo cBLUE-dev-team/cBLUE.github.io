@@ -192,7 +192,7 @@ class Tpu:
                         subaqu_thu, subaqu_tvu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
                     
                     else:
-                        #Not PILLS Sensor: Sending to fit_lut() 
+                        #Single beam Sensor: Sending to fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
 
                     vdatum_mcu = (

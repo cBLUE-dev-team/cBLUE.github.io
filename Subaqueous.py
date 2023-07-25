@@ -213,7 +213,7 @@ class Subaqueous:
         #               3: ("Moderate Breeze (11-15 kts)", [6, 7]),
         #               4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
 
-        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the PILLS lookup table.
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the lookup table.
         # The excel sheets are ordered by the permutations of turbidity (low to high) with wind speed (low to high).
 
         # ex: sheet 0 represents fan angle observation equation coefficients for kd selection 0 and wind speed selection 0, 
