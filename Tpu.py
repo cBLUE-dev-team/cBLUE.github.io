@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 31th, 2023
+July 25th, 2023
 
 """
 
@@ -131,7 +131,7 @@ class Tpu:
             )
             logger.tpu("flight lines {}".format(las.unq_flight_lines))
 
-            unsorted_las_xyztcf, t_argsort, flight_lines = las.get_flight_line(self.sensor_object.name)
+            unsorted_las_xyztcf, t_argsort, flight_lines = las.get_flight_line(self.sensor_object.type)
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
@@ -187,9 +187,9 @@ class Tpu:
                         self.sensor_object
                     )
 
-                    if(self.sensor_object.name == "PILLS"):
-                        #PILLS Sensor: Sending to pills_fit_lut() 
-                        subaqu_thu, subaqu_tvu = subaqu_obj.pills_fit_lut(masked_fan_angle) 
+                    if(self.sensor_object.type == "multi"):
+                        #Multi beam sensor: Sending to multi_beam_fit_lut() 
+                        subaqu_thu, subaqu_tvu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
                     
                     else:
                         #Not PILLS Sensor: Sending to fit_lut() 

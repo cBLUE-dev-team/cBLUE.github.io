@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 30th, 2023
+July 25th, 2023
 
 
 """
@@ -81,7 +81,7 @@ class Las:
         # pandas' unique faster than numpy's ?
         return pd.unique(self.points_to_process["pt_src_id"])
 
-    def get_flight_line(self, sensor_name):
+    def get_flight_line(self, sensor_type):
         """retrieves the x, y, z, and timestamp data from the las data points
 
         The x, y, and z values in the las file are stored as integers.  The
@@ -106,13 +106,13 @@ class Las:
 
         self.t_argsort = t.argsort()
 
-        # Check if this is the PILLS sensor
-        if(sensor_name == "PILLS"):
+        # Check if this is a multi beam sensor
+        if(sensor_type == "multi"):
             #Get the fan angle and multiply it by 0.006 to convert to degrees
             fan_angle = self.inFile.scan_angle*0.006
             #Add xyztcf to an array together
             xyztcf = np.vstack([x, y, z, t, c, fan_angle]).T
-            # logger.las(f"{sensor_name} Fan Angle: {fan_angle}")
+            # logger.las(f"{sensor_type} Fan Angle: {fan_angle}")
         else:
             #Fan angle is not used by the other sensors
             #Add xyztc to an array together
