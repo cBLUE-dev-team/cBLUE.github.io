@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited:
-Keana Kief
-April 12th, 2023
+Keana Kief (OSU)
+July 25th, 2023
 """
 
 import logging
@@ -75,6 +75,8 @@ class Sensor:
         else:
             logger.sensor("Sensor file doesn't exist")
 
+        #The type of sensor: single or multi beam
+        self.type = self.sensor_config[self.name]["sensor_model"]["type"]
         #The vertical look up table used for modeling
         self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
         #The horizontal look up table used for modeling
