@@ -39,18 +39,6 @@ import json
 
 logger = logging.getLogger(__name__)
 
-#Current Sensors:
-#   "Riegl VQ-880-G (0.7 mrad)"
-#   "Riegl VQ-880-G (1.0 mrad)"
-#   "Riegl VQ-880-G (1.5 mrad)"
-#   "Riegl VQ-880-G (2.0 mrad)"
-#   "Leica Chiroptera 4X (HawkEye 4X Shallow)"
-#   "HawkEye 4X 400m AGL"
-#   "HawkEye 4X 500m AGL"
-#   "HawkEye 4X 600m AGL"
-
-#TODO: Add PILLS Sensor
-
 class Sensor: 
 
     def __init__(self, sensor_name):
