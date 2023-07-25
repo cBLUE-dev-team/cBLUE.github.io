@@ -3,7 +3,8 @@
         "sensor_model": {
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
-            "std_rho": 0.025
+            "std_rho": 0.025,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad.csv",
@@ -14,7 +15,8 @@
         "sensor_model": {
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
-            "std_rho": 0.025
+            "std_rho": 0.025,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad.csv",
@@ -25,7 +27,8 @@
         "sensor_model": {
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
-            "std_rho": 0.025
+            "std_rho": 0.025,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad.csv",
@@ -36,7 +39,8 @@
         "sensor_model": {
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
-            "std_rho": 0.025
+            "std_rho": 0.025,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad.csv",
@@ -47,7 +51,8 @@
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
-            "std_rho": 0.020
+            "std_rho": 0.020,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
@@ -58,7 +63,8 @@
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
-            "std_rho": 0.020
+            "std_rho": 0.020,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad.csv",
@@ -69,7 +75,8 @@
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
-            "std_rho": 0.020
+            "std_rho": 0.020,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad.csv",
@@ -80,18 +87,20 @@
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
-            "std_rho": 0.020
+            "std_rho": 0.020,
+            "type": "single"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad.csv",
             "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad_hz.csv"
         }
     },
-    "PILLS": {
+    "PILLS or RAMMS": {
         "sensor_model": {
             "a_std_dev": 0.015,
             "b_std_dev": 0.00,
-            "std_rho": 0.033
+            "std_rho": 0.033,
+            "type": "multi"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/PILLS_Lookup_Results_Vertical.xlsx",
