@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited:
-Keana Kief
-April 12th, 2023
+Keana Kief (OSU)
+July 25th, 2023
 """
 
 import logging
@@ -38,18 +38,6 @@ import os
 import json
 
 logger = logging.getLogger(__name__)
-
-#Current Sensors:
-#   "Riegl VQ-880-G (0.7 mrad)"
-#   "Riegl VQ-880-G (1.0 mrad)"
-#   "Riegl VQ-880-G (1.5 mrad)"
-#   "Riegl VQ-880-G (2.0 mrad)"
-#   "Leica Chiroptera 4X (HawkEye 4X Shallow)"
-#   "HawkEye 4X 400m AGL"
-#   "HawkEye 4X 500m AGL"
-#   "HawkEye 4X 600m AGL"
-
-#TODO: Add PILLS Sensor
 
 class Sensor: 
 
@@ -75,6 +63,8 @@ class Sensor:
         else:
             logger.sensor("Sensor file doesn't exist")
 
+        #The type of sensor: single or multi beam
+        self.type = self.sensor_config[self.name]["sensor_model"]["type"]
         #The vertical look up table used for modeling
         self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
         #The horizontal look up table used for modeling

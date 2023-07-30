@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-June 20th, 2023
+July 25th, 2023
 
 """
 
@@ -118,11 +118,13 @@ class Merge:
         #TODO: Only for testing if merging data fails, the las data might have the wrong time format.
         #       In the future turn this into a function that checks what the las time format is and 
         #       convert it into adjusted standard gps time.
-        # if(sensor_object.name == "PILLS"):
-        #     #Convert UTC time to Adjusted Standard GPS time (with leap seconds adjustment for data on or after Jan 1st 2017)
-        #     # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
-        #     #Convert standard gps time to Adjusted Standard GPS time
-        #     fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
+        # Check if this is a multi beam sensor, like PILLS/RAMMS
+        # if(sensor_object.type == "multi"):
+        # Use the UTC time conversion or the standard gps time conversion, not both 
+            # Convert UTC time to Adjusted Standard GPS time (with leap seconds adjustment for data on or after Jan 1st 2017)
+            # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
+            # Convert standard gps time to Adjusted Standard GPS time
+            # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
 
         # match sbet and las dfs based on timestamps
         idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
@@ -187,8 +189,8 @@ class Merge:
 
             masked_fan_angle = []
 
-            # If this is the PILLS sensor, use the mask on the fan angle array 
-            if(sensor_object.name == "PILLS"):
+            # If this is a multi beam sensor, use the mask on the fan angle array 
+            if(sensor_object.type == "multi"):
                 masked_fan_angle = fl_las_data[:, 5][mask]
                 #Take the absolute value of the fan angle
                 masked_fan_angle = np.absolute(masked_fan_angle)

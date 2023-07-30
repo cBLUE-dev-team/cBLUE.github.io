@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-May 31th, 2023
+July 25th, 2023
 """
 
 import logging
@@ -130,14 +130,14 @@ class Subaqueous:
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return mean_fit_tvu, mean_fit_thu
     
-    def pills_fit_lut(self, masked_fan_angle):
-        """Called to begin the SubAqueous processing for the PILLS sensor"""
+    def multi_beam_fit_lut(self, masked_fan_angle):
+        """Called to begin the SubAqueous processing for multi beam sensors"""
     
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
         # query coefficients from look up tables
-        fit_tvu, fit_thu = self.pills_model_process()
+        fit_tvu, fit_thu = self.multi_beam_model_process()
 
         # a_h := horizontal linear coeffs
         # b_h := horizontal linear offsets
@@ -188,7 +188,7 @@ class Subaqueous:
 
         return np.asarray(res_thu), np.asarray(res_tvu)
     
-    def pills_model_process(self):
+    def multi_beam_model_process(self):
         """Retrieves the page of TVU and THU observation equation coefficients for all fan angles for the given combination
             of wind and kd. TVU and THU observation equation coefficients are based on the linear regression of 
             precalculated uncertainties from Monte Carlo simulations  
@@ -213,7 +213,7 @@ class Subaqueous:
         #               3: ("Moderate Breeze (11-15 kts)", [6, 7]),
         #               4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
 
-        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the PILLS lookup table.
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the lookup table.
         # The excel sheets are ordered by the permutations of turbidity (low to high) with wind speed (low to high).
 
         # ex: sheet 0 represents fan angle observation equation coefficients for kd selection 0 and wind speed selection 0, 
@@ -224,14 +224,14 @@ class Subaqueous:
         sheet = (5 * self.gui_object.kd_ind) + self.gui_object.wind_ind
 
         logger.subaqueous(f"kd_ind: {self.gui_object.kd_ind}, wind_ind: {self.gui_object.wind_ind}")
-        logger.subaqueous(f"PILLS look up table sheet number: {sheet}")
+        logger.subaqueous(f"Multi beam look up table sheet number: {sheet}")
 
         # Read look up tables, select rows
         fit_tvu = pd.read_excel(self.sensor_object.vert_lut, sheet_name=sheet, header=None, names=["a", "b"])
         fit_thu = pd.read_excel(self.sensor_object.horz_lut, sheet_name=sheet, header=None, names=["a", "b"])
 
-        # logger.subaqueous(f"PILLS fit_tvu: {fit_tvu}")
-        # logger.subaqueous(f"PILLS fit_thu: {fit_thu}")
+        # logger.subaqueous(f"Multi beam fit_tvu: {fit_tvu}")
+        # logger.subaqueous(f"Multi beam fit_thu: {fit_thu}")
 
         # Return DataFrames of TVU and THU observation equation coefficients for each fan angle. 
         return fit_tvu, fit_thu

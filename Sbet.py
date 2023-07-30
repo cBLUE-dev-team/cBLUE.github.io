@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 16th, 2023
+July 25th, 2023
 
 """
 
@@ -191,12 +191,14 @@ class Sbet:
             logger.sbet("-" * 50)
             logger.sbet("{}...".format(os.path.split(sbet)[-1]))
             sbet_date = self.get_sbet_date(sbet)
+
             # If this is the PILLS sensor, pre-process the sbet data
-            if(self.sensor_name == "PILLS"):
-                logger.sbet("PILLS Sensor, pre-processing sbet file")
+            if(self.sensor_name == "PILLS or RAMMS"):
+                logger.sbet("PILLS or RAMMS Sensor, pre-processing sbet file")
                 self.preprocess_pills_sbet(sbet, modified_sbet_file)
                 # Reassign the SBET file name to the modified file
                 sbet = modified_sbet_file
+
             sbet_df = pd.read_csv(
                 sbet,
                 skip_blank_lines=True,
