@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Keana Kief (OSU)
-June 15th, 2023
+Austin Anderson (NV5 Geospatial)
+August 24th, 2023
 
 THINGS TO DO:
 Add comments
@@ -79,14 +79,14 @@ class CBlueApp(tk.Tk):
     @modified by: Nick Forfinski-Sarkozi
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, command_line_mode=False, config_file="cblue_configuration.json", *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         with open("cBLUE_ASCII_splash.txt", "r") as f:
             message = f.readlines()
             print("".join(message))
 
-        self.config_file = "cblue_configuration.json"
+        self.config_file = config_file
 
         print(
             "Be sure to verify the settings in {}\n"
@@ -94,6 +94,10 @@ class CBlueApp(tk.Tk):
         )
 
         self.load_config()  # sets controller_configuration variables
+
+        if command_line_mode:
+            ControllerPanel(None, self, command_line_mode=command_line_mode)
+            return
 
         # show splash screen
         self.withdraw()
@@ -216,7 +220,12 @@ class Splash(tk.Toplevel):
 
 
 class ControllerPanel(ttk.Frame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, command_line_mode=False):
+        self.command_line_mode = command_line_mode
+        self.controller = controller
+        if self.command_line_mode:
+            self.sbet_process_callback()
+            return
         ttk.Frame.__init__(self, parent)
 
         self.lastFileLoc = os.getcwd()
@@ -252,7 +261,6 @@ class ControllerPanel(ttk.Frame):
         self.tpuOutput = None
         self.sbet = None
         self.parent = parent
-        self.controller = controller
 
         # Default region is no region
         self.mcu = 0
@@ -580,6 +588,13 @@ class ControllerPanel(ttk.Frame):
             self.tpuProcess.config(state=tk.ACTIVE)
 
     def sbet_process_callback(self):
+        if self.command_line_mode:
+            sbet_dir_value = self.controller.controller_configuration["directories"]["sbet"]
+            selected_sensor_value = self.controller.controller_configuration["sensor_model"]
+            self.sbet = Sbet(sbet_dir_value, selected_sensor_value)
+            self.sbet.set_data()
+            self.tpu_process_callback()
+            return
         print(
             json.dumps(
                 self.controller.controller_configuration, indent=1, sort_keys=True
@@ -600,10 +615,15 @@ class ControllerPanel(ttk.Frame):
             "water_surface_ellipsoid_height"
         ] = wseh_value
         self.controller.save_config()
-        wseh_popup.destroy()
+        if not self.command_line_mode:
+            wseh_popup.destroy()
         self.begin_tpu_calc()
 
     def verify_water_level(self):
+        if self.command_line_mode:
+            self.continue_with_tpu_calc(
+                None, float(self.controller.controller_configuration["water_surface_ellipsoid_height"]))
+            return
         wseh = tk.Toplevel()
         tk.Toplevel.iconbitmap(wseh, "cBLUE_icon.ico")
         wseh.resizable(False, False)
@@ -633,21 +653,29 @@ class ControllerPanel(ttk.Frame):
 
     def begin_tpu_calc(self):
 
+        if self.command_line_mode:
+            selected_sensor_value = self.controller.controller_configuration["sensor_model"]
+            las_dir_value = self.controller.controller_configuration["directories"]["las"]
+        else:
+            selected_sensor_value = self.selected_sensor
+            las_dir_value = self.lasInput.directoryName
+
         # CREATE OBSERVATION EQUATIONS
         sensor_model = SensorModel(self.controller.controller_configuration["sensor_model"])
          
         #Create a gui object initialized to the user's selections from the GUI
-        gui_object = UserInput(self)
+        gui_object = UserInput(self, self.command_line_mode)
 
         #Create a sensor object initialized to the user's selected sensor
-        sensor_object = Sensor(self.selected_sensor)
+
+        sensor_object = Sensor(selected_sensor_value)
 
         #Initalize the tpu object
         tpu = Tpu(gui_object, sensor_object)
 
         las_files = [
-            os.path.join(self.lasInput.directoryName, l)
-            for l in os.listdir(self.lasInput.directoryName)
+            os.path.join(las_dir_value, l)
+            for l in os.listdir(las_dir_value)
             if l.endswith(".las") | l.endswith(".laz")
         ]
 
@@ -660,6 +688,9 @@ class ControllerPanel(ttk.Frame):
         merge = Merge(sensor_object)
 
         def signal_completion():
+            if self.command_line_mode:
+                print("DONE!!")
+                return
             self.tpu_btn_text.set("TPU Calculated")
             self.tpuProcess.config(fg="darkgreen")
             print("DONE!! (close cBLUE before running again)")

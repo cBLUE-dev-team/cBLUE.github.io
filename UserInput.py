@@ -33,31 +33,51 @@ Keana Kief (OSU)
 April 26th, 2023
 """
 
+
 class UserInput: 
     
-    def __init__(self, controller_panel):
+    def __init__(self, controller_panel, command_line_mode=False):
 
-        #Get the index of the wind selection from the controller panel
-        self.wind_ind = controller_panel.windRadio.selection.get()
-        #Use the wind index to get the string name describing the wind selection
-        self.wind_selection = controller_panel.wind_vals[self.wind_ind][0]
-        #Use the wind index get the array holding integer values representing the wind selection
-        self.wind_vals = controller_panel.wind_vals[self.wind_ind][1]
+        if command_line_mode:
+            #If running from command line, get these values from the cblue_configuration.json
+            self.wind_ind = controller_panel.controller.controller_configuration["wind_ind"]
+            self.wind_selection = controller_panel.controller.controller_configuration["wind_selection"]
+            self.wind_vals = controller_panel.controller.controller_configuration["wind_vals"]
+            self.kd_ind = controller_panel.controller.controller_configuration["kd_ind"]
+            self.kd_selection = controller_panel.controller.controller_configuration["kd_selection"]
+            kd_vals_tuple = controller_panel.controller.controller_configuration["kd_vals"]
+            self.kd_vals = range(kd_vals_tuple[0], kd_vals_tuple[-1])
+            self.vdatum_region = controller_panel.controller.controller_configuration["vdatum_region"]
+            self.mcu = controller_panel.controller.controller_configuration["mcu"]
+            self.output_directory = controller_panel.controller.controller_configuration["directories"]["tpu"]
+            self.csv_option = controller_panel.controller.controller_configuration["csv_option"]
+        else:
+            #Get the index of the wind selection from the controller panel
+            self.wind_ind = controller_panel.windRadio.selection.get()
+            #Use the wind index to get the string name describing the wind selection
+            self.wind_selection = controller_panel.wind_vals[self.wind_ind][0]
+            #Use the wind index get the array holding integer values representing the wind selection
+            self.wind_vals = controller_panel.wind_vals[self.wind_ind][1]
 
-        #Get the index of the turbidity selection from the controller panel
-        self.kd_ind = controller_panel.turbidityRadio.selection.get()
-        #Use the kd index to get the string name describing the turbidity selection
-        self.kd_selection = controller_panel.kd_vals[self.kd_ind][0]
-        #Use the kd index get the array holding integer values representing the turbidity selection
-        self.kd_vals = controller_panel.kd_vals[self.kd_ind][1]
-        
-        #Get the string name of the vdatum region
-        self.vdatum_region = controller_panel.vdatum_region.get()
-        #Get the float value for the maximum cumulative error related to the vdatum region
-        self.mcu = controller_panel.mcu
+            #Get the index of the turbidity selection from the controller panel
+            self.kd_ind = controller_panel.turbidityRadio.selection.get()
+            #Use the kd index to get the string name describing the turbidity selection
+            self.kd_selection = controller_panel.kd_vals[self.kd_ind][0]
+            #Use the kd index get the array holding integer values representing the turbidity selection
+            self.kd_vals = controller_panel.kd_vals[self.kd_ind][1]
+            
+            #Get the string name of the vdatum region
+            self.vdatum_region = controller_panel.vdatum_region.get()
+            #Get the float value for the maximum cumulative error related to the vdatum region
+            self.mcu = controller_panel.mcu
 
-        #Get the file path of the TPU output directory
-        self.output_directory = controller_panel.tpuOutput.directoryName
+            #Get the file path of the TPU output directory
+            self.output_directory = controller_panel.tpuOutput.directoryName
+
+            # Get if the user wants a csv output file. True or False boolean value.
+            self.csv_option = controller_panel.csv_option.get()
+
+        #Get remaining values in the same way regardless of if using GUI or command line
 
         #Get the current cblue version from the cblue_configuration.json
         self.cblue_version = controller_panel.controller.controller_configuration["cBLUE_version"]
@@ -82,6 +102,3 @@ class UserInput:
 
         #A string holding the error type requested by the user. Either "1-\u03c3" or "95% confidence".
         self.error_type = controller_panel.controller.controller_configuration["error_type"]
-
-        #Get if the user wants a csv output file. True or False boolean value.
-        self.csv_option = controller_panel.csv_option.get()
