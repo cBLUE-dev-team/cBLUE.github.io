@@ -219,7 +219,7 @@ if __name__ == "__main__":
     config_dict["mcu"] = mcu
     config_dict["sensor_model"] = sensor_options[sensor_index]
     config_dict["error_type"] = TPU_METRIC_OPTIONS[tpu_metric_index]
-    config_dict["csv_option"] = False
+    config_dict["csv_option"] = csv
     config_dict["water_surface_ellipsoid_height"] = water_height
 
     # Save config json in output folder using current time as filename suffix
@@ -227,7 +227,7 @@ if __name__ == "__main__":
     time_string = time_object.strftime("%Y-%m-%d_%H-%M-%S")
     config_file = os.path.join(output_dir, f"config_{time_string}.json")
     with open(config_file, "w") as custom_config:
-        json.dump(config_dict, custom_config)
+        json.dump(config_dict, custom_config, indent=4)
     if just_save_config:
         sys.exit()
 
