@@ -52,6 +52,7 @@ from Sensor import Sensor
 from UserInput import UserInput
 import argparse
 from datetime import datetime
+import subprocess
 
 #Create a logging file named CBlue.log stored in the current working directory
 utils.CustomLogger(filename="CBlue.log")
@@ -180,6 +181,11 @@ if __name__ == "__main__":
     parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only.")
     # Water Surface Ellipsoid Height
     parser.add_argument("water_height", help="Choose a number. Nominal water surface ellipsoid height")
+
+    # RUN GUI IF NOT ARGUMENTS GIVEN
+    if not len(sys.argv) > 1:
+        subprocess.run(["python", "CBlueAppGui.py"])
+        sys.exit()
 
     # PARSE ARGUMENTS
     args = parser.parse_args()
