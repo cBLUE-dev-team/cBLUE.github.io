@@ -29,11 +29,9 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Austin Anderson (NV5 Geospatial)
-August 24th, 2023
+Austin Anderson (NV5 Geospatial) and Keana Kief (OSU)
+September 22th, 2023
 
-THINGS TO DO:
-Add comments
 """
 
 # -*- coding: utf-8 -*-
