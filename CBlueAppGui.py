@@ -77,18 +77,20 @@ def browse(button, var):
     dir_path = filedialog.askdirectory()
     if dir_path:
         var.set(dir_path)
-        new_text = button["text"].replace("Choose ", "") + " Set"
-        print(f"{new_text}: {dir_path}")
-        button.config(text=new_text, fg="green")
+        if "Set" not in button["text"]:
+            new_text = button["text"].replace("Choose ", "") + " Set"
+            button.config(text=new_text, fg="green")
+        print(f'{button["text"]}: {dir_path}')
+
 
 
 def main():
     root = tk.Tk()
     root.wm_title("cBLUE")
     root.iconbitmap(root, "cBLUE_icon.ico")
-    root.geometry("250x730")
+    root.geometry("270x740")
     norm_font_bold = ("Verdanna", 10, "bold")
-    padx = (3, 30)
+    padx = (30, 30)
     pady = (10, 0)
 
     # Splash screen
@@ -115,6 +117,10 @@ def main():
     menu_bar.add_cascade(label="Help", menu=about_menu)
     root.config(menu=menu_bar)
 
+    #Load settings from cblue_configuration.json
+    with open("cblue_configuration.json", "r") as config:
+        config_dict = json.load(config)
+
     # Directory buttons
     dir_frame = tk.Frame(root)
     tk.Label(dir_frame, text="Data Directories", font=norm_font_bold).pack()
@@ -122,14 +128,38 @@ def main():
     traj_dir_button = tk.Button(dir_frame, text="Choose Trajectory Directory",
                                 command=lambda: browse(traj_dir_button, traj_dir_var))
     traj_dir_button.pack(fill="x")
+
+    #If sbet file path is saved in the cblue_configuration.json, set it as the trajectory directory path
+    if(config_dict["directories"]["sbet"] != ""):
+        traj_dir_var.set(config_dict["directories"]["sbet"])
+        new_text = traj_dir_button["text"].replace("Choose ", "") + " Set"
+        print(f'{new_text}: {config_dict["directories"]["sbet"]}')
+        traj_dir_button.config(text=new_text, fg="green")
+
     las_dir_var = tk.StringVar()
     las_dir_button = tk.Button(dir_frame, text="Choose LAS Directory",
                                command=lambda: browse(las_dir_button, las_dir_var))
     las_dir_button.pack(fill="x")
+
+    #If las file path is saved in the cblue_configuration.json, set it as the las directory path
+    if(config_dict["directories"]["las"] != ""):
+        las_dir_var.set(config_dict["directories"]["las"])
+        new_text = las_dir_button["text"].replace("Choose ", "") + " Set"
+        print(f'{new_text}: {config_dict["directories"]["las"]}')
+        las_dir_button.config(text=new_text, fg="green")
+
     out_dir_var = tk.StringVar()
     out_dir_button = tk.Button(dir_frame, text="Choose Output Directory",
                                command=lambda: browse(out_dir_button, out_dir_var))
     out_dir_button.pack(fill="x")
+
+    #If tpu ouput file path is saved in the cblue_configuration.json, set it as the output directory path
+    if(config_dict["directories"]["tpu"] != ""):
+        out_dir_var.set(config_dict["directories"]["tpu"])
+        new_text = out_dir_button["text"].replace("Choose ", "") + " Set"
+        print(f'{new_text}: {config_dict["directories"]["tpu"]}')
+        out_dir_button.config(text=new_text, fg="green")
+    
     dir_frame.pack(padx=padx, pady=pady, fill="x")
 
     # Environmental parameters
@@ -192,8 +222,8 @@ def main():
     water_height_frame = tk.Frame(root)
     tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
     water_height_var = tk.StringVar()
-    water_height_var.set("0.0")
-    water_height_msg = "Nominal water-surface ellipsoid height:"
+    water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
+    water_height_msg = "Nominal water-surface ellipsoid height \n(in meters):"
     tk.Label(water_height_frame, text=water_height_msg).pack()
     tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
     water_height_frame.pack(padx=padx, pady=pady, fill="x")
