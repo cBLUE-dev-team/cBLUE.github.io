@@ -134,6 +134,24 @@ def CBlueApp(controller_configuration):
         logging.cblue(f"multiprocessing set to {settings_object.multiprocess} (Must be True or False)")
     print("Done!")
 
+def updateConfig(config_dict):
+    """Updates the cblue_configuration.json with the current run's settings."""
+    new_config_dict = config_dict.copy()
+    del new_config_dict["wind_ind"]
+    del new_config_dict["wind_selection"]
+    del new_config_dict["wind_vals"]
+    del new_config_dict["kd_ind"]
+    del new_config_dict["kd_selection"]
+    del new_config_dict["kd_vals"]
+    del new_config_dict["vdatum_region"]
+    del new_config_dict["mcu"]
+    del new_config_dict["csv_option"]
+
+    with open("cblue_configuration.json", "w") as update_config:
+        json.dump(new_config_dict, update_config, indent=4)
+    if just_save_config:
+        sys.exit()
+
 
 if __name__ == "__main__":
 
@@ -222,13 +240,6 @@ if __name__ == "__main__":
     config_dict["csv_option"] = csv
     config_dict["water_surface_ellipsoid_height"] = water_height
 
-    # Save config json in output folder using current time as filename suffix
-    time_object = datetime.now()
-    time_string = time_object.strftime("%Y-%m-%d_%H-%M-%S")
-    config_file = os.path.join(output_dir, f"config_{time_string}.json")
-    with open(config_file, "w") as custom_config:
-        json.dump(config_dict, custom_config, indent=4)
-    if just_save_config:
-        sys.exit()
+    updateConfig(config_dict)
 
     CBlueApp(config_dict)
