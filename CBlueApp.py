@@ -150,25 +150,6 @@ def updateConfig(config_dict):
     if just_save_config:
         sys.exit()
 
-def get_vdatum_dict():
-    vdatum_lookup_path = r"lookup_tables\V_Datum_MCU_Values.txt"
-    vdatum_dict = {"---No Region Specified---": 0.0}
-    with open(vdatum_lookup_path, "r") as f:
-        vdatum_lines = f.readlines()
-    vdatum_lines = sorted(vdatum_lines, key=lambda item: item.replace('"', ''))
-    for line in vdatum_lines:
-        vdatum = line.split("\t")[0].strip().strip('"').replace("\x96", "-")
-        mcu = line.split("\t")[-1].strip().strip("\n")
-        vdatum_dict[vdatum] = float(mcu)
-    return vdatum_dict
-
-def get_vdatum_region(mcu):
-    vdatum_dict = get_vdatum_dict()
-
-    for region, value in vdatum_dict.items():
-        if mcu == str(value):
-            return region
-
 if __name__ == "__main__":
 
     # Command Line Interface
@@ -199,6 +180,8 @@ if __name__ == "__main__":
     parser.add_argument("turbidity", help=turbidity_help_text)
     # VDatum Region
     parser.add_argument("mcu", default=0.0, help=r"Input MCU value for the VDatum region. See .\lookup_tables\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.")
+    parser.add_argument("-vdatum_region", default=f"Used MCU value given in command", 
+                        help=r"Adds the name of the VDatum region to the metadata log. User must provide region name after -vdatum_region flag.")
     # Sensor Model
     with open("lidar_sensors.json", "r") as sensors_json:
         sensor_json_content = json.load(sensors_json)
@@ -227,7 +210,7 @@ if __name__ == "__main__":
     wind_index = int(args.wind)
     turbidity_index = int(args.turbidity)
     mcu = args.mcu
-    vdatum_region = get_vdatum_region(mcu)
+    vdatum_region = args.vdatum_region
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
