@@ -117,7 +117,20 @@ def browse(button, var):
             button.config(text=new_text, fg="green")
         print(f'{button["text"]}: {dir_path}')
 
-
+def set_dir_from_config(dir_path, dir_var, dir_button):
+    """Function to set directory paths for the SBET, LAS, and Output directories
+    with informatoin from the cblue_configuration.json.
+    """
+    #If the dir path from the configuration file is not empty and is a valid path to a directory
+    #   set the correct directory variable to the directory path and update the button in the GUI
+    if(dir_path != "" and os.path.isdir(dir_path)):
+        #Update the directory variable
+        dir_var.set(dir_path)
+        new_text = dir_button["text"].replace("Choose ", "") + " Set"
+        dir_button.config(text=new_text, fg="green")
+        #Print to the command line that the appropriate directory path has been set    
+        print(f'{new_text}: {dir_path}')
+        
 
 def main():
     root = tk.Tk()
@@ -159,41 +172,31 @@ def main():
     # Directory buttons
     dir_frame = tk.Frame(root)
     tk.Label(dir_frame, text="Data Directories", font=norm_font_bold).pack()
+
+
     traj_dir_var = tk.StringVar()
     traj_dir_button = tk.Button(dir_frame, text="Choose Trajectory Directory",
                                 command=lambda: browse(traj_dir_button, traj_dir_var))
     traj_dir_button.pack(fill="x")
+    #If SBET file path is saved in the cblue_configuration.json, set it as the trajectory directory path
+    set_dir_from_config(config_dict["directories"]["sbet"], traj_dir_var, traj_dir_button)
 
-    #If sbet file path is saved in the cblue_configuration.json, set it as the trajectory directory path
-    if(config_dict["directories"]["sbet"] != ""):
-        traj_dir_var.set(config_dict["directories"]["sbet"])
-        new_text = traj_dir_button["text"].replace("Choose ", "") + " Set"
-        print(f'{new_text}: {config_dict["directories"]["sbet"]}')
-        traj_dir_button.config(text=new_text, fg="green")
 
     las_dir_var = tk.StringVar()
     las_dir_button = tk.Button(dir_frame, text="Choose LAS Directory",
                                command=lambda: browse(las_dir_button, las_dir_var))
     las_dir_button.pack(fill="x")
-
     #If las file path is saved in the cblue_configuration.json, set it as the las directory path
-    if(config_dict["directories"]["las"] != ""):
-        las_dir_var.set(config_dict["directories"]["las"])
-        new_text = las_dir_button["text"].replace("Choose ", "") + " Set"
-        print(f'{new_text}: {config_dict["directories"]["las"]}')
-        las_dir_button.config(text=new_text, fg="green")
+    set_dir_from_config(config_dict["directories"]["las"], las_dir_var, las_dir_button)
+
 
     out_dir_var = tk.StringVar()
     out_dir_button = tk.Button(dir_frame, text="Choose Output Directory",
                                command=lambda: browse(out_dir_button, out_dir_var))
     out_dir_button.pack(fill="x")
-
     #If tpu ouput file path is saved in the cblue_configuration.json, set it as the output directory path
-    if(config_dict["directories"]["tpu"] != ""):
-        out_dir_var.set(config_dict["directories"]["tpu"])
-        new_text = out_dir_button["text"].replace("Choose ", "") + " Set"
-        print(f'{new_text}: {config_dict["directories"]["tpu"]}')
-        out_dir_button.config(text=new_text, fg="green")
+    set_dir_from_config(config_dict["directories"]["tpu"], out_dir_var, out_dir_button)
+
     
     dir_frame.pack(padx=padx, pady=pady, fill="x")
 
@@ -285,7 +288,8 @@ def main():
                    str(sensor_integer),
                    str(tpu_integer),
                    str(water_height_var.get()),
-                   "-vdatum", vdatum_var.get()]
+                #    "-vdatum", vdatum_var.get()
+                   ]
         if csv_var.get():
             command.append("--csv")
         if just_save_config:
