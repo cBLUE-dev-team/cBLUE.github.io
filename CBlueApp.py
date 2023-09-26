@@ -150,6 +150,24 @@ def updateConfig(config_dict):
     if just_save_config:
         sys.exit()
 
+def get_vdatum_dict():
+    vdatum_lookup_path = r"lookup_tables\V_Datum_MCU_Values.txt"
+    vdatum_dict = {"---No Region Specified---": 0.0}
+    with open(vdatum_lookup_path, "r") as f:
+        vdatum_lines = f.readlines()
+    vdatum_lines = sorted(vdatum_lines, key=lambda item: item.replace('"', ''))
+    for line in vdatum_lines:
+        vdatum = line.split("\t")[0].strip().strip('"').replace("\x96", "-")
+        mcu = line.split("\t")[-1].strip().strip("\n")
+        vdatum_dict[vdatum] = float(mcu)
+    return vdatum_dict
+
+def get_vdatum_region(mcu):
+    vdatum_dict = get_vdatum_dict()
+
+    for region, value in vdatum_dict.items():
+        if mcu == str(value):
+            return region
 
 if __name__ == "__main__":
 
@@ -167,9 +185,9 @@ if __name__ == "__main__":
     # ADD ARGUMENTS
     parser = argparse.ArgumentParser(description="Run CBlueApp command line interface")
     # Data Directories
-    parser.add_argument("in_sbet_dir", help="Trajectory Directory")
-    parser.add_argument("in_las_dir", help="LAS Directory")
-    parser.add_argument("output_dir", help="Output Directory")
+    parser.add_argument("in_sbet_dir", help="Trajectory directory file path.")
+    parser.add_argument("in_las_dir", help="LAS directory file path.")
+    parser.add_argument("output_dir", help="Output directory file path.")
     # Environmental Parameters
     # # Water Surface
     wind_values = [[1], [2, 3], [4, 5], [6, 7], [8, 9, 10]]
@@ -180,9 +198,7 @@ if __name__ == "__main__":
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
     parser.add_argument("turbidity", help=turbidity_help_text)
     # VDatum Region
-    parser.add_argument("mcu", default=0.0, help=r"Choose a number. See .\lookup_tables\V_Datum_MCU_Values.txt")
-    parser.add_argument("-vdatum_region", default=f"Used MCU value given in command",
-                        help=r"Choose a string. This value is for logs only.")
+    parser.add_argument("mcu", default=0.0, help=r"Input MCU value for the VDatum region. See .\lookup_tables\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.")
     # Sensor Model
     with open("lidar_sensors.json", "r") as sensors_json:
         sensor_json_content = json.load(sensors_json)
@@ -193,7 +209,7 @@ if __name__ == "__main__":
     tpu_help_text = get_help_text(TPU_METRIC_OPTIONS)
     parser.add_argument("tpu_metric", help=tpu_help_text)
     # Output Options
-    parser.add_argument("--csv", action="store_true", help="Output CSV")
+    parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate a CSV output files.")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only.")
     # Water Surface Ellipsoid Height
     parser.add_argument("water_height", help="Choose a number. Nominal water surface ellipsoid height")
@@ -211,7 +227,7 @@ if __name__ == "__main__":
     wind_index = int(args.wind)
     turbidity_index = int(args.turbidity)
     mcu = args.mcu
-    vdatum_region = args.vdatum_region
+    vdatum_region = get_vdatum_region(mcu)
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
