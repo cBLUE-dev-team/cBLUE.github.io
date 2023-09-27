@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Austin Anderson (NV5 Geospatial) and Keana Kief (OSU)
-September 25th, 2023
+September 26th, 2023
 
 """
 
@@ -156,46 +156,48 @@ if __name__ == "__main__":
 
     def get_help_text(options_list):
         """Generate command line interface help text for arguments that are designated using a list index value"""
-        help_text = "Choose an integer. "
+        
+        help_text = f"Choose an integer: \n"
         for n, option in enumerate(options_list):
             option = option.replace("%", "%%")  # Escape percent sign to avoid argparse error
-            help_text += f"{n}={option}, "
-        help_text = help_text.strip(", ")
+            help_text += f"{n} = {option}, \n"
+        help_text = help_text.strip(", \n")
+        help_text += f'\n\n'
         return help_text
 
     # ADD ARGUMENTS
-    parser = argparse.ArgumentParser(description="Run CBlueApp command line interface")
+    parser = argparse.ArgumentParser(description="Run CBlueApp through the command line interface.", formatter_class=argparse.RawTextHelpFormatter)
     # Data Directories
-    parser.add_argument("in_sbet_dir", help="Trajectory directory file path.")
-    parser.add_argument("in_las_dir", help="LAS directory file path.")
-    parser.add_argument("output_dir", help="Output directory file path.")
+    parser.add_argument("in_sbet_dir", help="Trajectory directory file path.\n\n")
+    parser.add_argument("in_las_dir", help="LAS directory file path.\n\n")
+    parser.add_argument("output_dir", help="Output directory file path.\n\n")
     # Environmental Parameters
     # # Water Surface
     wind_values = [[1], [2, 3], [4, 5], [6, 7], [8, 9, 10]]
     wind_help_text = get_help_text(WIND_OPTIONS)
-    parser.add_argument("wind", help=wind_help_text)
+    parser.add_argument("wind", type=int, choices=[0, 1, 2, 3, 4], help=wind_help_text, metavar="wind_speed")
     # # Turbidity
     turbidity_values = [[6, 11], [11, 18], [18, 26], [26, 33], [33, 37]]
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
-    parser.add_argument("turbidity", help=turbidity_help_text)
+    parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4], help=turbidity_help_text, metavar="turbidity")
     # VDatum Region
-    parser.add_argument("mcu", default=0.0, help=r"Input MCU value for the VDatum region. See .\lookup_tables\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.")
-    parser.add_argument("-vdatum_region", default=f"Used MCU value given in command", 
-                        help=r"Adds the name of the VDatum region to the metadata log. User must provide region name after -vdatum_region flag.")
+    parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value.\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
+    parser.add_argument("-vdatum_region", default=f"Used MCU value given in the command line interface.", 
+                        help=f"Adds the name of the VDatum region to the metadata log.\nUser must provide the region name after -vdatum_region flag.\n\n")
     # Sensor Model
     with open("lidar_sensors.json", "r") as sensors_json:
         sensor_json_content = json.load(sensors_json)
     sensor_options = list(sensor_json_content.keys())
     sensor_help_text = get_help_text(sensor_options)
-    parser.add_argument("sensor", help=sensor_help_text)
+    parser.add_argument("sensor", type=int, choices=[0, 1, 2, 3, 4, 5, 6, 7, 8], help=sensor_help_text, metavar="sensor")
     # TPU Metric
     tpu_help_text = get_help_text(TPU_METRIC_OPTIONS)
-    parser.add_argument("tpu_metric", help=tpu_help_text)
+    parser.add_argument("tpu_metric", type=int, choices=[0, 1], help=tpu_help_text, metavar="tpu_metric")
     # Output Options
-    parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate a CSV output files.")
+    parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate CSV output files.")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only.")
     # Water Surface Ellipsoid Height
-    parser.add_argument("water_height", help="Choose a number. Nominal water surface ellipsoid height")
+    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.")
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
     if not len(sys.argv) > 1:
