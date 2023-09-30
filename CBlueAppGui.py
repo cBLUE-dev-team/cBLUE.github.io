@@ -136,7 +136,7 @@ def main():
     root = tk.Tk()
     root.wm_title("cBLUE")
     root.iconbitmap(root, "cBLUE_icon.ico")
-    root.geometry("270x740")
+    root.geometry("270x730")
     norm_font_bold = ("Verdanna", 10, "bold")
     padx = (30, 30)
     pady = (10, 0)
@@ -219,7 +219,7 @@ def main():
     tk.Label(env_frame, text="Environmental Parameters", font=norm_font_bold).pack()
     subaqueous_method_tabs = ttk.Notebook(env_frame)
     wind_var = add_tab(WIND_OPTIONS, tab_name="Water Surface")
-    turbidity_var = add_tab(TURBIDITY_OPTIONS, tab_name="Turbidity", label_text="Turbidity (kd_490)")
+    turbidity_var = add_tab(TURBIDITY_OPTIONS, tab_name="Turbidity")
     subaqueous_method_tabs.pack(fill="x")
     env_frame.pack(padx=padx, pady=pady, fill="x")
 
