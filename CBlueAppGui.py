@@ -201,7 +201,6 @@ def main():
     dir_frame.pack(padx=padx, pady=pady, fill="x")
 
     # Environmental parameters
-
     def add_tab(options, tab_name, label_text=None):
         """Add tab to Notebook and return Radiobutton variable"""
         tab = ttk.Frame(subaqueous_method_tabs)
@@ -222,6 +221,16 @@ def main():
     turbidity_var = add_tab(TURBIDITY_OPTIONS, tab_name="Turbidity")
     subaqueous_method_tabs.pack(fill="x")
     env_frame.pack(padx=padx, pady=pady, fill="x")
+
+    # Water Height
+    water_height_frame = tk.Frame(root)
+    tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
+    water_height_var = tk.StringVar()
+    water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
+    water_height_msg = "Nominal water-surface ellipsoid height \n(in meters):"
+    tk.Label(water_height_frame, text=water_height_msg).pack()
+    tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
+    water_height_frame.pack(padx=padx, pady=pady, fill="x")
 
     # VDatum Region
     vdatum_frame = tk.Frame(root)
@@ -255,16 +264,6 @@ def main():
     ttk.Radiobutton(csv_frame, text="ExtraBytes", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
     ttk.Radiobutton(csv_frame, text="ExtraBytes + CSV", value=True, variable=csv_var).pack(fill="x", padx=padx[-1])
     csv_frame.pack(padx=padx, pady=pady, fill="x")
-
-    # Water Height
-    water_height_frame = tk.Frame(root)
-    tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
-    water_height_var = tk.StringVar()
-    water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
-    water_height_msg = "Nominal water-surface ellipsoid height \n(in meters):"
-    tk.Label(water_height_frame, text=water_height_msg).pack()
-    tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
-    water_height_frame.pack(padx=padx, pady=pady, fill="x")
 
     def start_process(just_save_config=False):
         """Generate command for CBlueApp.py command line interface. Run the command."""
