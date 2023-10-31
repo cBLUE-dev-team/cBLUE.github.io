@@ -227,7 +227,7 @@ def main():
     tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
     water_height_var = tk.StringVar()
     water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
-    water_height_msg = "Nominal water-surface ellipsoid height \n(in meters):"
+    water_height_msg = "Nominal water surface ellipsoid height \n(in meters):"
     tk.Label(water_height_frame, text=water_height_msg).pack()
     tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
     water_height_frame.pack(padx=padx, pady=pady, fill="x")
