@@ -65,21 +65,27 @@ class Subaqueous:
         # query coefficients from look up tables
         fit_tvu, fit_thu = self.model_process()
 
-        # a_h := horizontal linear coeffs
-        # b_h := horizontal linear offsets
+        # Quadratic fit: a*depth^2 + b*depth + c
+        # a_h := horizontal quadratic coefficient
+        # b_h := horizontal linear coefficient
+        # c_h := horizontal offset
         a_h = fit_thu["a"].to_numpy()
         b_h = fit_thu["b"].to_numpy()
+        c_h = fit_thu["c"].to_numpy()
 
         # inner product of coeffs w/ depths + offsets
         # gives matrix of dims (#coeffs, #las points)
-        res_thu = a_h @ self.depth.reshape(1, -1) + b_h
+        res_thu = a_h @ np.square(self.depth.reshape(1,-1)) + b_h @ self.depth.reshape(1, -1) + c_h
 
-        # a_z := vertical linear coeffs
-        # b_z := vertical linear offsets
+        # Quadratic fit: a*depth^2 + b*depth + c
+        # a_z := horizontal quadratic coefficient
+        # b_z := horizontal linear coefficient
+        # c_z := horizontal offset
         a_z = fit_tvu["a"].to_numpy()
         b_z = fit_tvu["b"].to_numpy()
+        c_z = fit_tvu["c"].to_numpy()
 
-        res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
+        res_tvu = a_z @ np.square(self.depth.reshape(1,-1)) + b_z @ self.depth.reshape(1, -1) + c_z
 
         # enforce minimum value for tvu
         res_tvu[res_tvu < min_tvu] = min_tvu
@@ -119,13 +125,29 @@ class Subaqueous:
         #  and add it to the indices array. 
         indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
 
+        #Get columns a, b and c if they exist
+        #Linear fits: bx + c
+        #Quadratic fits: ax^2 + bx + c
+        cols = ['a', 'b', 'c']
         # Read look up tables, select rows
-        fit_tvu = pd.read_csv(self.sensor_object.vert_lut, names=["a", "b"]).iloc[indices]
-        fit_thu = pd.read_csv(self.sensor_object.horz_lut, names=["a", "b"]).iloc[indices]
+        fit_tvu = pd.read_csv(self.sensor_object.vert_lut, usecols=lambda i: i in set(cols)).iloc[indices]
+        fit_thu = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[indices]
 
-        #Take mean result of the indicies returned
-        mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b"])
-        mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b"])
+        #If this is a linear fit with no a coefficient 
+        if 'a' not in fit_thu:
+            #Take mean result for each column of the indicies returned
+            mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["b","c"])
+            mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["b","c"])
+
+            #Add a c column and set it to 0
+            mean_fit_tvu['a'] = 0 
+            mean_fit_thu['a'] = 0
+        else:
+            #Take mean result for each column of the indicies returned
+            mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b","c"])
+            mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b","c"])
+
+
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return mean_fit_tvu, mean_fit_thu
