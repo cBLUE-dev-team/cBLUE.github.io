@@ -147,8 +147,6 @@ class Subaqueous:
             mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b","c"])
             mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b","c"])
 
-
-
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return mean_fit_tvu, mean_fit_thu
     
