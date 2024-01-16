@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-July 25th, 2023
+January 16th, 2024
 """
 
 import logging
@@ -63,12 +63,26 @@ class Sensor:
         else:
             logger.sensor("Sensor file doesn't exist")
 
-        #The type of sensor: single or multi beam
+        #The type of sensor: "single", "single_leica", or "multi" beam
         self.type = self.sensor_config[self.name]["sensor_model"]["type"]
-        #The vertical look up table used for modeling
-        self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
-        #The horizontal look up table used for modeling
-        self.horz_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal"]
+
+        #If this is a Leica Chiroptera or HawkEye sensor, get narrow and wide subaqueous lookup tables
+        if self.type == "single_leica":
+            #The vertical narrow look up table used for modeling
+            self.vert_lut_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_narrow"]
+            #The horizontal narrow look up table used for modeling
+            self.horz_lut_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_narrow"]
+            #The vertical wide look up table used for modeling
+            self.vert_lut_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_wide"]
+            #The horizontal wide look up table used for modeling
+            self.horz_lut_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_wide"]
+        #Otherwise if this is a non-Leica single beam sensor, or a multi beam sensor
+        else:
+            #The vertical look up table used for modeling
+            self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
+            #The horizontal look up table used for modeling
+            self.horz_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal"]
+        
         #Scan angle and range uncertainties
         self.a_std_dev = self.sensor_config[self.name]["sensor_model"]["a_std_dev"]
         self.b_std_dev = self.sensor_config[self.name]["sensor_model"]["b_std_dev"]

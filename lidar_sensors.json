@@ -52,11 +52,13 @@
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020,
-            "type": "single"
+            "type": "single_leica"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Hawkeye_LUTs/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
-            "horizontal": "./lookup_tables/Hawkeye_LUTs/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
         }
     },
     "HawkEye 4X 400m AGL": {
@@ -64,11 +66,13 @@
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020,
-            "type": "single"
+            "type": "single_leica"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad.csv",
-            "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad_hz.csv"
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
         }
     },
     "HawkEye 4X 500m AGL": {
@@ -76,11 +80,13 @@
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020,
-            "type": "single"
+            "type": "single_leica"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad.csv",
-            "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad_hz.csv"
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
         }
     },
     "HawkEye 4X 600m AGL": {
@@ -88,11 +94,69 @@
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020,
-            "type": "single"
+            "type": "single_leica"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad.csv",
-            "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_600_AGL_8_mrad_hz.csv"
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
+        }
+    },
+    "Leica Chiroptera 5 (HawkEye 5 Shallow)": {
+        "sensor_model": {
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
+            "std_rho": 0.020,
+            "type": "single_leica"
+        },
+        "subaqueous_LUTs": {
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
+        }
+    },
+    "HawkEye 5 400m AGL": {
+        "sensor_model": {
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
+            "std_rho": 0.020,
+            "type": "single_leica"
+        },
+        "subaqueous_LUTs": {
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
+        }
+    },
+    "HawkEye 5 500m AGL": {
+        "sensor_model": {
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
+            "std_rho": 0.020,
+            "type": "single_leica"
+        },
+        "subaqueous_LUTs": {
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
+        }
+    },
+    "HawkEye 5 600m AGL": {
+        "sensor_model": {
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
+            "std_rho": 0.020,
+            "type": "single_leica"
+        },
+        "subaqueous_LUTs": {
+            "vertical_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_narrow": "./lookup_tables/Hawkeye_LUTs/",
+            "vertical_wide": "./lookup_tables/Hawkeye_LUTs/",
+            "horizontal_wide": "./lookup_tables/Hawkeye_LUTs/"
         }
     },
     "PILLS or RAMMS": {
