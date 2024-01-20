@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-July 25th, 2023
+January 18th, 2024
 
 """
 
@@ -131,16 +131,16 @@ class Tpu:
             )
             logger.tpu("flight lines {}".format(las.unq_flight_lines))
 
-            unsorted_las_xyztcf, t_argsort, flight_lines = las.get_flight_line(self.sensor_object.type)
+            unsorted_las, t_argsort, flight_lines = las.get_flight_line(self.sensor_object.type)
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
 
                 logger.tpu("flight line {} \n{}\n".format(fl, "-" * 50))
 
-                # las_xyzt has the same order as points in las (i.e., unordered)
+                # unsorted_las has the same order as points in las (i.e., unordered)
                 fl_idx = flight_lines == fl
-                fl_unsorted_las_xyztcf = unsorted_las_xyztcf[fl_idx]
+                fl_unsorted_las = unsorted_las[fl_idx]
                 fl_t_argsort = t_argsort[fl_idx]
                 fl_las_idx = t_argsort.argsort()[fl_idx]
 
@@ -153,11 +153,11 @@ class Tpu:
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
 
-                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle = merge.merge(
+                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle, masked_leica_data  = merge.merge(
                     las,
                     fl,
                     sbet.values,
-                    fl_unsorted_las_xyztcf,
+                    fl_unsorted_las,
                     fl_t_argsort,
                     fl_las_idx,
                     self.sensor_object,
@@ -190,7 +190,9 @@ class Tpu:
                     if(self.sensor_object.type == "multi"):
                         #Multi beam sensor: Sending to multi_beam_fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
-                    
+                    elif(self.sensor_object.type == "single_leica"):
+                       #Single beam Leica Sensor (Chiroptera or HawkEye): Sending to leica_fit_lut() 
+                       subaqu_thu, subaqu_tvu = subaqu_obj.leica_fit_lut(masked_leica_data) 
                     else:
                         #Single beam Sensor: Sending to fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
