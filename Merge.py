@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-September 22th, 2023
+January 16th, 2024
 
 """
 
@@ -186,6 +186,7 @@ class Merge:
             raw_class = fl_las_data[:, 4][mask]
 
             masked_fan_angle = []
+            masked_leica_data = []
 
             # If this is a multi beam sensor, use the mask on the fan angle array 
             if(sensor_object.type == "multi"):
@@ -196,6 +197,15 @@ class Merge:
                 #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
                 #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
                 masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
+            elif(sensor_object.type =="single_leica"):
+                 
+                masked_leica_data = np.asarray(
+                [
+                    fl_las_data[:, 5][mask], # masked scanner_channel
+                    fl_las_data[:, 6][mask] # masked user_data
+                ]
+            )
+
 
         # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
         # logger.merge(f"processed fan angle: {masked_fan_angle}")
@@ -205,7 +215,8 @@ class Merge:
             stddev,
             fl_las_idx[mask],
             raw_class,
-            masked_fan_angle
+            masked_fan_angle,
+            masked_leica_data
         )  # 3rd to last array is masked t_idx
 
 
