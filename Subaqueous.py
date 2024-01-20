@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-July 25th, 2023
+January 18, 2024
 """
 
 import logging
@@ -139,7 +139,7 @@ class Subaqueous:
             mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["b","c"])
             mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["b","c"])
 
-            #Add a c column and set it to 0
+            #Add an "a" column and set it to 0
             mean_fit_tvu['a'] = 0 
             mean_fit_thu['a'] = 0
         else:
@@ -255,3 +255,143 @@ class Subaqueous:
 
         # Return DataFrames of TVU and THU observation equation coefficients for each fan angle. 
         return fit_tvu, fit_thu
+    
+    def leica_fit_lut(self, masked_leica_data):
+        """Called to begin the SubAqueous processing."""
+    
+        # tvu values below 0.03 are considered erroneous
+        min_tvu = 0.03
+
+        # query coefficients from look up tables
+        fit_tvu_narrow, fit_thu_narrow, fit_tvu_wide, fit_thu_wide = self.leica_model_process()
+
+        # Quadratic fit: a*depth^2 + b*depth + c
+        # a_h := horizontal quadratic coefficient
+        # b_h := horizontal linear coefficient
+        # c_h := horizontal offset
+        a_h_narrow = fit_thu_narrow["a"].to_numpy()
+        b_h_narrow = fit_thu_narrow["b"].to_numpy()
+        c_h_narrow = fit_thu_narrow["c"].to_numpy()
+        
+        a_h_wide = fit_thu_wide["a"].to_numpy()
+        b_h_wide = fit_thu_wide["b"].to_numpy()
+        c_h_wide = fit_thu_wide["c"].to_numpy()
+
+        # a_z := horizontal quadratic coefficient
+        # b_z := horizontal linear coefficient
+        # c_z := horizontal offset
+        a_z_narrow = fit_tvu_narrow["a"].to_numpy()
+        b_z_narrow = fit_tvu_narrow["b"].to_numpy()
+        c_z_narrow = fit_tvu_narrow["c"].to_numpy()
+
+        a_z_wide = fit_tvu_wide["a"].to_numpy()
+        b_z_wide = fit_tvu_wide["b"].to_numpy()                                                                 
+        c_z_wide = fit_tvu_wide["c"].to_numpy()
+
+        res_thu = []
+        res_tvu = []
+
+        # Product of coeffs w/ depths + offsets.
+        # Loop through the depth, scanner channel, and user data
+        for depth_point, leica_data_array in zip(self.depth, masked_leica_data):
+            
+            # leica_data_array[0] = masked scanner_channel, 
+            # leica_data_array[1] = masked user_data
+
+            # If Scanner Channel = 1, then this is topographic scanner data. 
+            # There is no subaqueous uncertainty.
+            if(leica_data_array[0] == 1):
+                thu_point = 0
+                tvu_point = 0
+            # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
+            # Use the wide uncertainty coefficients and offset. 
+            elif(leica_data_array[0] == 3 and leica_data_array[1] == 1):
+                thu_point = (a_h_wide * np.square(depth_point)) + (b_h_wide * depth_point) + c_h_wide
+                tvu_point = (a_z_wide * np.square(depth_point)) + (b_z_wide * depth_point) + c_z_wide
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+            # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
+            # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
+            # Either way, use the narrow uncertainty coefficients and offset. 
+            else:   
+                thu_point = (a_h_narrow * np.square(depth_point)) + (b_h_narrow * depth_point) + c_h_narrow
+                tvu_point = (a_z_narrow * np.square(depth_point)) + (b_z_narrow * depth_point) + c_z_narrow
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+
+            #Add the subaqueous thu at this point to the list of result thu values
+            res_thu.append(thu_point)
+            #Add the subaqueous tvu at this point to the list of result thu values
+            res_tvu.append(tvu_point)           
+
+        return np.asarray(res_thu), np.asarray(res_tvu)
+
+    def leica_model_process(self):
+        """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
+            precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
+
+        :return: (mean_fit_tvu, mean_fit_thu) Averaged TVU and THU observation equation coefficients.
+        :rtype: (DataFrame, DataFrame)
+        """
+        # wind_par values range from 0-20 kts, represented as integers 1-10.
+        # cBLUE gives users five options for Wind Speed:
+        #   Wind Speed: Calm-light air (0-2 kts) == [1]
+        #               Light Breeze (3-6 kts) == [2,3]
+        #               Gentle Breeze (7-10 kts) == [4,5]
+        #               Moderate Breeze (11-15 kts) == [6,7]
+        #               Fresh Breeze (16-20 kts) == [8, 9, 10]
+
+        # Turbidity (kd_par) values range from 0.06-0.36 (m^-1) and are represented as integers 6-36.
+        # cBLUE gives users five options for Turbidity:
+        #   kd: Clear (0.06-0.10 m^-1) == [6-10]
+        #       Clear-Moderate (0.11-0.17 m^-1) == [11-17]
+        #       Moderate (0.18-0.25 m^-1) == [18-25]
+        #       Moderate-High (0.26-0.32 m^-1) == [26-32]
+        #       High (0.33-0.36 m^-1) == [33-36]
+
+        # self.gui_object.wind_vals and self.gui_object.kd_vals are used to get the right indices for the lookup table.
+        # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+
+        # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
+        #       row 1 represents wind speed 1 and kd 7, [...], row 278 represents wind speed 8 and kd 36, etc.  
+
+        # For every permutation of values from the wind_par and kd_par arrays, get an index
+        #  and add it to the indices array. 
+        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
+
+        #Get columns a, b and c if they exist
+        #Linear fits: bx + c
+        #Quadratic fits: ax^2 + bx + c
+        cols = ['a', 'b', 'c']
+        # Read look up tables, select rows
+        fit_tvu_narrow = pd.read_csv(self.sensor_object.vert_lut_narrow, usecols=lambda i: i in set(cols)).iloc[indices]
+        fit_thu_narrow = pd.read_csv(self.sensor_object.horz_lut_narrow, usecols=lambda i: i in set(cols)).iloc[indices]
+        fit_tvu_wide = pd.read_csv(self.sensor_object.vert_lut_wide, usecols=lambda i: i in set(cols)).iloc[indices]
+        fit_thu_wide = pd.read_csv(self.sensor_object.horz_lut_wide, usecols=lambda i: i in set(cols)).iloc[indices]
+
+        # Assuming all LUTs have the same fit (either linear or quadratic).
+        # If this is a linear fit with no "a" coefficient 
+        if 'a' not in fit_thu_narrow:
+            #Take mean result for each column of the indicies returned
+            mean_fit_tvu_narrow = pd.DataFrame([fit_tvu_narrow.mean(axis=0)], columns=["b","c"])
+            mean_fit_thu_narrow = pd.DataFrame([fit_thu_narrow.mean(axis=0)], columns=["b","c"])
+            mean_fit_tvu_wide = pd.DataFrame([fit_tvu_wide.mean(axis=0)], columns=["b","c"])
+            mean_fit_thu_wide = pd.DataFrame([fit_thu_wide.mean(axis=0)], columns=["b","c"])
+
+            #Add an "a" column and set it to 0
+            mean_fit_tvu_narrow['a'] = 0 
+            mean_fit_thu_narrow['a'] = 0
+            mean_fit_tvu_wide['a'] = 0 
+            mean_fit_thu_wide['a'] = 0
+        else:
+            #Take mean result for each column of the indicies returned
+            mean_fit_tvu_narrow = pd.DataFrame([fit_tvu_narrow.mean(axis=0)], columns=["a","b","c"])
+            mean_fit_thu_narrow = pd.DataFrame([fit_thu_narrow.mean(axis=0)], columns=["a","b","c"])
+            mean_fit_tvu_wide = pd.DataFrame([fit_tvu_wide.mean(axis=0)], columns=["a","b","c"])
+            mean_fit_thu_wide = pd.DataFrame([fit_thu_wide.mean(axis=0)], columns=["a","b","c"])
+
+        # Return averaged TVU and THU observation equation coefficient DataFrames. 
+        return mean_fit_tvu_narrow, mean_fit_thu_narrow, mean_fit_tvu_wide, mean_fit_thu_wide
+    
