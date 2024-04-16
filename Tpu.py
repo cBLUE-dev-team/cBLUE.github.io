@@ -421,6 +421,7 @@ class Tpu:
                 "flight line stats (min max mean stddev)": self.flight_line_stats,
                 "sensor model": self.sensor_object.name,
                 "cBLUE version": self.gui_object.cblue_version,
+                "Subaqueous processing version": self.gui_object.subaqueous_version,
                 "cpu_processing_info": self.gui_object.cpu_process_info,
                 "water_surface_ellipsoid_height": self.gui_object.water_surface_ellipsoid_height,
                 "Error type": self.gui_object.error_type

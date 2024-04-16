@@ -49,8 +49,9 @@ class UserInput:
         self.output_directory = controller_configuration["directories"]["tpu"]
         self.csv_option = controller_configuration["csv_option"]
 
-        #Get the current cblue version from the cblue_configuration.json
+        #Get the current cblue version and subaqueous version from the cblue_configuration.json
         self.cblue_version = controller_configuration["cBLUE_version"]
+        self.subaqueous_version = controller_configuration["subaqueous_version"]
 
         #Get what multiprocess is set to from the cblue_configuration.json
         #Should be "True" or "False" held in a string
