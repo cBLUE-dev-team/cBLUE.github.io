@@ -45,11 +45,12 @@ class Subaqueous:
     To be used in conjunction with the associated
     """
 
-    def __init__(self, gui_object, depth, sensor_object):
+    def __init__(self, gui_object, depth, sensor_object, classification):
 
         self.gui_object = gui_object
         self.depth = depth
         self.sensor_object = sensor_object
+        self.classification = classification
 
         logger.subaqueous(f"kd_par {self.gui_object.kd_vals}")
         logger.subaqueous(f"wind_par {self.gui_object.wind_vals}")

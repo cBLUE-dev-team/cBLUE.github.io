@@ -184,7 +184,8 @@ class Tpu:
                     subaqu_obj = Subaqueous(
                         self.gui_object,
                         depth,
-                        self.sensor_object
+                        self.sensor_object,
+                        las.classification
                     )
 
                     if(self.sensor_object.type == "multi"):
