@@ -108,7 +108,7 @@
         }
     
     },
-    "CZMIL Nova (Shallow)": {
+    "CZMIL or CZMIL Nova (Shallow)": {
         "sensor_model": {
             "a_std_dev": 0.00392,
             "b_std_dev": 0.00392,
@@ -116,12 +116,12 @@
             "type": "single"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/CZMIL_LUTs/",
-            "horizontal": "./lookup_tables/CZMIL_LUTs/"
+            "vertical": "./lookup_tables/CZMIL_LUTs/Nova_Shallow_400_AGL_7_mrad_TVU.csv",
+            "horizontal": "./lookup_tables/CZMIL_LUTs/Nova_Shallow_400_AGL_7_mrad_THU.csv"
         }
     
     },
-    "CZMIL Nova (Deep)": {
+    "CZMIL or CZMIL Nova (Deep)": {
         "sensor_model": {
             "a_std_dev": 0.00392,
             "b_std_dev": 0.00392,
