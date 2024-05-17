@@ -52,6 +52,9 @@ class Subaqueous:
         self.sensor_object = sensor_object
         self.classification = classification
 
+        #A set of valid subaqeuous classification values:
+        self.subaqueous_class_values  = {40, 43, 46, 64}
+
         logger.subaqueous(f"kd_par {self.gui_object.kd_vals}")
         logger.subaqueous(f"wind_par {self.gui_object.wind_vals}")
         logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
@@ -90,6 +93,14 @@ class Subaqueous:
 
         # enforce minimum value for tvu
         res_tvu[res_tvu < min_tvu] = min_tvu
+
+        # Check classification values.
+        for i, classification in enumerate(self.classification):
+            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
+            if classification not in self.subaqueous_class_values:
+                res_thu[i] = 0
+                res_tvu[i] = 0
+
 
         return res_thu, res_tvu
 
@@ -177,35 +188,51 @@ class Subaqueous:
 
         res_thu = []
         res_tvu = []
+        #Index for checking classification values
+        i = 0
 
         #Loop through the depth and the masked fan angle
         for depth_point, fan_angle_point in zip(self.depth, masked_fan_angle):
             
-            #Use the fan angle at this point an an index to get the
-            #  horizontal coefficent and offset for this depth point
-            a_h_point = a_h[fan_angle_point]
-            b_h_point = b_h[fan_angle_point]
+            # Check classification values.
+            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
+            if self.classification[i] not in self.subaqueous_class_values:
+                # logger.subaqueous(f'Not Subaqueous Class: {self.classification[i]}')
+                res_tvu.append(0)
+                res_thu.append(0)
 
-            # Product of coeffs w/ depths + offsets
-            thu_point = a_h_point * depth_point + b_h_point
+            # If the point is subaqueous, calculate THU and TVU values. 
+            else:
+     
+                # logger.subaqueous(f'Subaqueous Class: {self.classification[i]}')
+                # Use the fan angle at this point an an index to get the
+                #  horizontal coefficent and offset for this depth point
+                a_h_point = a_h[fan_angle_point]
+                b_h_point = b_h[fan_angle_point]
 
-            #Add the subaqueous thu at this point to the list of result thu values
-            res_thu.append(thu_point)
+                # Product of coeffs w/ depths + offsets
+                thu_point = a_h_point * depth_point + b_h_point
 
-            #Use the fan angle at this point an an index to get the
-            #  vertical coefficent and offset for this depth point
-            a_z_point = a_z[fan_angle_point]
-            b_z_point = b_z[fan_angle_point]
+                #Add the subaqueous thu at this point to the list of result thu values
+                res_thu.append(thu_point)
 
-            # Product of coeffs w/ depths + offsets
-            tvu_point = a_z_point * depth_point + b_z_point
+                #Use the fan angle at this point an an index to get the
+                #  vertical coefficent and offset for this depth point
+                a_z_point = a_z[fan_angle_point]
+                b_z_point = b_z[fan_angle_point]
 
-            # enforce minimum value for tvu
-            if(tvu_point < min_tvu):
-                tvu_point = min_tvu
+                # Product of coeffs w/ depths + offsets
+                tvu_point = a_z_point * depth_point + b_z_point
 
-            #Add the subaqueous tvu at this point to the list of result thu values
-            res_tvu.append(tvu_point)
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+
+                #Add the subaqueous tvu at this point to the list of result thu values
+                res_tvu.append(tvu_point)
+            
+            # Increment counter for checking classification values.
+            i += 1
 
         return np.asarray(res_thu), np.asarray(res_tvu)
     

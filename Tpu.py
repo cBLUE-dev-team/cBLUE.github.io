@@ -185,7 +185,7 @@ class Tpu:
                         self.gui_object,
                         depth,
                         self.sensor_object,
-                        las.classification
+                        raw_class
                     )
 
                     if(self.sensor_object.type == "multi"):
