@@ -200,7 +200,7 @@ class Merge:
                 # Unbounded scan angle/fan angle can go past 26 degrees (absolute). 
                 # Warn the user if their fan angle exceed maximum allowed fan angle.
                 if not all(i <=26 for i in masked_fan_angle): 
-                    logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Merging will fail.")
+                    logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
 
         # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
         # logger.merge(f"processed fan angle: {masked_fan_angle}")
