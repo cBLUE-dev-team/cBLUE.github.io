@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited:
-Austin Anderson (NV5G)
-September 14th, 2023
+Keana Kief (OSU)
+April 16th, 2024
 """
 
 
