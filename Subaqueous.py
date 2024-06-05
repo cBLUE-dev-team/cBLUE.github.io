@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-July 25th, 2023
+May 17th, 2024
 """
 
 import logging
@@ -45,11 +45,15 @@ class Subaqueous:
     To be used in conjunction with the associated
     """
 
-    def __init__(self, gui_object, depth, sensor_object):
+    def __init__(self, gui_object, depth, sensor_object, classification):
 
         self.gui_object = gui_object
         self.depth = depth
         self.sensor_object = sensor_object
+        self.classification = classification
+
+        #A set of valid subaqeuous classification values:
+        self.subaqueous_class_values  = {40, 43, 46, 64}
 
         logger.subaqueous(f"kd_par {self.gui_object.kd_vals}")
         logger.subaqueous(f"wind_par {self.gui_object.wind_vals}")
@@ -65,24 +69,38 @@ class Subaqueous:
         # query coefficients from look up tables
         fit_tvu, fit_thu = self.model_process()
 
-        # a_h := horizontal linear coeffs
-        # b_h := horizontal linear offsets
+        # Quadratic fit: a*depth^2 + b*depth + c
+        # a_h := horizontal quadratic coefficient
+        # b_h := horizontal linear coefficient
+        # c_h := horizontal offset
         a_h = fit_thu["a"].to_numpy()
         b_h = fit_thu["b"].to_numpy()
+        c_h = fit_thu["c"].to_numpy()
 
         # inner product of coeffs w/ depths + offsets
         # gives matrix of dims (#coeffs, #las points)
-        res_thu = a_h @ self.depth.reshape(1, -1) + b_h
+        res_thu = a_h @ np.square(self.depth.reshape(1,-1)) + b_h @ self.depth.reshape(1, -1) + c_h
 
-        # a_z := vertical linear coeffs
-        # b_z := vertical linear offsets
+        # Quadratic fit: a*depth^2 + b*depth + c
+        # a_z := horizontal quadratic coefficient
+        # b_z := horizontal linear coefficient
+        # c_z := horizontal offset
         a_z = fit_tvu["a"].to_numpy()
         b_z = fit_tvu["b"].to_numpy()
+        c_z = fit_tvu["c"].to_numpy()
 
-        res_tvu = a_z @ self.depth.reshape(1, -1) + b_z
+        res_tvu = a_z @ np.square(self.depth.reshape(1,-1)) + b_z @ self.depth.reshape(1, -1) + c_z
 
         # enforce minimum value for tvu
         res_tvu[res_tvu < min_tvu] = min_tvu
+
+        # Check classification values.
+        for i, classification in enumerate(self.classification):
+            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
+            if classification not in self.subaqueous_class_values:
+                res_thu[i] = 0
+                res_tvu[i] = 0
+
 
         return res_thu, res_tvu
 
@@ -119,13 +137,27 @@ class Subaqueous:
         #  and add it to the indices array. 
         indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
 
+        #Get columns a, b and c if they exist
+        #Linear fits: bx + c
+        #Quadratic fits: ax^2 + bx + c
+        cols = ['a', 'b', 'c']
         # Read look up tables, select rows
-        fit_tvu = pd.read_csv(self.sensor_object.vert_lut, names=["a", "b"]).iloc[indices]
-        fit_thu = pd.read_csv(self.sensor_object.horz_lut, names=["a", "b"]).iloc[indices]
+        fit_tvu = pd.read_csv(self.sensor_object.vert_lut, usecols=lambda i: i in set(cols)).iloc[indices]
+        fit_thu = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[indices]
 
-        #Take mean result of the indicies returned
-        mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b"])
-        mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b"])
+        #If this is a linear fit with no a coefficient 
+        if 'a' not in fit_thu:
+            #Take mean result for each column of the indicies returned
+            mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["b","c"])
+            mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["b","c"])
+
+            #Add a c column and set it to 0
+            mean_fit_tvu['a'] = 0 
+            mean_fit_thu['a'] = 0
+        else:
+            #Take mean result for each column of the indicies returned
+            mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b","c"])
+            mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b","c"])
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return mean_fit_tvu, mean_fit_thu
@@ -156,35 +188,51 @@ class Subaqueous:
 
         res_thu = []
         res_tvu = []
+        #Index for checking classification values
+        i = 0
 
         #Loop through the depth and the masked fan angle
         for depth_point, fan_angle_point in zip(self.depth, masked_fan_angle):
             
-            #Use the fan angle at this point an an index to get the
-            #  horizontal coefficent and offset for this depth point
-            a_h_point = a_h[fan_angle_point]
-            b_h_point = b_h[fan_angle_point]
+            # Check classification values.
+            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
+            if self.classification[i] not in self.subaqueous_class_values:
+                # logger.subaqueous(f'Not Subaqueous Class: {self.classification[i]}')
+                res_tvu.append(0)
+                res_thu.append(0)
 
-            # Product of coeffs w/ depths + offsets
-            thu_point = a_h_point * depth_point + b_h_point
+            # If the point is subaqueous, calculate THU and TVU values. 
+            else:
+     
+                # logger.subaqueous(f'Subaqueous Class: {self.classification[i]}')
+                # Use the fan angle at this point an an index to get the
+                #  horizontal coefficent and offset for this depth point
+                a_h_point = a_h[fan_angle_point]
+                b_h_point = b_h[fan_angle_point]
 
-            #Add the subaqueous thu at this point to the list of result thu values
-            res_thu.append(thu_point)
+                # Product of coeffs w/ depths + offsets
+                thu_point = a_h_point * depth_point + b_h_point
 
-            #Use the fan angle at this point an an index to get the
-            #  vertical coefficent and offset for this depth point
-            a_z_point = a_z[fan_angle_point]
-            b_z_point = b_z[fan_angle_point]
+                #Add the subaqueous thu at this point to the list of result thu values
+                res_thu.append(thu_point)
 
-            # Product of coeffs w/ depths + offsets
-            tvu_point = a_z_point * depth_point + b_z_point
+                #Use the fan angle at this point an an index to get the
+                #  vertical coefficent and offset for this depth point
+                a_z_point = a_z[fan_angle_point]
+                b_z_point = b_z[fan_angle_point]
 
-            # enforce minimum value for tvu
-            if(tvu_point < min_tvu):
-                tvu_point = min_tvu
+                # Product of coeffs w/ depths + offsets
+                tvu_point = a_z_point * depth_point + b_z_point
 
-            #Add the subaqueous tvu at this point to the list of result thu values
-            res_tvu.append(tvu_point)
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+
+                #Add the subaqueous tvu at this point to the list of result thu values
+                res_tvu.append(tvu_point)
+            
+            # Increment counter for checking classification values.
+            i += 1
 
         return np.asarray(res_thu), np.asarray(res_tvu)
     

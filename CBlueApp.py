@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Austin Anderson (NV5 Geospatial) and Keana Kief (OSU)
-September 26th, 2023
+Keana Kief (OSU)
+January 10th, 2024
 
 """
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         sensor_json_content = json.load(sensors_json)
     sensor_options = list(sensor_json_content.keys())
     sensor_help_text = get_help_text(sensor_options)
-    parser.add_argument("sensor", type=int, choices=[0, 1, 2, 3, 4, 5, 6, 7, 8], help=sensor_help_text, metavar="sensor")
+    parser.add_argument("sensor", type=int, choices=list(range(len(sensor_options))), help=sensor_help_text, metavar="sensor")
     # TPU Metric
     tpu_help_text = get_help_text(TPU_METRIC_OPTIONS)
     parser.add_argument("tpu_metric", type=int, choices=[0, 1], help=tpu_help_text, metavar="tpu_metric")

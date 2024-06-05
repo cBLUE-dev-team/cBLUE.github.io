@@ -55,8 +55,8 @@
             "type": "single"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
-            "horizontal": "./lookup_tables/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
+            "vertical": "./lookup_tables/Hawkeye_LUTs/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
+            "horizontal": "./lookup_tables/Hawkeye_LUTs/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
         }
     },
     "HawkEye 4X 400m AGL": {
@@ -103,8 +103,61 @@
             "type": "multi"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/PILLS_Lookup_Results_Vertical.xlsx",
-            "horizontal": "./lookup_tables/PILLS_Lookup_Results_Horizontal.xlsx"
+            "vertical": "./lookup_tables/PILLS_LUTs/PILLS_Lookup_Results_Vertical.xlsx",
+            "horizontal": "./lookup_tables/PILLS_LUTs/PILLS_Lookup_Results_Horizontal.xlsx"
         }
+    
+    },
+    "CZMIL or CZMIL Nova (Shallow)": {
+        "sensor_model": {
+            "a_std_dev": 0.00392,
+            "b_std_dev": 0.00392,
+            "std_rho": 0.025,
+            "type": "single"
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/CZMIL_LUTs/Nova_Shallow_400_AGL_7_mrad_TVU.csv",
+            "horizontal": "./lookup_tables/CZMIL_LUTs/Nova_Shallow_400_AGL_7_mrad_THU.csv"
+        }
+    
+    },
+    "CZMIL or CZMIL Nova (Deep)": {
+        "sensor_model": {
+            "a_std_dev": 0.00392,
+            "b_std_dev": 0.00392,
+            "std_rho": 0.025,
+            "type": "single"
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/CZMIL_LUTs/Nova_Deep_400_AGL_7_mrad_TVU.csv",
+            "horizontal": "./lookup_tables/CZMIL_LUTs/Nova_Deep_400_AGL_7_mrad_THU.csv"
+        }
+    
+    },
+    "CZMIL SuperNova (Shallow)": {
+        "sensor_model": {
+            "a_std_dev": 0.00392,
+            "b_std_dev": 0.00392,
+            "std_rho": 0.025,
+            "type": "single"
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/CZMIL_LUTs/SuperNova_Shallow_400_AGL_7_mrad_TVU.csv",
+            "horizontal": "./lookup_tables/CZMIL_LUTs/SuperNova_Shallow_400_AGL_7_mrad_THU.csv"
+        }
+    
+    },
+    "CZMIL SuperNova (Deep)": {
+        "sensor_model": {
+            "a_std_dev": 0.00392,
+            "b_std_dev": 0.00392,
+            "std_rho": 0.025,
+            "type": "single"
+        },
+        "subaqueous_LUTs": {
+            "vertical": "./lookup_tables/CZMIL_LUTs/SuperNova_Deep_400_AGL_7_mrad_TVU.csv",
+            "horizontal": "./lookup_tables/CZMIL_LUTs/SuperNova_Deep_400_AGL_7_mrad_THU.csv"
+        }
+    
     }
 }

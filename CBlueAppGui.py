@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Austin Anderson (NV5 Geospatial) and Keana Kief (OSU)
-September 26th, 2023
+Keana Kief (OSU)
+April 29th, 2024
 
 """
 import tkinter as tk
@@ -287,7 +287,7 @@ def main():
                    str(sensor_integer),
                    str(tpu_integer),
                    str(water_height_var.get()),
-                   "-vdatum", vdatum_var.get()
+                   "-vdatum_region", vdatum_var.get()
                    ]
         if csv_var.get():
             command.append("--csv")
