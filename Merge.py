@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-January 16th, 2024
+May 30th, 2024
 
 """
 
@@ -197,6 +197,11 @@ class Merge:
                 #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
                 #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
                 masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
+
+                # Unbounded scan angle/fan angle can go past 26 degrees (absolute). 
+                # Warn the user if their fan angle exceed maximum allowed fan angle.
+                if not all(i <=26 for i in masked_fan_angle): 
+                    logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
             elif(sensor_object.type =="single_leica"):
                  
                 masked_leica_data = np.asarray(
@@ -205,7 +210,6 @@ class Merge:
                     fl_las_data[:, 6][mask] # masked user_data
                 ]
             )
-
 
         # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
         # logger.merge(f"processed fan angle: {masked_fan_angle}")
