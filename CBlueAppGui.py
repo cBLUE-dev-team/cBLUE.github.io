@@ -136,7 +136,7 @@ def main():
     root = tk.Tk()
     root.wm_title("cBLUE")
     root.iconbitmap(root, "cBLUE_icon.ico")
-    root.geometry("270x730")
+    root.geometry("325x760")
     norm_font_bold = ("Verdanna", 10, "bold")
     padx = (30, 30)
     pady = (10, 0)
@@ -227,7 +227,8 @@ def main():
     tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
     water_height_var = tk.StringVar()
     water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
-    water_height_msg = "Nominal water surface ellipsoid height \n(in meters):"
+    water_height_msg = "Nominal water surface ellipsoid height (in meters):\nNote: In CONUS locations, this will be "\
+                        "a negative\nnumber. Please be sure to enter the negative sign\nbefore the numerical value."
     tk.Label(water_height_frame, text=water_height_msg).pack()
     tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
     water_height_frame.pack(padx=padx, pady=pady, fill="x")

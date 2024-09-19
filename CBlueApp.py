@@ -197,7 +197,8 @@ if __name__ == "__main__":
     parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate CSV output files.")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only.")
     # Water Surface Ellipsoid Height
-    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.")
+    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.\n"\
+                        "Note: In CONUS locations, this will be a negative number. Please be sure to enter the negative sign before the numerical value.")
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
     if not len(sys.argv) > 1:
