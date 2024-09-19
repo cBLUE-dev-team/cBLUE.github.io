@@ -1,14 +1,20 @@
 {
     "directories": {
-        "tpu": "",
-        "sbet": "",
-        "las": ""
+        "sbet": "C:/Users/kkief/Box/cBLUE/Fugro_test/SBET",
+        "las": "C:/Users/kkief/Box/cBLUE/Fugro_test/LAS",
+        "tpu": "C:/Users/kkief/Box/cBLUE/Fugro_test/Output_test"
     },
     "multiprocess": "False",
     "number_cores": 4,
-    "cBLUE_version": "v3.1.0",
+    "cBLUE_version": "v3.2",
     "subaqueous_version": "v2.2",
-    "sensor_model": "",
-    "water_surface_ellipsoid_height": 0.00,
-    "error_type": ""
+    "subaqueous_classes": [
+        "40",
+        "43",
+        "46",
+        "64"
+    ],
+    "sensor_model": "PILLS or RAMMS",
+    "water_surface_ellipsoid_height": -38.09,
+    "error_type": "95% confidence"
 }
