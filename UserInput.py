@@ -48,7 +48,7 @@ class UserInput:
         self.mcu = controller_configuration["mcu"]
         self.output_directory = controller_configuration["directories"]["tpu"]
         self.csv_option = controller_configuration["csv_option"]
-        
+        self.laz_option = controller_configuration["laz_option"]
 
         #Get the current cblue version and subaqueous version from the cblue_configuration.json
         self.cblue_version = controller_configuration["cBLUE_version"]

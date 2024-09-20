@@ -130,7 +130,7 @@ def set_dir_from_config(dir_path, dir_var, dir_button):
         dir_button.config(text=new_text, fg="green")
         #Print to the command line that the appropriate directory path has been set    
         print(f'{new_text}: {dir_path}')
-        
+
 
 def main():
     root = tk.Tk()
@@ -262,8 +262,14 @@ def main():
     csv_frame = tk.Frame(root)
     tk.Label(csv_frame, text="Output Options", font=norm_font_bold).pack()
     csv_var = tk.BooleanVar()
-    ttk.Radiobutton(csv_frame, text="ExtraBytes", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
-    ttk.Radiobutton(csv_frame, text="ExtraBytes + CSV", value=True, variable=csv_var).pack(fill="x", padx=padx[-1])
+    laz_var = tk.BooleanVar()
+
+    ttk.Checkbutton(csv_frame, text = "LAZ", variable = laz_var, onvalue = True, offvalue = False).pack(padx=padx[-1], side=tk.LEFT)
+    ttk.Checkbutton(csv_frame, text = "CSV", variable = csv_var, onvalue = True, offvalue = False).pack(padx=padx[-1], side=tk.LEFT)
+
+    # ttk.Radiobutton(csv_frame, text="ExtraBytes LAS", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
+    # ttk.Radiobutton(csv_frame, text="ExtraBytes LAZ", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
+    # ttk.Radiobutton(csv_frame, text="ExtraBytes + CSV", value=True, variable=csv_var).pack(fill="x", padx=padx[-1])
     csv_frame.pack(padx=padx, pady=pady, fill="x")
 
     def start_process(just_save_config=False):
@@ -292,6 +298,8 @@ def main():
                    ]
         if csv_var.get():
             command.append("--csv")
+        if laz_var.get():
+            command.append("--laz")
         if just_save_config:
             command.append("--just_save_config")
         print(f"\nCommand: {command}")
