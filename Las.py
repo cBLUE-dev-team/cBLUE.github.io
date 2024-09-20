@@ -53,7 +53,10 @@ class Las:
     def __init__(self, las):
         self.las = las
         self.las_short_name = os.path.split(las)[-1]
-        self.las_base_name = self.las_short_name.replace(".las", "")
+        if ".las" in self.las_short_name:
+            self.las_base_name = self.las_short_name.replace(".las", "")
+        else:
+            self.las_base_name = self.las_short_name.replace(".laz", "")
         self.inFile = laspy.read(self.las)
         self.points_to_process = self.inFile.points
         self.unq_flight_lines = self.get_flight_line_ids()
