@@ -145,6 +145,7 @@ def updateConfig(config_dict):
     del new_config_dict["mcu"]
     del new_config_dict["csv_option"]
     del new_config_dict["laz_option"]
+    del new_config_dict["las_option"]
 
     with open("cblue_configuration.json", "w") as update_config:
         json.dump(new_config_dict, update_config, indent=4)
@@ -196,7 +197,8 @@ if __name__ == "__main__":
     parser.add_argument("tpu_metric", type=int, choices=[0, 1], help=tpu_help_text, metavar="tpu_metric")
     # Output Options
     parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate CSV output files.")
-    parser.add_argument("--laz", action="store_true",  help="Add the --laz flag to generate .laz output files instead of .las files.")
+    parser.add_argument("--las", action="store_true",  help="Add the --las flag to generate .las output files.")
+    parser.add_argument("--laz", action="store_true",  help="Add the --laz flag to generate .laz output files.")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only.")
     # Water Surface Ellipsoid Height
     parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.\n"\
@@ -219,6 +221,7 @@ if __name__ == "__main__":
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
+    las = args.las
     laz = args.laz
     just_save_config = args.just_save_config
     water_height = float(args.water_height)
@@ -241,6 +244,7 @@ if __name__ == "__main__":
     config_dict["sensor_model"] = sensor_options[sensor_index]
     config_dict["error_type"] = TPU_METRIC_OPTIONS[tpu_metric_index]
     config_dict["csv_option"] = csv
+    config_dict["las_option"] = las
     config_dict["laz_option"] = laz
     config_dict["water_surface_ellipsoid_height"] = water_height
 
