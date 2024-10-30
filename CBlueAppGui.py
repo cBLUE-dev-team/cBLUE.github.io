@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-April 29th, 2024
+October 30th, 2024
 
 """
 import tkinter as tk
@@ -301,6 +301,8 @@ def main():
                    ]
         if csv_var.get():
             command.append("--csv")
+        if las_var.get():
+            command.append("--las")
         if laz_var.get():
             command.append("--laz")
         if just_save_config:
