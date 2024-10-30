@@ -101,9 +101,10 @@ class Subaqueous:
         for i, classification in enumerate(self.classification):
             # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
             if classification not in self.gui_object.subaqueous_classes:
-                print(f"Class: {classification}")
                 res_thu[i] = 0
                 res_tvu[i] = 0
+            # else:
+            #     print(f"subaqueous tvu[{i}]: {res_tvu[i]}")
 
 
         return res_thu, res_tvu
