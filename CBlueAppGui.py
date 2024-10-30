@@ -261,11 +261,14 @@ def main():
     # Output Options
     csv_frame = tk.Frame(root)
     tk.Label(csv_frame, text="Output Options", font=norm_font_bold).pack()
-    csv_var = tk.BooleanVar()
-    laz_var = tk.BooleanVar()
 
-    ttk.Checkbutton(csv_frame, text = "LAZ", variable = laz_var, onvalue = True, offvalue = False).pack(padx=padx[-1], side=tk.LEFT)
-    ttk.Checkbutton(csv_frame, text = "CSV", variable = csv_var, onvalue = True, offvalue = False).pack(padx=padx[-1], side=tk.LEFT)
+    las_var = tk.BooleanVar()
+    laz_var = tk.BooleanVar()
+    csv_var = tk.BooleanVar()
+
+    ttk.Checkbutton(csv_frame, text = "LAS", variable = las_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
+    ttk.Checkbutton(csv_frame, text = "LAZ", variable = laz_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
+    ttk.Checkbutton(csv_frame, text = "CSV", variable = csv_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
 
     # ttk.Radiobutton(csv_frame, text="ExtraBytes LAS", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
     # ttk.Radiobutton(csv_frame, text="ExtraBytes LAZ", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
