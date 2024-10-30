@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-April 16th, 2024
+October 30th, 2024
 """
 
 
@@ -48,6 +48,7 @@ class UserInput:
         self.mcu = controller_configuration["mcu"]
         self.output_directory = controller_configuration["directories"]["tpu"]
         self.csv_option = controller_configuration["csv_option"]
+        self.las_option = controller_configuration["las_option"]
         self.laz_option = controller_configuration["laz_option"]
 
         #Get the current cblue version and subaqueous version from the cblue_configuration.json
