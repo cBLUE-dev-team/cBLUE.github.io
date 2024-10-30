@@ -174,6 +174,9 @@ class Tpu:
 
                     depth = self.gui_object.water_surface_ellipsoid_height - merged_data[4]
 
+                    # print(f"\nMax depth: {max(depth)}")
+                    # print(f"Min depth: {min(depth)}")
+
                     logger.tpu(
                         "({}) calculating subaqueous thu/tvu...".format(
                             las.las_short_name
@@ -223,6 +226,8 @@ class Tpu:
                         total_tvu *= 1.96
                     else:
                         logging.tpu("TPU reported at 1 sigma...")
+
+                    # print(f"{total_tvu[2279775]}")
 
                     fl_tpu_data = np.vstack((total_thu, total_tvu, unsort_idx)).T
 
@@ -310,6 +315,13 @@ class Tpu:
             )
             # print(f"\npoint format: {in_las.header.point_format.id}\n")
             out_las = laspy.LasData(laspy.LasHeader(version="1.4", point_format=in_las.header.point_format.id))
+            out_las.header.scales[0] = in_las.header.scales[0]
+            out_las.header.scales[1] = in_las.header.scales[1]
+            out_las.header.scales[2] = in_las.header.scales[2]
+
+            out_las.header.offsets[0] = in_las.header.offsets[0]
+            out_las.header.offsets[1] = in_las.header.offsets[1]
+            out_las.header.offsets[2] = in_las.header.offsets[2]
             # out_las = laspy.LasData(in_las.header)
             # print(in_las.header)
 
@@ -362,6 +374,8 @@ class Tpu:
             logger.tpu("populating extra byte data for total_tvu...")
             out_las.total_tvu = extra_byte_df["total_tvu"]
             # print(f"TVU: {out_las.total_tvu}")
+            # print(f"{out_las.total_tvu[2279775]}")
+
 
         else:
             logger.tpu("populating extra byte data for total_thu...")
