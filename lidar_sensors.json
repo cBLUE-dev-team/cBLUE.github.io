@@ -47,7 +47,7 @@
             "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad_hz.csv"
         }
     },
-    "Leica Chiroptera 4X (HawkEye 4X Shallow)": {
+    "Leica Chiroptera 4X or 5 (HawkEye 4X/5 Shallow)": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
