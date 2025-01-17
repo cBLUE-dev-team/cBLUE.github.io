@@ -294,36 +294,52 @@ class Tpu:
         # Get input file name and append _TPU and file extension.
         # If the user has selected .laz ouput, append .laz
         if self.gui_object.laz_option:
-            out_las_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.laz"
-        else:
+            out_laz_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.laz"
+            
+            # if TPU file already exists, notify the user that it will be overwritten
+            if os.path.exists(out_laz_name):
+                # Remove the old file
+                os.remove(out_laz_name)
+                logger.tpu(
+                    "writing laz and tpu results to existing file: {}".format(out_laz_name)
+                )
+            # otherwise, create new TPU file
+            else:
+                logger.tpu(
+                    "writing laz and tpu results to new file: {}".format(out_laz_name)
+                )
+
+        # If the user has selected .las ouput, append .las
+        if self.gui_object.las_option:
             out_las_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.las"
+
+            # if TPU file already exists, notify the user that it will be overwritten
+            if os.path.exists(out_las_name):
+                # Remove the old file
+                os.remove(out_las_name)
+                logger.tpu(
+                    "writing las and tpu results to existing file: {}".format(out_las_name)
+                )
+            # otherwise, create new TPU file
+            else:
+                logger.tpu(
+                    "writing las and tpu results to new file: {}".format(out_las_name)
+                )
 
         # read las file
         in_las = laspy.read(las.las)
 
-        # if TPU file already exists, overwrite it
-        if las.las_base_name + "_TPU.las" in os.listdir(self.gui_object.output_directory):
-            out_las = laspy.read(out_las_name)
-            logger.tpu(
-                "writing las and tpu results to existing file: {}".format(out_las_name)
-            )
+        # print(f"\npoint format: {in_las.header.point_format.id}\n")
+        out_las = laspy.LasData(laspy.LasHeader(version="1.4", point_format=in_las.header.point_format.id))
+        out_las.header.scales[0] = in_las.header.scales[0]
+        out_las.header.scales[1] = in_las.header.scales[1]
+        out_las.header.scales[2] = in_las.header.scales[2]
 
-        # otherwise, create new TPU file
-        else:
-            logger.tpu(
-                "writing las and tpu results to new file: {}".format(out_las_name)
-            )
-            # print(f"\npoint format: {in_las.header.point_format.id}\n")
-            out_las = laspy.LasData(laspy.LasHeader(version="1.4", point_format=in_las.header.point_format.id))
-            out_las.header.scales[0] = in_las.header.scales[0]
-            out_las.header.scales[1] = in_las.header.scales[1]
-            out_las.header.scales[2] = in_las.header.scales[2]
-
-            out_las.header.offsets[0] = in_las.header.offsets[0]
-            out_las.header.offsets[1] = in_las.header.offsets[1]
-            out_las.header.offsets[2] = in_las.header.offsets[2]
-            # out_las = laspy.LasData(in_las.header)
-            # print(in_las.header)
+        out_las.header.offsets[0] = in_las.header.offsets[0]
+        out_las.header.offsets[1] = in_las.header.offsets[1]
+        out_las.header.offsets[2] = in_las.header.offsets[2]
+        # out_las = laspy.LasData(in_las.header)
+        # print(in_las.header)
 
         # note '<f4' -> 32 bit floating point
         # extra_byte_dimensions = {"total_thu": "<f4", "total_tvu": "<f4"}
@@ -395,9 +411,12 @@ class Tpu:
                 las_data = in_las[field.name]
                 out_las[field.name] = las_data[las.t_argsort]
 
-        # write las with extrabytes to file
-        out_las.write(out_las_name)
-
+        # If the user has selected .laz ouput, append .laz
+        if self.gui_object.laz_option:
+            out_las.write(out_laz_name)
+        # If the user has selected .las ouput, append .las
+        if self.gui_object.las_option:
+            out_las.write(out_las_name)
         # print("Wrote out_las")
 
         # for field in out_las.point_format:
@@ -412,13 +431,13 @@ class Tpu:
             # print(f"out_csv_name{out_csv_name}")
             # print(f"out_las_name{out_las_name}")
 
-            try:
-                csv_las = Las(out_las_name)
-            except ValueError as e:
-                raise ValueError(f"Error: {e}, Laspy failed to read {out_las_name}")
+            # try:
+            #     csv_las = Las(out_las_name)
+            # except ValueError as e:
+            #     raise ValueError(f"Error: {e}, Laspy failed to read {out_las_name}")
 
             #xyz_to_coordinate converts the x, y, z integer values to decimal values
-            x, y, z = csv_las.xyz_to_coordinate()
+            x, y, z = las.xyz_to_coordinate()
 
             try:
                 # Save relevant data to csv
@@ -435,10 +454,6 @@ class Tpu:
                 ).to_csv(out_csv_name, index=False)
             except ValueError as e:
                 raise ValueError("CSV writing failed")
-                        
-
-
-
 
     def write_metadata(self, las):
         """creates a json file with summary statistics and metedata
