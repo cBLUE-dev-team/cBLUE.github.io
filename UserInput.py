@@ -51,6 +51,10 @@ class UserInput:
         self.las_option = controller_configuration["las_option"]
         self.laz_option = controller_configuration["laz_option"]
 
+        # If the user didn't select an output option, set las_option to True. 
+        if not self.csv_option and not self.laz_option: 
+            self.las_option = True
+
         #Get the current cblue version and subaqueous version from the cblue_configuration.json
         self.cblue_version = controller_configuration["cBLUE_version"]
         self.subaqueous_version = controller_configuration["subaqueous_version"]
