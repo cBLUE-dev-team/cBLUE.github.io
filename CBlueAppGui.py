@@ -287,7 +287,8 @@ def main():
                    str(sensor_integer),
                    str(tpu_integer),
                    str(water_height_var.get()),
-                   "-vdatum_region", vdatum_var.get()
+                   "-vdatum_region", vdatum_var.get(),
+                   "--save_config",
                    ]
         if csv_var.get():
             command.append("--csv")

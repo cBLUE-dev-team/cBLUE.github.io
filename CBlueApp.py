@@ -147,8 +147,6 @@ def updateConfig(config_dict):
 
     with open("cblue_configuration.json", "w") as update_config:
         json.dump(new_config_dict, update_config, indent=4)
-    if just_save_config:
-        sys.exit()
 
 if __name__ == "__main__":
 
@@ -195,7 +193,8 @@ if __name__ == "__main__":
     parser.add_argument("tpu_metric", type=int, choices=[0, 1], help=tpu_help_text, metavar="tpu_metric")
     # Output Options
     parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate CSV output files.")
-    parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only.")
+    parser.add_argument("--save_config", action="store_true", help="Save config file in main cBlue app folder. Not recommended if running multiple cBlue CLI processes concurrently due to potential multi-write conflicts.")
+    parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only. Will do nothing if --save_config is not used.")
     # Water Surface Ellipsoid Height
     parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.")
 
@@ -216,6 +215,7 @@ if __name__ == "__main__":
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
+    save_config = args.save_config
     just_save_config = args.just_save_config
     water_height = float(args.water_height)
 
@@ -239,6 +239,9 @@ if __name__ == "__main__":
     config_dict["csv_option"] = csv
     config_dict["water_surface_ellipsoid_height"] = water_height
 
-    updateConfig(config_dict)
+    if save_config:
+        updateConfig(config_dict)
+    if just_save_config:
+        sys.exit()
 
     CBlueApp(config_dict)
