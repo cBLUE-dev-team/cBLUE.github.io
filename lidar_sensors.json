@@ -59,7 +59,7 @@
             "horizontal": "./lookup_tables/Hawkeye_LUTs/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
         }
     },
-    "HawkEye 4X or 5 400m AGL": {
+    "HawkEye 4X 400m AGL": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
@@ -71,7 +71,7 @@
             "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_400_AGL_8_mrad_hz.csv"
         }
     },
-    "HawkEye 4X or 5 500m AGL": {
+    "HawkEye 4X 500m AGL": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
@@ -83,7 +83,7 @@
             "horizontal": "./lookup_tables/Hawkeye_LUTs/HawkEye4X_Deep_500_AGL_8_mrad_hz.csv"
         }
     },
-    "HawkEye 4X or 5 600m AGL": {
+    "HawkEye 4X 600m AGL": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
