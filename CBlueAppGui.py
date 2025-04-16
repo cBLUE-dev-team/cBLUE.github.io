@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Keana Kief (OSU)
-October 30th, 2024
+Keana Kief (OSU) and Austin Anderson (NV5)
+April 16th, 2025
 
 """
 import tkinter as tk
@@ -297,7 +297,8 @@ def main():
                    str(sensor_integer),
                    str(tpu_integer),
                    str(water_height_var.get()),
-                   "-vdatum_region", vdatum_var.get()
+                   "-vdatum_region", vdatum_var.get(),
+                   "--save_config",
                    ]
         if csv_var.get():
             command.append("--csv")
@@ -345,12 +346,12 @@ def main():
         proc_button.config(state=state)
 
     # Check if Process button can be enabled each time one of these vars changes
-    traj_dir_var.trace("w", update_process_button)
-    las_dir_var.trace("w", update_process_button)
-    out_dir_var.trace("w", update_process_button)
-    sensor_var.trace("w", update_process_button)
-    tpu_metric_var.trace("w", update_process_button)
-    water_height_var.trace("w", update_process_button)
+    traj_dir_var.trace_add("write", update_process_button)
+    las_dir_var.trace_add("write", update_process_button)
+    out_dir_var.trace_add("write", update_process_button)
+    sensor_var.trace_add("write", update_process_button)
+    tpu_metric_var.trace_add("write", update_process_button)
+    water_height_var.trace_add("write", update_process_button)
 
     root.mainloop()
 
