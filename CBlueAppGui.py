@@ -332,12 +332,12 @@ def main():
         proc_button.config(state=state)
 
     # Check if Process button can be enabled each time one of these vars changes
-    traj_dir_var.trace("w", update_process_button)
-    las_dir_var.trace("w", update_process_button)
-    out_dir_var.trace("w", update_process_button)
-    sensor_var.trace("w", update_process_button)
-    tpu_metric_var.trace("w", update_process_button)
-    water_height_var.trace("w", update_process_button)
+    traj_dir_var.trace_add("write", update_process_button)
+    las_dir_var.trace_add("write", update_process_button)
+    out_dir_var.trace_add("write", update_process_button)
+    sensor_var.trace_add("write", update_process_button)
+    tpu_metric_var.trace_add("write", update_process_button)
+    water_height_var.trace_add("write", update_process_button)
 
     root.mainloop()
 
