@@ -174,6 +174,9 @@ class Tpu:
 
                     depth = self.gui_object.water_surface_ellipsoid_height - merged_data[4]
 
+                    # print(f"\nMax depth: {max(depth)}")
+                    # print(f"Min depth: {min(depth)}")
+
                     logger.tpu(
                         "({}) calculating subaqueous thu/tvu...".format(
                             las.las_short_name
@@ -223,6 +226,8 @@ class Tpu:
                         total_tvu *= 1.96
                     else:
                         logging.tpu("TPU reported at 1 sigma...")
+
+                    # print(f"{total_tvu[2279775]}")
 
                     fl_tpu_data = np.vstack((total_thu, total_tvu, unsort_idx)).T
 
@@ -286,48 +291,78 @@ class Tpu:
         :return:
         """
 
-        # get input file name and append TPU
-        out_las_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.las"
+        # Get input file name and append _TPU and file extension.
+        # If the user has selected .laz ouput, append .laz
+        if self.gui_object.laz_option:
+            out_laz_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.laz"
+            
+            # if TPU file already exists, notify the user that it will be overwritten
+            if os.path.exists(out_laz_name):
+                # Remove the old file
+                os.remove(out_laz_name)
+                logger.tpu(
+                    "writing laz and tpu results to existing file: {}".format(out_laz_name)
+                )
+            # otherwise, create new TPU file
+            else:
+                logger.tpu(
+                    "writing laz and tpu results to new file: {}".format(out_laz_name)
+                )
+
+        # If the user has selected .las ouput, append .las
+        if self.gui_object.las_option:
+            out_las_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.las"
+
+            # if TPU file already exists, notify the user that it will be overwritten
+            if os.path.exists(out_las_name):
+                # Remove the old file
+                os.remove(out_las_name)
+                logger.tpu(
+                    "writing las and tpu results to existing file: {}".format(out_las_name)
+                )
+            # otherwise, create new TPU file
+            else:
+                logger.tpu(
+                    "writing las and tpu results to new file: {}".format(out_las_name)
+                )
 
         # read las file
         in_las = laspy.read(las.las)
 
-        # if TPU file already exists, overwrite it
-        if las.las_base_name + "_TPU.las" in os.listdir(self.gui_object.output_directory):
-            out_las = laspy.read(out_las_name)
-            logger.tpu(
-                "writing las and tpu results to existing file: {}".format(out_las_name)
-            )
+        # print(f"\npoint format: {in_las.header.point_format.id}\n")
+        out_las = laspy.LasData(laspy.LasHeader(version="1.4", point_format=in_las.header.point_format.id))
+        out_las.header.scales[0] = in_las.header.scales[0]
+        out_las.header.scales[1] = in_las.header.scales[1]
+        out_las.header.scales[2] = in_las.header.scales[2]
 
-        # otherwise, create new TPU file
-        else:
-            logger.tpu(
-                "writing las and tpu results to new file: {}".format(out_las_name)
-            )
-            out_las = laspy.LasData(in_las.header)
+        out_las.header.offsets[0] = in_las.header.offsets[0]
+        out_las.header.offsets[1] = in_las.header.offsets[1]
+        out_las.header.offsets[2] = in_las.header.offsets[2]
+        # out_las = laspy.LasData(in_las.header)
+        # print(in_las.header)
 
         # note '<f4' -> 32 bit floating point
-        extra_byte_dimensions = {"total_thu": "<f4", "total_tvu": "<f4"}
+        # extra_byte_dimensions = {"total_thu": "<f4", "total_tvu": "<f4"}
+        extra_byte_dimensions = [laspy.ExtraBytesParams(name="total_thu", type="<f4", description="total_thu"), \
+                                 laspy.ExtraBytesParams(name="total_tvu", type="<f4", description="total_tvu")]
 
-        num_extra_bytes = len(extra_byte_dimensions.keys())
+        num_extra_bytes = len(extra_byte_dimensions)
 
         # define new extrabyte dimensions
-        for dimension, dtype in extra_byte_dimensions.items():
+        # for dimension, dtype in extra_byte_dimensions.items():
 
-            logger.tpu("creating extra byte dimension for {}...".format(dimension))
-            out_las.add_extra_dim(
-                laspy.ExtraBytesParams(
-                    name=dimension, type=dtype, description=dimension
-                )
-            )
+        logger.tpu("creating extra byte dimension for total_thu and total_tvu")
+        out_las.add_extra_dims(extra_byte_dimensions)
 
         if len(data_to_output) != 0:
             tpu_data = np.vstack(data_to_output)
             extra_byte_df = pd.DataFrame(
                 tpu_data[:, 0:num_extra_bytes],
                 index=tpu_data[:, num_extra_bytes],
-                columns=extra_byte_dimensions.keys(),
+                columns=["total_thu", "total_tvu"],
             )
+            # print(f"extra_byte_dims: {extra_byte_dimensions}")
+            # print(f"extra_byte_df: {extra_byte_df}")
 
             if extra_byte_df.shape[0] == las.num_file_points:
                 extra_byte_df = extra_byte_df.sort_index()
@@ -350,9 +385,13 @@ class Tpu:
 
             logger.tpu("populating extra byte data for total_thu...")
             out_las.total_thu = extra_byte_df["total_thu"]
+            # print(f"THU: {out_las.total_thu}")
 
             logger.tpu("populating extra byte data for total_tvu...")
             out_las.total_tvu = extra_byte_df["total_tvu"]
+            # print(f"TVU: {out_las.total_tvu}")
+            # print(f"{out_las.total_tvu[2279775]}")
+
 
         else:
             logger.tpu("populating extra byte data for total_thu...")
@@ -368,11 +407,20 @@ class Tpu:
             # cannot copy over non-standard (extrabyte) dimensions
             dim = in_las.point_format.dimension_by_name(field.name)
             if dim.is_standard:
+                # print({field.name})
                 las_data = in_las[field.name]
                 out_las[field.name] = las_data[las.t_argsort]
 
-        # write las with extrabytes to file
-        out_las.write(out_las_name)
+        # If the user has selected .laz ouput, append .laz
+        if self.gui_object.laz_option:
+            out_las.write(out_laz_name)
+        # If the user has selected .las ouput, append .las
+        if self.gui_object.las_option:
+            out_las.write(out_las_name)
+        # print("Wrote out_las")
+
+        # for field in out_las.point_format:
+        #     print({field.name})
 
         if self.gui_object.csv_option:
             logger.tpu(f"Saving CSV as {las.las_base_name}_TPU.csv")
@@ -380,23 +428,32 @@ class Tpu:
             # get name of csv from las file
             out_csv_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.csv"
 
-            csv_las = Las(out_las_name)
+            # print(f"out_csv_name{out_csv_name}")
+            # print(f"out_las_name{out_las_name}")
+
+            # try:
+            #     csv_las = Las(out_las_name)
+            # except ValueError as e:
+            #     raise ValueError(f"Error: {e}, Laspy failed to read {out_las_name}")
 
             #xyz_to_coordinate converts the x, y, z integer values to decimal values
-            x, y, z = csv_las.xyz_to_coordinate()
+            x, y, z = las.xyz_to_coordinate()
 
-            # Save relevant data to csv
-            pd.DataFrame.from_dict(
-                {
-                    "GPS Time": out_las.gps_time,
-                    "X": x,
-                    "Y": y,
-                    "Z": z,
-                    "THU": out_las.total_thu,
-                    "TVU": out_las.total_tvu,
-                    "Classification": out_las.classification,
-                }
-            ).to_csv(out_csv_name, index=False)
+            try:
+                # Save relevant data to csv
+                pd.DataFrame.from_dict(
+                    {
+                        "GPS Time": out_las.gps_time,
+                        "X": x,
+                        "Y": y,
+                        "Z": z,
+                        "THU": out_las.total_thu,
+                        "TVU": out_las.total_tvu,
+                        "Classification": out_las.classification,
+                    }
+                ).to_csv(out_csv_name, index=False)
+            except ValueError as e:
+                raise ValueError("CSV writing failed")
 
     def write_metadata(self, las):
         """creates a json file with summary statistics and metedata

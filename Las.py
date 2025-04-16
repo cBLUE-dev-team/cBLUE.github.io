@@ -53,7 +53,10 @@ class Las:
     def __init__(self, las):
         self.las = las
         self.las_short_name = os.path.split(las)[-1]
-        self.las_base_name = self.las_short_name.replace(".las", "")
+        if ".las" in self.las_short_name:
+            self.las_base_name = self.las_short_name.replace(".las", "")
+        else:
+            self.las_base_name = self.las_short_name.replace(".laz", "")
         self.inFile = laspy.read(self.las)
         self.points_to_process = self.inFile.points
         self.unq_flight_lines = self.get_flight_line_ids()
@@ -131,18 +134,35 @@ class Las:
         scale_x = np.asarray(self.inFile.header.scales[0])
         scale_y = np.asarray(self.inFile.header.scales[1])
         scale_z = np.asarray(self.inFile.header.scales[2])
+        # print(f"\nLAS File: {self.las_short_name}")
+        # print(f"\nScale X: {scale_x}")
+        # print(f"Scale Y: {scale_y}")
+        # print(f"Scale Z: {scale_z}")
 
         offset_x = np.asarray(self.inFile.header.offsets[0])
         offset_y = np.asarray(self.inFile.header.offsets[1])
         offset_z = np.asarray(self.inFile.header.offsets[2])
 
+        # print(f"\nOffset X: {offset_x}")
+        # print(f"Offset Y: {offset_y}")
+        # print(f"Offset Z: {offset_z}")
+
+
         X = self.points_to_process["X"]
         Y = self.points_to_process["Y"]
         Z = self.points_to_process["Z"]
+
+        # print(f"\nX: {X}")
+        # print(f"Y: {Y}")
+        # print(f"Z: {Z}")
 
 
         x = ne.evaluate("X * scale_x + offset_x")
         y = ne.evaluate("Y * scale_y + offset_y")
         z = ne.evaluate("Z * scale_z + offset_z")
+
+        # print(f"\nx: {x}")
+        # print(f"y: {y}")
+        # print(f"z: {z}")
 
         return x, y, z

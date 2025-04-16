@@ -30,10 +30,9 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-January 10th, 2024
+October 30th, 2024
 
 """
-
 # -*- coding: utf-8 -*-
 import logging
 import sys
@@ -133,7 +132,7 @@ def CBlueApp(controller_configuration):
     print("Done!")
 
 def updateConfig(config_dict):
-    """Updates the cblue_configuration.json with the current runs settings."""
+    """Updates the cblue_configuration.json with the settings of the current run."""
     new_config_dict = config_dict.copy()
     del new_config_dict["wind_ind"]
     del new_config_dict["wind_selection"]
@@ -144,6 +143,8 @@ def updateConfig(config_dict):
     del new_config_dict["vdatum_region"]
     del new_config_dict["mcu"]
     del new_config_dict["csv_option"]
+    del new_config_dict["laz_option"]
+    del new_config_dict["las_option"]
 
     with open("cblue_configuration.json", "w") as update_config:
         json.dump(new_config_dict, update_config, indent=4)
@@ -193,10 +194,13 @@ if __name__ == "__main__":
     parser.add_argument("tpu_metric", type=int, choices=[0, 1], help=tpu_help_text, metavar="tpu_metric")
     # Output Options
     parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate CSV output files.")
-    parser.add_argument("--save_config", action="store_true", help="Updates the cblue_configuration.json in main cBlue app folder with the current runs settings. Not recommended if running multiple cBlue CLI processes concurrently due to potential multi-write conflicts.")
+    parser.add_argument("--las", action="store_true",  help="Add the --las flag to generate .las output files.")
+    parser.add_argument("--laz", action="store_true",  help="Add the --laz flag to generate .laz output files.")
+    parser.add_argument("--save_config", action="store_true", help="Updates the cblue_configuration.json in the main cBlue app folder with the settings for the current run.\nNot recommended if running multiple cBlue CLI processes concurrently due to potential multi-write conflicts.")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run cBLUE process and update the cblue_configuration file only.")
     # Water Surface Ellipsoid Height
-    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.")
+    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.\n"\
+                        "Note: In CONUS locations, this will be a negative number. Please be sure to enter the negative sign before the numerical value.")
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
     if not len(sys.argv) > 1:
@@ -215,6 +219,8 @@ if __name__ == "__main__":
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
+    las = args.las
+    laz = args.laz
     save_config = args.save_config
     just_save_config = args.just_save_config
     water_height = float(args.water_height)
@@ -237,12 +243,16 @@ if __name__ == "__main__":
     config_dict["sensor_model"] = sensor_options[sensor_index]
     config_dict["error_type"] = TPU_METRIC_OPTIONS[tpu_metric_index]
     config_dict["csv_option"] = csv
+    config_dict["las_option"] = las
+    config_dict["laz_option"] = laz
     config_dict["water_surface_ellipsoid_height"] = water_height
 
     if just_save_config:
+        # Update the config file and exit without running cBLUE.     
         updateConfig(config_dict)
         sys.exit()
     elif save_config:
+        # Update the config file with the settings of the current run.       
         updateConfig(config_dict)
 
     CBlueApp(config_dict)
