@@ -180,7 +180,8 @@ if __name__ == "__main__":
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
     parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4], help=turbidity_help_text, metavar="turbidity")
     # VDatum Region
-    parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value.\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
+    parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value."\
+                        "\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
     parser.add_argument("-vdatum_region", default=f"Used MCU value given in the command line interface.", 
                         help=f"Adds the name of the VDatum region to the metadata log.\nUser must provide the region name after -vdatum_region flag.\n\n")
     # Sensor Model
@@ -194,13 +195,17 @@ if __name__ == "__main__":
     parser.add_argument("tpu_metric", type=int, choices=[0, 1], help=tpu_help_text, metavar="tpu_metric")
     # Output Options
     parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate CSV output files.")
-    parser.add_argument("--las", action="store_true",  help="Add the --las flag to generate .las output files.")
-    parser.add_argument("--laz", action="store_true",  help="Add the --laz flag to generate .laz output files.")
-    parser.add_argument("--save_config", action="store_true", help="Updates the cblue_configuration.json in the main cBlue app folder with the settings for the current run.\nNot recommended if running multiple cBlue CLI processes concurrently due to potential multi-write conflicts.")
+    parser.add_argument("--las", action="store_true",  help="Add the --las flag to generate LAS output files.")
+    parser.add_argument("--laz", action="store_true",  help="Add the --laz flag to generate LAZ output files."\
+                        "\nNote: cBLUE will default to LAS output if no output flags (--csv, --las, or --laz) are provided.\n\n")
+    parser.add_argument("--save_config", action="store_true", help="Updates the cblue_configuration.json in the main cBlue app folder"\
+                        " with the settings for the current run.\n*WARNING* --save_config is not recommended when running multiple cBlue"\
+                        " CLI processes concurrently\n          because of potential multi-write conflicts.\n\n")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run cBLUE process and update the cblue_configuration file only.")
     # Water Surface Ellipsoid Height
     parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.\n"\
-                        "Note: In CONUS locations, this will be a negative number. Please be sure to enter the negative sign before the numerical value.")
+                        "Note: In CONUS locations, this will be a negative number.\n      "\
+                        "Please be sure to enter the negative sign before the numerical value.")
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
     if not len(sys.argv) > 1:
