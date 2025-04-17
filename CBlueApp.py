@@ -29,11 +29,10 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Keana Kief (OSU)
-January 10th, 2024
+Keana Kief (OSU) and Austin Anderson (NV5)
+April 16th, 2025
 
 """
-
 # -*- coding: utf-8 -*-
 import logging
 import sys
@@ -133,7 +132,7 @@ def CBlueApp(controller_configuration):
     print("Done!")
 
 def updateConfig(config_dict):
-    """Updates the cblue_configuration.json with the current run's settings."""
+    """Updates the cblue_configuration.json with the settings of the current run."""
     new_config_dict = config_dict.copy()
     del new_config_dict["wind_ind"]
     del new_config_dict["wind_selection"]
@@ -144,11 +143,11 @@ def updateConfig(config_dict):
     del new_config_dict["vdatum_region"]
     del new_config_dict["mcu"]
     del new_config_dict["csv_option"]
+    del new_config_dict["laz_option"]
+    del new_config_dict["las_option"]
 
     with open("cblue_configuration.json", "w") as update_config:
         json.dump(new_config_dict, update_config, indent=4)
-    if just_save_config:
-        sys.exit()
 
 if __name__ == "__main__":
 
@@ -181,7 +180,8 @@ if __name__ == "__main__":
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
     parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4], help=turbidity_help_text, metavar="turbidity")
     # VDatum Region
-    parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value.\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
+    parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value."\
+                        "\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
     parser.add_argument("-vdatum_region", default=f"Used MCU value given in the command line interface.", 
                         help=f"Adds the name of the VDatum region to the metadata log.\nUser must provide the region name after -vdatum_region flag.\n\n")
     # Sensor Model
@@ -195,9 +195,17 @@ if __name__ == "__main__":
     parser.add_argument("tpu_metric", type=int, choices=[0, 1], help=tpu_help_text, metavar="tpu_metric")
     # Output Options
     parser.add_argument("--csv", action="store_true", help="Add the --csv flag to generate CSV output files.")
-    parser.add_argument("--just_save_config", action="store_true", help="Do not run process. Save config file only.")
+    parser.add_argument("--las", action="store_true",  help="Add the --las flag to generate LAS output files.")
+    parser.add_argument("--laz", action="store_true",  help="Add the --laz flag to generate LAZ output files."\
+                        "\nNote: cBLUE will default to LAS output if no output flags (--csv, --las, or --laz) are provided.\n\n")
+    parser.add_argument("--save_config", action="store_true", help="Updates the cblue_configuration.json in the main cBlue app folder"\
+                        " with the settings for the current run.\n*WARNING* --save_config is not recommended when running multiple cBlue"\
+                        " CLI processes concurrently\n          because of potential multi-write conflicts.\n\n")
+    parser.add_argument("--just_save_config", action="store_true", help="Do not run cBLUE process and update the cblue_configuration file only.")
     # Water Surface Ellipsoid Height
-    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.")
+    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.\n"\
+                        "Note: In CONUS locations, this will be a negative number.\n      "\
+                        "Please be sure to enter the negative sign before the numerical value.")
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
     if not len(sys.argv) > 1:
@@ -216,6 +224,9 @@ if __name__ == "__main__":
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
+    las = args.las
+    laz = args.laz
+    save_config = args.save_config
     just_save_config = args.just_save_config
     water_height = float(args.water_height)
 
@@ -237,8 +248,16 @@ if __name__ == "__main__":
     config_dict["sensor_model"] = sensor_options[sensor_index]
     config_dict["error_type"] = TPU_METRIC_OPTIONS[tpu_metric_index]
     config_dict["csv_option"] = csv
+    config_dict["las_option"] = las
+    config_dict["laz_option"] = laz
     config_dict["water_surface_ellipsoid_height"] = water_height
 
-    updateConfig(config_dict)
+    if just_save_config:
+        # Update the config file and exit without running cBLUE.     
+        updateConfig(config_dict)
+        sys.exit()
+    elif save_config:
+        # Update the config file with the settings of the current run.       
+        updateConfig(config_dict)
 
     CBlueApp(config_dict)

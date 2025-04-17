@@ -29,8 +29,8 @@ Corvallis, OR  97331
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Keana Kief (OSU)
-April 29th, 2024
+Keana Kief (OSU) and Austin Anderson (NV5)
+April 16th, 2025
 
 """
 import tkinter as tk
@@ -130,13 +130,13 @@ def set_dir_from_config(dir_path, dir_var, dir_button):
         dir_button.config(text=new_text, fg="green")
         #Print to the command line that the appropriate directory path has been set    
         print(f'{new_text}: {dir_path}')
-        
+
 
 def main():
     root = tk.Tk()
     root.wm_title("cBLUE")
     root.iconbitmap(root, "cBLUE_icon.ico")
-    root.geometry("270x730")
+    root.geometry("325x760")
     norm_font_bold = ("Verdanna", 10, "bold")
     padx = (30, 30)
     pady = (10, 0)
@@ -227,7 +227,8 @@ def main():
     tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
     water_height_var = tk.StringVar()
     water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
-    water_height_msg = "Nominal water surface ellipsoid height \n(in meters):"
+    water_height_msg = "Nominal water surface ellipsoid height (in meters):\nNote: In CONUS locations, this will be "\
+                        "a negative\nnumber. Please be sure to enter the negative sign\nbefore the numerical value."
     tk.Label(water_height_frame, text=water_height_msg).pack()
     tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
     water_height_frame.pack(padx=padx, pady=pady, fill="x")
@@ -260,9 +261,18 @@ def main():
     # Output Options
     csv_frame = tk.Frame(root)
     tk.Label(csv_frame, text="Output Options", font=norm_font_bold).pack()
+
+    las_var = tk.BooleanVar()
+    laz_var = tk.BooleanVar()
     csv_var = tk.BooleanVar()
-    ttk.Radiobutton(csv_frame, text="ExtraBytes", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
-    ttk.Radiobutton(csv_frame, text="ExtraBytes + CSV", value=True, variable=csv_var).pack(fill="x", padx=padx[-1])
+
+    ttk.Checkbutton(csv_frame, text = "LAS", variable = las_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
+    ttk.Checkbutton(csv_frame, text = "LAZ", variable = laz_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
+    ttk.Checkbutton(csv_frame, text = "CSV", variable = csv_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
+
+    # ttk.Radiobutton(csv_frame, text="ExtraBytes LAS", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
+    # ttk.Radiobutton(csv_frame, text="ExtraBytes LAZ", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
+    # ttk.Radiobutton(csv_frame, text="ExtraBytes + CSV", value=True, variable=csv_var).pack(fill="x", padx=padx[-1])
     csv_frame.pack(padx=padx, pady=pady, fill="x")
 
     def start_process(just_save_config=False):
@@ -287,10 +297,15 @@ def main():
                    str(sensor_integer),
                    str(tpu_integer),
                    str(water_height_var.get()),
-                   "-vdatum_region", vdatum_var.get()
+                   "-vdatum_region", vdatum_var.get(),
+                   "--save_config",
                    ]
         if csv_var.get():
             command.append("--csv")
+        if las_var.get():
+            command.append("--las")
+        if laz_var.get():
+            command.append("--laz")
         if just_save_config:
             command.append("--just_save_config")
         print(f"\nCommand: {command}")
@@ -331,12 +346,12 @@ def main():
         proc_button.config(state=state)
 
     # Check if Process button can be enabled each time one of these vars changes
-    traj_dir_var.trace("w", update_process_button)
-    las_dir_var.trace("w", update_process_button)
-    out_dir_var.trace("w", update_process_button)
-    sensor_var.trace("w", update_process_button)
-    tpu_metric_var.trace("w", update_process_button)
-    water_height_var.trace("w", update_process_button)
+    traj_dir_var.trace_add("write", update_process_button)
+    las_dir_var.trace_add("write", update_process_button)
+    out_dir_var.trace_add("write", update_process_button)
+    sensor_var.trace_add("write", update_process_button)
+    tpu_metric_var.trace_add("write", update_process_button)
+    water_height_var.trace_add("write", update_process_button)
 
     root.mainloop()
 
