@@ -10,9 +10,7 @@
     "subaqueous_version": "v2.2",
     "subaqueous_classes": [
         "40",
-        "43",
-        "46",
-        "64"
+        "43"
     ],
     "sensor_model": "",
     "water_surface_ellipsoid_height": -28.0,
