@@ -328,18 +328,8 @@ class Tpu:
 
         # read las file
         in_las = laspy.read(las.las)
-
-        # print(f"\npoint format: {in_las.header.point_format.id}\n")
-        out_las = laspy.LasData(laspy.LasHeader(version="1.4", point_format=in_las.header.point_format.id))
-        out_las.header.scales[0] = in_las.header.scales[0]
-        out_las.header.scales[1] = in_las.header.scales[1]
-        out_las.header.scales[2] = in_las.header.scales[2]
-
-        out_las.header.offsets[0] = in_las.header.offsets[0]
-        out_las.header.offsets[1] = in_las.header.offsets[1]
-        out_las.header.offsets[2] = in_las.header.offsets[2]
-        # out_las = laspy.LasData(in_las.header)
         # print(in_las.header)
+        # print(in_las.vlrs)
 
         # note '<f4' -> 32 bit floating point
         # extra_byte_dimensions = {"total_thu": "<f4", "total_tvu": "<f4"}
@@ -352,7 +342,9 @@ class Tpu:
         # for dimension, dtype in extra_byte_dimensions.items():
 
         logger.tpu("creating extra byte dimension for total_thu and total_tvu")
-        out_las.add_extra_dims(extra_byte_dimensions)
+        in_las.add_extra_dims(extra_byte_dimensions)
+        # print(in_las.header)
+        # print(in_las.vlrs)
 
         if len(data_to_output) != 0:
             tpu_data = np.vstack(data_to_output)
@@ -384,42 +376,32 @@ class Tpu:
                 ).sort_index()
 
             logger.tpu("populating extra byte data for total_thu...")
-            out_las.total_thu = extra_byte_df["total_thu"]
-            # print(f"THU: {out_las.total_thu}")
+            in_las.total_thu = extra_byte_df["total_thu"]
+            # print(f"THU: {in_las.total_thu}")
+
 
             logger.tpu("populating extra byte data for total_tvu...")
-            out_las.total_tvu = extra_byte_df["total_tvu"]
-            # print(f"TVU: {out_las.total_tvu}")
-            # print(f"{out_las.total_tvu[2279775]}")
+            in_las.total_tvu = extra_byte_df["total_tvu"]
+            # print(f"TVU: {in_las.total_tvu}")
+
 
 
         else:
             logger.tpu("populating extra byte data for total_thu...")
-            out_las.total_thu = np.zeros(las.num_file_points)
-
+            in_las.total_thu = np.zeros(las.num_file_points)
             logger.tpu("populating extra byte data for total_tvu...")
-            out_las.total_tvu = np.zeros(las.num_file_points)
-
-        # copy data from in_las
-        for field in in_las.point_format:
-            logger.tpu("writing {} to {} ...".format(field.name, out_las))
-
-            # cannot copy over non-standard (extrabyte) dimensions
-            dim = in_las.point_format.dimension_by_name(field.name)
-            if dim.is_standard:
-                # print({field.name})
-                las_data = in_las[field.name]
-                out_las[field.name] = las_data[las.t_argsort]
+            in_las.total_tvu = np.zeros(las.num_file_points)
 
         # If the user has selected .laz ouput, append .laz
         if self.gui_object.laz_option:
-            out_las.write(out_laz_name)
+            in_las.write(out_laz_name)
         # If the user has selected .las ouput, append .las
         if self.gui_object.las_option:
-            out_las.write(out_las_name)
-        # print("Wrote out_las")
+            in_las.write(out_las_name)
 
-        # for field in out_las.point_format:
+        # print("Wrote in_las")
+
+        # for field in in_las.point_format:
         #     print({field.name})
 
         if self.gui_object.csv_option:
@@ -443,13 +425,13 @@ class Tpu:
                 # Save relevant data to csv
                 pd.DataFrame.from_dict(
                     {
-                        "GPS Time": out_las.gps_time,
+                        "GPS Time": in_las.gps_time,
                         "X": x,
                         "Y": y,
                         "Z": z,
-                        "THU": out_las.total_thu,
-                        "TVU": out_las.total_tvu,
-                        "Classification": out_las.classification,
+                        "THU": in_las.total_thu,
+                        "TVU": in_las.total_tvu,
+                        "Classification": in_las.classification,
                     }
                 ).to_csv(out_csv_name, index=False)
             except ValueError as e:
