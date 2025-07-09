@@ -55,8 +55,8 @@ class Subaqueous:
         #A set of valid subaqeuous classification values:
         self.subaqueous_class_values  = {40, 43, 46, 64}
 
-        logger.subaqueous(f"kd_par {self.gui_object.kd_vals}")
-        logger.subaqueous(f"wind_par {self.gui_object.wind_vals}")
+        logger.subaqueous(f"kd_par {self.gui_object.kd_ind}")
+        logger.subaqueous(f"wind_par {self.gui_object.wind_ind}")
         logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
         logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
 
@@ -127,7 +127,7 @@ class Subaqueous:
         #       Moderate-High (0.26-0.32 m^-1) == [26-32]
         #       High (0.33-0.36 m^-1) == [33-36]
 
-        # self.gui_object.wind_vals and self.gui_object.kd_vals are used to get the right indices for the lookup table.
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
 
         # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
@@ -135,7 +135,7 @@ class Subaqueous:
 
         # For every permutation of values from the wind_par and kd_par arrays, get an index
         #  and add it to the indices array. 
-        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
+        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_ind for k in self.gui_object.kd_ind]
 
         #Get columns a, b and c if they exist
         #Linear fits: bx + c
@@ -283,14 +283,14 @@ class Subaqueous:
 
         # Return DataFrames of TVU and THU observation equation coefficients for each fan angle. 
     
-    def leica_fit_lut(self, masked_leica_data):
+    def hawkeye_fit_lut(self, masked_leica_data):
         """Called to begin the SubAqueous processing."""
     
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
         # query coefficients from look up tables
-        fit_tvu_narrow, fit_thu_narrow, fit_tvu_wide, fit_thu_wide = self.leica_model_process()
+        fit_tvu_narrow, fit_thu_narrow, fit_tvu_wide, fit_thu_wide = self.hawkeye_model_process()
 
         # Quadratic fit: a*depth^2 + b*depth + c
         # a_h := horizontal quadratic coefficient
@@ -355,70 +355,61 @@ class Subaqueous:
 
         return np.asarray(res_thu), np.asarray(res_tvu)
 
-    def leica_model_process(self):
-        """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
+    def hawkeye_model_process(self):
+        """Retrieves the TVU and THU observation equation coefficients and offsets based on the polynomial regression of 
             precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
 
-        :return: (mean_fit_tvu, mean_fit_thu) Averaged TVU and THU observation equation coefficients.
+        :return: (tvu_narrow, thu_narrow, tvu_wide, thu_wide) TVU and THU observation equation coefficients.
         :rtype: (DataFrame, DataFrame)
         """
-        # wind_par values range from 0-20 kts, represented as integers 1-10.
+        # wind_par values range from 0-20 kts, represented as integers 0-4.
         # cBLUE gives users five options for Wind Speed:
-        #   Wind Speed: Calm-light air (0-2 kts) == [1]
-        #               Light Breeze (3-6 kts) == [2,3]
-        #               Gentle Breeze (7-10 kts) == [4,5]
-        #               Moderate Breeze (11-15 kts) == [6,7]
-        #               Fresh Breeze (16-20 kts) == [8, 9, 10]
+        #   Wind Speed: "Calm-light air [0-4] kts" == 0,
+        #               "Light Breeze (4-8] kts" == 1,
+        #               "Gentle Breeze (8-12] kts" == 2,
+        #               "Moderate Breeze (12-16] kts" == 3,
+        #               "Fresh Breeze (16-20+] kts == 4"
 
-        # Turbidity (kd_par) values range from 0.06-0.36 (m^-1) and are represented as integers 6-36.
-        # cBLUE gives users five options for Turbidity:
-        #   kd: Clear (0.06-0.10 m^-1) == [6-10]
-        #       Clear-Moderate (0.11-0.17 m^-1) == [11-17]
-        #       Moderate (0.18-0.25 m^-1) == [18-25]
-        #       Moderate-High (0.26-0.32 m^-1) == [26-32]
-        #       High (0.33-0.36 m^-1) == [33-36]
+        # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
+        # This represents six Jerlov types: III = 0.11 , IC = 0.13, 3C = 0.17, 
+        #                                   5C = 0.24, 7C = 0.35, 9C = 0.58
 
-        # self.gui_object.wind_vals and self.gui_object.kd_vals are used to get the right indices for the lookup table.
+        # cBLUE gives users six options for Turbidity:
+        #   kd: Clear [0-0.12] m^-1 == 0,
+        #       Clear-Moderate (0.12-0.15] m^-1 == 1,
+        #       Moderate (0.15-0.21] m^-1 == 2,
+        #       Moderate-Turbid (0.21-0.27] m^-1 == 3,
+        #       Turbid (0.27-0.47] m^-1) == 4,
+        #       Very Turbid (0.47-0.58+] m^-1 == 5
+
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+        # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
+        #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
+        #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
 
-        # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
-        #       row 1 represents wind speed 1 and kd 7, [...], row 278 represents wind speed 8 and kd 36, etc.  
+        index = 5*self.gui_object.wind_ind + 1*self.gui_object.wind_ind + self.gui_object.kd_ind
 
-        # For every permutation of values from the wind_par and kd_par arrays, get an index
-        #  and add it to the indices array. 
-        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_vals for k in self.gui_object.kd_vals]
-
-        #Get columns a, b and c if they exist
-        #Linear fits: bx + c
-        #Quadratic fits: ax^2 + bx + c
-        cols = ['a', 'b', 'c']
+        # Columns to grab from the LUTs. 
+        # Get columns a, b from vert and horz LUTs. 
+        # Get columns a, b, c, d from range bias LUT. 
+        cols = ['a', 'b', 'c', 'd']
         # Read look up tables, select rows
-        fit_tvu_narrow = pd.read_csv(self.sensor_object.vert_lut_narrow, usecols=lambda i: i in set(cols)).iloc[indices]
-        fit_thu_narrow = pd.read_csv(self.sensor_object.horz_lut_narrow, usecols=lambda i: i in set(cols)).iloc[indices]
-        fit_tvu_wide = pd.read_csv(self.sensor_object.vert_lut_wide, usecols=lambda i: i in set(cols)).iloc[indices]
-        fit_thu_wide = pd.read_csv(self.sensor_object.horz_lut_wide, usecols=lambda i: i in set(cols)).iloc[indices]
+        # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
+        # from the vertical and horizontal LUTs, and columns a, b, c, and d from the range bias LUT. 
+        tvu_deep_narrow = pd.read_csv(self.sensor_object.vert_lut_narrow, usecols=lambda i: i in set(cols)).iloc[index]
+        thu_deep_narrow = pd.read_csv(self.sensor_object.horz_lut_narrow, usecols=lambda i: i in set(cols)).iloc[index]
+        tvu_deep_wide = pd.read_csv(self.sensor_object.vert_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        thu_deep_wide = pd.read_csv(self.sensor_object.horz_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        tvu_shallow = pd.read_csv(self.sensor_object.vert_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        thu_shallow = pd.read_csv(self.sensor_object.horz_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        range_bias = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
 
-        # Assuming all LUTs have the same fit (either linear or quadratic).
-        # If this is a linear fit with no "a" coefficient 
-        if 'a' not in fit_thu_narrow:
-            #Take mean result for each column of the indicies returned
-            mean_fit_tvu_narrow = pd.DataFrame([fit_tvu_narrow.mean(axis=0)], columns=["b","c"])
-            mean_fit_thu_narrow = pd.DataFrame([fit_thu_narrow.mean(axis=0)], columns=["b","c"])
-            mean_fit_tvu_wide = pd.DataFrame([fit_tvu_wide.mean(axis=0)], columns=["b","c"])
-            mean_fit_thu_wide = pd.DataFrame([fit_thu_wide.mean(axis=0)], columns=["b","c"])
-
-            #Add an "a" column and set it to 0
-            mean_fit_tvu_narrow['a'] = 0 
-            mean_fit_thu_narrow['a'] = 0
-            mean_fit_tvu_wide['a'] = 0 
-            mean_fit_thu_wide['a'] = 0
-        else:
-            #Take mean result for each column of the indicies returned
-            mean_fit_tvu_narrow = pd.DataFrame([fit_tvu_narrow.mean(axis=0)], columns=["a","b","c"])
-            mean_fit_thu_narrow = pd.DataFrame([fit_thu_narrow.mean(axis=0)], columns=["a","b","c"])
-            mean_fit_tvu_wide = pd.DataFrame([fit_tvu_wide.mean(axis=0)], columns=["a","b","c"])
-            mean_fit_thu_wide = pd.DataFrame([fit_thu_wide.mean(axis=0)], columns=["a","b","c"])
+        # print(f"TVU Deep Narrow: {tvu_deep_narrow} and THU Deep Narrow: {thu_deep_narrow}")
+        # print(f"TVU Deep Wide: {tvu_deep_wide} and THU Deep Wide: {thu_deep_wide}")
+        # print(f"TVU Shallow: {tvu_shallow} and THU Shallow: {thu_shallow}")
+        # print(f"Range Bias Uncertainty: {range_bias}")
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
-        return mean_fit_tvu_narrow, mean_fit_thu_narrow, mean_fit_tvu_wide, mean_fit_thu_wide
+        return tvu_deep_narrow, thu_deep_narrow, tvu_deep_wide, thu_deep_wide, tvu_shallow, thu_shallow, range_bias
     
