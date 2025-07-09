@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-May 17th, 2024
+July 9th, 2025
 """
 
 import logging
@@ -53,7 +53,10 @@ class Subaqueous:
         self.classification = classification
 
         #A set of valid subaqeuous classification values:
-        self.subaqueous_class_values  = {40, 43, 46, 64}
+        self.subaqueous_class_values  = gui_object.subaqueous_classes
+        # print(type(self.subaqueous_class_values))
+        # print(self.subaqueous_class_values)
+        # self.subaqueous_class_values  = {40, 43, 46, 64}
 
         logger.subaqueous(f"kd_par {self.gui_object.kd_ind}")
         logger.subaqueous(f"wind_par {self.gui_object.wind_ind}")
@@ -97,9 +100,11 @@ class Subaqueous:
         # Check classification values.
         for i, classification in enumerate(self.classification):
             # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
-            if classification not in self.subaqueous_class_values:
+            if classification not in self.gui_object.subaqueous_classes:
                 res_thu[i] = 0
                 res_tvu[i] = 0
+            # else:
+            #     print(f"subaqueous tvu[{i}]: {res_tvu[i]}")
 
 
         return res_thu, res_tvu
@@ -196,15 +201,15 @@ class Subaqueous:
             
             # Check classification values.
             # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
-            if self.classification[i] not in self.subaqueous_class_values:
-                # logger.subaqueous(f'Not Subaqueous Class: {self.classification[i]}')
+            if self.classification[i] not in self.gui_object.subaqueous_classes:
+                # print(f'Not Subaqueous Class: {self.classification[i]}')
                 res_tvu.append(0)
                 res_thu.append(0)
 
             # If the point is subaqueous, calculate THU and TVU values. 
             else:
      
-                # logger.subaqueous(f'Subaqueous Class: {self.classification[i]}')
+                # print(f'Subaqueous Class: {self.classification[i]}')
                 # Use the fan angle at this point an an index to get the
                 #  horizontal coefficent and offset for this depth point
                 a_h_point = a_h[fan_angle_point]
