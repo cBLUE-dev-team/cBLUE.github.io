@@ -113,9 +113,9 @@ class Las:
             # Add x, y, z, gps time, classification, and fan angle (scan angle) to an array together
             las_data = np.vstack([x, y, z, t, c, fan_angle]).T
             # logger.las(f"{sensor_type} Fan Angle: {fan_angle}")
-        #Check if this is a leica sensor (Chiroptera or HawkEye), if it is the subaquous processing requires
-        #   the scanner channel and user data
-        elif(sensor_type == "single_leica"):
+        # Check if this is a HawkEye sensor, if it is the subaquous processing will require 
+        # the scanner channel and user data.
+        elif(sensor_type == "single_hawkeye"):
             scanner_channel = self.inFile.scanner_channel
             user_data = self.inFile.user_data
             # Add x, y, z, gps time, classification, scanner channel, and user data to an array together
