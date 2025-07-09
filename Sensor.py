@@ -68,17 +68,17 @@ class Sensor:
 
         #If this is a Leica HawkEye sensor, get the path of the deep narrow, deep wide, and shallow subaqueous lookup tables
         if self.type == "single_hawkeye":
-            #The vertical deep narrow look up table used for modeling
+            #The path of the vertical deep narrow look up table used for modeling
             self.vert_lut_deep_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_deep_narrow"]
-            #The horizontal deep narrow look up table used for modeling
+            #The path of the horizontal deep narrow look up table used for modeling
             self.horz_lut_deep_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_deep_narrow"]
-            #The vertical deep wide look up table used for modeling
+            #The path of the vertical deep wide look up table used for modeling
             self.vert_lut_deep_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_deep_wide"]
-            #The horizontal deep wide look up table used for modeling
+            #The path of the horizontal deep wide look up table used for modeling
             self.horz_lut_deep_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_deep_wide"]
-            #The vertical wide look up table used for modeling
+            #The path of the vertical wide look up table used for modeling
             self.vert_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_shallow"]
-            #The horizontal wide look up table used for modeling
+            #The path of the horizontal wide look up table used for modeling
             self.horz_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_shallow"]
         #Otherwise if this is a non-HawkEye sensor
         else:
