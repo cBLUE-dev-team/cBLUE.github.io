@@ -8,7 +8,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad.csv",
-            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad_hz.csv"
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_0.7_mrad_hz.csv",
+            "bias": "./lookup_tables/RieglVQ880_LUTs/"
         }
     },
     "Riegl VQ-880-G (1.0 mrad)": {
@@ -20,7 +21,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad.csv",
-            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad_hz.csv"
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1_mrad_hz.csv",
+            "bias": "./lookup_tables/RieglVQ880_LUTs/"
         }
     },
     "Riegl VQ-880-G (1.5 mrad)": {
@@ -32,7 +34,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad.csv",
-            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad_hz.csv"
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_1.5_mrad_hz.csv",
+            "bias": "./lookup_tables/RieglVQ880_LUTs/"
         }
     },
     "Riegl VQ-880-G (2.0 mrad)": {
@@ -44,7 +47,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad.csv",
-            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad_hz.csv"
+            "horizontal": "./lookup_tables/RieglVQ880_LUTs/ReiglVQ880G_600_AGL_2_mrad_hz.csv",
+            "bias": "./lookup_tables/RieglVQ880_LUTs/"
         }
     },
     "Leica Chiroptera 4X (HawkEye 4X Shallow)": {
@@ -55,53 +59,12 @@
             "type": "single"
         },
         "subaqueous_LUTs": {
-            "vertical": "/.lookup_tables/Leica_LUTS/Chrioptera_4X/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
-            "horizontal": "/.lookup_tables/Leica_LUTS/Chrioptera_4X/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv"
+            "vertical": "./lookup_tables/Leica_LUTS/Chrioptera_4X/Chiroptera_4X_400_AGL_4pt75_mrad_LUT_linear.csv",
+            "horizontal": "./lookup_tables/Leica_LUTS/Chrioptera_4X/Chiroptera_4X_400_AGL_4pt75_mrad_hz.csv",
+            "bias": "./lookup_tables/Leica_LUTS/"
         }
     },
-    "HawkEye 4X 400m AGL": {
-        "sensor_model": {
-            "a_std_dev": 0.025,
-            "b_std_dev": 0.025,
-            "std_rho": 0.020,
-            "type": "single_leica"
-        },
-        "subaqueous_LUTs": {
-            "vertical_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
-            "horizontal_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
-            "vertical_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
-            "horizontal_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/"
-        }
-    },
-    "HawkEye 4X 500m AGL": {
-        "sensor_model": {
-            "a_std_dev": 0.025,
-            "b_std_dev": 0.025,
-            "std_rho": 0.020,
-            "type": "single_leica"
-        },
-        "subaqueous_LUTs": {
-            "vertical_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_500m/",
-            "horizontal_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_500m/",
-            "vertical_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_500m/",
-            "horizontal_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_500m/"
-        }
-    },
-    "HawkEye 4X 600m AGL": {
-        "sensor_model": {
-            "a_std_dev": 0.025,
-            "b_std_dev": 0.025,
-            "std_rho": 0.020,
-            "type": "single_leica"
-        },
-        "subaqueous_LUTs": {
-            "vertical_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_600m/",
-            "horizontal_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_600m/",
-            "vertical_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_600m/",
-            "horizontal_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_600m/"
-        }
-    },
-    "Leica Chiroptera-5 (HawkEye-5 Shallow)": {
+    "Leica Chiroptera-5 400m (HawkEye-5 Shallow)": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
@@ -110,10 +73,37 @@
         },
         "subaqueous_LUTs": {
             "vertical": "/.lookup_tables/Leica_LUTS/Chrioptera_5/",
-            "horizontal": "/.lookup_tables/Leica_LUTS/Chrioptera_5/"
+            "horizontal": "/.lookup_tables/Leica_LUTS/Chrioptera_5/",
+            "bias": "./lookup_tables/Leica_LUTS/"
         }
     },
-    "HawkEye-5 400m AGL": {
+    "Leica Chiroptera-5 500m (HawkEye-5 Shallow)": {
+        "sensor_model": {
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
+            "std_rho": 0.020,
+            "type": "single"
+        },
+        "subaqueous_LUTs": {
+            "vertical": "/.lookup_tables/Leica_LUTS/Chrioptera_5/",
+            "horizontal": "/.lookup_tables/Leica_LUTS/Chrioptera_5/",
+            "bias": "./lookup_tables/Leica_LUTS/"
+        }
+    },
+    "Leica Chiroptera-5 600m (HawkEye-5 Shallow)": {
+        "sensor_model": {
+            "a_std_dev": 0.025,
+            "b_std_dev": 0.025,
+            "std_rho": 0.020,
+            "type": "single"
+        },
+        "subaqueous_LUTs": {
+            "vertical": "/.lookup_tables/Leica_LUTS/Chrioptera_5/",
+            "horizontal": "/.lookup_tables/Leica_LUTS/Chrioptera_5/",
+            "bias": "./lookup_tables/Leica_LUTS/"
+        }
+    },    
+    "HawkEye 4X or 5 400m AGL": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
@@ -121,13 +111,16 @@
             "type": "single_leica"
         },
         "subaqueous_LUTs": {
-            "vertical_narrow": "./lookup_tables/Leica_LUTS/HawkEye_5_400m/",
-            "horizontal_narrow": "./lookup_tables/Leica_LUTS/HawkEye_5_400m/",
-            "vertical_wide": "./lookup_tables/Leica_LUTS/HawkEye_5_400m/",
-            "horizontal_wide": "./lookup_tables/Leica_LUTS/HawkEye_5_400m/"
+            "vertical_deep_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_deep_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "vertical_deep_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_deep_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "vertical_shallow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_shallow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "bias": "./lookup_tables/Leica_LUTS/"
         }
     },
-    "HawkEye-5 500m AGL": {
+    "HawkEye 4X or 5 500m AGL": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
@@ -135,13 +128,16 @@
             "type": "single_leica"
         },
         "subaqueous_LUTs": {
-            "vertical_narrow": "./lookup_tables/Leica_LUTS/HawkEye_5_500m/",
-            "horizontal_narrow": "./lookup_tables/Leica_LUTS/HawkEye_5_500m/",
-            "vertical_wide": "./lookup_tables/Leica_LUTS/HawkEye_5_500m/",
-            "horizontal_wide": "./lookup_tables/Leica_LUTS/HawkEye_5_500m/"
+            "vertical_deep_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_deep_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "vertical_deep_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_deep_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "vertical_shallow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_shallow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "bias": "./lookup_tables/Leica_LUTS/"
         }
     },
-    "HawkEye-5 600m AGL": {
+    "HawkEye 4X or 5 600m AGL": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
@@ -149,10 +145,13 @@
             "type": "single_leica"
         },
         "subaqueous_LUTs": {
-            "vertical_narrow": "./lookup_tables/Leica_LUTS/HawkEye_5_600m/",
-            "horizontal_narrow": "./lookup_tables/Leica_LUTS/HawkEye_5_600m/",
-            "vertical_wide": "./lookup_tables/Leica_LUTS/HawkEye_5_600m/",
-            "horizontal_wide": "./lookup_tables/Leica_LUTS/HawkEye_5_600m/"
+            "vertical_deep_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_deep_narrow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "vertical_deep_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_deep_wide": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "vertical_shallow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "horizontal_shallow": "./lookup_tables/Leica_LUTS/HawkEye_4X_400m/",
+            "bias": "./lookup_tables/Leica_LUTS/"
         }
     },
     "PILLS or RAMMS": {
@@ -164,7 +163,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/PILLS_LUTs/PILLS_Lookup_Results_Vertical.xlsx",
-            "horizontal": "./lookup_tables/PILLS_LUTs/PILLS_Lookup_Results_Horizontal.xlsx"
+            "horizontal": "./lookup_tables/PILLS_LUTs/PILLS_Lookup_Results_Horizontal.xlsx",
+            "bias": "./lookup_tables/PILLS_LUTs/"
         }
     
     },
@@ -177,7 +177,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/CZMIL_LUTs/Nova_Shallow_400_AGL_7_mrad_TVU.csv",
-            "horizontal": "./lookup_tables/CZMIL_LUTs/Nova_Shallow_400_AGL_7_mrad_THU.csv"
+            "horizontal": "./lookup_tables/CZMIL_LUTs/Nova_Shallow_400_AGL_7_mrad_THU.csv",
+            "bias": "./lookup_tables/CZMIL_LUTs/"
         }
     
     },
@@ -190,7 +191,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/CZMIL_LUTs/Nova_Deep_400_AGL_7_mrad_TVU.csv",
-            "horizontal": "./lookup_tables/CZMIL_LUTs/Nova_Deep_400_AGL_7_mrad_THU.csv"
+            "horizontal": "./lookup_tables/CZMIL_LUTs/Nova_Deep_400_AGL_7_mrad_THU.csv",
+            "bias": "./lookup_tables/CZMIL_LUTs/"
         }
     
     },
@@ -203,7 +205,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/CZMIL_LUTs/SuperNova_Shallow_400_AGL_7_mrad_TVU.csv",
-            "horizontal": "./lookup_tables/CZMIL_LUTs/SuperNova_Shallow_400_AGL_7_mrad_THU.csv"
+            "horizontal": "./lookup_tables/CZMIL_LUTs/SuperNova_Shallow_400_AGL_7_mrad_THU.csv",
+            "bias": "./lookup_tables/CZMIL_LUTs/"
         }
     
     },
@@ -216,7 +219,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/CZMIL_LUTs/SuperNova_Deep_400_AGL_7_mrad_TVU.csv",
-            "horizontal": "./lookup_tables/CZMIL_LUTs/SuperNova_Deep_400_AGL_7_mrad_THU.csv"
+            "horizontal": "./lookup_tables/CZMIL_LUTs/SuperNova_Deep_400_AGL_7_mrad_THU.csv",
+            "bias": "./lookup_tables/CZMIL_LUTs/"
         }
     
     }
