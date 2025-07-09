@@ -39,11 +39,8 @@ class UserInput:
     def __init__(self, controller_configuration):
         self.wind_ind = controller_configuration["wind_ind"]
         self.wind_selection = controller_configuration["wind_selection"]
-        self.wind_vals = controller_configuration["wind_vals"]
         self.kd_ind = controller_configuration["kd_ind"]
         self.kd_selection = controller_configuration["kd_selection"]
-        kd_vals_tuple = controller_configuration["kd_vals"]
-        self.kd_vals = range(kd_vals_tuple[0], kd_vals_tuple[-1])
         self.vdatum_region = controller_configuration["vdatum_region"]
         self.mcu = controller_configuration["mcu"]
         self.output_directory = controller_configuration["directories"]["tpu"]
