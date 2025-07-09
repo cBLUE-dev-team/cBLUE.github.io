@@ -6,8 +6,8 @@
     },
     "multiprocess": "False",
     "number_cores": 4,
-    "cBLUE_version": "v3.1.0",
-    "subaqueous_version": "v2.2",
+    "cBLUE_version": "v4.0.0",
+    "subaqueous_version": "v3.0",
     "sensor_model": "",
     "water_surface_ellipsoid_height": 0.00,
     "error_type": ""
