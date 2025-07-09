@@ -56,19 +56,20 @@ import subprocess
 utils.CustomLogger(filename="CBlue.log")
 
 WIND_OPTIONS = [
-        "Calm-light air (0-2 kts)",
-        "Light Breeze (3-6 kts)",
-        "Gentle Breeze (7-10 kts)",
-        "Moderate Breeze (11-15 kts)",
+        "Calm-light air (0-4 kts)",
+        "Light Breeze (4-8 kts)",
+        "Gentle Breeze (8-12 kts)",
+        "Moderate Breeze (12-16 kts)",
         "Fresh Breeze (16-20 kts)"
     ]
 
 TURBIDITY_OPTIONS = [
-        "Clear (0.06-0.10 m^-1)",
-        "Clear-Moderate (0.11-0.17 m^-1)",
-        "Moderate (0.18-0.25 m^-1)",
-        "Moderate-High (0.26-0.32 m^-1)",
-        "High (0.33-0.36 m^-1)"
+        "Clear [0-0.12] m^-1",
+        "Clear-Moderate (0.12-0.15] m^-1",
+        "Moderate (0.15-0.21] m^-1",
+        "Moderate-Turbid (0.21-0.27] m^-1",
+        "Turbid (0.27-0.47] m^-1)",
+        "Very Turbid (0.47-0.58+] m^-1"
     ]
 
 TPU_METRIC_OPTIONS = ["1-\u03c3", "95% confidence"]
@@ -173,13 +174,11 @@ if __name__ == "__main__":
     parser.add_argument("output_dir", help="Output directory file path.\n\n")
     # Environmental Parameters
     # # Water Surface
-    wind_values = [[1], [2, 3], [4, 5], [6, 7], [8, 9, 10]]
     wind_help_text = get_help_text(WIND_OPTIONS)
     parser.add_argument("wind", type=int, choices=[0, 1, 2, 3, 4], help=wind_help_text, metavar="wind_speed")
     # # Turbidity
-    turbidity_values = [[6, 11], [11, 18], [18, 26], [26, 33], [33, 37]]
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
-    parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4], help=turbidity_help_text, metavar="turbidity")
+    parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4, 5], help=turbidity_help_text, metavar="turbidity")
     # VDatum Region
     parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value.\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
     parser.add_argument("-vdatum_region", default=f"Used MCU value given in the command line interface.", 
@@ -228,10 +227,8 @@ if __name__ == "__main__":
     config_dict["directories"]["tpu"] = output_dir
     config_dict["wind_ind"] = wind_index
     config_dict["wind_selection"] = WIND_OPTIONS[wind_index]
-    config_dict["wind_vals"] = wind_values[wind_index]
     config_dict["kd_ind"] = turbidity_index
     config_dict["kd_selection"] = TURBIDITY_OPTIONS[turbidity_index]
-    config_dict["kd_vals"] = (turbidity_values[turbidity_index][0], turbidity_values[turbidity_index][1])
     config_dict["vdatum_region"] = vdatum_region
     config_dict["mcu"] = mcu
     config_dict["sensor_model"] = sensor_options[sensor_index]
