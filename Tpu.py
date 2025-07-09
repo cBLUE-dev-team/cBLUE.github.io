@@ -191,9 +191,9 @@ class Tpu:
                     if(self.sensor_object.type == "multi"):
                         #Multi beam sensor: Sending to multi_beam_fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
-                    elif(self.sensor_object.type == "single_leica"):
-                       #Single beam Leica Sensor (Chiroptera or HawkEye): Sending to leica_fit_lut() 
-                       subaqu_thu, subaqu_tvu = subaqu_obj.leica_fit_lut(masked_leica_data) 
+                    elif(self.sensor_object.type == "single_hawkeye"):
+                       #Hawkeye Leica Sensor (Chiroptera or HawkEye): Sending to hawkeye_fit_lut() 
+                       subaqu_thu, subaqu_tvu = subaqu_obj.hawkeye_fit_lut(masked_leica_data) 
                     else:
                         #Single beam Sensor: Sending to fit_lut() 
                         subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
