@@ -186,7 +186,7 @@ class Merge:
             raw_class = fl_las_data[:, 4][mask]
 
             masked_fan_angle = []
-            masked_leica_data = []
+            masked_hawkeye_data = []
 
             # If this is a multi beam sensor, use the mask on the fan angle array 
             if(sensor_object.type == "multi"):
@@ -202,12 +202,12 @@ class Merge:
                 # Warn the user if their fan angle exceed maximum allowed fan angle.
                 if not all(i <=26 for i in masked_fan_angle): 
                     logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
-            elif(sensor_object.type =="single_leica"):
+            elif(sensor_object.type =="single_hawkeye"):
                  
-                masked_leica_data = np.asarray(
+                masked_hawkeye_data = np.asarray(
                 [
                     fl_las_data[:, 5][mask], # masked scanner_channel
-                    fl_las_data[:, 6][mask] # masked user_data
+                    fl_las_data[:, 6][mask]  # masked user_data
                 ]
             )
 
@@ -220,7 +220,7 @@ class Merge:
             fl_las_idx[mask],
             raw_class,
             masked_fan_angle,
-            masked_leica_data
+            masked_hawkeye_data
         )  # 3rd to last array is masked t_idx
 
 
