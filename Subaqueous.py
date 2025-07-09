@@ -283,7 +283,7 @@ class Subaqueous:
 
         # Return DataFrames of TVU and THU observation equation coefficients for each fan angle. 
     
-    def hawkeye_fit_lut(self, masked_leica_data):
+    def hawkeye_fit_lut(self, masked_hawkeye_data):
         """Called to begin the SubAqueous processing."""
     
         # tvu values below 0.03 are considered erroneous
@@ -320,19 +320,19 @@ class Subaqueous:
 
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, scanner channel, and user data
-        for depth_point, leica_data_array in zip(self.depth, masked_leica_data):
+        for depth_point, hawkeye_data_array in zip(self.depth, masked_hawkeye_data):
             
-            # leica_data_array[0] = masked scanner_channel, 
-            # leica_data_array[1] = masked user_data
+            # hawkeye_data_array[0] = masked scanner_channel, 
+            # hawkeye_data_array[1] = masked user_data
 
             # If Scanner Channel = 1, then this is topographic scanner data. 
             # There is no subaqueous uncertainty.
-            if(leica_data_array[0] == 1):
+            if(hawkeye_data_array[0] == 1):
                 thu_point = 0
                 tvu_point = 0
             # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
             # Use the wide uncertainty coefficients and offset. 
-            elif(leica_data_array[0] == 3 and leica_data_array[1] == 1):
+            elif(hawkeye_data_array[0] == 3 and hawkeye_data_array[1] == 1):
                 thu_point = (a_h_wide * np.square(depth_point)) + (b_h_wide * depth_point) + c_h_wide
                 tvu_point = (a_z_wide * np.square(depth_point)) + (b_z_wide * depth_point) + c_z_wide
                 # enforce minimum value for tvu
