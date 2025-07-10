@@ -104,7 +104,7 @@ class Tpu:
                 fl_tpu_stddev[ind],
             )
 
-            fl_stats_str = "{}: {:6.3f} {:6.3f} {:6.3f} {:6.3f}".format(*fl_stats_vals)
+            fl_stats_str = "{}: {:.3f} {:.3f} {:.3f} {:.3f}".format(*fl_stats_vals)
             fl_stats_strs.append(fl_stats_str)
 
         fl_header_str = f"{fl} ({fl_tpu_count}/{num_fl_points} points with TPU)"
