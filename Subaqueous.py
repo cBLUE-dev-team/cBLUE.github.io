@@ -36,6 +36,7 @@ July 9th, 2025
 import logging
 import pandas as pd
 import numpy as np
+from math import sqrt
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,7 @@ class Subaqueous:
             #     print(f"subaqueous tvu[{i}]: {res_tvu[i]}")
 
 
-        return res_thu, res_tvu
+        return res_tvu, res_thu
 
     def model_process(self):
         """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
@@ -193,15 +194,13 @@ class Subaqueous:
 
         res_thu = []
         res_tvu = []
-        #Index for checking classification values
-        i = 0
 
         #Loop through the depth and the masked fan angle
-        for depth_point, fan_angle_point in zip(self.depth, masked_fan_angle):
+        for depth_point, fan_angle_point, class_point in zip(self.depth, masked_fan_angle, self.classification):
             
             # Check classification values.
             # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
-            if self.classification[i] not in self.gui_object.subaqueous_classes:
+            if class_point not in self.gui_object.subaqueous_classes:
                 # print(f'Not Subaqueous Class: {self.classification[i]}')
                 res_tvu.append(0)
                 res_thu.append(0)
@@ -235,11 +234,8 @@ class Subaqueous:
 
                 #Add the subaqueous tvu at this point to the list of result thu values
                 res_tvu.append(tvu_point)
-            
-            # Increment counter for checking classification values.
-            i += 1
 
-        return np.asarray(res_thu), np.asarray(res_tvu)
+        return np.asarray(res_tvu), np.asarray(res_thu)
     
     def multi_beam_model_process(self):
         """Retrieves the page of TVU and THU observation equation coefficients for all fan angles for the given combination
@@ -295,60 +291,107 @@ class Subaqueous:
         min_tvu = 0.03
 
         # query coefficients from look up tables
-        fit_tvu_narrow, fit_thu_narrow, fit_tvu_wide, fit_thu_wide = self.hawkeye_model_process()
+        tvu_deep_narrow, thu_deep_narrow, tvu_deep_wide, thu_deep_wide, tvu_shallow, thu_shallow, range_bias = self.hawkeye_model_process()
 
-        # Quadratic fit: a*depth^2 + b*depth + c
-        # a_h := horizontal quadratic coefficient
-        # b_h := horizontal linear coefficient
-        # c_h := horizontal offset
-        a_h_narrow = fit_thu_narrow["a"].to_numpy()
-        b_h_narrow = fit_thu_narrow["b"].to_numpy()
-        c_h_narrow = fit_thu_narrow["c"].to_numpy()
-        
-        a_h_wide = fit_thu_wide["a"].to_numpy()
-        b_h_wide = fit_thu_wide["b"].to_numpy()
-        c_h_wide = fit_thu_wide["c"].to_numpy()
+        # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+        # a_z := vertical a coefficient
+        # b_z := vertical b coefficient
 
-        # a_z := horizontal quadratic coefficient
-        # b_z := horizontal linear coefficient
-        # c_z := horizontal offset
-        a_z_narrow = fit_tvu_narrow["a"].to_numpy()
-        b_z_narrow = fit_tvu_narrow["b"].to_numpy()
-        c_z_narrow = fit_tvu_narrow["c"].to_numpy()
+        a_z_narrow = tvu_deep_narrow["a"].to_numpy()
+        b_z_narrow = tvu_deep_narrow["b"].to_numpy()
 
-        a_z_wide = fit_tvu_wide["a"].to_numpy()
-        b_z_wide = fit_tvu_wide["b"].to_numpy()                                                                 
-        c_z_wide = fit_tvu_wide["c"].to_numpy()
+        a_z_wide = tvu_deep_wide["a"].to_numpy()
+        b_z_wide = tvu_deep_wide["b"].to_numpy()                                                                 
+
+        a_z_shallow = tvu_shallow["a"].to_numpy()
+        b_z_shallow = tvu_shallow["b"].to_numpy()
+
+        # THU is a Linear fit: b + a*x 
+        # a_h := horizontal coefficient
+        # b_h := horizontal offset
+        a_h_narrow = thu_deep_narrow["a"].to_numpy()
+        b_h_narrow = thu_deep_narrow["b"].to_numpy()
+
+        a_h_wide = thu_deep_wide["a"].to_numpy()
+        b_h_wide = thu_deep_wide["b"].to_numpy()
+
+        a_h_shallow = thu_shallow["a"].to_numpy()
+        b_h_shallow = thu_shallow["b"].to_numpy()
+
+        # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+        a_rb = range_bias["a"].to_numpy()
+        b_rb = range_bias["b"].to_numpy()
+        c_rb = range_bias["c"].to_numpy()
+        d_rb = range_bias["d"].to_numpy()
+
+        res_range_bias = res_tvu = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
 
         res_thu = []
         res_tvu = []
-
+        
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, scanner channel, and user data
-        for depth_point, hawkeye_data_array in zip(self.depth, masked_hawkeye_data):
-            
-            # hawkeye_data_array[0] = masked scanner_channel, 
-            # hawkeye_data_array[1] = masked user_data
+        for i, (depth_point, hawkeye_data_array, class_point) in enumerate(zip(self.depth, masked_hawkeye_data, self.classification)):
 
-            # If Scanner Channel = 1, then this is topographic scanner data. 
-            # There is no subaqueous uncertainty.
-            if(hawkeye_data_array[0] == 1):
+            
+            # Check classification values.
+            # If the point is not subaqueous, set range bias and subaqueous THU and TVU values to 0.
+            if class_point not in self.gui_object.subaqueous_classes:
+                # print(f'Not Subaqueous Class: {self.classification[i]}')
                 thu_point = 0
                 tvu_point = 0
-            # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
-            # Use the wide uncertainty coefficients and offset. 
-            elif(hawkeye_data_array[0] == 3 and hawkeye_data_array[1] == 1):
-                thu_point = (a_h_wide * np.square(depth_point)) + (b_h_wide * depth_point) + c_h_wide
-                tvu_point = (a_z_wide * np.square(depth_point)) + (b_z_wide * depth_point) + c_z_wide
+                res_range_bias[i] = 0
+
+            # Topographic scanner, only one channel exists
+            # Scanner Channel: 1, User data: 0
+
+            # Shallow scanner, only one channel exists 
+            # Scanner channel: 2, User data: 0
+
+            # Deep scanner, narrow channel
+            # Scanner channel: 3, User data: 0
+
+            # Deep scanner, combined channel (wide)
+            # Scanner channel: 3, User data: 1
+
+            # hawkeye_data_array[0] = masked scanner_channel, 
+            # hawkeye_data_array[1] = masked user_data
+            
+            # If Scanner Channel = 1, then this is topographic scanner data. 
+            # There is no subaqueous uncertainty.
+            elif(hawkeye_data_array[0] == 1):
+                thu_point = 0
+                tvu_point = 0
+            # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
+            # Use the shallow uncertainty coefficients and offset. 
+            elif(hawkeye_data_array[0] == 2 and hawkeye_data_array[1] == 0):
+                # THU is a Linear fit: a + b*x 
+                thu_point = a_h_shallow + (b_h_shallow * depth_point) 
+                # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                bx_h_shallow = (b_z_shallow * depth_point)
+                tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
                 # enforce minimum value for tvu
                 if(tvu_point < min_tvu):
                     tvu_point = min_tvu
-            # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
+            # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
+            # Use the deep wide uncertainty coefficients and offset. 
+            elif(hawkeye_data_array[0] == 3 and hawkeye_data_array[1] == 1):
+                # THU is a Linear fit: a + b*x 
+                thu_point = a_h_wide + (b_h_wide * depth_point) 
+                # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                bx_h_wide = (b_z_wide * depth_point)
+                tvu_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
             # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
-            # Either way, use the narrow uncertainty coefficients and offset. 
+            # Use the deep narrow uncertainty coefficients and offset. 
             else:   
-                thu_point = (a_h_narrow * np.square(depth_point)) + (b_h_narrow * depth_point) + c_h_narrow
-                tvu_point = (a_z_narrow * np.square(depth_point)) + (b_z_narrow * depth_point) + c_z_narrow
+                # THU is a Linear fit: a + b*x 
+                thu_point = a_h_narrow + (b_h_narrow * depth_point) 
+                # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                bx_h_narrow = (b_z_narrow * depth_point)
+                tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_h_narrow*bx_h_narrow))
                 # enforce minimum value for tvu
                 if(tvu_point < min_tvu):
                     tvu_point = min_tvu
@@ -356,9 +399,10 @@ class Subaqueous:
             #Add the subaqueous thu at this point to the list of result thu values
             res_thu.append(thu_point)
             #Add the subaqueous tvu at this point to the list of result thu values
-            res_tvu.append(tvu_point)           
+            res_tvu.append(tvu_point)
 
-        return np.asarray(res_thu), np.asarray(res_tvu)
+
+        return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
 
     def hawkeye_model_process(self):
         """Retrieves the TVU and THU observation equation coefficients and offsets based on the polynomial regression of 
