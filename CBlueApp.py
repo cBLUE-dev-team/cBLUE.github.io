@@ -179,7 +179,7 @@ if __name__ == "__main__":
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
     parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4, 5], help=turbidity_help_text, metavar="turbidity")
     # VDatum Region
-    parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value."\
+    parser.add_argument("mcu", default=0.0, help=f"Input maximum cumulative uncertainty (MCU) value in cm for the VDatum region. Enter a float value."\
                         "\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
     parser.add_argument("-vdatum_region", default=f"Used MCU value given in the command line interface.", 
                         help=f"Adds the name of the VDatum region to the metadata log.\nUser must provide the region name after -vdatum_region flag.\n\n")
