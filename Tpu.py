@@ -195,7 +195,7 @@ class Tpu:
                         subaqu_tvu, subaqu_thu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
                     elif(self.sensor_object.type == "single_hawkeye"):
                         #Hawkeye Sensor: Sending to hawkeye_fit_lut() 
-                        subaqu_tvu, subaqu_thu = subaqu_obj.hawkeye_fit_lut(masked_hawkeye_data) 
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.hawkeye_fit_lut(masked_hawkeye_data) 
                     else:
                         #Single beam Sensor: Sending to fit_lut() 
                         subaqu_tvu, subaqu_thu = subaqu_obj.fit_lut()     
