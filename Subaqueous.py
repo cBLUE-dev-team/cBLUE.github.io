@@ -71,48 +71,50 @@ class Subaqueous:
         min_tvu = 0.03
 
         # query coefficients from look up tables
-        fit_tvu, fit_thu = self.model_process()
+        fit_tvu, fit_thu, range_bias = self.model_process()
 
-        # Quadratic fit: a*depth^2 + b*depth + c
-        # a_h := horizontal quadratic coefficient
-        # b_h := horizontal linear coefficient
-        # c_h := horizontal offset
-        a_h = fit_thu["a"].to_numpy()
-        b_h = fit_thu["b"].to_numpy()
-        c_h = fit_thu["c"].to_numpy()
+        # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+        a_rb = range_bias["a"].to_numpy()
+        b_rb = range_bias["b"].to_numpy()
+        c_rb = range_bias["c"].to_numpy()
+        d_rb = range_bias["d"].to_numpy()
 
-        # inner product of coeffs w/ depths + offsets
-        # gives matrix of dims (#coeffs, #las points)
-        res_thu = a_h @ np.square(self.depth.reshape(1,-1)) + b_h @ self.depth.reshape(1, -1) + c_h
+        res_range_bias = res_tvu = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
 
-        # Quadratic fit: a*depth^2 + b*depth + c
-        # a_z := horizontal quadratic coefficient
-        # b_z := horizontal linear coefficient
-        # c_z := horizontal offset
+        # a_z := vertical a coefficient
+        # b_z := vertical b coefficient
         a_z = fit_tvu["a"].to_numpy()
         b_z = fit_tvu["b"].to_numpy()
-        c_z = fit_tvu["c"].to_numpy()
-
-        res_tvu = a_z @ np.square(self.depth.reshape(1,-1)) + b_z @ self.depth.reshape(1, -1) + c_z
+        # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+        res_tvu =  np.sqrt(np.square(a_z) + np.square(b_z @ self.depth.reshape(1,-1)))
 
         # enforce minimum value for tvu
         res_tvu[res_tvu < min_tvu] = min_tvu
 
+        # a_h := horizontal coefficient
+        # b_h := horizontal offset
+        a_h = fit_thu["a"].to_numpy()
+        b_h = fit_thu["b"].to_numpy()
+        # THU is a Linear fit: a + b*x 
+        res_thu = a_h + b_h @ self.depth.reshape(1, -1)
+
         # Check classification values.
         for i, classification in enumerate(self.classification):
-            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
+            # If the point is not subaqueous, set range bias and subaqueous THU and TVU values to 0.
             if classification not in self.gui_object.subaqueous_classes:
                 res_thu[i] = 0
                 res_tvu[i] = 0
+                res_range_bias[i] = 0
             # else:
             #     print(f"subaqueous tvu[{i}]: {res_tvu[i]}")
 
 
-        return res_tvu, res_thu
+        return res_tvu, res_thu, res_range_bias
 
     def model_process(self):
-        """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
-            precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
+        """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
+            on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
+            given permutations of wind and kd. 
 
         :return: (tvu, thu, range_bias) TVU, THU, and range bias observation equation coefficients.
         :rtype: (DataFrame, DataFrame, DataFrame)
