@@ -198,7 +198,7 @@ class Tpu:
                         subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.hawkeye_fit_lut(masked_hawkeye_data) 
                     else:
                         #Single beam Sensor: Sending to fit_lut() 
-                        subaqu_tvu, subaqu_thu = subaqu_obj.fit_lut()     
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut()     
 
                     vdatum_mcu = (
                         float(self.gui_object.mcu) / 100.0
