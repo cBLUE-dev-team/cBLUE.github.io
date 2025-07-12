@@ -114,8 +114,8 @@ class Subaqueous:
         """Retrieves the averaged TVU and THU observation equation coefficients based on the linear regression of 
             precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
 
-        :return: (mean_fit_tvu, mean_fit_thu) Averaged TVU and THU observation equation coefficients.
-        :rtype: (DataFrame, DataFrame)
+        :return: (tvu, thu, range_bias) TVU, THU, and range bias observation equation coefficients.
+        :rtype: (DataFrame, DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 0-4.
         # cBLUE gives users five options for Wind Speed:
@@ -136,41 +136,35 @@ class Subaqueous:
         #       Moderate-Turbid (0.21-0.27] m^-1 == 3,
         #       Turbid (0.27-0.47] m^-1) == 4,
         #       Very Turbid (0.47-0.58+] m^-1 == 5
-
+        
         # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
+
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+        # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
+        #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
+        #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
 
-        # ex: row 0 represents observation equation coefficients for wind speed 1 and kd 6, 
-        #       row 1 represents wind speed 1 and kd 7, [...], row 278 represents wind speed 8 and kd 36, etc.  
+        index = 5*self.gui_object.wind_ind + 1*self.gui_object.wind_ind + self.gui_object.kd_ind
 
-        # For every permutation of values from the wind_par and kd_par arrays, get an index
-        #  and add it to the indices array. 
-        indices = [31 * (w - 1) + k - 6 for w in self.gui_object.wind_ind for k in self.gui_object.kd_ind]
-
-        #Get columns a, b and c if they exist
-        #Linear fits: bx + c
-        #Quadratic fits: ax^2 + bx + c
-        cols = ['a', 'b', 'c']
+        # Columns to grab from the LUTs. 
+        # Get columns a, b from vert and horz LUTs. 
+        # Get columns a, b, c, d from range bias LUT. 
+        cols = ['a', 'b', 'c', 'd']
         # Read look up tables, select rows
-        fit_tvu = pd.read_csv(self.sensor_object.vert_lut, usecols=lambda i: i in set(cols)).iloc[indices]
-        fit_thu = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[indices]
+        # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
+        # from the vertical and horizontal LUTs, and columns a, b, c, and d from the range bias LUT. 
 
-        #If this is a linear fit with no a coefficient 
-        if 'a' not in fit_thu:
-            #Take mean result for each column of the indicies returned
-            mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["b","c"])
-            mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["b","c"])
+        tvu = pd.read_csv(self.sensor_object.vert_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        thu = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        range_bias = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
 
-            #Add an "a" column and set it to 0
-            mean_fit_tvu['a'] = 0 
-            mean_fit_thu['a'] = 0
-        else:
-            #Take mean result for each column of the indicies returned
-            mean_fit_tvu = pd.DataFrame([fit_tvu.mean(axis=0)], columns=["a","b","c"])
-            mean_fit_thu = pd.DataFrame([fit_thu.mean(axis=0)], columns=["a","b","c"])
+        # print(f"TVU Deep Narrow: {tvu_deep_narrow} and THU Deep Narrow: {thu_deep_narrow}")
+        # print(f"TVU Deep Wide: {tvu_deep_wide} and THU Deep Wide: {thu_deep_wide}")
+        # print(f"TVU Shallow: {tvu_shallow} and THU Shallow: {thu_shallow}")
+        # print(f"Range Bias Uncertainty: {range_bias}")
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
-        return mean_fit_tvu, mean_fit_thu
+        return tvu, thu, range_bias
     
     def multi_beam_fit_lut(self, masked_fan_angle):
         """Called to begin the SubAqueous processing for multi beam sensors"""
@@ -416,11 +410,12 @@ class Subaqueous:
         return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
 
     def hawkeye_model_process(self):
-        """Retrieves the TVU and THU observation equation coefficients and offsets based on the polynomial regression of 
-            precalculated uncertainties from Monte Carlo simulations for all given permutations of wind and kd. 
+        """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
+            on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
+            given permutations of wind and kd. 
 
-        :return: (tvu_narrow, thu_narrow, tvu_wide, thu_wide) TVU and THU observation equation coefficients.
-        :rtype: (DataFrame, DataFrame)
+        :return: (tvu_deep_narrow, thu_deep_narrow, tvu_deep_wide, thu_deep_wide, tvu_shallow, thu_shallow, range_bias ) TVU, THU, and range bias observation equation coefficients.
+        :rtype: (DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 0-4.
         # cBLUE gives users five options for Wind Speed:
