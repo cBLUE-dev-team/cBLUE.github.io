@@ -208,17 +208,23 @@ class Tpu:
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
 
-                    # sum in quadrature - get 95% confidence level
+                    # sum in quadrature - 1 - sigma
                     total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2)
 
                     logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
                     )
 
-                    # sum in quadrature - get 95% confidence level
-                    total_tvu = np.sqrt(
-                        subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2
-                    )
+                    if(self.sensor_object.type == "multi"):
+                        # sum in quadrature - 1 - sigma
+                        total_tvu = np.sqrt(
+                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2
+                        )
+                    else:
+                        # sum in quadrature - 1 - sigma
+                        total_tvu = np.sqrt(
+                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + range_bias**2
+                        )
 
                     # convert to 95% conf, if requested
                     if self.gui_object.error_type == "95% confidence":
