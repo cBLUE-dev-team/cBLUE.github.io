@@ -117,21 +117,25 @@ class Subaqueous:
         :return: (mean_fit_tvu, mean_fit_thu) Averaged TVU and THU observation equation coefficients.
         :rtype: (DataFrame, DataFrame)
         """
-        # wind_par values range from 0-20 kts, represented as integers 1-10.
+        # wind_par values range from 0-20 kts, represented as integers 0-4.
         # cBLUE gives users five options for Wind Speed:
-        #   Wind Speed: Calm-light air (0-2 kts) == [1]
-        #               Light Breeze (3-6 kts) == [2,3]
-        #               Gentle Breeze (7-10 kts) == [4,5]
-        #               Moderate Breeze (11-15 kts) == [6,7]
-        #               Fresh Breeze (16-20 kts) == [8, 9, 10]
+        #   Wind Speed: "Calm-light air [0-4] kts" == 0,
+        #               "Light Breeze (4-8] kts" == 1,
+        #               "Gentle Breeze (8-12] kts" == 2,
+        #               "Moderate Breeze (12-16] kts" == 3,
+        #               "Fresh Breeze (16-20+] kts == 4"
 
-        # Turbidity (kd_par) values range from 0.06-0.36 (m^-1) and are represented as integers 6-36.
-        # cBLUE gives users five options for Turbidity:
-        #   kd: Clear (0.06-0.10 m^-1) == [6-10]
-        #       Clear-Moderate (0.11-0.17 m^-1) == [11-17]
-        #       Moderate (0.18-0.25 m^-1) == [18-25]
-        #       Moderate-High (0.26-0.32 m^-1) == [26-32]
-        #       High (0.33-0.36 m^-1) == [33-36]
+        # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
+        # This represents six Jerlov types: III = 0.11 , IC = 0.13, 3C = 0.17, 
+        #                                   5C = 0.24, 7C = 0.35, 9C = 0.58
+
+        # cBLUE gives users six options for Turbidity:
+        #   kd: Clear [0-0.12] m^-1 == 0,
+        #       Clear-Moderate (0.12-0.15] m^-1 == 1,
+        #       Moderate (0.15-0.21] m^-1 == 2,
+        #       Moderate-Turbid (0.21-0.27] m^-1 == 3,
+        #       Turbid (0.27-0.47] m^-1) == 4,
+        #       Very Turbid (0.47-0.58+] m^-1 == 5
 
         # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
@@ -267,10 +271,15 @@ class Subaqueous:
 
         # ex: sheet 0 represents fan angle observation equation coefficients for kd selection 0 and wind speed selection 0, 
         #       sheet 1 represents kd selection 0 and wind speed selection 1, [...],
-        #       sheet 24 represents kd selection 4 and wind speed selection 4, etc.  
+        #       sheet 24 represents kd selection 4 and wind speed selection 4, etc.
+
+        wind_ind = self.gui_object.wind_ind
+        # To account for new selection options
+        if wind_ind == 5:
+            wind_ind = 4  
 
         # Get the sheet number for this combination of wind_ind and kd_ind. 
-        sheet = (5 * self.gui_object.kd_ind) + self.gui_object.wind_ind
+        sheet = (5 * self.gui_object.kd_ind) + wind_ind
 
         logger.subaqueous(f"kd_ind: {self.gui_object.kd_ind}, wind_ind: {self.gui_object.wind_ind}")
         logger.subaqueous(f"Multi beam look up table sheet number: {sheet}")
@@ -283,6 +292,8 @@ class Subaqueous:
         # logger.subaqueous(f"Multi beam fit_thu: {fit_thu}")
 
         # Return DataFrames of TVU and THU observation equation coefficients for each fan angle. 
+        return fit_tvu, fit_thu
+
     
     def hawkeye_fit_lut(self, masked_hawkeye_data):
         """Called to begin the SubAqueous processing."""
@@ -446,12 +457,12 @@ class Subaqueous:
         # Read look up tables, select rows
         # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
         # from the vertical and horizontal LUTs, and columns a, b, c, and d from the range bias LUT. 
-        tvu_deep_narrow = pd.read_csv(self.sensor_object.vert_lut_narrow, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_deep_narrow = pd.read_csv(self.sensor_object.horz_lut_narrow, usecols=lambda i: i in set(cols)).iloc[index]
-        tvu_deep_wide = pd.read_csv(self.sensor_object.vert_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_deep_wide = pd.read_csv(self.sensor_object.horz_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
-        tvu_shallow = pd.read_csv(self.sensor_object.vert_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_shallow = pd.read_csv(self.sensor_object.horz_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        tvu_deep_narrow = pd.read_csv(self.sensor_object.vert_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
+        thu_deep_narrow = pd.read_csv(self.sensor_object.horz_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
+        tvu_deep_wide = pd.read_csv(self.sensor_object.vert_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        thu_deep_wide = pd.read_csv(self.sensor_object.horz_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        tvu_shallow = pd.read_csv(self.sensor_object.vert_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        thu_shallow = pd.read_csv(self.sensor_object.horz_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
         range_bias = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
 
         # print(f"TVU Deep Narrow: {tvu_deep_narrow} and THU Deep Narrow: {thu_deep_narrow}")
