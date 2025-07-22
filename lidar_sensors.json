@@ -169,7 +169,8 @@
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Arete_or_Fugro/PILLS_Lookup_Results_Vertical.xlsx",
-            "horizontal": "./lookup_tables/Arete_or_Fugro/PILLS_Lookup_Results_Horizontal.xlsx"
+            "horizontal": "./lookup_tables/Arete_or_Fugro/PILLS_Lookup_Results_Horizontal.xlsx",
+            "range_bias": ""
         }
     
     },
