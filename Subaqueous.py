@@ -79,7 +79,7 @@ class Subaqueous:
         c_rb = range_bias["c"].to_numpy()
         d_rb = range_bias["d"].to_numpy()
 
-        res_range_bias = res_tvu = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
+        res_range_bias = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
 
         # a_z := vertical a coefficient
         # b_z := vertical b coefficient
@@ -298,7 +298,7 @@ class Subaqueous:
         min_tvu = 0.03
 
         # query coefficients from look up tables
-        tvu_deep_narrow, thu_deep_narrow, tvu_deep_wide, thu_deep_wide, tvu_shallow, thu_shallow, range_bias = self.hawkeye_model_process()
+        tvu_deep_narrow, thu_deep_narrow, range_bias_narrow, tvu_deep_wide, thu_deep_wide, range_bias_wide, tvu_shallow, thu_shallow, range_bias_shallow = self.hawkeye_model_process()
 
         # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
         # a_z := vertical a coefficient
@@ -326,15 +326,26 @@ class Subaqueous:
         b_h_shallow = thu_shallow["b"].to_numpy()
 
         # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-        a_rb = range_bias["a"].to_numpy()
-        b_rb = range_bias["b"].to_numpy()
-        c_rb = range_bias["c"].to_numpy()
-        d_rb = range_bias["d"].to_numpy()
+        a_rb_narrow = range_bias_narrow["a"].to_numpy()
+        b_rb_narrow = range_bias_narrow["b"].to_numpy()
+        c_rb_narrow = range_bias_narrow["c"].to_numpy()
+        d_rb_narrow = range_bias_narrow["d"].to_numpy()
 
-        res_range_bias = res_tvu = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
+        a_rb_wide = range_bias_wide["a"].to_numpy()
+        b_rb_wide = range_bias_wide["b"].to_numpy()
+        c_rb_wide = range_bias_wide["c"].to_numpy()
+        d_rb_wide = range_bias_wide["d"].to_numpy()
+
+        a_rb_shallow = range_bias_shallow["a"].to_numpy()
+        b_rb_shallow = range_bias_shallow["b"].to_numpy()
+        c_rb_shallow = range_bias_shallow["c"].to_numpy()
+        d_rb_shallow = range_bias_shallow["d"].to_numpy()
+
+        # res_range_bias = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
 
         res_thu = []
         res_tvu = []
+        res_range_bias = []
         
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, scanner channel, and user data
@@ -347,7 +358,7 @@ class Subaqueous:
                 # print(f'Not Subaqueous Class: {self.classification[i]}')
                 thu_point = 0
                 tvu_point = 0
-                res_range_bias[i] = 0
+                range_bias_point = 0
 
             # Topographic scanner, only one channel exists
             # Scanner Channel: 1, User data: 0
@@ -369,6 +380,7 @@ class Subaqueous:
             elif(hawkeye_data_array[0] == 1):
                 thu_point = 0
                 tvu_point = 0
+                range_bias_point = 0
             # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
             # Use the shallow uncertainty coefficients and offset. 
             elif(hawkeye_data_array[0] == 2 and hawkeye_data_array[1] == 0):
@@ -380,6 +392,9 @@ class Subaqueous:
                 # enforce minimum value for tvu
                 if(tvu_point < min_tvu):
                     tvu_point = min_tvu
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
             # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
             # Use the deep wide uncertainty coefficients and offset. 
             elif(hawkeye_data_array[0] == 3 and hawkeye_data_array[1] == 1):
@@ -391,6 +406,9 @@ class Subaqueous:
                 # enforce minimum value for tvu
                 if(tvu_point < min_tvu):
                     tvu_point = min_tvu
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_wide * (depth_point*depth_square) + b_rb_wide*depth_square + c_rb_wide*depth_point + d_rb_wide
             # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
             # Use the deep narrow uncertainty coefficients and offset. 
             else:   
@@ -402,11 +420,16 @@ class Subaqueous:
                 # enforce minimum value for tvu
                 if(tvu_point < min_tvu):
                     tvu_point = min_tvu
-
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
+                
             #Add the subaqueous thu at this point to the list of result thu values
             res_thu.append(thu_point)
-            #Add the subaqueous tvu at this point to the list of result thu values
+            #Add the subaqueous tvu at this point to the list of result tvu values
             res_tvu.append(tvu_point)
+            #Add the range bias uncertainty at this point to the list of result range bias values
+            res_range_bias.append(range_bias_point)
 
 
         return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
@@ -456,11 +479,13 @@ class Subaqueous:
         # from the vertical and horizontal LUTs, and columns a, b, c, and d from the range bias LUT. 
         tvu_deep_narrow = pd.read_csv(self.sensor_object.vert_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
         thu_deep_narrow = pd.read_csv(self.sensor_object.horz_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
+        range_bias_narrow = pd.read_csv(self.sensor_object.range_bias_lut_narrow, usecols=lambda i: i in set(cols)).iloc[index]
         tvu_deep_wide = pd.read_csv(self.sensor_object.vert_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
         thu_deep_wide = pd.read_csv(self.sensor_object.horz_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        range_bias_wide = pd.read_csv(self.sensor_object.range_bias_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
         tvu_shallow = pd.read_csv(self.sensor_object.vert_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
         thu_shallow = pd.read_csv(self.sensor_object.horz_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
-        range_bias = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        range_bias_shallow = pd.read_csv(self.sensor_object.range_bias_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
 
         # print(f"TVU Deep Narrow: {tvu_deep_narrow} and THU Deep Narrow: {thu_deep_narrow}")
         # print(f"TVU Deep Wide: {tvu_deep_wide} and THU Deep Wide: {thu_deep_wide}")
@@ -468,5 +493,5 @@ class Subaqueous:
         # print(f"Range Bias Uncertainty: {range_bias}")
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
-        return tvu_deep_narrow, thu_deep_narrow, tvu_deep_wide, thu_deep_wide, tvu_shallow, thu_shallow, range_bias
+        return tvu_deep_narrow, thu_deep_narrow, range_bias_narrow, tvu_deep_wide, thu_deep_wide, range_bias_wide, tvu_shallow, thu_shallow, range_bias_shallow
     

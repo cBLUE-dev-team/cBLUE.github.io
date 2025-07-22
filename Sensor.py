@@ -72,23 +72,30 @@ class Sensor:
             self.vert_lut_deep_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_deep_narrow"]
             #The path of the horizontal deep narrow look up table used for modeling
             self.horz_lut_deep_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_deep_narrow"]
+            # The path of the range bias deep narrow uncertainty look up table used for modeling
+            self.range_bias_lut_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias_deep_narrow"]
             #The path of the vertical deep wide look up table used for modeling
             self.vert_lut_deep_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_deep_wide"]
             #The path of the horizontal deep wide look up table used for modeling
             self.horz_lut_deep_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_deep_wide"]
+            # The path of the range bias deep wide uncertainty look up table used for modeling
+            self.range_bias_lut_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias_deep_wide"]
             #The path of the vertical wide look up table used for modeling
             self.vert_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_shallow"]
             #The path of the horizontal wide look up table used for modeling
             self.horz_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_shallow"]
+            # The path of the range bias shallow uncertainty look up table used for modeling
+            self.range_bias_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias_shallow"]
         #Otherwise if this is a non-HawkEye sensor
         else:
             #The path of the vertical look up table used for modeling
             self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
             #The path of the horizontal look up table used for modeling
             self.horz_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal"]
+            # The path of the range bias uncertainty look up table used for modeling
+            self.range_bias_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias"]
         
-        # The path of the range bias uncertainty look up table used for modeling
-        self.range_bias_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias"]
+
 
         #Scan angle and range uncertainties
         self.a_std_dev = self.sensor_config[self.name]["sensor_model"]["a_std_dev"]
