@@ -89,7 +89,7 @@ def show_about():
 
 def get_vdatum_dict():
     vdatum_lookup_path = r"lookup_tables\V_Datum_MCU_Values.txt"
-    vdatum_dict = {"---No Region Specified---": 0.0}
+    vdatum_dict = {"Don't Include Datum Transformation Uncertainty": 0.0}
     with open(vdatum_lookup_path, "r") as f:
         vdatum_lines = f.readlines()
     vdatum_lines = sorted(vdatum_lines, key=lambda item: item.replace('"', ''))
