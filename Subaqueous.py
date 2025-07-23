@@ -84,7 +84,7 @@ class Subaqueous:
 
         res_range_bias = a_rb * np.power(self.depth, 3) + b_rb * np.square(self.depth) + c_rb * self.depth + d_rb
 
-        print(f"\nres_range_bias: {res_range_bias}")
+        # print(f"\nres_range_bias: {res_range_bias}")
 
         # a_z := vertical a coefficient
         # b_z := vertical b coefficient
