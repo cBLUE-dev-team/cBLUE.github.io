@@ -137,10 +137,8 @@ def updateConfig(config_dict):
     new_config_dict = config_dict.copy()
     del new_config_dict["wind_ind"]
     del new_config_dict["wind_selection"]
-    del new_config_dict["wind_vals"]
     del new_config_dict["kd_ind"]
     del new_config_dict["kd_selection"]
-    del new_config_dict["kd_vals"]
     del new_config_dict["vdatum_region"]
     del new_config_dict["mcu"]
     del new_config_dict["csv_option"]
