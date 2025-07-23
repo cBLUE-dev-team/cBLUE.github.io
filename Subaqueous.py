@@ -74,29 +74,34 @@ class Subaqueous:
         fit_tvu, fit_thu, range_bias = self.model_process()
 
         # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-        a_rb = range_bias["a"].to_numpy()
-        b_rb = range_bias["b"].to_numpy()
-        c_rb = range_bias["c"].to_numpy()
-        d_rb = range_bias["d"].to_numpy()
+        a_rb = range_bias["a"]
+        b_rb = range_bias["b"]
+        c_rb = range_bias["c"]
+        d_rb = range_bias["d"]
 
-        res_range_bias = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
+        # print(f"a_rb: {a_rb}, b_rb: {b_rb}, c_rb: {c_rb}, d_rb: {d_rb}")
+        # print(self.depth)
+
+        res_range_bias = a_rb * np.power(self.depth, 3) + b_rb * np.square(self.depth) + c_rb * self.depth + d_rb
+
+        print(f"\nres_range_bias: {res_range_bias}")
 
         # a_z := vertical a coefficient
         # b_z := vertical b coefficient
-        a_z = fit_tvu["a"].to_numpy()
-        b_z = fit_tvu["b"].to_numpy()
+        a_z = fit_tvu["a"]
+        b_z = fit_tvu["b"]
         # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
-        res_tvu =  np.sqrt(np.square(a_z) + np.square(b_z @ self.depth.reshape(1,-1)))
+        res_tvu =  np.sqrt(np.square(a_z) + np.square(b_z * self.depth))
 
         # enforce minimum value for tvu
         res_tvu[res_tvu < min_tvu] = min_tvu
 
         # a_h := horizontal coefficient
         # b_h := horizontal offset
-        a_h = fit_thu["a"].to_numpy()
-        b_h = fit_thu["b"].to_numpy()
+        a_h = fit_thu["a"]
+        b_h = fit_thu["b"]
         # THU is a Linear fit: a + b*x 
-        res_thu = a_h + b_h @ self.depth.reshape(1, -1)
+        res_thu = a_h + b_h * self.depth
 
         # Check classification values.
         for i, classification in enumerate(self.classification):
@@ -160,10 +165,7 @@ class Subaqueous:
         thu = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[index]
         range_bias = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
 
-        # print(f"TVU Deep Narrow: {tvu_deep_narrow} and THU Deep Narrow: {thu_deep_narrow}")
-        # print(f"TVU Deep Wide: {tvu_deep_wide} and THU Deep Wide: {thu_deep_wide}")
-        # print(f"TVU Shallow: {tvu_shallow} and THU Shallow: {thu_shallow}")
-        # print(f"Range Bias Uncertainty: {range_bias}")
+        # print(f"tvu: {tvu}\nthu: {thu}\nrange_bias: {range_bias}")
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return tvu, thu, range_bias
@@ -304,44 +306,42 @@ class Subaqueous:
         # a_z := vertical a coefficient
         # b_z := vertical b coefficient
 
-        a_z_narrow = tvu_deep_narrow["a"].to_numpy()
-        b_z_narrow = tvu_deep_narrow["b"].to_numpy()
+        a_z_narrow = tvu_deep_narrow["a"]
+        b_z_narrow = tvu_deep_narrow["b"]
 
-        a_z_wide = tvu_deep_wide["a"].to_numpy()
-        b_z_wide = tvu_deep_wide["b"].to_numpy()                                                                 
+        a_z_wide = tvu_deep_wide["a"]
+        b_z_wide = tvu_deep_wide["b"]                                                             
 
-        a_z_shallow = tvu_shallow["a"].to_numpy()
-        b_z_shallow = tvu_shallow["b"].to_numpy()
+        a_z_shallow = tvu_shallow["a"]
+        b_z_shallow = tvu_shallow["b"]
 
         # THU is a Linear fit: b + a*x 
         # a_h := horizontal coefficient
         # b_h := horizontal offset
-        a_h_narrow = thu_deep_narrow["a"].to_numpy()
-        b_h_narrow = thu_deep_narrow["b"].to_numpy()
+        a_h_narrow = thu_deep_narrow["a"]
+        b_h_narrow = thu_deep_narrow["b"]
 
-        a_h_wide = thu_deep_wide["a"].to_numpy()
-        b_h_wide = thu_deep_wide["b"].to_numpy()
+        a_h_wide = thu_deep_wide["a"]
+        b_h_wide = thu_deep_wide["b"]
 
-        a_h_shallow = thu_shallow["a"].to_numpy()
-        b_h_shallow = thu_shallow["b"].to_numpy()
+        a_h_shallow = thu_shallow["a"]
+        b_h_shallow = thu_shallow["b"]
 
         # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-        a_rb_narrow = range_bias_narrow["a"].to_numpy()
-        b_rb_narrow = range_bias_narrow["b"].to_numpy()
-        c_rb_narrow = range_bias_narrow["c"].to_numpy()
-        d_rb_narrow = range_bias_narrow["d"].to_numpy()
+        a_rb_narrow = range_bias_narrow["a"]
+        b_rb_narrow = range_bias_narrow["b"]
+        c_rb_narrow = range_bias_narrow["c"]
+        d_rb_narrow = range_bias_narrow["d"]
 
-        a_rb_wide = range_bias_wide["a"].to_numpy()
-        b_rb_wide = range_bias_wide["b"].to_numpy()
-        c_rb_wide = range_bias_wide["c"].to_numpy()
-        d_rb_wide = range_bias_wide["d"].to_numpy()
+        a_rb_wide = range_bias_wide["a"]
+        b_rb_wide = range_bias_wide["b"]
+        c_rb_wide = range_bias_wide["c"]
+        d_rb_wide = range_bias_wide["d"]
 
-        a_rb_shallow = range_bias_shallow["a"].to_numpy()
-        b_rb_shallow = range_bias_shallow["b"].to_numpy()
-        c_rb_shallow = range_bias_shallow["c"].to_numpy()
-        d_rb_shallow = range_bias_shallow["d"].to_numpy()
-
-        # res_range_bias = a_rb @ np.power(self.depth.reshape(1,-1), 3) + b_rb @ np.square(self.depth.reshape(1, -1)) + c_rb @ self.depth.reshape(1, -1) + d_rb
+        a_rb_shallow = range_bias_shallow["a"]
+        b_rb_shallow = range_bias_shallow["b"]
+        c_rb_shallow = range_bias_shallow["c"]
+        d_rb_shallow = range_bias_shallow["d"]
 
         res_thu = []
         res_tvu = []
@@ -423,7 +423,7 @@ class Subaqueous:
                 # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
                 depth_square = depth_point * depth_point
                 range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
-                
+
             #Add the subaqueous thu at this point to the list of result thu values
             res_thu.append(thu_point)
             #Add the subaqueous tvu at this point to the list of result tvu values
