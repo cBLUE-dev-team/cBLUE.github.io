@@ -147,6 +147,7 @@ class Merge:
             stddev = False
             raw_class = False
             masked_fan_angle = False
+            masked_hawkeye_data = False
 
             logging.warning("trajectory and LAS data NOT MERGED")
             logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
