@@ -55,7 +55,7 @@ class Merge:
         # logger.merge(f"b std dev: {self.b_std_dev}")
         # logger.merge(f"std rho: {self.std_rho}")
 
-    def match_timestamps(sbet_data, fl_las_data, num_sbet_pts):
+    def match_timestamps(self, sbet_data, fl_las_data, num_sbet_pts):
         """returns sbet timestamps and las timestamps matched based on time
 
         :param ndarray sbet_data: SBET data
