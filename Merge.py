@@ -67,6 +67,7 @@ class Merge:
         - t_sbet_masked: masked sbet data
         - t_las_masked: masked las data
         - idx: indices of the matched sbet and las data
+        - mask: boolean mask indicating which points are valid
         - max_dt: maximum delta_t between the matched sbet and las data
         """
 
