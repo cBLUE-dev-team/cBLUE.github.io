@@ -55,11 +55,11 @@ import subprocess
 utils.CustomLogger(filename="CBlue.log")
 
 WIND_OPTIONS = [
-        "Calm-light air (0-4 kts)",
-        "Light Breeze (4-8 kts)",
-        "Gentle Breeze (8-12 kts)",
-        "Moderate Breeze (12-16 kts)",
-        "Fresh Breeze (16-20 kts)"
+        "Calm-light air [0-4] kts",
+        "Light Breeze (4-8] kts",
+        "Gentle Breeze (8-12] kts",
+        "Moderate Breeze (12-16] kts",
+        "Fresh Breeze (16-20+] kts"
     ]
 
 TURBIDITY_OPTIONS = [
@@ -67,7 +67,7 @@ TURBIDITY_OPTIONS = [
         "Clear-Moderate (0.12-0.15] m^-1",
         "Moderate (0.15-0.21] m^-1",
         "Moderate-Turbid (0.21-0.27] m^-1",
-        "Turbid (0.27-0.47] m^-1)",
+        "Turbid (0.27-0.47] m^-1",
         "Very Turbid (0.47-0.58+] m^-1"
     ]
 
