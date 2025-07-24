@@ -55,6 +55,41 @@ class Merge:
         # logger.merge(f"b std dev: {self.b_std_dev}")
         # logger.merge(f"std rho: {self.std_rho}")
 
+    def match_timestamps(sbet_data, fl_las_data, num_sbet_pts):
+        """returns sbet timestamps and las timestamps matched based on time
+
+        :param ndarray sbet_data: SBET data
+        :param ndarray fl_las_data: LAS data
+        :param ndarray num_sbet_pts: number of points in the SBET data
+        :return: Tuple(ndarray, ndarray, ndarray, ndarray)
+
+        The returned tuple contains:
+        - t_sbet_masked: masked sbet data
+        - t_las_masked: masked las data
+        - idx: indices of the matched sbet and las data
+        - max_dt: maximum delta_t between the matched sbet and las data
+        """
+
+        # Try to match sbet and las dfs based on timestamps
+        idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
+
+        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
+
+        # don't use las points outside range of sbet points
+        mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
+
+        t_sbet_masked = sbet_data[:, 0][idx[mask]]
+        t_las_masked = fl_las_data[:, 3][mask]
+
+        # logger.merge(f"t_las_masked: {t_las_masked}")
+        # logger.merge(f"t_sbet_masked: {t_sbet_masked}")
+
+        dt = ne.evaluate("t_sbet_masked - t_las_masked")
+        max_dt = ne.evaluate("max(dt)")  # may be empty
+
+        return t_sbet_masked, t_las_masked, idx, mask, max_dt
+
 
     def merge(self, las, fl, sbet_data, fl_unsorted_las_xyztcf, fl_t_argsort, fl_las_idx, sensor_object):
         """returns sbet & las data merged based on timestamps
@@ -115,42 +150,40 @@ class Merge:
         # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
         # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
 
-        #TODO: Only for testing if merging data fails, the las data might have the wrong time format.
-        #       In the future turn this into a function that checks what the las time format is and 
-        #       convert it into adjusted standard gps time.
-        # Use the UTC time conversion or the standard gps time conversion, not both 
-        # Convert UTC time to Adjusted Standard GPS time (with leap seconds adjustment for data on or after Jan 1st 2017)
-        # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
-        # Convert standard gps time to Adjusted Standard GPS time
-        # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
+        # Try to match sbet and las dfs based on timestamps
+        t_sbet_masked, t_las_masked, idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
 
-        # match sbet and las dfs based on timestamps
-        idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
-
-        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
-        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
-
-        # don't use las points outside range of sbet points
-        mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
-
-        t_sbet_masked = sbet_data[:, 0][idx[mask]]
-        t_las_masked = fl_las_data[:, 3][mask]
-
-        # logger.merge(f"t_las_masked: {t_las_masked}")
-        # logger.merge(f"t_sbet_masked: {t_sbet_masked}")
-
-        dt = ne.evaluate("t_sbet_masked - t_las_masked")
-        max_dt = ne.evaluate("max(dt)")  # may be empty
-
+        # If the max_dt is too large, or empty, then we cannot merge the data.
+        # This is likely due to the LAS data being standard gps time, when we expect adjusted standard gps time.
         if max_dt > self.max_allowable_dt or max_dt.size == 0:
-            data = False
-            stddev = False
-            raw_class = False
-            masked_fan_angle = False
-            masked_hawkeye_data = False
 
-            logging.warning("trajectory and LAS data NOT MERGED")
-            logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
+            # Try converting LAS time data from standard gps time to Adjusted Standard GPS time
+            fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
+
+            t_sbet_masked, t_las_masked, idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
+
+            # If the max_dt is still too large, or empty, then we cannot merge the data.
+            # This is likely due to the LAS data being in UTC time, when we expect adjusted standard gps time.
+            if max_dt > self.max_allowable_dt or max_dt.size == 0:
+
+                # If the LAS data was in UTC time, then we can try converting it to adjusted standard gps time.
+                # We've already converted the time once to take away - 1e9 seconds, so we can try adding 18 seconds to the time
+                # to account for the leap seconds adjustment.
+                fl_las_data[:, 3] = fl_las_data[:, 3] + 18
+
+                t_sbet_masked, t_las_masked, idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
+
+                # If the max_dt is still too large, or empty, then we cannot merge the data.
+                if max_dt > self.max_allowable_dt or max_dt.size == 0:
+                    # We will log a warning and return empty arrays for the data.
+                    data = False
+                    stddev = False
+                    raw_class = False
+                    masked_fan_angle = False
+                    masked_hawkeye_data = False
+
+                    logging.warning("trajectory and LAS data NOT MERGED")
+                    logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
         else:
             data = np.asarray(
                 [
