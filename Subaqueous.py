@@ -61,8 +61,14 @@ class Subaqueous:
 
         logger.subaqueous(f"kd_par {self.gui_object.kd_ind}")
         logger.subaqueous(f"wind_par {self.gui_object.wind_ind}")
-        logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
-        logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
+        if(self.sensor_object.type == "single_hawkeye"):
+            logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut_deep_narrow}, {self.sensor_object.vert_lut_deep_wide}, {self.sensor_object.vert_lut_shallow}")
+            logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut_deep_narrow}, {self.sensor_object.horz_lut_deep_wide}, {self.sensor_object.horz_lut_shallow}")
+            logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut_narrow}, {self.sensor_object.range_bias_lut_wide}, {self.sensor_object.range_bias_lut_shallow}")
+        else:
+            logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
+            logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
+            logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut}")
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
@@ -347,89 +353,95 @@ class Subaqueous:
         res_tvu = []
         res_range_bias = []
         
+        # print(f"length of masked_hawkeye_data (scanner channel): {len(masked_hawkeye_data[0])}"
+        #       f"\nlength of depth: {len(self.depth)}"
+        #       f"\nlength of classification: {len(self.classification)}") 
+
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, scanner channel, and user data
-        for i, (depth_point, hawkeye_data_array, class_point) in enumerate(zip(self.depth, masked_hawkeye_data, self.classification)):
+        for depth_point, scanner_channel, user_data, class_point in zip(self.depth, masked_hawkeye_data[0], masked_hawkeye_data[1], self.classification):
+            # print(f"depth_point: {depth_point}, scanner: {scanner_channel}, user: {user_data}, class_point: {class_point}")
 
             
             # Check classification values.
-            # If the point is not subaqueous, set range bias and subaqueous THU and TVU values to 0.
+            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
             if class_point not in self.gui_object.subaqueous_classes:
-                # print(f'Not Subaqueous Class: {self.classification[i]}')
-                thu_point = 0
-                tvu_point = 0
-                range_bias_point = 0
+                # print(f'Not Subaqueous Class: {class_point}')
+                res_tvu.append(0)
+                res_thu.append(0)
+                res_range_bias.append(0)
+            else:
 
-            # Topographic scanner, only one channel exists
-            # Scanner Channel: 1, User data: 0
+                # Topographic scanner, only one channel exists
+                # Scanner Channel: 1, User data: 0
 
-            # Shallow scanner, only one channel exists 
-            # Scanner channel: 2, User data: 0
+                # Shallow scanner, only one channel exists 
+                # Scanner channel: 2, User data: 0
 
-            # Deep scanner, narrow channel
-            # Scanner channel: 3, User data: 0
+                # Deep scanner, narrow channel
+                # Scanner channel: 3, User data: 0
 
-            # Deep scanner, combined channel (wide)
-            # Scanner channel: 3, User data: 1
+                # Deep scanner, combined channel (wide)
+                # Scanner channel: 3, User data: 1
 
-            # hawkeye_data_array[0] = masked scanner_channel, 
-            # hawkeye_data_array[1] = masked user_data
-            
-            # If Scanner Channel = 1, then this is topographic scanner data. 
-            # There is no subaqueous uncertainty.
-            elif(hawkeye_data_array[0] == 1):
-                thu_point = 0
-                tvu_point = 0
-                range_bias_point = 0
-            # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
-            # Use the shallow uncertainty coefficients and offset. 
-            elif(hawkeye_data_array[0] == 2 and hawkeye_data_array[1] == 0):
-                # THU is a Linear fit: a + b*x 
-                thu_point = a_h_shallow + (b_h_shallow * depth_point) 
-                # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
-                bx_h_shallow = (b_z_shallow * depth_point)
-                tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
-                # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
-            # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
-            # Use the deep wide uncertainty coefficients and offset. 
-            elif(hawkeye_data_array[0] == 3 and hawkeye_data_array[1] == 1):
-                # THU is a Linear fit: a + b*x 
-                thu_point = a_h_wide + (b_h_wide * depth_point) 
-                # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
-                bx_h_wide = (b_z_wide * depth_point)
-                tvu_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
-                # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_wide * (depth_point*depth_square) + b_rb_wide*depth_square + c_rb_wide*depth_point + d_rb_wide
-            # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
-            # Use the deep narrow uncertainty coefficients and offset. 
-            else:   
-                # THU is a Linear fit: a + b*x 
-                thu_point = a_h_narrow + (b_h_narrow * depth_point) 
-                # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
-                bx_h_narrow = (b_z_narrow * depth_point)
-                tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_h_narrow*bx_h_narrow))
-                # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
+                # scanner_channel = masked scanner_channel, 
+                # user_data = masked user_data
+                
+                # If Scanner Channel = 1, then this is topographic scanner data. 
+                # There is no subaqueous uncertainty.
+                if(scanner_channel == 1):
+                    thu_point = 0
+                    tvu_point = 0
+                    range_bias_point = 0
+                # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
+                # Use the shallow uncertainty coefficients and offset. 
+                elif(scanner_channel == 2 and user_data == 0):
+                    # THU is a Linear fit: a + b*x 
+                    thu_point = a_h_shallow + (b_h_shallow * depth_point) 
+                    # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                    bx_h_shallow = (b_z_shallow * depth_point)
+                    tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
+                    # enforce minimum value for tvu
+                    if(tvu_point < min_tvu):
+                        tvu_point = min_tvu
+                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                    depth_square = depth_point * depth_point
+                    range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
+                # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
+                # Use the deep wide uncertainty coefficients and offset. 
+                elif(scanner_channel == 3 and user_data == 1):
+                    # THU is a Linear fit: a + b*x 
+                    thu_point = a_h_wide + (b_h_wide * depth_point) 
+                    # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                    bx_h_wide = (b_z_wide * depth_point)
+                    tvu_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
+                    # enforce minimum value for tvu
+                    if(tvu_point < min_tvu):
+                        tvu_point = min_tvu
+                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                    depth_square = depth_point * depth_point
+                    range_bias_point = a_rb_wide * (depth_point*depth_square) + b_rb_wide*depth_square + c_rb_wide*depth_point + d_rb_wide
+                # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
+                # Use the deep narrow uncertainty coefficients and offset. 
+                else:   
+                    # THU is a Linear fit: a + b*x 
+                    thu_point = a_h_narrow + (b_h_narrow * depth_point) 
+                    # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                    bx_h_narrow = (b_z_narrow * depth_point)
+                    tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_h_narrow*bx_h_narrow))
+                    # enforce minimum value for tvu
+                    if(tvu_point < min_tvu):
+                        tvu_point = min_tvu
+                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                    depth_square = depth_point * depth_point
+                    range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
 
-            #Add the subaqueous thu at this point to the list of result thu values
-            res_thu.append(thu_point)
-            #Add the subaqueous tvu at this point to the list of result tvu values
-            res_tvu.append(tvu_point)
-            #Add the range bias uncertainty at this point to the list of result range bias values
-            res_range_bias.append(range_bias_point)
+                #Add the subaqueous thu at this point to the list of result thu values
+                res_thu.append(thu_point)
+                #Add the subaqueous tvu at this point to the list of result tvu values
+                res_tvu.append(tvu_point)
+                #Add the range bias uncertainty at this point to the list of result range bias values
+                res_range_bias.append(range_bias_point)
 
 
         return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
