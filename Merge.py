@@ -185,66 +185,76 @@ class Merge:
 
                     logging.warning("trajectory and LAS data NOT MERGED")
                     logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
-        else:
-            data = np.asarray(
-                [
-                    sbet_data[:, 0][idx[mask]],  # t?
-                    fl_las_data[:, 3][mask],  # t
-                    fl_las_data[:, 0][mask],  # x
-                    fl_las_data[:, 1][mask],  # y
-                    fl_las_data[:, 2][mask],  # z
-                    sbet_data[:, 3][idx[mask]],  # x?
-                    sbet_data[:, 4][idx[mask]],  # y?
-                    sbet_data[:, 5][idx[mask]],  # z?
-                    np.radians(sbet_data[:, 6][idx[mask]]),  # r?
-                    np.radians(sbet_data[:, 7][idx[mask]]),  # p?
-                    np.radians(sbet_data[:, 8][idx[mask]]),  # h?
-                ]
-            )
+                    return (
+                            data,
+                            stddev,
+                            fl_las_idx[mask],
+                            raw_class,
+                            masked_fan_angle,
+                            masked_hawkeye_data
+                        )  # 3rd to last array is masked t_idx
+        
+        data = np.asarray(
+            [
+                sbet_data[:, 0][idx[mask]],  # t?
+                fl_las_data[:, 3][mask],  # t
+                fl_las_data[:, 0][mask],  # x
+                fl_las_data[:, 1][mask],  # y
+                fl_las_data[:, 2][mask],  # z
+                sbet_data[:, 3][idx[mask]],  # x?
+                sbet_data[:, 4][idx[mask]],  # y?
+                sbet_data[:, 5][idx[mask]],  # z?
+                np.radians(sbet_data[:, 6][idx[mask]]),  # r?
+                np.radians(sbet_data[:, 7][idx[mask]]),  # p?
+                np.radians(sbet_data[:, 8][idx[mask]]),  # h?
+            ]
+        )
 
-            num_points = data[0].shape
+        num_points = data[0].shape
 
-            stddev = np.vstack(
-                [
-                    np.full(num_points, radians(self.a_std_dev)),  # std_a
-                    np.full(num_points, radians(self.b_std_dev)),  # std_b
-                    np.radians(sbet_data[:, 12][idx[mask]]),  # std_r
-                    np.radians(sbet_data[:, 13][idx[mask]]),  # std_p
-                    np.radians(sbet_data[:, 14][idx[mask]]),  # std_h
-                    sbet_data[:, 9][idx[mask]],  # stdx_sbet
-                    sbet_data[:, 10][idx[mask]],  # stdy_sbet
-                    sbet_data[:, 11][idx[mask]],  # stdz_sbet
-                    np.full(num_points, self.std_rho),  # std_rho
-                ]
-            )
+        stddev = np.vstack(
+            [
+                np.full(num_points, radians(self.a_std_dev)),  # std_a
+                np.full(num_points, radians(self.b_std_dev)),  # std_b
+                np.radians(sbet_data[:, 12][idx[mask]]),  # std_r
+                np.radians(sbet_data[:, 13][idx[mask]]),  # std_p
+                np.radians(sbet_data[:, 14][idx[mask]]),  # std_h
+                sbet_data[:, 9][idx[mask]],  # stdx_sbet
+                sbet_data[:, 10][idx[mask]],  # stdy_sbet
+                sbet_data[:, 11][idx[mask]],  # stdz_sbet
+                np.full(num_points, self.std_rho),  # std_rho
+            ]
+        )
 
-            raw_class = fl_las_data[:, 4][mask]
+        raw_class = fl_las_data[:, 4][mask]
 
-            masked_fan_angle = []
-            masked_hawkeye_data = []
+        masked_fan_angle = []
+        masked_hawkeye_data = []
 
-            # If this is a multi beam sensor, use the mask on the fan angle array 
-            if(sensor_object.type == "multi"):
-                masked_fan_angle = fl_las_data[:, 5][mask]
-                #Take the absolute value of the fan angle
-                masked_fan_angle = np.absolute(masked_fan_angle)
-                #Round fan angle to the nearest integer
-                #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
-                #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
-                masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
+        # If this is a multi beam sensor, use the mask on the fan angle array 
+        if(sensor_object.type == "multi"):
+            masked_fan_angle = fl_las_data[:, 5][mask]
+            #Take the absolute value of the fan angle
+            masked_fan_angle = np.absolute(masked_fan_angle)
+            #Round fan angle to the nearest integer
+            #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
+            #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
+            masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
 
-                # Unbounded scan angle/fan angle can go past 26 degrees (absolute). 
-                # Warn the user if their fan angle exceed maximum allowed fan angle.
-                if not all(i <=26 for i in masked_fan_angle): 
-                    logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
-            elif(sensor_object.type =="single_hawkeye"):
-                 
-                masked_hawkeye_data = np.asarray(
+            # Unbounded scan angle/fan angle can go past 26 degrees (absolute). 
+            # Warn the user if their fan angle exceed maximum allowed fan angle.
+            if not all(i <=26 for i in masked_fan_angle): 
+                logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
+        elif(sensor_object.type =="single_hawkeye"):
+                
+            masked_hawkeye_data = np.asarray(
                 [
                     fl_las_data[:, 5][mask], # masked scanner_channel
                     fl_las_data[:, 6][mask]  # masked user_data
                 ]
             )
+
+            # print(f"masked_hawkeye_data: {masked_hawkeye_data}")
 
         # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
         # logger.merge(f"processed fan angle: {masked_fan_angle}")
