@@ -68,9 +68,8 @@ class Las:
         """
         self.t_argsort = None
 
-    def get_bathy_points(self):
-        class_codes = {"BATHYMETRY": 26}
-        bathy_inds = self.inFile.raw_classification == class_codes["BATHYMETRY"]
+    def get_bathy_points(self, subaqueous_classes):
+        bathy_inds = self.inFile.raw_classification in subaqueous_classes
         return self.inFile.points.array[bathy_inds]["point"]
 
     def get_flight_line_ids(self):
