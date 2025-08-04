@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-July 9th, 2025
+August 4th, 2025
 """
 
 
@@ -43,6 +43,8 @@ class UserInput:
         self.kd_selection = controller_configuration["kd_selection"]
         self.vdatum_region = controller_configuration["vdatum_region"]
         self.mcu = controller_configuration["mcu"]
+        self.vuc =controller_configuration["vuc"]
+        self.huc =controller_configuration["huc"]
         self.output_directory = controller_configuration["directories"]["tpu"]
         self.csv_option = controller_configuration["csv_option"]
         self.las_option = controller_configuration["las_option"]
