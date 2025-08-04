@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-July 9th, 2025
+August 4th, 2025
 """
 
 import logging
@@ -200,16 +200,21 @@ class Tpu:
                         #Single beam Sensor: Sending to fit_lut() 
                         subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut()     
 
-                    vdatum_mcu = (
-                        float(self.gui_object.mcu) / 100.0
-                    )  # file is in cm (1-sigma)
+                    # VDatum file is in cm (1-sigma)
+                    vdatum_mcu = (float(self.gui_object.mcu) / 100.0)
+                    # Optional user input vertical uncertainty component
+                    # vuc is in m 
+                    vuc = float(self.gui_object.vuc)
+                    # Optional user input horizontal uncertainty component
+                    # huc is in m
+                    huc = float(self.gui_object.huc) 
 
                     logger.tpu(
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
 
                     # sum in quadrature - 1 - sigma
-                    total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2)
+                    total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2 + huc**2)
 
                     logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
@@ -218,12 +223,12 @@ class Tpu:
                     if(self.sensor_object.type == "multi"):
                         # sum in quadrature - 1 - sigma
                         total_tvu = np.sqrt(
-                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2
+                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2
                         )
                     else:
                         # sum in quadrature - 1 - sigma
                         total_tvu = np.sqrt(
-                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + range_bias**2
+                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2 + range_bias**2
                         )
 
                     # convert to 95% conf, if requested
