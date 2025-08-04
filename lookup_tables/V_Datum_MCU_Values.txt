@@ -19,20 +19,22 @@
 "Florida - South Florida Inland Waterways"	9.4
 "Florida - Anclote Key to Naples"	13.0
 "Florida - Apalachicola to Anclote Key"	10.2
-"Florida - St. Joseph Bay and the Gulf of Mexico"	8.6
-"Florida - St. Andrews Bay and the Gulf of Mexico"	8.0
+"Florida - St. Joseph Bay and the Gulf Coast"	8.6
+"Florida - St. Andrews Bay and the Gulf Coast"	8.0
 "Florida - Perdido, Pensacola and Choctawhatchee Bays"	8.3
-"Florida/Alabama - Gulf of Mexico from Mobile Bay to east of Choctawhatchee Bay"	8.1
+"Florida/Alabama - Gulf Coast from Mobile Bay to east of Choctawhatchee Bay"	8.1
 "Alabama - Mobile Bay and Perdido Bay"	8.2
 "Louisiana/Mississippi - Eastern Louisiana to Mississippi Sound"	17.1
-"Louisiana/Texas - western Louisiana to Galveston Bay"	12.8
-"Texas - Lagoons, Galveston Bay to Matagorda Island"	12.5
-"Texas - Shelf, Galveston Bay to Matagorda Is."	9.4
-"Texas - Lagoons, Matagorda Island to US/Mexico border"	15.8
-"Texas - Shelf, Matagorda Island to US/Mexico border"	8.2
+"Louisiana - Atchafalaya"	6.0
+"Louisiana/Texas - Intracoastal"	5.5
+"Louisiana/Texas - Gulf Coast nearshore"	6.2
+"Texas - Central Intracoastal"	5.9
+"Texas - Southern Intracoastal"	6.2
+"Texas/Louisiana - Gulf Coast offshore"	6.6
+"Texas - Southern Intracoastal"	6.4
 "California - Southern California"	7.5
 "California - Southern California Inland"	6.7
-"California -Monterey Bay to Morro Bay"	8.0
+"California - Monterey Bay to Morro Bay"	8.0
 "California - San Francisco Bay Vicinity"	7.7
 "California - San Francisco Bay Inland"	6.5
 "California/Oregon - Coastal"	7.8
