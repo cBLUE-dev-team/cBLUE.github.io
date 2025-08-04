@@ -322,8 +322,8 @@ def main():
                    str(tpu_integer),
                    str(water_height_var.get()),
                    "-vdatum_region", vdatum_var.get(),
-                   "-optional_vuc", str(user_input_vert.get()),
-                   "-optional_huc", str(user_input_horz.get()),
+                   "-opt_vuc", str(user_input_vert.get()),
+                   "-opt_huc", str(user_input_horz.get()),
                    "--save_config",
                    ]
         if csv_var.get():
