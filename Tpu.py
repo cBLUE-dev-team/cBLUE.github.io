@@ -75,7 +75,6 @@ class Tpu:
         #Store the sensor_obejct information          
         self.sensor_object = sensor_object
 
-        self.subaqu_lookup_params = None
         self.metadata = {}
         self.flight_line_stats = {}
 
@@ -465,17 +464,18 @@ class Tpu:
         logger.tpu("({}) creating TPU meta data file...".format(las.las_short_name))
         self.metadata.update(
             {
-                "subaqueous lookup params": self.subaqu_lookup_params,
-                "wind": self.gui_object.wind_selection,
-                "kd": self.gui_object.kd_selection,
+                "Wind speed": self.gui_object.wind_selection,
+                "Turbidity": self.gui_object.kd_selection,
                 "VDatum region": self.gui_object.vdatum_region,
                 "VDatum region MCU": self.gui_object.mcu,
-                "flight line stats (min max mean stddev)": self.flight_line_stats,
-                "sensor model": self.sensor_object.name,
+                "Optional VUC": self.gui_object.vuc,
+                "Optional HUC": self.gui_object.huc,
+                "Flight line stats (min max mean stddev)": self.flight_line_stats,
+                "Sensor model": self.sensor_object.name,
                 "cBLUE version": self.gui_object.cblue_version,
                 "Subaqueous processing version": self.gui_object.subaqueous_version,
-                "cpu_processing_info": self.gui_object.cpu_process_info,
-                "water_surface_ellipsoid_height": self.gui_object.water_surface_ellipsoid_height,
+                "CPU processing": self.gui_object.cpu_process_info,
+                "Water surface ellipsoid height": self.gui_object.water_surface_ellipsoid_height,
                 "Error type": self.gui_object.error_type
             }
         )
