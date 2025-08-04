@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-July 9th, 2025
+August 4th, 2025
 
 """
 # -*- coding: utf-8 -*-
@@ -141,9 +141,12 @@ def updateConfig(config_dict):
     del new_config_dict["kd_selection"]
     del new_config_dict["vdatum_region"]
     del new_config_dict["mcu"]
+    del new_config_dict["vuc"]
+    del new_config_dict["huc"]
     del new_config_dict["csv_option"]
     del new_config_dict["laz_option"]
     del new_config_dict["las_option"]
+
 
     with open("cblue_configuration.json", "w") as update_config:
         json.dump(new_config_dict, update_config, indent=4)
@@ -181,6 +184,10 @@ if __name__ == "__main__":
                         "\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
     parser.add_argument("-vdatum_region", default=f"Used MCU value given in the command line interface.", 
                         help=f"Adds the name of the VDatum region to the metadata log.\nUser must provide the region name after -vdatum_region flag.\n\n")
+    # Optional user generated vertical uncertainty component (VUC)
+    parser.add_argument("-opt_vuc", default=0.0, type=float, help="Optional user generated vertical uncertainty component (VUC) value in meters. Enter a float value.\n\n")
+    # Optional user generated horizontal uncertainty component (HUC)
+    parser.add_argument("-opt_huc", default=0.0, type=float, help="Optional user generated horizontal uncertainty component (HUC) value in meters. Enter a float value.\n\n")
     # Sensor Model
     with open("lidar_sensors.json", "r") as sensors_json:
         sensor_json_content = json.load(sensors_json)
@@ -218,6 +225,8 @@ if __name__ == "__main__":
     turbidity_index = int(args.turbidity)
     mcu = args.mcu
     vdatum_region = args.vdatum_region
+    vuc = args.opt_vuc
+    huc = args.opt_huc
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
@@ -240,6 +249,8 @@ if __name__ == "__main__":
     config_dict["kd_selection"] = TURBIDITY_OPTIONS[turbidity_index]
     config_dict["vdatum_region"] = vdatum_region
     config_dict["mcu"] = mcu
+    config_dict["vuc"] = vuc
+    config_dict["huc"] = huc
     config_dict["sensor_model"] = sensor_options[sensor_index]
     config_dict["error_type"] = TPU_METRIC_OPTIONS[tpu_metric_index]
     config_dict["csv_option"] = csv
