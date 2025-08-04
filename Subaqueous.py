@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-July 9th, 2025
+August 4th, 2025
 """
 
 import logging
@@ -107,7 +107,8 @@ class Subaqueous:
         a_h = fit_thu["a"]
         b_h = fit_thu["b"]
         # THU is a Linear fit: a + b*x 
-        res_thu = a_h + b_h * self.depth
+        # Multiply by 0.577 to approximate Gaussian spread
+        res_thu = (a_h + b_h * self.depth)* 0.577
 
         # Check classification values.
         for i, classification in enumerate(self.classification):
@@ -443,6 +444,8 @@ class Subaqueous:
                 #Add the range bias uncertainty at this point to the list of result range bias values
                 res_range_bias.append(range_bias_point)
 
+        # Multiply THU by 0.577 to approximate Gaussian spread
+        res_thu = res_thu * 0.577
 
         return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
 
