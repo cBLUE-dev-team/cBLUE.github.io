@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-August 4th, 2025
+August 5th, 2025
 
 """
 import tkinter as tk
@@ -248,10 +248,10 @@ def main():
                         "a negative\nnumber. Please be sure to enter the negative sign\nbefore the numerical value."
     tk.Label(water_height_frame, text=water_height_msg).pack()
     tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
-    water_height_frame.pack(pady=pady)
+    water_height_frame.pack(pady=(10,10))
 
     # VDatum Region
-    vdatum_frame = tk.Frame(right_frame, width=300, height=55)
+    vdatum_frame = tk.Frame(right_frame, width=350, height=60)
     tk.Label(vdatum_frame, text="VDatum Region", font=norm_font_bold).pack()
     vdatum_list = list(get_vdatum_dict().keys())
     vdatum_var = tk.StringVar()
@@ -259,7 +259,7 @@ def main():
     vdatum_om = tk.OptionMenu(vdatum_frame, vdatum_var, *vdatum_list)
     vdatum_om.config(direction="right")
     vdatum_om.pack(fill="x")
-    vdatum_frame.pack(pady=pady)
+    vdatum_frame.pack()
     vdatum_frame.pack_propagate(0)
 
     # Sensor Model
@@ -267,7 +267,7 @@ def main():
     tk.Label(sensor_frame, text="Sensor Model", font=norm_font_bold).pack()
     sensor_var = tk.StringVar()
     tk.OptionMenu(sensor_frame, sensor_var, *get_sensor_list()).pack(fill="x")
-    sensor_frame.pack(fill="x", pady=pady)
+    sensor_frame.pack(fill="x")
 
     # TPU Metric
     tpu_frame = tk.Frame(right_frame)
