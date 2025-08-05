@@ -22,15 +22,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
-Last Edited:
+Last Edited By:
 Keana Kief (OSU)
-July 9th, 2025
+August 4th, 2025
 """
 
 import logging
