@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-August 4th, 2025
+August 5th, 2025
 """
 
 import logging
@@ -425,8 +425,9 @@ class Subaqueous:
                 # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
                 # Use the deep narrow uncertainty coefficients and offset. 
                 else:   
-                    # THU is a Linear fit: a + b*x 
-                    thu_point = a_h_narrow + (b_h_narrow * depth_point) 
+                    # THU is a Linear fit: a + b*x
+                    # Multiply THU by 0.577 to approximate Gaussian spread 
+                    thu_point = (a_h_narrow + (b_h_narrow * depth_point))* 0.577 
                     # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
                     bx_h_narrow = (b_z_narrow * depth_point)
                     tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_h_narrow*bx_h_narrow))
@@ -443,9 +444,6 @@ class Subaqueous:
                 res_tvu.append(tvu_point)
                 #Add the range bias uncertainty at this point to the list of result range bias values
                 res_range_bias.append(range_bias_point)
-
-        # Multiply THU by 0.577 to approximate Gaussian spread
-        res_thu = res_thu * 0.577
 
         return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
 
