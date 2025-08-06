@@ -64,8 +64,6 @@ class Merge:
         :return: Tuple(ndarray, ndarray, ndarray, ndarray)
 
         The returned tuple contains:
-        - t_sbet_masked: masked sbet data
-        - t_las_masked: masked las data
         - idx: indices of the matched sbet and las data
         - mask: boolean mask indicating which points are valid
         - max_dt: maximum delta_t between the matched sbet and las data
@@ -89,7 +87,7 @@ class Merge:
         dt = ne.evaluate("t_sbet_masked - t_las_masked")
         max_dt = ne.evaluate("max(dt)")  # may be empty
 
-        return t_sbet_masked, t_las_masked, idx, mask, max_dt
+        return idx, mask, max_dt
 
 
     def merge(self, las, fl, sbet_data, fl_unsorted_las_xyztcf, fl_t_argsort, fl_las_idx, sensor_object):
@@ -152,7 +150,7 @@ class Merge:
         # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
 
         # Try to match sbet and las dfs based on timestamps
-        t_sbet_masked, t_las_masked, idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
+        idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
 
         # If the max_dt is too large, or empty, then we cannot merge the data.
         # This is likely due to the LAS data being standard gps time, when we expect adjusted standard gps time.
@@ -161,7 +159,7 @@ class Merge:
             # Try converting LAS time data from standard gps time to Adjusted Standard GPS time
             fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
 
-            t_sbet_masked, t_las_masked, idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
+            idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
 
             # If the max_dt is still too large, or empty, then we cannot merge the data.
             # This is likely due to the LAS data being in UTC time, when we expect adjusted standard gps time.
@@ -172,7 +170,7 @@ class Merge:
                 # to account for the leap seconds adjustment.
                 fl_las_data[:, 3] = fl_las_data[:, 3] + 18
 
-                t_sbet_masked, t_las_masked, idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
+                idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
 
                 # If the max_dt is still too large, or empty, then we cannot merge the data.
                 if max_dt > self.max_allowable_dt or max_dt.size == 0:
