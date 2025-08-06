@@ -339,6 +339,12 @@ class Tpu:
 
         # read las file
         in_las = laspy.read(las.las)
+
+        # copy data from in_las
+        for field in in_las.point_format:
+
+            las_data = in_las[field.name]
+            in_las[field.name] = las_data[las.t_argsort]
         # print(in_las.header)
         # print(in_las.vlrs)
 
