@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
@@ -30,8 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 17th, 2024
-
+August 4th, 2025
 """
 
 import logging
@@ -76,7 +75,6 @@ class Tpu:
         #Store the sensor_obejct information          
         self.sensor_object = sensor_object
 
-        self.subaqu_lookup_params = None
         self.metadata = {}
         self.flight_line_stats = {}
 
@@ -105,7 +103,7 @@ class Tpu:
                 fl_tpu_stddev[ind],
             )
 
-            fl_stats_str = "{}: {:6.3f}{:6.3f}{:6.3f}{:6.3f}".format(*fl_stats_vals)
+            fl_stats_str = "{}: {:.3f} {:.3f} {:.3f} {:.3f}".format(*fl_stats_vals)
             fl_stats_strs.append(fl_stats_str)
 
         fl_header_str = f"{fl} ({fl_tpu_count}/{num_fl_points} points with TPU)"
@@ -131,16 +129,16 @@ class Tpu:
             )
             logger.tpu("flight lines {}".format(las.unq_flight_lines))
 
-            unsorted_las_xyztcf, t_argsort, flight_lines = las.get_flight_line(self.sensor_object.type)
+            unsorted_las, t_argsort, flight_lines = las.get_flight_line(self.sensor_object.type)
 
             self.flight_line_stats = {}  # reset flight line stats dict
             for fl in las.unq_flight_lines:
 
                 logger.tpu("flight line {} \n{}\n".format(fl, "-" * 50))
 
-                # las_xyzt has the same order as points in las (i.e., unordered)
+                # unsorted_las has the same order as points in las (i.e., unordered)
                 fl_idx = flight_lines == fl
-                fl_unsorted_las_xyztcf = unsorted_las_xyztcf[fl_idx]
+                fl_unsorted_las = unsorted_las[fl_idx]
                 fl_t_argsort = t_argsort[fl_idx]
                 fl_las_idx = t_argsort.argsort()[fl_idx]
 
@@ -153,11 +151,11 @@ class Tpu:
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
 
-                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle = merge.merge(
+                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle, masked_hawkeye_data  = merge.merge(
                     las,
                     fl,
                     sbet.values,
-                    fl_unsorted_las_xyztcf,
+                    fl_unsorted_las,
                     fl_t_argsort,
                     fl_las_idx,
                     self.sensor_object,
@@ -193,31 +191,44 @@ class Tpu:
 
                     if(self.sensor_object.type == "multi"):
                         #Multi beam sensor: Sending to multi_beam_fit_lut() 
-                        subaqu_thu, subaqu_tvu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
-                    
+                        subaqu_tvu, subaqu_thu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
+                    elif(self.sensor_object.type == "single_hawkeye"):
+                        #Hawkeye Sensor: Sending to hawkeye_fit_lut() 
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.hawkeye_fit_lut(masked_hawkeye_data) 
                     else:
                         #Single beam Sensor: Sending to fit_lut() 
-                        subaqu_thu, subaqu_tvu = subaqu_obj.fit_lut()     
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut()     
 
-                    vdatum_mcu = (
-                        float(self.gui_object.mcu) / 100.0
-                    )  # file is in cm (1-sigma)
+                    # VDatum file is in cm (1-sigma)
+                    vdatum_mcu = (float(self.gui_object.mcu) / 100.0)
+                    # Optional user input vertical uncertainty component
+                    # vuc is in m 
+                    vuc = float(self.gui_object.vuc)
+                    # Optional user input horizontal uncertainty component
+                    # huc is in m
+                    huc = float(self.gui_object.huc) 
 
                     logger.tpu(
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
 
-                    # sum in quadrature - get 95% confidence level
-                    total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2)
+                    # sum in quadrature - 1 - sigma
+                    total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2 + huc**2)
 
                     logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
                     )
 
-                    # sum in quadrature - get 95% confidence level
-                    total_tvu = np.sqrt(
-                        subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2
-                    )
+                    if(self.sensor_object.type == "multi"):
+                        # sum in quadrature - 1 - sigma
+                        total_tvu = np.sqrt(
+                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2
+                        )
+                    else:
+                        # sum in quadrature - 1 - sigma
+                        total_tvu = np.sqrt(
+                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2 + range_bias**2
+                        )
 
                     # convert to 95% conf, if requested
                     if self.gui_object.error_type == "95% confidence":
@@ -328,6 +339,12 @@ class Tpu:
 
         # read las file
         in_las = laspy.read(las.las)
+
+        # copy data from in_las
+        for field in in_las.point_format:
+
+            las_data = in_las[field.name]
+            in_las[field.name] = las_data[las.t_argsort]
         # print(in_las.header)
         # print(in_las.vlrs)
 
@@ -453,17 +470,18 @@ class Tpu:
         logger.tpu("({}) creating TPU meta data file...".format(las.las_short_name))
         self.metadata.update(
             {
-                "subaqueous lookup params": self.subaqu_lookup_params,
-                "wind": self.gui_object.wind_selection,
-                "kd": self.gui_object.kd_selection,
+                "Wind speed": self.gui_object.wind_selection,
+                "Turbidity": self.gui_object.kd_selection,
                 "VDatum region": self.gui_object.vdatum_region,
                 "VDatum region MCU": self.gui_object.mcu,
-                "flight line stats (min max mean stddev)": self.flight_line_stats,
-                "sensor model": self.sensor_object.name,
+                "Optional VUC": self.gui_object.vuc,
+                "Optional HUC": self.gui_object.huc,
+                "Flight line stats (min max mean stddev)": self.flight_line_stats,
+                "Sensor model": self.sensor_object.name,
                 "cBLUE version": self.gui_object.cblue_version,
                 "Subaqueous processing version": self.gui_object.subaqueous_version,
-                "cpu_processing_info": self.gui_object.cpu_process_info,
-                "water_surface_ellipsoid_height": self.gui_object.water_surface_ellipsoid_height,
+                "CPU processing": self.gui_object.cpu_process_info,
+                "Water surface ellipsoid height": self.gui_object.water_surface_ellipsoid_height,
                 "Error type": self.gui_object.error_type
             }
         )

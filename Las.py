@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-September 20th, 2024 
+August 4th, 2025
 
 
 """
@@ -68,9 +68,8 @@ class Las:
         """
         self.t_argsort = None
 
-    def get_bathy_points(self):
-        class_codes = {"BATHYMETRY": 26}
-        bathy_inds = self.inFile.raw_classification == class_codes["BATHYMETRY"]
+    def get_bathy_points(self, subaqueous_classes):
+        bathy_inds = self.inFile.raw_classification in subaqueous_classes
         return self.inFile.points.array[bathy_inds]["point"]
 
     def get_flight_line_ids(self):
@@ -95,7 +94,7 @@ class Las:
         :return: np.array, np.array, np.array, np.array
         """
 
-        #xyz_to_coordinate converts the x, y, z integer values to coordinate values
+        # xyz_to_coordinate converts the x, y, z integer values to coordinate values
         x, y, z = self.xyz_to_coordinate()
 
         t = self.points_to_process["gps_time"]
@@ -109,21 +108,28 @@ class Las:
 
         self.t_argsort = t.argsort()
 
-        # Check if this is a multi beam sensor
+        # Check if this is a multi beam sensor, if it is the subaqueous processing requires fan angle (scan angle)
         if(sensor_type == "multi"):
-            #Get the fan angle and multiply it by 0.006 to convert to degrees
+            # Get the fan angle and multiply it by 0.006 to convert to degrees
             fan_angle = self.inFile.scan_angle*0.006
-            #Add xyztcf to an array together
-            xyztcf = np.vstack([x, y, z, t, c, fan_angle]).T
+            # Add x, y, z, gps time, classification, and fan angle (scan angle) to an array together
+            las_data = np.vstack([x, y, z, t, c, fan_angle]).T
             # logger.las(f"{sensor_type} Fan Angle: {fan_angle}")
+        # Check if this is a HawkEye sensor, if it is the subaquous processing will require 
+        # the scanner channel and user data.
+        elif(sensor_type == "single_hawkeye"):
+            scanner_channel = self.inFile.scanner_channel
+            user_data = self.inFile.user_data
+            # Add x, y, z, gps time, classification, scanner channel, and user data to an array together
+            las_data = np.vstack([x, y, z, t, c, scanner_channel, user_data]).T
         else:
-            #Fan angle is not used by the other sensors
-            #Add xyztc to an array together
-            xyztcf = np.vstack([x, y, z, t, c]).T
+            # Fan angle, is not used by the other sensors
+            # Add x, y, z, gps time, and classification to an array together
+            las_data = np.vstack([x, y, z, t, c]).T
 
         flight_lines = self.points_to_process["pt_src_id"]
 
-        return xyztcf, self.t_argsort, flight_lines
+        return las_data, self.t_argsort, flight_lines
 
     
     def xyz_to_coordinate(self):

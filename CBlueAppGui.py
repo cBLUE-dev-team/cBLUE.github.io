@@ -22,15 +22,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Keana Kief (OSU) and Austin Anderson (NV5)
-April 16th, 2025
+Keana Kief (OSU)
+August 5th, 2025
 
 """
 import tkinter as tk
@@ -89,7 +89,7 @@ def show_about():
 
 def get_vdatum_dict():
     vdatum_lookup_path = r"lookup_tables\V_Datum_MCU_Values.txt"
-    vdatum_dict = {"---No Region Specified---": 0.0}
+    vdatum_dict = {"Don't Include Datum Transformation Uncertainty": 0.0}
     with open(vdatum_lookup_path, "r") as f:
         vdatum_lines = f.readlines()
     vdatum_lines = sorted(vdatum_lines, key=lambda item: item.replace('"', ''))
@@ -136,7 +136,7 @@ def main():
     root = tk.Tk()
     root.wm_title("cBLUE")
     root.iconbitmap(root, "cBLUE_icon.ico")
-    root.geometry("325x760")
+    root.geometry("700x500")
     norm_font_bold = ("Verdanna", 10, "bold")
     padx = (30, 30)
     pady = (10, 0)
@@ -169,13 +169,16 @@ def main():
     with open("cblue_configuration.json", "r") as config:
         config_dict = json.load(config)
 
+    topFrame = tk.Frame(root)  # Added "container" Frame.
+    topFrame.pack(side="top", fill="x", anchor="n")
+
     # Directory buttons
-    dir_frame = tk.Frame(root)
-    tk.Label(dir_frame, text="Data Directories", font=norm_font_bold).pack()
+    left_frame = tk.Frame(topFrame)
+    tk.Label(left_frame, text="Data Directories", font=norm_font_bold).pack()
 
 
     traj_dir_var = tk.StringVar()
-    traj_dir_button = tk.Button(dir_frame, text="Choose Trajectory Directory",
+    traj_dir_button = tk.Button(left_frame, text="Choose Trajectory Directory", padx=20,
                                 command=lambda: browse(traj_dir_button, traj_dir_var))
     traj_dir_button.pack(fill="x")
     #If SBET file path is saved in the cblue_configuration.json, set it as the trajectory directory path
@@ -183,7 +186,7 @@ def main():
 
 
     las_dir_var = tk.StringVar()
-    las_dir_button = tk.Button(dir_frame, text="Choose LAS Directory",
+    las_dir_button = tk.Button(left_frame, text="Choose LAS Directory", padx=20,
                                command=lambda: browse(las_dir_button, las_dir_var))
     las_dir_button.pack(fill="x")
     #If las file path is saved in the cblue_configuration.json, set it as the las directory path
@@ -191,14 +194,11 @@ def main():
 
 
     out_dir_var = tk.StringVar()
-    out_dir_button = tk.Button(dir_frame, text="Choose Output Directory",
+    out_dir_button = tk.Button(left_frame, text="Choose Output Directory", padx=20,
                                command=lambda: browse(out_dir_button, out_dir_var))
     out_dir_button.pack(fill="x")
     #If tpu ouput file path is saved in the cblue_configuration.json, set it as the output directory path
     set_dir_from_config(config_dict["directories"]["tpu"], out_dir_var, out_dir_button)
-
-    
-    dir_frame.pack(padx=padx, pady=pady, fill="x")
 
     # Environmental parameters
     def add_tab(options, tab_name, label_text=None):
@@ -214,52 +214,16 @@ def main():
         subaqueous_method_tabs.add(tab, text=tab_name)
         return var
 
-    env_frame = tk.Frame(root)
+    env_frame = tk.Frame(left_frame)
     tk.Label(env_frame, text="Environmental Parameters", font=norm_font_bold).pack()
     subaqueous_method_tabs = ttk.Notebook(env_frame)
     wind_var = add_tab(WIND_OPTIONS, tab_name="Water Surface")
     turbidity_var = add_tab(TURBIDITY_OPTIONS, tab_name="Turbidity")
     subaqueous_method_tabs.pack(fill="x")
-    env_frame.pack(padx=padx, pady=pady, fill="x")
-
-    # Water Height
-    water_height_frame = tk.Frame(root)
-    tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
-    water_height_var = tk.StringVar()
-    water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
-    water_height_msg = "Nominal water surface ellipsoid height (in meters):\nNote: In CONUS locations, this will be "\
-                        "a negative\nnumber. Please be sure to enter the negative sign\nbefore the numerical value."
-    tk.Label(water_height_frame, text=water_height_msg).pack()
-    tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
-    water_height_frame.pack(padx=padx, pady=pady, fill="x")
-
-    # VDatum Region
-    vdatum_frame = tk.Frame(root)
-    tk.Label(vdatum_frame, text="VDatum Region", font=norm_font_bold).pack()
-    vdatum_list = list(get_vdatum_dict().keys())
-    vdatum_var = tk.StringVar()
-    vdatum_var.set(vdatum_list[0])
-    vdatum_om = tk.OptionMenu(vdatum_frame, vdatum_var, *vdatum_list)
-    vdatum_om.config(direction="right")
-    vdatum_om.pack(fill="x")
-    vdatum_frame.pack(padx=padx, pady=pady, fill="x")
-
-    # Sensor Model
-    sensor_frame = tk.Frame(root)
-    tk.Label(sensor_frame, text="Sensor Model", font=norm_font_bold).pack()
-    sensor_var = tk.StringVar()
-    tk.OptionMenu(sensor_frame, sensor_var, *get_sensor_list()).pack(fill="x")
-    sensor_frame.pack(padx=padx, pady=pady, fill="x")
-
-    # TPU Metric
-    tpu_frame = tk.Frame(root)
-    tk.Label(tpu_frame, text="TPU Metric", font=norm_font_bold).pack()
-    tpu_metric_var = tk.StringVar()
-    tk.OptionMenu(tpu_frame, tpu_metric_var, *TPU_METRIC_OPTIONS).pack(fill="x")
-    tpu_frame.pack(padx=padx, pady=pady, fill="x")
+    env_frame.pack(pady=pady)
 
     # Output Options
-    csv_frame = tk.Frame(root)
+    csv_frame = tk.Frame(left_frame)
     tk.Label(csv_frame, text="Output Options", font=norm_font_bold).pack()
 
     las_var = tk.BooleanVar()
@@ -270,10 +234,70 @@ def main():
     ttk.Checkbutton(csv_frame, text = "LAZ", variable = laz_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
     ttk.Checkbutton(csv_frame, text = "CSV", variable = csv_var, onvalue = True, offvalue = False).pack(padx=20, side=tk.LEFT)
 
-    # ttk.Radiobutton(csv_frame, text="ExtraBytes LAS", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
-    # ttk.Radiobutton(csv_frame, text="ExtraBytes LAZ", value=False, variable=csv_var).pack(fill="x", padx=padx[-1])
-    # ttk.Radiobutton(csv_frame, text="ExtraBytes + CSV", value=True, variable=csv_var).pack(fill="x", padx=padx[-1])
-    csv_frame.pack(padx=padx, pady=pady, fill="x")
+    csv_frame.pack(fill="x", pady=pady)
+
+    left_frame.pack(padx=padx, pady=pady, side="left")
+
+    right_frame = tk.Frame(topFrame)
+    # Water Height
+    water_height_frame = tk.Frame(right_frame)
+    tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
+    water_height_var = tk.StringVar()
+    water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
+    water_height_msg = "Nominal water surface ellipsoid height (in meters):\nNote: In CONUS locations, this will be "\
+                        "a negative\nnumber. Please be sure to enter the negative sign\nbefore the numerical value."
+    tk.Label(water_height_frame, text=water_height_msg).pack()
+    tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
+    water_height_frame.pack(pady=(10,10))
+
+    # VDatum Region
+    vdatum_frame = tk.Frame(right_frame, width=350, height=60)
+    tk.Label(vdatum_frame, text="VDatum Region", font=norm_font_bold).pack()
+    vdatum_list = list(get_vdatum_dict().keys())
+    vdatum_var = tk.StringVar()
+    vdatum_var.set(vdatum_list[0])
+    vdatum_om = tk.OptionMenu(vdatum_frame, vdatum_var, *vdatum_list)
+    vdatum_om.config(direction="right")
+    vdatum_om.pack(fill="x")
+    vdatum_frame.pack()
+    vdatum_frame.pack_propagate(0)
+
+    # Sensor Model
+    sensor_frame = tk.Frame(right_frame)
+    tk.Label(sensor_frame, text="Sensor Model", font=norm_font_bold).pack()
+    sensor_var = tk.StringVar()
+    tk.OptionMenu(sensor_frame, sensor_var, *get_sensor_list()).pack(fill="x")
+    sensor_frame.pack(fill="x")
+
+    # TPU Metric
+    tpu_frame = tk.Frame(right_frame)
+    tk.Label(tpu_frame, text="TPU Metric", font=norm_font_bold).pack()
+    tpu_metric_var = tk.StringVar()
+    tk.OptionMenu(tpu_frame, tpu_metric_var, *TPU_METRIC_OPTIONS).pack(fill="x")
+    tpu_frame.pack(fill="x", pady=pady)
+
+    # Optional User Input Uncertainty (Meters)
+    user_input_frame = tk.Frame(right_frame)
+    tk.Label(user_input_frame, text="Optional Uncertainty Components (Meters)", font=norm_font_bold).pack()
+    # Vertical Uncertainty Input
+    vert_frame = tk.Frame(user_input_frame)
+    tk.Label(vert_frame, text="Vertical", font=norm_font_bold).pack()
+    user_input_vert = tk.StringVar()
+    user_input_vert.set("0.00")
+    vert_frame.pack(pady=pady, side="left")
+    tk.Entry(vert_frame, textvariable=user_input_vert, justify="center").pack()
+
+
+    horz_frame = tk.Frame(user_input_frame)
+    tk.Label(horz_frame, text="Horizontal", font=norm_font_bold).pack()
+    user_input_horz = tk.StringVar()
+    user_input_horz.set("0.00")
+    horz_frame.pack(pady=pady, side="right")
+    tk.Entry(horz_frame, textvariable=user_input_horz, justify="center").pack()
+
+    user_input_frame.pack(pady=pady, fill="x")
+
+    right_frame.pack(padx=padx, pady=pady, side="right")
 
     def start_process(just_save_config=False):
         """Generate command for CBlueApp.py command line interface. Run the command."""
@@ -298,6 +322,8 @@ def main():
                    str(tpu_integer),
                    str(water_height_var.get()),
                    "-vdatum_region", vdatum_var.get(),
+                   "-opt_vuc", str(user_input_vert.get()),
+                   "-opt_huc", str(user_input_horz.get()),
                    "--save_config",
                    ]
         if csv_var.get():
@@ -315,8 +341,9 @@ def main():
     # Process Button
     proc_frame = tk.Frame(root)
     proc_button = tk.Button(proc_frame, text="Process", font=norm_font_bold, command=start_process, state="disabled")
-    proc_button.pack(fill="x")
-    proc_frame.pack(padx=padx, pady=(pady[0]*2, 0), fill="x")
+    proc_button.pack(fill="x", pady=pady)
+    proc_frame.pack(padx=padx, pady=20, fill="x")
+
 
     def update_process_button(*args):
         """Enable or disable process button based on variable values"""

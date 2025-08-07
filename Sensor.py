@@ -22,15 +22,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
-Last Edited:
+Last Edited By:
 Keana Kief (OSU)
-July 25th, 2023
+August 4th, 2025
 """
 
 import logging
@@ -63,12 +63,40 @@ class Sensor:
         else:
             logger.sensor("Sensor file doesn't exist")
 
-        #The type of sensor: single or multi beam
+        #The type of sensor: "single", "single_hawkeye", or "multi" beam
         self.type = self.sensor_config[self.name]["sensor_model"]["type"]
-        #The vertical look up table used for modeling
-        self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
-        #The horizontal look up table used for modeling
-        self.horz_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal"]
+
+        #If this is a Leica HawkEye sensor, get the path of the deep narrow, deep wide, and shallow subaqueous lookup tables
+        if self.type == "single_hawkeye":
+            #The path of the vertical deep narrow look up table used for modeling
+            self.vert_lut_deep_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_deep_narrow"]
+            #The path of the horizontal deep narrow look up table used for modeling
+            self.horz_lut_deep_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_deep_narrow"]
+            # The path of the range bias deep narrow uncertainty look up table used for modeling
+            self.range_bias_lut_narrow = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias_deep_narrow"]
+            #The path of the vertical deep wide look up table used for modeling
+            self.vert_lut_deep_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_deep_wide"]
+            #The path of the horizontal deep wide look up table used for modeling
+            self.horz_lut_deep_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_deep_wide"]
+            # The path of the range bias deep wide uncertainty look up table used for modeling
+            self.range_bias_lut_wide = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias_deep_wide"]
+            #The path of the vertical wide look up table used for modeling
+            self.vert_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_shallow"]
+            #The path of the horizontal wide look up table used for modeling
+            self.horz_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_shallow"]
+            # The path of the range bias shallow uncertainty look up table used for modeling
+            self.range_bias_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias_shallow"]
+        #Otherwise if this is a non-HawkEye sensor
+        else:
+            #The path of the vertical look up table used for modeling
+            self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
+            #The path of the horizontal look up table used for modeling
+            self.horz_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal"]
+            # The path of the range bias uncertainty look up table used for modeling
+            self.range_bias_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias"]
+        
+
+
         #Scan angle and range uncertainties
         self.a_std_dev = self.sensor_config[self.name]["sensor_model"]["a_std_dev"]
         self.b_std_dev = self.sensor_config[self.name]["sensor_model"]["b_std_dev"]

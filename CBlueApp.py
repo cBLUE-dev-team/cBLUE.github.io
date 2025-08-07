@@ -22,15 +22,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
-Keana Kief (OSU) and Austin Anderson (NV5)
-April 16th, 2025
+Keana Kief (OSU)
+August 4th, 2025
 
 """
 # -*- coding: utf-8 -*-
@@ -55,19 +55,20 @@ import subprocess
 utils.CustomLogger(filename="CBlue.log")
 
 WIND_OPTIONS = [
-        "Calm-light air (0-2 kts)",
-        "Light Breeze (3-6 kts)",
-        "Gentle Breeze (7-10 kts)",
-        "Moderate Breeze (11-15 kts)",
-        "Fresh Breeze (16-20 kts)"
+        "Calm-light air [0-4] kts",
+        "Light Breeze (4-8] kts",
+        "Gentle Breeze (8-12] kts",
+        "Moderate Breeze (12-16] kts",
+        "Fresh Breeze (16-20+] kts"
     ]
 
 TURBIDITY_OPTIONS = [
-        "Clear (0.06-0.10 m^-1)",
-        "Clear-Moderate (0.11-0.17 m^-1)",
-        "Moderate (0.18-0.25 m^-1)",
-        "Moderate-High (0.26-0.32 m^-1)",
-        "High (0.33-0.36 m^-1)"
+        "Clear [0-0.12] m^-1",
+        "Clear-Moderate (0.12-0.15] m^-1",
+        "Moderate (0.15-0.21] m^-1",
+        "Moderate-Turbid (0.21-0.27] m^-1",
+        "Turbid (0.27-0.47] m^-1",
+        "Very Turbid (0.47-0.58+] m^-1"
     ]
 
 TPU_METRIC_OPTIONS = ["1-\u03c3", "95% confidence"]
@@ -136,15 +137,16 @@ def updateConfig(config_dict):
     new_config_dict = config_dict.copy()
     del new_config_dict["wind_ind"]
     del new_config_dict["wind_selection"]
-    del new_config_dict["wind_vals"]
     del new_config_dict["kd_ind"]
     del new_config_dict["kd_selection"]
-    del new_config_dict["kd_vals"]
     del new_config_dict["vdatum_region"]
     del new_config_dict["mcu"]
+    del new_config_dict["vuc"]
+    del new_config_dict["huc"]
     del new_config_dict["csv_option"]
     del new_config_dict["laz_option"]
     del new_config_dict["las_option"]
+
 
     with open("cblue_configuration.json", "w") as update_config:
         json.dump(new_config_dict, update_config, indent=4)
@@ -172,18 +174,20 @@ if __name__ == "__main__":
     parser.add_argument("output_dir", help="Output directory file path.\n\n")
     # Environmental Parameters
     # # Water Surface
-    wind_values = [[1], [2, 3], [4, 5], [6, 7], [8, 9, 10]]
     wind_help_text = get_help_text(WIND_OPTIONS)
     parser.add_argument("wind", type=int, choices=[0, 1, 2, 3, 4], help=wind_help_text, metavar="wind_speed")
     # # Turbidity
-    turbidity_values = [[6, 11], [11, 18], [18, 26], [26, 33], [33, 37]]
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
-    parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4], help=turbidity_help_text, metavar="turbidity")
+    parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4, 5], help=turbidity_help_text, metavar="turbidity")
     # VDatum Region
-    parser.add_argument("mcu", default=0.0, help=f"Input MCU value for the VDatum region. Enter a float value."\
+    parser.add_argument("mcu", default=0.0, help=f"Input maximum cumulative uncertainty (MCU) value in cm for the VDatum region. Enter a float value."\
                         "\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
     parser.add_argument("-vdatum_region", default=f"Used MCU value given in the command line interface.", 
                         help=f"Adds the name of the VDatum region to the metadata log.\nUser must provide the region name after -vdatum_region flag.\n\n")
+    # Optional user generated vertical uncertainty component (VUC)
+    parser.add_argument("-opt_vuc", default=0.0, type=float, help="Optional user generated vertical uncertainty component (VUC) value in meters. Enter a float value.\n\n")
+    # Optional user generated horizontal uncertainty component (HUC)
+    parser.add_argument("-opt_huc", default=0.0, type=float, help="Optional user generated horizontal uncertainty component (HUC) value in meters. Enter a float value.\n\n")
     # Sensor Model
     with open("lidar_sensors.json", "r") as sensors_json:
         sensor_json_content = json.load(sensors_json)
@@ -221,6 +225,8 @@ if __name__ == "__main__":
     turbidity_index = int(args.turbidity)
     mcu = args.mcu
     vdatum_region = args.vdatum_region
+    vuc = args.opt_vuc
+    huc = args.opt_huc
     sensor_index = int(args.sensor)
     tpu_metric_index = int(args.tpu_metric)
     csv = args.csv
@@ -239,12 +245,12 @@ if __name__ == "__main__":
     config_dict["directories"]["tpu"] = output_dir
     config_dict["wind_ind"] = wind_index
     config_dict["wind_selection"] = WIND_OPTIONS[wind_index]
-    config_dict["wind_vals"] = wind_values[wind_index]
     config_dict["kd_ind"] = turbidity_index
     config_dict["kd_selection"] = TURBIDITY_OPTIONS[turbidity_index]
-    config_dict["kd_vals"] = (turbidity_values[turbidity_index][0], turbidity_values[turbidity_index][1])
     config_dict["vdatum_region"] = vdatum_region
     config_dict["mcu"] = mcu
+    config_dict["vuc"] = vuc
+    config_dict["huc"] = huc
     config_dict["sensor_model"] = sensor_options[sensor_index]
     config_dict["error_type"] = TPU_METRIC_OPTIONS[tpu_metric_index]
     config_dict["csv_option"] = csv

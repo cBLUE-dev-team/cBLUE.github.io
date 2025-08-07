@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-October 30th, 2024
+August 4th, 2025
 """
 
 
@@ -39,13 +39,12 @@ class UserInput:
     def __init__(self, controller_configuration):
         self.wind_ind = controller_configuration["wind_ind"]
         self.wind_selection = controller_configuration["wind_selection"]
-        self.wind_vals = controller_configuration["wind_vals"]
         self.kd_ind = controller_configuration["kd_ind"]
         self.kd_selection = controller_configuration["kd_selection"]
-        kd_vals_tuple = controller_configuration["kd_vals"]
-        self.kd_vals = range(kd_vals_tuple[0], kd_vals_tuple[-1])
         self.vdatum_region = controller_configuration["vdatum_region"]
         self.mcu = controller_configuration["mcu"]
+        self.vuc =controller_configuration["vuc"]
+        self.huc =controller_configuration["huc"]
         self.output_directory = controller_configuration["directories"]["tpu"]
         self.csv_option = controller_configuration["csv_option"]
         self.las_option = controller_configuration["las_option"]
@@ -66,7 +65,7 @@ class UserInput:
         self.multiprocess = controller_configuration["multiprocess"]
 
         #If multiprocess is "True", save cpu information about number of cores to multiprocess with
-        if self.multiprocess:
+        if self.multiprocess == "True":
             #Get the number of cores to run multiprocessing on from the cblue_configuration.json
             #TODO: Make number of cores a GUI selection? Currently the user edits the cblue_configuration.json to change this value.
             num_cores = controller_configuration["number_cores"]

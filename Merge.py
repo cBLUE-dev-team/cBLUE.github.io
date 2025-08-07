@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 Contact:
 Christopher Parrish, PhD
 School of Construction and Civil Engineering
-101 Kearney Hall
+204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
 (541) 737-5688
@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 30th, 2024
+August 4th, 2025
 
 """
 
@@ -54,6 +54,40 @@ class Merge:
         # logger.merge(f"a std dev: {self.a_std_dev}")
         # logger.merge(f"b std dev: {self.b_std_dev}")
         # logger.merge(f"std rho: {self.std_rho}")
+
+    def match_timestamps(self, sbet_data, fl_las_data, num_sbet_pts):
+        """returns sbet timestamps and las timestamps matched based on time
+
+        :param ndarray sbet_data: SBET data
+        :param ndarray fl_las_data: LAS data
+        :param ndarray num_sbet_pts: number of points in the SBET data
+        :return: Tuple(ndarray, ndarray, ndarray, ndarray)
+
+        The returned tuple contains:
+        - idx: indices of the matched sbet and las data
+        - mask: boolean mask indicating which points are valid
+        - max_dt: maximum delta_t between the matched sbet and las data
+        """
+
+        # Try to match sbet and las dfs based on timestamps
+        idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
+
+        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
+        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
+
+        # don't use las points outside range of sbet points
+        mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
+
+        t_sbet_masked = sbet_data[:, 0][idx[mask]]
+        t_las_masked = fl_las_data[:, 3][mask]
+
+        # logger.merge(f"t_las_masked: {t_las_masked}")
+        # logger.merge(f"t_sbet_masked: {t_sbet_masked}")
+
+        dt = ne.evaluate("t_sbet_masked - t_las_masked")
+        max_dt = ne.evaluate("max(dt)")  # may be empty
+
+        return idx, mask, max_dt
 
 
     def merge(self, las, fl, sbet_data, fl_unsorted_las_xyztcf, fl_t_argsort, fl_las_idx, sensor_object):
@@ -115,92 +149,110 @@ class Merge:
         # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
         # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
 
-        #TODO: Only for testing if merging data fails, the las data might have the wrong time format.
-        #       In the future turn this into a function that checks what the las time format is and 
-        #       convert it into adjusted standard gps time.
-        # Use the UTC time conversion or the standard gps time conversion, not both 
-        # Convert UTC time to Adjusted Standard GPS time (with leap seconds adjustment for data on or after Jan 1st 2017)
-        # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9 + 18
-        # Convert standard gps time to Adjusted Standard GPS time
-        # fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
+        # Try to match sbet and las dfs based on timestamps
+        idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
 
-        # match sbet and las dfs based on timestamps
-        idx = np.searchsorted(sbet_data[:, 0], fl_las_data[:, 3])
-
-        # logger.merge(f"fl_las_data[:, 3]: {fl_las_data[:, 3]}")
-        # logger.merge(f"sbet_data[:, 0]: {sbet_data[:, 0]}")
-
-        # don't use las points outside range of sbet points
-        mask = ne.evaluate("0 < idx") & ne.evaluate("idx < num_sbet_pts")
-
-        t_sbet_masked = sbet_data[:, 0][idx[mask]]
-        t_las_masked = fl_las_data[:, 3][mask]
-
-        # logger.merge(f"t_las_masked: {t_las_masked}")
-        # logger.merge(f"t_sbet_masked: {t_sbet_masked}")
-
-        dt = ne.evaluate("t_sbet_masked - t_las_masked")
-        max_dt = ne.evaluate("max(dt)")  # may be empty
-
+        # If the max_dt is too large, or empty, then we cannot merge the data.
+        # This is likely due to the LAS data being standard gps time, when we expect adjusted standard gps time.
         if max_dt > self.max_allowable_dt or max_dt.size == 0:
-            data = False
-            stddev = False
-            raw_class = False
-            masked_fan_angle = False
 
-            logging.warning("trajectory and LAS data NOT MERGED")
-            logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
-        else:
-            data = np.asarray(
+            # Try converting LAS time data from standard gps time to Adjusted Standard GPS time
+            fl_las_data[:, 3] = fl_las_data[:, 3] - 1e9
+
+            idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
+
+            # If the max_dt is still too large, or empty, then we cannot merge the data.
+            # This is likely due to the LAS data being in UTC time, when we expect adjusted standard gps time.
+            if max_dt > self.max_allowable_dt or max_dt.size == 0:
+
+                # If the LAS data was in UTC time, then we can try converting it to adjusted standard gps time.
+                # We've already converted the time once to take away - 1e9 seconds, so we can try adding 18 seconds to the time
+                # to account for the leap seconds adjustment.
+                fl_las_data[:, 3] = fl_las_data[:, 3] + 18
+
+                idx, mask, max_dt = self.match_timestamps(sbet_data, fl_las_data, num_sbet_pts)
+
+                # If the max_dt is still too large, or empty, then we cannot merge the data.
+                if max_dt > self.max_allowable_dt or max_dt.size == 0:
+                    # We will log a warning and return empty arrays for the data.
+                    data = False
+                    stddev = False
+                    raw_class = False
+                    masked_fan_angle = False
+                    masked_hawkeye_data = False
+
+                    logging.warning("trajectory and LAS data NOT MERGED")
+                    logging.warning("({} FL {}) max_dt: {}".format(las.las_short_name, fl, max_dt))
+                    return (
+                            data,
+                            stddev,
+                            fl_las_idx[mask],
+                            raw_class,
+                            masked_fan_angle,
+                            masked_hawkeye_data
+                        )  # 3rd to last array is masked t_idx
+        
+        data = np.asarray(
+            [
+                sbet_data[:, 0][idx[mask]],  # t?
+                fl_las_data[:, 3][mask],  # t
+                fl_las_data[:, 0][mask],  # x
+                fl_las_data[:, 1][mask],  # y
+                fl_las_data[:, 2][mask],  # z
+                sbet_data[:, 3][idx[mask]],  # x?
+                sbet_data[:, 4][idx[mask]],  # y?
+                sbet_data[:, 5][idx[mask]],  # z?
+                np.radians(sbet_data[:, 6][idx[mask]]),  # r?
+                np.radians(sbet_data[:, 7][idx[mask]]),  # p?
+                np.radians(sbet_data[:, 8][idx[mask]]),  # h?
+            ]
+        )
+
+        num_points = data[0].shape
+
+        stddev = np.vstack(
+            [
+                np.full(num_points, radians(self.a_std_dev)),  # std_a
+                np.full(num_points, radians(self.b_std_dev)),  # std_b
+                np.radians(sbet_data[:, 12][idx[mask]]),  # std_r
+                np.radians(sbet_data[:, 13][idx[mask]]),  # std_p
+                np.radians(sbet_data[:, 14][idx[mask]]),  # std_h
+                sbet_data[:, 9][idx[mask]],  # stdx_sbet
+                sbet_data[:, 10][idx[mask]],  # stdy_sbet
+                sbet_data[:, 11][idx[mask]],  # stdz_sbet
+                np.full(num_points, self.std_rho),  # std_rho
+            ]
+        )
+
+        raw_class = fl_las_data[:, 4][mask]
+
+        masked_fan_angle = []
+        masked_hawkeye_data = []
+
+        # If this is a multi beam sensor, use the mask on the fan angle array 
+        if(sensor_object.type == "multi"):
+            masked_fan_angle = fl_las_data[:, 5][mask]
+            #Take the absolute value of the fan angle
+            masked_fan_angle = np.absolute(masked_fan_angle)
+            #Round fan angle to the nearest integer
+            #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
+            #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
+            masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
+
+            # Unbounded scan angle/fan angle can go past 26 degrees (absolute). 
+            # Warn the user if their fan angle exceed maximum allowed fan angle.
+            if not all(i <=26 for i in masked_fan_angle): 
+                logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
+        elif(sensor_object.type =="single_hawkeye"):
+                
+            masked_hawkeye_data = np.asarray(
                 [
-                    sbet_data[:, 0][idx[mask]],  # t?
-                    fl_las_data[:, 3][mask],  # t
-                    fl_las_data[:, 0][mask],  # x
-                    fl_las_data[:, 1][mask],  # y
-                    fl_las_data[:, 2][mask],  # z
-                    sbet_data[:, 3][idx[mask]],  # x?
-                    sbet_data[:, 4][idx[mask]],  # y?
-                    sbet_data[:, 5][idx[mask]],  # z?
-                    np.radians(sbet_data[:, 6][idx[mask]]),  # r?
-                    np.radians(sbet_data[:, 7][idx[mask]]),  # p?
-                    np.radians(sbet_data[:, 8][idx[mask]]),  # h?
+                    fl_las_data[:, 5][mask], # masked scanner_channel
+                    fl_las_data[:, 6][mask]  # masked user_data
                 ]
             )
 
-            num_points = data[0].shape
-
-            stddev = np.vstack(
-                [
-                    np.full(num_points, radians(self.a_std_dev)),  # std_a
-                    np.full(num_points, radians(self.b_std_dev)),  # std_b
-                    np.radians(sbet_data[:, 12][idx[mask]]),  # std_r
-                    np.radians(sbet_data[:, 13][idx[mask]]),  # std_p
-                    np.radians(sbet_data[:, 14][idx[mask]]),  # std_h
-                    sbet_data[:, 9][idx[mask]],  # stdx_sbet
-                    sbet_data[:, 10][idx[mask]],  # stdy_sbet
-                    sbet_data[:, 11][idx[mask]],  # stdz_sbet
-                    np.full(num_points, self.std_rho),  # std_rho
-                ]
-            )
-
-            raw_class = fl_las_data[:, 4][mask]
-
-            masked_fan_angle = []
-
-            # If this is a multi beam sensor, use the mask on the fan angle array 
-            if(sensor_object.type == "multi"):
-                masked_fan_angle = fl_las_data[:, 5][mask]
-                #Take the absolute value of the fan angle
-                masked_fan_angle = np.absolute(masked_fan_angle)
-                #Round fan angle to the nearest integer
-                #   Adding 0.5 and flooring the value gives consistant rounding up on a half value. 
-                #   numpy's rint rounds to the nearest even value, which is an undesired outcome in this case, so it is not used here.
-                masked_fan_angle = np.floor(masked_fan_angle + 0.5).astype(int)
-
-                # Unbounded scan angle/fan angle can go past 26 degrees (absolute). 
-                # Warn the user if their fan angle exceed maximum allowed fan angle.
-                if not all(i <=26 for i in masked_fan_angle): 
-                    logger.merge(f"WARNING: A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
+            # print(f"masked_hawkeye_data: {masked_hawkeye_data}")
 
         # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
         # logger.merge(f"processed fan angle: {masked_fan_angle}")
@@ -210,7 +262,8 @@ class Merge:
             stddev,
             fl_las_idx[mask],
             raw_class,
-            masked_fan_angle
+            masked_fan_angle,
+            masked_hawkeye_data
         )  # 3rd to last array is masked t_idx
 
 
