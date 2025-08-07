@@ -65,7 +65,7 @@ class UserInput:
         self.multiprocess = controller_configuration["multiprocess"]
 
         #If multiprocess is "True", save cpu information about number of cores to multiprocess with
-        if self.multiprocess:
+        if self.multiprocess == "True":
             #Get the number of cores to run multiprocessing on from the cblue_configuration.json
             #TODO: Make number of cores a GUI selection? Currently the user edits the cblue_configuration.json to change this value.
             num_cores = controller_configuration["number_cores"]
