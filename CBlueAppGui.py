@@ -136,7 +136,6 @@ def main():
     root = tk.Tk()
     root.wm_title("cBLUE")
     root.iconbitmap(root, "cBLUE_icon.ico")
-    root.geometry("700x500")
     norm_font_bold = ("Verdanna", 10, "bold")
     padx = (30, 30)
     pady = (10, 0)
