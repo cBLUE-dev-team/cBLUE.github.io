@@ -6,7 +6,7 @@
     },
     "multiprocess": "False",
     "number_cores": 4,
-    "cBLUE_version": "v4.0",
+    "cBLUE_version": "v4.1",
     "subaqueous_version": "v3.0",
     "subaqueous_classes": [
         "40",
