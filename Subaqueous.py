@@ -96,7 +96,7 @@ class Subaqueous:
         # b_z := vertical b coefficient
         a_z = fit_tvu["a"]
         b_z = fit_tvu["b"]
-        # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+        # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
         res_tvu =  np.sqrt(np.square(a_z) + np.square(b_z * self.depth))
 
         # enforce minimum value for tvu
@@ -107,7 +107,7 @@ class Subaqueous:
         a_h = fit_thu["a"]
         b_h = fit_thu["b"]
         # THU is a Linear fit: a + b*x 
-        # Multiply by 0.577 to approximate Gaussian spread
+        # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
         res_thu = (a_h + b_h * self.depth)* 0.577
 
         # Check classification values.
@@ -309,7 +309,7 @@ class Subaqueous:
         # query coefficients from look up tables
         tvu_deep_narrow, thu_deep_narrow, range_bias_narrow, tvu_deep_wide, thu_deep_wide, range_bias_wide, tvu_shallow, thu_shallow, range_bias_shallow = self.hawkeye_model_process()
 
-        # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+        # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
         # a_z := vertical a coefficient
         # b_z := vertical b coefficient
 
@@ -399,7 +399,7 @@ class Subaqueous:
                 elif(scanner_channel == 2 and user_data == 0):
                     # THU is a Linear fit: a + b*x 
                     thu_point = a_h_shallow + (b_h_shallow * depth_point) 
-                    # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
                     bx_h_shallow = (b_z_shallow * depth_point)
                     tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
                     # enforce minimum value for tvu
@@ -413,7 +413,7 @@ class Subaqueous:
                 elif(scanner_channel == 3 and user_data == 1):
                     # THU is a Linear fit: a + b*x 
                     thu_point = a_h_wide + (b_h_wide * depth_point) 
-                    # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
                     bx_h_wide = (b_z_wide * depth_point)
                     tvu_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
                     # enforce minimum value for tvu
@@ -428,7 +428,7 @@ class Subaqueous:
                     # THU is a Linear fit: a + b*x
                     # Multiply THU by 0.577 to approximate Gaussian spread 
                     thu_point = (a_h_narrow + (b_h_narrow * depth_point))* 0.577 
-                    # TVU is a polynomial fit: (a^2+(b*x)^2)^0.5
+                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
                     bx_h_narrow = (b_z_narrow * depth_point)
                     tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_h_narrow*bx_h_narrow))
                     # enforce minimum value for tvu
