@@ -12,6 +12,7 @@
         "40",
         "43"
     ],
+    "sbet_buffer": 1250,
     "sensor_model": "",
     "water_surface_ellipsoid_height": -28.0,
     "error_type": "95% confidence"
