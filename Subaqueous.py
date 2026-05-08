@@ -107,8 +107,7 @@ class Subaqueous:
         a_h = fit_thu["a"]
         b_h = fit_thu["b"]
         # THU is a Linear fit: a + b*x 
-        # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-        res_thu = (a_h + b_h * self.depth)* 0.577
+        res_thu = (a_h + b_h * self.depth)
 
         # Check classification values.
         for i, classification in enumerate(self.classification):
@@ -426,8 +425,7 @@ class Subaqueous:
                 # Use the deep narrow uncertainty coefficients and offset. 
                 else:   
                     # THU is a Linear fit: a + b*x
-                    # Multiply THU by 0.577 to approximate Gaussian spread 
-                    thu_point = (a_h_narrow + (b_h_narrow * depth_point))* 0.577 
+                    thu_point = (a_h_narrow + (b_h_narrow * depth_point))
                     # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
                     bx_h_narrow = (b_z_narrow * depth_point)
                     tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_h_narrow*bx_h_narrow))
