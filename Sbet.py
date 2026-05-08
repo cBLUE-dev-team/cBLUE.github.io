@@ -41,6 +41,8 @@ from datetime import datetime
 import progressbar
 import logging
 import numexpr as ne
+import concurrent.futures
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +164,7 @@ class Sbet:
         =====   =============================================================
         """
 
-        sbets_df = pd.DataFrame()
+        dfs = []
         header_sbet = [
             "time",
             "lon",
@@ -183,13 +185,37 @@ class Sbet:
         # Used for holding processed SBET data if this is the PILLS sensor
         modified_sbet_file = "modified_pills_sbet.txt"
 
+
         print(r"Loading trajectory files...")
-        logger.sbet("loading {} trajectory files...".format(len(self.sbet_files)))
-        for sbet in progressbar.progressbar(
-            sorted(self.sbet_files), redirect_stdout=True
-        ):
-            logger.sbet("-" * 50)
-            logger.sbet("{}...".format(os.path.split(sbet)[-1]))
+        logger.sbet(f"loading {len(self.sbet_files)} trajectory files...")
+
+
+
+        # dtype hints for faster CSV reading
+        dtype_map = {
+            "time": float,
+            "lon": float,
+            "lat": float,
+            "X": float,
+            "Y": float,
+            "Z": float,
+            "roll": float,
+            "pitch": float,
+            "heading": float,
+            "stdX": float,
+            "stdY": float,
+            "stdZ": float,
+            "stdroll": float,
+            "stdpitch": float,
+            "stdheading": float,
+        }
+
+        # Thread-safe progress bar
+        progress = tqdm(total=len(self.sbet_files), desc="SBET Files", unit="file")
+
+        def process_sbet_file(sbet):
+            # Only log file start
+            logger.sbet(f"Processing {os.path.split(sbet)[-1]}")
             sbet_date = self.get_sbet_date(sbet)
 
             # If this is the PILLS sensor, pre-process the sbet data
@@ -198,26 +224,50 @@ class Sbet:
                 self.preprocess_pills_sbet(sbet, modified_sbet_file)
                 # Reassign the SBET file name to the modified file
                 sbet = modified_sbet_file
-
             sbet_df = pd.read_csv(
                 sbet,
                 skip_blank_lines=True,
                 engine="c",
-                delim_whitespace=True,
+                sep=r"\s+",
                 header=None,
                 names=header_sbet,
                 index_col=False,
+                dtype=dtype_map,
             )
-            logger.sbet("({} trajectory points)".format(sbet_df.shape[0]))
-            
             is_sow = self.check_if_sow(sbet_df["time"][0])
             if is_sow:
                 gps_time_adj = self.gps_sow_to_gps_adj(sbet_date, sbet_df["time"])
                 sbet_df["time"] = gps_time_adj
+            progress.update(1)
+            return sbet_df
 
-            sbets_df = sbets_df.append(sbet_df, ignore_index=True)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            dfs = list(executor.map(process_sbet_file, sorted(self.sbet_files)))
+        progress.close()
 
-        sbets_data = sbets_df.sort_values(["time"], ascending=[1])
+
+        if dfs:
+            sbets_data = pd.concat(dfs, ignore_index=True)
+            # Only sort if more than one file
+            if len(dfs) > 1:
+                n_rows = len(sbets_data)
+                msg_start = f"Sorting concatenated SBET data by time ({n_rows} rows)..."
+                print(msg_start)
+                logger.sbet(msg_start)
+                sort_start = time.process_time()
+                sbets_data = sbets_data.sort_values(["time"], ascending=[1])
+                sort_end = time.process_time()
+                msg_end = f"Sorting complete. Took {(sort_end - sort_start):.2f} seconds."
+                print(msg_end)
+                logger.sbet(msg_end)
+        else:
+            sbets_data = pd.DataFrame(columns=header_sbet)
+
+        if dfs:
+            sbets_data = pd.concat(dfs, ignore_index=True)
+            sbets_data = sbets_data.sort_values(["time"], ascending=[1])
+        else:
+            sbets_data = pd.DataFrame(columns=header_sbet)
 
         #If this was the PILLS sensor and we created a modified SBET file.
         #   Then clean up by deleting the modified_pills_sbet.txt
@@ -279,6 +329,37 @@ class Sbet:
 
         return data
     
+    def get_tile_data_by_time(self, start_time, end_time):
+        """queries the sbet data points that lie within the given start and end time
+
+        One pandas dataframe is created from all of the loaded ASCII sbet files,
+        but as each las tile is processed, only the sbet data located within the
+        las tile limits are sent to the calc_tpu() method.
+
+        To account for las tiles that contain data points from a las flight line
+        whose corresponding trajectory data falls outside of the las tile extents,
+        a buffer is added to the bounds of the tile when retreiving the
+        trajectory data.
+
+        :param float start_time: starting timestamp of las tile
+        :param float end_time: ending timestamp of las tile
+        :return: pandas dataframe
+        """
+        time_buff = 20  # seconds buffer to add to start and end time to ensure we capture all relevant trajectory data for the tile
+                        # in case the user didn't account for leap seconds converting to adjusted gps standard time. 
+        
+        time = self.data.time.values
+
+        start_time -= time_buff
+        end_time += time_buff
+
+        # using numexpr for accelerating computations of large arrays
+        data = self.data[
+            ne.evaluate("(time >= start_time) & (time <= end_time)")
+        ]
+
+        return data
+    
     def preprocess_pills_sbet(self, sbet_file, modified_sbet_file):
         """Pre-process the given PILLS SBET data into the expected cBLUE format so that build_sbets_data()
             will run as expected. 
@@ -330,7 +411,7 @@ class Sbet:
             fp.close()
 
         # Read in the sbet_file and save it to a DataFrame
-        sbet_df = pd.read_csv(modified_sbet_file, delim_whitespace=True, header=None, index_col=False)
+        sbet_df = pd.read_csv(modified_sbet_file, sep=r"\s+", header=None, index_col=False)
 
         # logger.sbet(f"sbet df: {sbet_df}")
         
