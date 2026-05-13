@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-August 4th, 2025
+May 12th, 2026
 
 """
 
@@ -324,8 +324,10 @@ class SensorModel:
             "arcsin(((fR1 * rho_x) + (fR4 * rho_y) + (fR7 * rho_z)) / (rho_est * cos(b_est)))"
         )
 
-    def calc_poly_surf_coeffs(self, itv=10):
-        """estimates error model using polynomial surface fitting
+
+    def calc_poly_surf_coeffs(self, itv=10, sel_mask=None):
+        """
+        Estimates error model using polynomial surface fitting.
 
         This method calculates the coefficients of the polynomial-surface
         error model intended to account for the positional errors resulting
@@ -340,17 +342,21 @@ class SensorModel:
         coefficients, for small speed gains in the calculations of the
         coefficients.
 
-        :param a_est:
-        :param b_est:
-        :param dx:
-        :param dy:
-        :param dz:
-        :param itv:
-        :return: list[tuple, tuple, tuple] TODO: verify
+        If sel_mask is provided, use it as the stable subsample selector.
+        Otherwise fall back to positional slicing [::itv].
         """
+        if sel_mask is None:
+            sel = slice(None, None, itv)
+        else:
+            sel_mask = np.asarray(sel_mask, dtype=bool)
+            # fallback if selection is too small (tiny flightline or aggressive itv)
+            if sel_mask.sum() < 20:
+                sel = slice(None, None, itv)
+            else:
+                sel = sel_mask
 
-        B0 = self.b_est[::itv]
-        A0 = self.a_est[::itv]
+        B0 = self.b_est[sel]
+        A0 = self.a_est[sel]
 
         A = np.vstack(
             (
@@ -366,15 +372,15 @@ class SensorModel:
             )
         ).T
 
-        (self.poly_err_surf_coeffs_x, __, __, __) = np.linalg.lstsq(
-            A, self.dx[::itv], rcond=None
-        )
-        (self.poly_err_surf_coeffs_y, __, __, __) = np.linalg.lstsq(
-            A, self.dy[::itv], rcond=None
-        )
-        (self.poly_err_surf_coeffs_z, __, __, __) = np.linalg.lstsq(
-            A, self.dz[::itv], rcond=None
-        )
+        dx = self.dx[sel]
+        dy = self.dy[sel]
+        dz = self.dz[sel]
+
+        (self.poly_err_surf_coeffs_x, __, __, __) = np.linalg.lstsq(A, dx, rcond=None)
+        (self.poly_err_surf_coeffs_y, __, __, __) = np.linalg.lstsq(A, dy, rcond=None)
+        (self.poly_err_surf_coeffs_z, __, __, __) = np.linalg.lstsq(A, dz, rcond=None)
+
+
 
     @staticmethod
     def calcRMSE(data):
@@ -798,10 +804,33 @@ class Jacobian:
         # calculate differece between initial X, Y, and Z estimates and las X, Y, and Z
         self.sensor_model.calc_diff(data[2], data[3], data[4])
 
-        # calculate polynomial surface coefficients to account for differences dx, dy, and dz
-        self.sensor_model.calc_poly_surf_coeffs()
+        # --- stable subsample mask based on point identity (t,x,y,z) ---
+        t_i = np.round(data[1] * 1e7).astype(np.int64)   # 0.1 microsecond ticks
+        x_i = np.round(data[2] * 100).astype(np.int64)   # centimeters
+        y_i = np.round(data[3] * 100).astype(np.int64)
+        z_i = np.round(data[4] * 100).astype(np.int64)
 
-        # precalculate sin and cos of attitude data to simplify evaluation of Jacobian
+        key = (t_i
+            ^ (x_i * np.int64(1000003))
+            ^ (y_i * np.int64(10007))
+            ^ (z_i * np.int64(101))).astype(np.int64)
+
+        # Choose a modulus that guarantees enough points, deterministically.
+        min_pts = 50
+        mod = 10
+        sel_mask = (key % mod) == 0
+
+        # deterministically relax mod until we have enough points
+        while sel_mask.sum() < min_pts and mod > 1:
+            mod -= 1
+            sel_mask = (key % mod) == 0
+
+        # If still too small (tiny flightline), just use all points (only for tiny cases)
+        if sel_mask.sum() < 9:
+            sel_mask[:] = True
+
+        self.sensor_model.calc_poly_surf_coeffs(itv=mod, sel_mask=sel_mask)
+        # print("sel_mask_sum =", int(sel_mask.sum()), "N =", int(sel_mask.size), "mod =", mod)
 
         trig_subs = self.calc_trig_terms(
             self.sensor_model.a_est, self.sensor_model.b_est, data[8], data[9], data[10]
