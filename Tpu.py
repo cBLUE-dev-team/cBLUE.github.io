@@ -167,7 +167,7 @@ class Tpu:
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
                     )
-                    subaer_obj = Subaerial(jacobian, merged_data, stddev, las_idx=unsort_idx)
+                    subaer_obj = Subaerial(jacobian, merged_data, stddev)
 
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
 
