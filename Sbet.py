@@ -37,6 +37,7 @@ August 4th, 2025
 import os
 import time
 import pandas as pd
+import numpy as np
 from datetime import datetime
 import progressbar
 import logging
@@ -286,6 +287,7 @@ class Sbet:
 
         sbet_tic = time.process_time()
         self.data = self.build_sbets_data()  # df
+        self.data = self.data.sort_values("time").reset_index(drop=True)
         sbet_toc = time.process_time()
         logger.sbet(
             "It took {:.1f} mins to load the trajectory data.".format(
@@ -330,7 +332,7 @@ class Sbet:
         return data
     
     def get_tile_data_by_time(self, start_time, end_time):
-        """queries the sbet data points that lie within the given start and end time
+        """Queries the sbet data points that lie within the given start and end time
 
         One pandas dataframe is created from all of the loaded ASCII sbet files,
         but as each las tile is processed, only the sbet data located within the
@@ -345,18 +347,37 @@ class Sbet:
         :param float end_time: ending timestamp of las tile
         :return: pandas dataframe
         """
+
         time_buff = 20  # seconds buffer to add to start and end time to ensure we capture all relevant trajectory data for the tile
-                        # in case the user didn't account for leap seconds converting to adjusted gps standard time. 
-        
-        time = self.data.time.values
+                        # in case the user didn't account for leap seconds converting to adjusted gps standard time.
+        scale = 10**7   # must match match_timestamps() in merge.py
 
-        start_time -= time_buff
-        end_time += time_buff
+        # --- adjust time bounds ---
+        start_time_adj = start_time - time_buff
+        end_time_adj   = end_time   + time_buff
 
-        # using numexpr for accelerating computations of large arrays
-        data = self.data[
-            ne.evaluate("(time >= start_time) & (time <= end_time)")
-        ]
+        # --- full SBET time array (POSITIONAL) ---
+        t_full = self.data.time.values
+        t_full_i = np.round(t_full * scale).astype(np.int64)
+
+        # --- compute integer bounds ---
+        start_i = int(round(start_time_adj * scale))
+        end_i   = int(round(end_time_adj   * scale))
+
+        # --- find insertion positions (NOT labels) ---
+        pos_lo = np.searchsorted(t_full_i, start_i, side="left")
+        pos_hi = np.searchsorted(t_full_i, end_i,   side="right")
+
+        # --- expand left to include full duplicate cluster ---
+        while pos_lo > 0 and t_full_i[pos_lo - 1] == t_full_i[pos_lo]:
+            pos_lo -= 1
+
+        # --- expand right to include full duplicate cluster ---
+        while pos_hi < len(t_full_i) and t_full_i[pos_hi] == t_full_i[pos_hi - 1]:
+            pos_hi += 1
+
+        # --- final deterministic slice (POSITIONAL) ---
+        data = self.data.iloc[pos_lo:pos_hi]
 
         return data
     
