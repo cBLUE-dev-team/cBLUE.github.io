@@ -116,11 +116,15 @@ def CBlueApp(controller_configuration):
             sbet_tile = os.path.split(las_file)[-1]
             logging.cblue(f"({sbet_tile}) generating SBET tile...")
             inFile = laspy.read(las_file)
-            west = inFile.header.x_min
-            east = inFile.header.x_max
-            north = inFile.header.y_max
-            south = inFile.header.y_min
-            yield sbet.get_tile_data(north, south, east, west), las_file, jacobian, merge
+            # west = inFile.header.x_min
+            # east = inFile.header.x_max
+            # north = inFile.header.y_max
+            # south = inFile.header.y_min
+            # yield sbet.get_tile_data(north, south, east, west), las_file, jacobian, merge
+
+            time_min = inFile.gps_time.min()
+            time_max = inFile.gps_time.max()
+            yield sbet.get_tile_data_by_time(time_min, time_max), las_file, jacobian, merge
 
     if settings_object.multiprocess == "True":
         p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())

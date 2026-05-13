@@ -30,7 +30,7 @@ christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-August 4th, 2025
+May 12th, 2026
 """
 
 import logging
@@ -138,9 +138,8 @@ class Tpu:
 
                 # unsorted_las has the same order as points in las (i.e., unordered)
                 fl_idx = flight_lines == fl
+                fl_las_idx = np.nonzero(fl_idx)[0]   # stable index into the original LAS order
                 fl_unsorted_las = unsorted_las[fl_idx]
-                fl_t_argsort = t_argsort[fl_idx]
-                fl_las_idx = t_argsort.argsort()[fl_idx]
 
                 num_fl_points = np.sum(fl_idx)  # count Trues
                 logger.tpu(f"{las.las_short_name} fl {fl}: {num_fl_points} points")
@@ -152,13 +151,15 @@ class Tpu:
                 )
 
                 merged_data, stddev, unsort_idx, raw_class, masked_fan_angle, masked_hawkeye_data  = merge.merge(
-                    las,
+                    las.las_short_name,
                     fl,
                     sbet.values,
                     fl_unsorted_las,
-                    fl_t_argsort,
                     fl_las_idx,
                     self.sensor_object,
+                    # context_label=f"{las.las_short_name} FL {fl}", #DEBUGGING
+                    # debug_target=(t_las, x_las, y_las, z_las) ex: debug_target=(415394516.5950186, 389106.83, 4299188.75, -0.43), #DEBUGGING
+
                 )
 
                 if merged_data is not False:  # i.e., las and sbet is merged
@@ -229,6 +230,26 @@ class Tpu:
                         total_tvu = np.sqrt(
                             subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2 + range_bias**2
                         )
+
+                    # Debugging: print a few sample values of the uncertainty components and total TPU, 1 sigma only
+                    # uncertainty_components = pd.DataFrame({
+                    #     "subaer_thu": subaer_thu,
+                    #     "subaqu_thu": subaqu_thu,
+                    #     "subaer_tvu": subaer_tvu,
+                    #     "subaqu_tvu": subaqu_tvu,
+                    #     "vdatum_mcu": vdatum_mcu,
+                    #     "range_bias": range_bias if self.sensor_object.type != "multi" else None,
+                    #     "total_thu": total_thu,
+                    #     "total_tvu": total_tvu
+                    # })
+
+                    # # get csv path for printing uncertainty components
+                    # comp_csv_name = os.path.join(self.gui_object.output_directory, f"uncertainty_components_{las.las_short_name}_fl{fl}.csv")
+                    # logger.tpu(f"Saving uncertainty components CSV as {comp_csv_name}")
+                    # try:
+                    #     uncertainty_components.to_csv(comp_csv_name, index=False)
+                    # except ValueError as e:
+                    #     raise ValueError("CSV writing failed for uncertainty components")
 
                     # convert to 95% conf, if requested
                     if self.gui_object.error_type == "95% confidence":
@@ -344,7 +365,7 @@ class Tpu:
         for field in in_las.point_format:
 
             las_data = in_las[field.name]
-            in_las[field.name] = las_data[las.t_argsort]
+            in_las[field.name] = las_data
         # print(in_las.header)
         # print(in_las.vlrs)
 
@@ -373,24 +394,17 @@ class Tpu:
             # print(f"extra_byte_dims: {extra_byte_dimensions}")
             # print(f"extra_byte_df: {extra_byte_df}")
 
-            if extra_byte_df.shape[0] == las.num_file_points:
-                extra_byte_df = extra_byte_df.sort_index()
-                # print(f"extra_byte_df\n-------------")
-                # print(extra_byte_df)
-
-            else:
-
-                logger.tpu(
-                    """
-                filling data points for which TPU was not calculated
-                with no_data_value (also sorting by index, or t_idx)
+            logger.tpu(
                 """
-                )
-                no_data_value = -1
+            filling data points for which TPU was not calculated
+            with no_data_value ( also sorting by index, or t_idx)
+            """
+            )
+            no_data_value = -1
 
-                extra_byte_df = extra_byte_df.reindex(
-                    las.t_argsort, fill_value=no_data_value
-                ).sort_index()
+            extra_byte_df = extra_byte_df.reindex(
+                np.arange(las.num_file_points), fill_value=no_data_value
+            )
 
             logger.tpu("populating extra byte data for total_thu...")
             in_las.total_thu = extra_byte_df["total_thu"]
@@ -430,25 +444,17 @@ class Tpu:
             # print(f"out_csv_name{out_csv_name}")
             # print(f"out_las_name{out_las_name}")
 
-            # try:
-            #     csv_las = Las(out_las_name)
-            # except ValueError as e:
-            #     raise ValueError(f"Error: {e}, Laspy failed to read {out_las_name}")
-
-            #xyz_to_coordinate converts the x, y, z integer values to decimal values
-            x, y, z = las.xyz_to_coordinate()
-
             try:
                 # Save relevant data to csv
                 pd.DataFrame.from_dict(
                     {
-                        "GPS Time": in_las.gps_time,
-                        "X": x,
-                        "Y": y,
-                        "Z": z,
-                        "THU": in_las.total_thu,
-                        "TVU": in_las.total_tvu,
-                        "Classification": in_las.classification,
+                        "GPS Time": np.asarray(in_las.gps_time),
+                        "X": np.asarray(in_las.x),
+                        "Y": np.asarray(in_las.y),
+                        "Z": np.asarray(in_las.z),
+                        "THU": np.asarray(in_las.total_thu),
+                        "TVU": np.asarray(in_las.total_tvu),
+                        "Classification": np.asarray(in_las.classification),
                     }
                 ).to_csv(out_csv_name, index=False)
             except ValueError as e:
