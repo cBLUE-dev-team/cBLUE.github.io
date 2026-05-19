@@ -4,7 +4,7 @@
 
 ### Documentation
 
-To view cBLUE documentation, including installation instructions, click [cBLUE User Manual](https://github.com/cBLUE-dev-team/cBLUE.github.io/blob/main/Manual/cBLUE_Manual_v4.2.pdf)
+To view cBLUE documentation, including installation instructions, click [cBLUE User Manual](https://github.com/cBLUE-dev-team/cBLUE.github.io/blob/main/Manual/cBLUE_Manual__v4.2.pdf)
 
 ### Note for Contributors:
 
