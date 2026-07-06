@@ -272,7 +272,7 @@
         }
     
     },
-    "CoastalMapper 875m AGL(Deep)": {
+    "CoastalMapper 875m AGL (Deep)": {
         "sensor_model": {
             "a_std_dev": 0.0,
             "b_std_dev": 0.0,
