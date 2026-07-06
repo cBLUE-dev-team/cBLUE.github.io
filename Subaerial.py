@@ -310,6 +310,9 @@ class SensorModel:
         self.rho_y = rho_y = ne.evaluate("y_las - y_sbet")
         self.rho_z = rho_z =  ne.evaluate("z_las - z_sbet")
 
+        if rho_x[0] > 10000:
+            logger.warning("WARNING: rho_x is greater than 10000, check data for errors")
+
         fR0 = self.fR[0](data[10], data[9])
         fR3 = self.fR[3](data[10], data[9])
         fR6 = self.fR[6](data[9])
