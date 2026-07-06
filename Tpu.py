@@ -167,7 +167,7 @@ class Tpu:
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
                     )
-                    subaer_obj = Subaerial(jacobian, merged_data, stddev)
+                    subaer_obj = Subaerial(jacobian, merged_data, stddev, self.gui_object.output_directory)
 
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
 
@@ -231,7 +231,7 @@ class Tpu:
                             subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2 + range_bias**2
                         )
 
-                    # Debugging: print a few sample values of the uncertainty components and total TPU, 1 sigma only
+                    # # Debugging: print a few sample values of the uncertainty components and total TPU, 1 sigma only
                     # uncertainty_components = pd.DataFrame({
                     #     "subaer_thu": subaer_thu,
                     #     "subaqu_thu": subaqu_thu,

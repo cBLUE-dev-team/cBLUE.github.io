@@ -35,10 +35,12 @@ May 12th, 2026
 """
 
 import logging
+import os
 from Merge import Merge
 from sympy import lambdify, symbols, Matrix, cos, sin
 import numpy as np
 import numexpr as ne
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +76,9 @@ class SensorModel:
         self.poly_err_surf_coeffs_x = None
         self.poly_err_surf_coeffs_y = None
         self.poly_err_surf_coeffs_z = None
+        self.rho_x = None
+        self.rho_y = None
+        self.rho_z = None
 
     def get_sensor_model_diagnostic_data(self, las_pox_xyz):
 
@@ -301,9 +306,9 @@ class SensorModel:
         y_sbet = data[6]  # y_sbet
         z_sbet = data[7]  # z_sbet
 
-        rho_x = ne.evaluate("x_las - x_sbet")
-        rho_y = ne.evaluate("y_las - y_sbet")
-        rho_z = ne.evaluate("z_las - z_sbet")
+        self.rho_x = rho_x = ne.evaluate("x_las - x_sbet")
+        self.rho_y = rho_y = ne.evaluate("y_las - y_sbet")
+        self.rho_z = rho_z =  ne.evaluate("z_las - z_sbet")
 
         fR0 = self.fR[0](data[10], data[9])
         fR3 = self.fR[3](data[10], data[9])
@@ -1038,15 +1043,48 @@ class Subaerial:
     :param ndarray: standard deviations of component variables
     """
 
-    def __init__(self, jacobian, merged_data, stddev):
+    def __init__(self, jacobian, merged_data, stddev, output_dir=None):
         self.jacobian = jacobian  # Jacobian object
         self.merged_data = merged_data  # merged-data ndarray
         self.stddev = stddev  # nparray of standard deviations
+        self.output_dir = output_dir
         self.x_comp_uncertainties = None
         self.y_comp_uncertainties = None
         self.z_comp_uncertainties = None
         self.thu = None
         self.tvu = None
+        self.Jx = None
+        self.Jy = None
+        self.Jz = None
+        self.sum_Jx = None
+        self.sum_Jy = None
+        self.sum_Jz = None
+        self.sx = None
+        self.sy = None
+
+    
+    def export_uncertainty_debug(self, output_dir):
+        sm = self.jacobian.sensor_model
+
+        df = pd.DataFrame({
+            # "Jx": self.Jx,
+            # "Jy": self.Jy,
+            # "Jz": self.Jz,
+            "rho_x": sm.rho_x,
+            "rho_y": sm.rho_y,
+            "rho_z": sm.rho_z,
+            "sum_Jx": self.sum_Jx,
+            "sum_Jy": self.sum_Jy,
+            "sum_Jz": self.sum_Jz,
+            "sx": self.sx,
+            "sy": self.sy,
+            "aerial_thu": self.thu,
+            "aerial_tvu": self.tvu,
+        })
+
+        filename = os.path.join(output_dir, "subaerial_uncertainty_debug.csv")
+        df.to_csv(filename, index=False)
+
 
     def propogate_uncertainty(self, J_eval):  # 25875
         """propogates the subaerial uncertatinty
@@ -1088,9 +1126,9 @@ class Subaerial:
         Vy = np.delete(V, [5, 7], 0)
         Vz = np.delete(V, [4, 5, 6], 0)
 
-        Jx = J_eval[0]
-        Jy = J_eval[1]
-        Jz = J_eval[2]
+        self.Jx = Jx = J_eval[0]
+        self.Jy = Jy = J_eval[1]
+        self.Jz = Jz = J_eval[2]
 
         # componenet uncertainties
         self.x_comp_uncertainties = ne.evaluate("Jx * Jx * Vx")
@@ -1101,15 +1139,17 @@ class Subaerial:
         y_comp_uncertainties = self.y_comp_uncertainties
         z_comp_uncertainties = self.z_comp_uncertainties
 
-        sum_Jx = ne.evaluate("sum(x_comp_uncertainties, axis=0)")
-        sum_Jy = ne.evaluate("sum(y_comp_uncertainties, axis=0)")
-        sum_Jz = ne.evaluate("sum(z_comp_uncertainties, axis=0)")
+        self.sum_Jx = sum_Jx = ne.evaluate("sum(x_comp_uncertainties, axis=0)")
+        self.sum_Jy = sum_Jy = ne.evaluate("sum(y_comp_uncertainties, axis=0)")
+        self.sum_Jz = sum_Jz = ne.evaluate("sum(z_comp_uncertainties, axis=0)")
 
-        sx = ne.evaluate("sqrt(sum_Jx)")
-        sy = ne.evaluate("sqrt(sum_Jy)")
+        self.sx = sx = ne.evaluate("sqrt(sum_Jx)")
+        self.sy = sy = ne.evaluate("sqrt(sum_Jy)")
 
         self.tvu = ne.evaluate("sqrt(sum_Jz)")
         self.thu = ne.evaluate("sqrt(sx**2 + sy**2)")
+
+        
 
     def calc_subaerial_tpu(self):
         """calculates the subaerial uncertainty
@@ -1141,6 +1181,9 @@ class Subaerial:
 
         # PROPAGATE UNCERTAINTY
         self.propogate_uncertainty(J_eval)
+
+        #Uncertainty Debugging
+        # self.export_uncertainty_debug(self.output_dir)
 
         return self.thu, self.tvu
 
