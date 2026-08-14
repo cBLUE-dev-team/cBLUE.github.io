@@ -518,13 +518,27 @@ class Tpu:
         :return:
         """
 
-        print("Calculating TPU (multi-processing)...")
-        p = pp.ProcessPool(2)
 
-        for _ in tqdm(
-            p.imap(self.calc_tpu, sbet_las_generator), total=num_las, ascii=True
-        ):
-            pass
+        print("Calculating TPU (multi-processing)...")
+
+        #Vary workers based on the number of CPU cores available, up to a maximum of 4
+        workers = min(4, os.cpu_count() or 1)
+        p = pp.ProcessPool(workers)
+
+        bar = tqdm(total=num_las, ascii=True, leave=False)
+
+        try:
+            for _ in p.imap(self.calc_tpu, sbet_las_generator):
+                bar.update(1)
+
+        except Exception:
+            bar.close()
+            p.terminate()
+            print()  # move to a clean line
+            raise
+
+        else:
+            bar.close()
 
         return p
 
@@ -542,10 +556,16 @@ class Tpu:
         """
 
         print("Calculating TPU (single-processing)...")
+
         with progressbar.ProgressBar(max_value=num_las) as bar:
             for i, sbet_las in enumerate(sbet_las_generator):
                 bar.update(i)
-                self.calc_tpu(sbet_las)
+
+                try:
+                    self.calc_tpu(sbet_las)
+                except Exception:
+                    bar.finish()
+                    raise
 
 
 if __name__ == "__main__":
