@@ -36,6 +36,7 @@ August 5th, 2025
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 import time
 import json
 import os
@@ -335,7 +336,13 @@ def main():
             command.append("--just_save_config")
         print(f"\nCommand: {command}")
         # Run the command
-        subprocess.run(command)
+        result = subprocess.run(command)
+
+        if result.returncode == 99:
+            tk.messagebox.showwarning(
+                "WARNING:Run Cancelled",
+                "cBLUE canceled the run because rho_x exceeded 10000. Check the input data for errors."
+            )
 
     # Process Button
     proc_frame = tk.Frame(root)
