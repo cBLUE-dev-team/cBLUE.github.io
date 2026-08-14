@@ -522,7 +522,8 @@ class Tpu:
         print("Calculating TPU (multi-processing)...")
 
         #Vary workers based on the number of CPU cores available, up to a maximum of 4
-        workers = min(4, os.cpu_count() or 1)
+        max_cores = self.gui_object.cpu_process_info[1]
+        workers = min(max_cores, os.cpu_count() or 1)
         p = pp.ProcessPool(workers)
 
         bar = tqdm(total=num_las, ascii=True, leave=False)
