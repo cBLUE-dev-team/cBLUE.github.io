@@ -127,11 +127,21 @@ def CBlueApp(controller_configuration):
             yield sbet.get_tile_data_by_time(time_min, time_max), las_file, jacobian, merge
 
     if settings_object.multiprocess == "True":
-        p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
-        p.close()
-        p.join()
+        try:
+            p = tpu.run_tpu_multiprocess(num_las, sbet_las_tiles_generator())
+            p.close()
+            p.join()
+        except ValueError as e:
+            logging.error(str(e))
+            print(f"\n{str(e)}")
+            sys.exit(99)
     elif settings_object.multiprocess == "False":
-        tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
+        try:
+            tpu.run_tpu_singleprocess(num_las, sbet_las_tiles_generator())
+        except ValueError as e:
+            logging.error(str(e))
+            print(f"\n{str(e)}")
+            sys.exit(99)
     else:
         logging.cblue(f"multiprocessing set to {settings_object.multiprocess} (Must be True or False)")
     print("Done!")

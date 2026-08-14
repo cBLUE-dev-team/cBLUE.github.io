@@ -107,7 +107,8 @@ class Subaqueous:
         a_h = fit_thu["a"]
         b_h = fit_thu["b"]
         # THU is a Linear fit: a + b*x 
-        res_thu = (a_h + b_h * self.depth)
+        # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
+        res_thu = (a_h + b_h * self.depth)* 0.577
 
         # Check classification values.
         for i, classification in enumerate(self.classification):
@@ -437,6 +438,8 @@ class Subaqueous:
                     range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
 
                 #Add the subaqueous thu at this point to the list of result thu values
+                # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
+                thu_point = thu_point * 0.577
                 res_thu.append(thu_point)
                 #Add the subaqueous tvu at this point to the list of result tvu values
                 res_tvu.append(tvu_point)
