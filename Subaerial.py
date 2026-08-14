@@ -36,6 +36,7 @@ May 12th, 2026
 
 import logging
 import os
+import sys
 from Merge import Merge
 from sympy import lambdify, symbols, Matrix, cos, sin
 import numpy as np
@@ -309,9 +310,10 @@ class SensorModel:
         self.rho_x = rho_x = ne.evaluate("x_las - x_sbet")
         self.rho_y = rho_y = ne.evaluate("y_las - y_sbet")
         self.rho_z = rho_z =  ne.evaluate("z_las - z_sbet")
-
         if rho_x[0] > 10000:
-            logger.warning("WARNING: rho_x is greater than 10000, check data for errors")
+            raise ValueError(
+                f"WARNING: rho_x exceeds limit. rho_x[0]={rho_x[0]} \n Check data for errors, canceling run."
+            )
 
         fR0 = self.fR[0](data[10], data[9])
         fR3 = self.fR[3](data[10], data[9])
