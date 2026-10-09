@@ -220,10 +220,6 @@ if __name__ == "__main__":
                         " with the settings for the current run.\n*WARNING* --save_config is not recommended when running multiple cBlue"\
                         " CLI processes concurrently\n          because of potential multi-write conflicts.\n\n")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run cBLUE process and update the cblue_configuration file only.")
-    # Water Surface Ellipsoid Height
-    parser.add_argument("water_height", help="Nominal water surface ellipsoid height in meters. Enter a float value.\n"\
-                        "Note: In CONUS locations, this will be a negative number.\n      "\
-                        "Please be sure to enter the negative sign before the numerical value.")
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
     if not len(sys.argv) > 1:
@@ -248,7 +244,7 @@ if __name__ == "__main__":
     laz = args.laz
     save_config = args.save_config
     just_save_config = args.just_save_config
-    water_height = float(args.water_height)
+
 
     # UPDATE CONFIG
     with open("cblue_configuration.json", "r") as config:
@@ -270,7 +266,6 @@ if __name__ == "__main__":
     config_dict["csv_option"] = csv
     config_dict["las_option"] = las
     config_dict["laz_option"] = laz
-    config_dict["water_surface_ellipsoid_height"] = water_height
 
     if just_save_config:
         # Update the config file and exit without running cBLUE.     
