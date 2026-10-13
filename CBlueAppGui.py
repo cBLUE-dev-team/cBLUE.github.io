@@ -239,16 +239,6 @@ def main():
     left_frame.pack(padx=padx, pady=pady, side="left")
 
     right_frame = tk.Frame(topFrame)
-    # Water Height
-    water_height_frame = tk.Frame(right_frame)
-    tk.Label(water_height_frame, text="Water Height", font=norm_font_bold).pack()
-    water_height_var = tk.StringVar()
-    water_height_var.set(f'{config_dict["water_surface_ellipsoid_height"]:.2f}')
-    water_height_msg = "Nominal water surface ellipsoid height (in meters):\nNote: In CONUS locations, this will be "\
-                        "a negative\nnumber. Please be sure to enter the negative sign\nbefore the numerical value."
-    tk.Label(water_height_frame, text=water_height_msg).pack()
-    tk.Entry(water_height_frame, textvariable=water_height_var, justify="center").pack()
-    water_height_frame.pack(pady=(10,10))
 
     # VDatum Region
     vdatum_frame = tk.Frame(right_frame, width=350, height=60)
@@ -320,7 +310,6 @@ def main():
                    str(mcu),
                    str(sensor_integer),
                    str(tpu_integer),
-                   str(water_height_var.get()),
                    "-vdatum_region", vdatum_var.get(),
                    "-opt_vuc", str(user_input_vert.get()),
                    "-opt_huc", str(user_input_horz.get()),
@@ -366,11 +355,6 @@ def main():
             disable = True
         if not tpu_metric_var.get():
             disable = True
-        # Check that water height is a valid number
-        try:
-            float(water_height_var.get())
-        except ValueError:
-            disable = True
         # Update the button state
         if disable:
             state = "disable"
@@ -384,7 +368,6 @@ def main():
     out_dir_var.trace_add("write", update_process_button)
     sensor_var.trace_add("write", update_process_button)
     tpu_metric_var.trace_add("write", update_process_button)
-    water_height_var.trace_add("write", update_process_button)
 
     root.mainloop()
 
