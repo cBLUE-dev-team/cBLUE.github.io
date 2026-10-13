@@ -229,5 +229,39 @@
             "range_bias": "./lookup_tables/Teledyne/SuperNova/Deep/RBU_LUT_CZMIL_or_CZMIL_SuperNova_Deep_400_AGL_7_mrad.csv"
         }
     
+    },
+    "CoastalMapper AGL 400m": {
+        "sensor_model": {
+            "a_std_dev": 0.0,
+            "b_std_dev": 0.0,
+            "std_rho": 0.0,
+            "type": "single_cm"
+        },
+        "subaqueous_LUTs": {
+            "vertical_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "horizontal_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "range_bias_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "vertical_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "horizontal_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "range_bias_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv"
+        }
+    
+    },
+    "CoastalMapper AGL 875m": {
+        "sensor_model": {
+            "a_std_dev": 0.0,
+            "b_std_dev": 0.0,
+            "std_rho": 0.0,
+            "type": "single_cm"
+        },
+        "subaqueous_LUTs": {
+            "vertical_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "horizontal_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "range_bias_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "vertical_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "horizontal_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+            "range_bias_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv"
+        }
+    
     }
 }
