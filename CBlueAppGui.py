@@ -240,6 +240,16 @@ def main():
 
     right_frame = tk.Frame(topFrame)
 
+    # Water Surface Bin Length
+    bin_length_frame = tk.Frame(right_frame)
+    tk.Label(bin_length_frame, text="Water Surface Bin Length", font=norm_font_bold).pack()
+    bin_length_var = tk.StringVar()
+    bin_length_var.set(f'{config_dict["water_bin_length"]:.1f}')
+    bin_length_msg = "Water surface bin length in meters."
+    tk.Label(bin_length_frame, text=bin_length_msg).pack()
+    tk.Entry(bin_length_frame, textvariable=bin_length_var, justify="center").pack()
+    bin_length_frame.pack(pady=(10,10))
+
     # VDatum Region
     vdatum_frame = tk.Frame(right_frame, width=350, height=60)
     tk.Label(vdatum_frame, text="VDatum Region", font=norm_font_bold).pack()
@@ -310,6 +320,7 @@ def main():
                    str(mcu),
                    str(sensor_integer),
                    str(tpu_integer),
+                   str(bin_length_var.get()),
                    "-vdatum_region", vdatum_var.get(),
                    "-opt_vuc", str(user_input_vert.get()),
                    "-opt_huc", str(user_input_horz.get()),
@@ -355,6 +366,14 @@ def main():
             disable = True
         if not tpu_metric_var.get():
             disable = True
+        # Check that water bin length is a valid number greater than 0
+        try:
+            bin_length = float(bin_length_var.get())
+            if bin_length <= 0:
+                disable = True
+        except ValueError:
+            disable = True
+
         # Update the button state
         if disable:
             state = "disable"
