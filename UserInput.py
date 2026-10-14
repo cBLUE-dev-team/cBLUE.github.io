@@ -74,8 +74,5 @@ class UserInput:
         else:
             self.cpu_process_info = ("singleprocess",)
 
-        #Get the float value for water surface ellipsoid height. In meters, positive up. 
-        self.water_surface_ellipsoid_height = controller_configuration["water_surface_ellipsoid_height"]
-
         #A string holding the error type requested by the user. Either "1-\u03c3" or "95% confidence".
         self.error_type = controller_configuration["error_type"]
