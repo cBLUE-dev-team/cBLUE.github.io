@@ -232,9 +232,9 @@
     },
     "CoastalMapper AGL 400m": {
         "sensor_model": {
-            "a_std_dev": 0.0,
-            "b_std_dev": 0.0,
-            "std_rho": 0.0,
+            "a_std_dev": 0.003,
+            "b_std_dev": 0.003,
+            "std_rho": 0.01,
             "type": "single_cm"
         },
         "subaqueous_LUTs": {
@@ -249,9 +249,9 @@
     },
     "CoastalMapper AGL 875m": {
         "sensor_model": {
-            "a_std_dev": 0.0,
-            "b_std_dev": 0.0,
-            "std_rho": 0.0,
+            "a_std_dev": 0.003,
+            "b_std_dev": 0.003,
+            "std_rho": 0.01,
             "type": "single_cm"
         },
         "subaqueous_LUTs": {
