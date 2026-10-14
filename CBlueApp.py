@@ -221,7 +221,7 @@ if __name__ == "__main__":
                         " CLI processes concurrently\n          because of potential multi-write conflicts.\n\n")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run cBLUE process and update the cblue_configuration file only.")
     # Water Surface Bin Length
-    parser.add_argument("water_bin", help="Water surface bin length in meters. Enter a float value.\n\n")
+    parser.add_argument("water_bin", default=10.0, type=float, help="Water surface bin length in meters. The default bin length is 10m. \nEnter a float value if you'd like to specify a different value than the default.\n\n")
 
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
