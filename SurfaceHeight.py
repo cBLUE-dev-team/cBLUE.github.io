@@ -57,3 +57,23 @@ class SurfaceHeight:
                     self.height_array[y, x]['avg_height'] = -9999
 
         return self.height_array['avg_height']
+
+    def calculate_depth(self, x_data, y_data, z_data):
+
+        depth_data = np.full(len(x_data), -9999)  # Initialize depth_data with default error value
+
+        for i, x, y, z in enumerate(zip(x_data, y_data, z_data)):
+            # Calculate the bin indices for the point
+            bin_x = int((x - self.height_array['avg_height'].min()) / self.bin_size)
+            bin_y = int((y - self.height_array['avg_height'].min()) / self.bin_size)
+
+            # Check if the bin indices are within the bounds of the height array
+            if 0 <= bin_x < self.height_array.shape[1] and 0 <= bin_y < self.height_array.shape[0]:
+                avg_height = self.height_array[bin_y, bin_x]['avg_height']
+                if avg_height != -9999:
+                    depth_data[i] = avg_height - z
+                    # print(f"Depth at ({x}, {y}, {z}): {depth}")
+            else:               
+                print(f"Point ({x}, {y}) is out of bounds for the height array.")
+                
+        return depth_data
