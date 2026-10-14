@@ -25,12 +25,11 @@ School of Construction and Civil Engineering
 204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
-(541) 737-5688
 christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-August 4th, 2025
+October 14, 2026
 """
 
 
@@ -73,6 +72,9 @@ class UserInput:
         #otherwise if multiprocess is "False", save cpu information as singleprocess
         else:
             self.cpu_process_info = ("singleprocess",)
+
+        #Get the water surface bin length in meteres. This is a float value. The default is 10m.
+        self.water_bin_length = controller_configuration["water_bin_length"]
 
         #A string holding the error type requested by the user. Either "1-\u03c3" or "95% confidence".
         self.error_type = controller_configuration["error_type"]
