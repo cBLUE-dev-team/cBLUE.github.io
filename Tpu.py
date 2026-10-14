@@ -46,6 +46,7 @@ from tqdm import tqdm
 from Subaerial import Subaerial
 from Subaqueous import Subaqueous
 from Las import Las
+import SurfaceHeight
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +164,11 @@ class Tpu:
                 )
 
                 if merged_data is not False:  # i.e., las and sbet is merged
+                    logger.tpu(
+                        "({}) calculating water surface height...".format(las.las_short_name)
+                    )
+
+                    water_surface_height = SurfaceHeight(merged_data)
 
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
@@ -171,16 +177,18 @@ class Tpu:
 
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
 
-                    depth = self.gui_object.water_surface_ellipsoid_height - merged_data[4]
-
-                    # print(f"\nMax depth: {max(depth)}")
-                    # print(f"Min depth: {min(depth)}")
 
                     logger.tpu(
                         "({}) calculating subaqueous thu/tvu...".format(
                             las.las_short_name
                         )
                     )
+
+                    depth = water_surface_height.calculate_depth(merged_data[2], merged_data[3], merged_data[4]) #x, y, z data 
+
+                    # print(f"\nMax depth: {max(depth)}")
+                    # print(f"Min depth: {min(depth)}")
+
 
                     #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
