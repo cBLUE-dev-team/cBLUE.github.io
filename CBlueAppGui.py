@@ -242,11 +242,9 @@ def main():
 
     # Water Surface Bin Length
     bin_length_frame = tk.Frame(right_frame)
-    tk.Label(bin_length_frame, text="Water Surface Bin Length", font=norm_font_bold).pack()
+    tk.Label(bin_length_frame, text="Water Surface Bin Length (Meters)", font=norm_font_bold).pack()
     bin_length_var = tk.StringVar()
     bin_length_var.set(f'{config_dict["water_bin_length"]:.1f}')
-    bin_length_msg = "Water surface bin length in meters."
-    tk.Label(bin_length_frame, text=bin_length_msg).pack()
     tk.Entry(bin_length_frame, textvariable=bin_length_var, justify="center").pack()
     bin_length_frame.pack(pady=(10,10))
 
