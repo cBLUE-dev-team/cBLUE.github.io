@@ -300,7 +300,7 @@ class Subaqueous:
         return fit_tvu, fit_thu
 
     
-    def hawkeye_fit_lut(self, masked_hawkeye_data):
+    def hawkeye_fit_lut(self, masked_scan_user_data):
         """Called to begin the SubAqueous processing."""
     
         # tvu values below 0.03 are considered erroneous
@@ -354,13 +354,13 @@ class Subaqueous:
         res_tvu = []
         res_range_bias = []
         
-        # print(f"length of masked_hawkeye_data (scanner channel): {len(masked_hawkeye_data[0])}"
+        # print(f"length of masked_scan_user_data (scanner channel): {len(masked_scan_user_data[0])}"
         #       f"\nlength of depth: {len(self.depth)}"
         #       f"\nlength of classification: {len(self.classification)}") 
 
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, scanner channel, and user data
-        for depth_point, scanner_channel, user_data, class_point in zip(self.depth, masked_hawkeye_data[0], masked_hawkeye_data[1], self.classification):
+        for depth_point, scanner_channel, user_data, class_point in zip(self.depth, masked_scan_user_data[0], masked_scan_user_data[1], self.classification):
             # print(f"depth_point: {depth_point}, scanner: {scanner_channel}, user: {user_data}, class_point: {class_point}")
 
             
@@ -509,7 +509,7 @@ class Subaqueous:
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return tvu_deep_narrow, thu_deep_narrow, range_bias_narrow, tvu_deep_wide, thu_deep_wide, range_bias_wide, tvu_shallow, thu_shallow, range_bias_shallow
 
-    def cm_fit_lut(self, masked_om_data):
+    def cm_fit_lut(self, masked_scan_user_data):
         """Called to begin the SubAqueous processing."""
     
         # tvu values below 0.03 are considered erroneous
@@ -552,13 +552,13 @@ class Subaqueous:
         res_tvu = []
         res_range_bias = []
         
-        # print(f"length of masked_hawkeye_data (scanner channel): {len(masked_hawkeye_data[0])}"
+        # print(f"length of masked_scan_user_data (scanner channel): {len(masked_scan_user_data[0])}"
         #       f"\nlength of depth: {len(self.depth)}"
         #       f"\nlength of classification: {len(self.classification)}") 
 
         # Product of coeffs w/ depths + offsets.
-        # Loop through the depth, scanner channel, and user data
-        for depth_point, scanner_channel, user_data, class_point in zip(self.depth, masked_cm_data[0], masked_cm_data[1], self.classification):
+        # Loop through the depth, user data, and classification
+        for depth_point, user_data, class_point in zip(self.depth, masked_scan_user_data[1], self.classification):
             # print(f"depth_point: {depth_point}, scanner: {scanner_channel}, user: {user_data}, class_point: {class_point}")
 
             
@@ -571,8 +571,14 @@ class Subaqueous:
                 res_range_bias.append(0)
             else:
 
-                # Topographic scanner, only one channel exists
-                # Scanner Channel: 1, User data: 0
+                # User data bytes are used to determine which scanner channel is being used.
+                # User data: 0 - NIR scanner data (topograhy)
+                # User data: 1 - Super Shallow (use deep LUTs)
+                # User data: 2 - Shallow
+                # User data: 3 - Deep
+                # User data: 4 - Synthetic water surface
+                # User data: 5 - Deep stacked (use deep LUTs)
+
 
                 # Shallow scanner, only one channel exists 
                 # Scanner channel: 2, User data: 0
@@ -586,15 +592,15 @@ class Subaqueous:
                 # scanner_channel = masked scanner_channel, 
                 # user_data = masked user_data
                 
-                # If Scanner Channel = 1, then this is topographic scanner data. 
+                # If User Data = 0 or User Data = 4, then this is topographic scanner data or synthetic water surface. 
                 # There is no subaqueous uncertainty.
-                if(scanner_channel == 1):
+                if(user_data == 0 or user_data == 4):
                     thu_point = 0
                     tvu_point = 0
                     range_bias_point = 0
-                # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
+                # If User Data = 2, then this is the shallow scanner
                 # Use the shallow uncertainty coefficients and offset. 
-                elif(scanner_channel == 2 and user_data == 0):
+                elif(user_data == 2):
                     # THU is a Linear fit: a + b*x 
                     thu_point = a_h_shallow + (b_h_shallow * depth_point) 
                     # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
@@ -606,8 +612,8 @@ class Subaqueous:
                     # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
                     depth_square = depth_point * depth_point
                     range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
-                # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
-                # Use the deep narrow uncertainty coefficients and offset. 
+                # If User Data = 3 or User Data = 5, then this is the deep scanner or deep stacked.
+                # If User Data = 1, this is the super shallow scanner, which is most similar to the deep scanner, so we will use the deep LUTs for this as well. 
                 else:   
                     # THU is a Linear fit: a + b*x
                     thu_point = (a_h_deep + (b_h_deep * depth_point))
@@ -619,7 +625,7 @@ class Subaqueous:
                         tvu_point = min_tvu
                     # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
                     depth_square = depth_point * depth_point
-                    range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
+                    range_bias_point = a_rb_deep*(depth_point*depth_square) + b_rb_deep*depth_square + c_rb_deep*depth_point + d_rb_deep
 
                 #Add the subaqueous thu at this point to the list of result thu values
                 # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
