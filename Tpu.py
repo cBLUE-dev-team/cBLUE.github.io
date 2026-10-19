@@ -46,7 +46,7 @@ from tqdm import tqdm
 from Subaerial import Subaerial
 from Subaqueous import Subaqueous
 from Las import Las
-import SurfaceHeight
+from SurfaceHeight import SurfaceHeight
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class Tpu:
                         "({}) calculating water surface height...".format(las.las_short_name)
                     )
 
-                    water_surface_height = SurfaceHeight(merged_data)
+                    water_surface_height = SurfaceHeight(self.gui_object.water_bin_length, merged_data, raw_class)
 
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
@@ -495,7 +495,7 @@ class Tpu:
                 "cBLUE version": self.gui_object.cblue_version,
                 "Subaqueous processing version": self.gui_object.subaqueous_version,
                 "CPU processing": self.gui_object.cpu_process_info,
-                "Water surface ellipsoid height": self.gui_object.water_surface_ellipsoid_height,
+                "Water surface bin length": self.gui_object.water_bin_length,
                 "Error type": self.gui_object.error_type
             }
         )
