@@ -151,7 +151,7 @@ class Tpu:
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
 
-                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle, masked_hawkeye_data  = merge.merge(
+                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle, masked_scan_user_data  = merge.merge(
                     las.las_short_name,
                     fl,
                     sbet.values,
@@ -203,7 +203,10 @@ class Tpu:
                         subaqu_tvu, subaqu_thu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
                     elif(self.sensor_object.type == "single_hawkeye"):
                         #Hawkeye Sensor: Sending to hawkeye_fit_lut() 
-                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.hawkeye_fit_lut(masked_hawkeye_data) 
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.hawkeye_fit_lut(masked_scan_user_data)
+                    elif(self.sensor_object.type == "single_cm"):
+                        #Coastal Mapper Sensor: Sending to cm_fit_lut() 
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.cm_fit_lut(masked_scan_user_data) 
                     else:
                         #Single beam Sensor: Sending to fit_lut() 
                         subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut()     
