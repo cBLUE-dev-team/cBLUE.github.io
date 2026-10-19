@@ -426,7 +426,7 @@ class Merge:
         raw_class = fl_las_data[:, 4][mask]
 
         masked_fan_angle = []
-        masked_hawkeye_data = []
+        masked_scan_user_data = []
 
         # If this is a multi beam sensor, use the mask on the fan angle array 
         if(sensor_object.type == "multi"):
@@ -446,15 +446,16 @@ class Merge:
                 else:
                     logger.warning("A scan angle exceeds an absolute value of 26 degrees. Subaqueous processing will fail.")
 
-        elif sensor_object.type == "single_hawkeye":
-            masked_hawkeye_data = np.asarray(
+        # If this is the hawkeye or coastalmapper sensor, use the mask on the scanner_channel and user_data arrays
+        elif sensor_object.type == "single_hawkeye" or sensor_object.type == "single_cm":
+            masked_scan_user_data = np.asarray(
                 [
                     fl_las_data[:, 5][mask], # masked scanner_channel
                     fl_las_data[:, 6][mask]  # masked user_data
                 ]
             )
 
-            # print(f"masked_hawkeye_data: {masked_hawkeye_data}")
+            # print(f"masked_scan_user_data: {masked_scan_user_data}")
 
         # logger.merge(f"raw fan angle: {fl_las_data[:, 5]}")
         # logger.merge(f"processed fan angle: {masked_fan_angle}")
@@ -465,7 +466,7 @@ class Merge:
             fl_las_idx[mask],
             raw_class,
             masked_fan_angle,
-            masked_hawkeye_data
+            masked_scan_user_data
         )  # 3rd to last array is masked t_idx
 
 
