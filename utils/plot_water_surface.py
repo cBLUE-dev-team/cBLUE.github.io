@@ -14,7 +14,7 @@ save_path = "Path/to/your_file_plot.png"
 fig = plt.figure(figsize=(12, 9))
 ax = fig.add_subplot(111, projection="3d")
 
-DECIMATION = 50
+DECIMATION = 100
 
 # Plot Z values separately for each classification
 classifications = np.sort(df["Classification"].unique())
@@ -60,7 +60,8 @@ ax.set_title("Point Elevations and Water Surface by Classification")
 ax.legend()
 
 plt.tight_layout()
-plt.show()
 
 if save:
     plt.savefig(save_path, dpi=300)
+
+plt.show()
