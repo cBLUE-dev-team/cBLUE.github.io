@@ -180,12 +180,10 @@ class SurfaceHeight:
         depth_data = np.full(len(x_data), self.NO_DATA_VALUE)  # Initialize depth_data with default error value
         surface_height_data = np.full(len(x_data), self.NO_DATA_VALUE)  # Initialize surface_height_data with default error value
 
-        # Determine the maximum distance to search for nearby surface heights based on the bin size.
-        max_distance = min(2 * self.bin_size, 20.0)
         # Loop through each point and calculate the depth based on the nearest surface height.
         for i, (x, y, z) in enumerate(zip(x_data, y_data, z_data)):
-            # Get the nearest surface height for the current point (x, y), searching up to max_distance away.
-            surface_height_data[i] = self.get_nearest_surface_height(x, y, max_distance)
+            # Get the nearest surface height for the current point (x, y), searching up to 20.0m away.
+            surface_height_data[i] = self.get_nearest_surface_height(x, y, 20.0)
 
             # If a valid surface height was found, calculate the depth as the difference between the surface height and the point's z value.
             if surface_height_data[i] != self.NO_DATA_VALUE:
