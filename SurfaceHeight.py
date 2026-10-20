@@ -4,8 +4,10 @@ class SurfaceHeight:
 
     NO_DATA_VALUE = -9999.0
 
-    def __init__(self, water_bin_length, merged_data, classification):
+    def __init__(self, water_bin_length, merged_data, classification, subaqueous_classes):
         self.bin_size = water_bin_length
+        self.classification = classification
+        self.subaqueous_classes = subaqueous_classes
 
         if self.bin_size <= 0:
             raise ValueError("Water bin length must be greater than zero.")
@@ -24,8 +26,7 @@ class SurfaceHeight:
         self.height_array = self.get_height(
             merged_data[2], # x (easting) points
             merged_data[3], # y (northing) points
-            merged_data[4], # z (height)points
-            classification  # point classification
+            merged_data[4] # z (height)points
         )
 
     def get_bin_indices(self, x, y):
@@ -58,7 +59,7 @@ class SurfaceHeight:
         return bin_x, bin_y   
 
 
-    def get_height(self, x_points, y_points, z_points, classification):
+    def get_height(self, x_points, y_points, z_points):
         """
         Calculate the average water-surface height for each bin. 
         Valid water-surface points are classified as either 41 or 42.
@@ -96,7 +97,7 @@ class SurfaceHeight:
         height_array['avg_height'] = self.NO_DATA_VALUE
 
         #Calculate the average surface height for each bin
-        for x, y, z, class_point in zip(x_points, y_points, z_points, classification):
+        for x, y, z, class_point in zip(x_points, y_points, z_points, self.classification):
             # Check if the point is class 41 (sea surface) or 42 (synthetic water surface)
             if class_point in (41, 42):
                 # Calculate the bin indices for the point
@@ -118,7 +119,7 @@ class SurfaceHeight:
 
         return height_array['avg_height'].copy()
 
-    def get_nearest_surface_height(self, x, y, max_distance=20.0):
+    def get_nearest_surface_height(self, x, y, class_val):
         """
         Find the nearest valid water-surface bin to (x, y).
 
@@ -136,42 +137,49 @@ class SurfaceHeight:
             if surface_height != self.NO_DATA_VALUE:
                 return surface_height
 
+        # If the point's own bin does not have a valid surface and 
+        # the point is not classified as subaqueous, return NO_DATA_VALUE immediately.
+        if class_val not in self.subaqueous_classes:
+            return self.NO_DATA_VALUE
+
+        # If this is a subaqueous point, extend the search outward from the point
+        # to the nearest valid surface height, up to max_distance.
         nearest_height = self.NO_DATA_VALUE
         nearest_distance = np.inf
+        max_distance = 20.0  # Maximum distance to search for a valid surface height (in meters)
 
         # Calculate the maximum number of bins to search based on max_distance, add 1 to ensure we cover near edges of bins that are partially within max_distance.
         max_bin_radius = int(np.ceil(max_distance / self.bin_size)) + 1
 
         # Search neighboring bins
-        for radius in range(1, max_bin_radius + 1):
+        for neighbor_x in range(bin_x - max_bin_radius, bin_x + max_bin_radius + 1):
+            for neighbor_y in range(bin_y - max_bin_radius, bin_y + max_bin_radius + 1):
 
-            for neighbor_x in range(bin_x - radius, bin_x + radius + 1):
-                for neighbor_y in range(bin_y - radius, bin_y + radius + 1):
+                # Skip bins outside the array
+                if not (0 <= neighbor_x < self.num_bins_x and
+                        0 <= neighbor_y < self.num_bins_y):
+                    continue
 
-                    # Skip bins outside the array
-                    if not (0 <= neighbor_x < self.num_bins_x and
-                            0 <= neighbor_y < self.num_bins_y):
-                        continue
+                surface_height = self.height_array[neighbor_x, neighbor_y]
 
-                    surface_height = self.height_array[neighbor_x, neighbor_y]
+                # Skip bins without surface data
+                if surface_height == self.NO_DATA_VALUE:
+                    continue
 
-                    # Skip bins without surface data
-                    if surface_height == self.NO_DATA_VALUE:
-                        continue
+                # Find the distance from the point (x, y) to the edges of the neighboring bin
+                bin_min_x = self.min_x + neighbor_x * self.bin_size
+                bin_max_x = bin_min_x + self.bin_size
+                bin_min_y = self.min_y + neighbor_y * self.bin_size
+                bin_max_y = bin_min_y + self.bin_size
 
-                    # Find the distance from the point (x, y) to the edges of the neighboring bin
-                    bin_min_x = self.min_x + neighbor_x * self.bin_size
-                    bin_max_x = bin_min_x + self.bin_size
-                    bin_min_y = self.min_y + neighbor_y * self.bin_size
-                    bin_max_y = bin_min_y + self.bin_size
+                dx = max(bin_min_x - x, 0, x - bin_max_x)
+                dy = max(bin_min_y - y, 0, y - bin_max_y)
+                distance = np.hypot(dx, dy)
 
-                    dx = max(bin_min_x - x, 0, x - bin_max_x)
-                    dy = max(bin_min_y - y, 0, y - bin_max_y)
-                    distance = np.hypot(dx, dy)
+                if distance <= max_distance and distance < nearest_distance:
+                    nearest_distance = distance
+                    nearest_height = surface_height
 
-                    if distance <= max_distance and distance < nearest_distance:
-                        nearest_distance = distance
-                        nearest_height = surface_height
 
         return nearest_height
 
@@ -181,9 +189,9 @@ class SurfaceHeight:
         surface_height_data = np.full(len(x_data), self.NO_DATA_VALUE)  # Initialize surface_height_data with default error value
 
         # Loop through each point and calculate the depth based on the nearest surface height.
-        for i, (x, y, z) in enumerate(zip(x_data, y_data, z_data)):
-            # Get the nearest surface height for the current point (x, y), searching up to 20.0m away.
-            surface_height_data[i] = self.get_nearest_surface_height(x, y, 20.0)
+        for i, (x, y, z, class_val) in enumerate(zip(x_data, y_data, z_data, self.classification)):
+            # Get the nearest surface height for the current point (x, y).
+            surface_height_data[i] = self.get_nearest_surface_height(x, y, class_val)
 
             # If a valid surface height was found, calculate the depth as the difference between the surface height and the point's z value.
             if surface_height_data[i] != self.NO_DATA_VALUE:
