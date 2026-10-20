@@ -184,7 +184,7 @@ class Tpu:
                         )
                     )
 
-                    depth = water_surface_height.calculate_depth(merged_data[2], merged_data[3], merged_data[4]) #x, y, z data 
+                    depth, water_surface_height = water_surface_height.calculate_depth(merged_data[2], merged_data[3], merged_data[4]) #x, y, z data 
 
                     # print(f"\nMax depth: {max(depth)}")
                     # print(f"Min depth: {min(depth)}")
@@ -272,7 +272,7 @@ class Tpu:
 
                     # print(f"{total_tvu[2279775]}")
 
-                    fl_tpu_data = np.vstack((total_thu, total_tvu, unsort_idx)).T
+                    fl_tpu_data = np.vstack((total_thu, total_tvu, water_surface_height, unsort_idx)).T
 
                     data_to_output.append(fl_tpu_data)
 
@@ -327,12 +327,15 @@ class Tpu:
 
             total_thu,  unsigned short (2 bytes), total horizontal uncertainty
             total_tvu,  unsigned short (2 bytes), total vertical uncertainty
+            water_surface_height,  unsigned short (2 bytes), water surface height
 
         :param las:
         :param data_to_output:
         :param output_columns:
         :return:
         """
+
+        no_data_value = -9999.0  # default error value for TPU and water surface height
 
         # Get input file name and append _TPU and file extension.
         # If the user has selected .laz ouput, append .laz
@@ -383,7 +386,8 @@ class Tpu:
         # note '<f4' -> 32 bit floating point
         # extra_byte_dimensions = {"total_thu": "<f4", "total_tvu": "<f4"}
         extra_byte_dimensions = [laspy.ExtraBytesParams(name="total_thu", type="<f4", description="total_thu"), \
-                                 laspy.ExtraBytesParams(name="total_tvu", type="<f4", description="total_tvu")]
+                                 laspy.ExtraBytesParams(name="total_tvu", type="<f4", description="total_tvu"), \
+                                 laspy.ExtraBytesParams(name="water_surface_height", type="<f4", description="water_surface_height")]
 
         num_extra_bytes = len(extra_byte_dimensions)
 
@@ -400,7 +404,7 @@ class Tpu:
             extra_byte_df = pd.DataFrame(
                 tpu_data[:, 0:num_extra_bytes],
                 index=tpu_data[:, num_extra_bytes],
-                columns=["total_thu", "total_tvu"],
+                columns=["total_thu", "total_tvu", "water_surface_height"],
             )
             # print(f"extra_byte_dims: {extra_byte_dimensions}")
             # print(f"extra_byte_df: {extra_byte_df}")
@@ -411,7 +415,6 @@ class Tpu:
             with no_data_value ( also sorting by index, or t_idx)
             """
             )
-            no_data_value = -1
 
             extra_byte_df = extra_byte_df.reindex(
                 np.arange(las.num_file_points), fill_value=no_data_value
@@ -426,13 +429,18 @@ class Tpu:
             in_las.total_tvu = extra_byte_df["total_tvu"]
             # print(f"TVU: {in_las.total_tvu}")
 
+            logger.tpu("populating extra byte data for water_surface_height...")
+            in_las.water_surface_height = extra_byte_df["water_surface_height"]
+
 
 
         else:
             logger.tpu("populating extra byte data for total_thu...")
-            in_las.total_thu = np.zeros(las.num_file_points)
+            in_las.total_thu = np.full(las.num_file_points, no_data_value)
             logger.tpu("populating extra byte data for total_tvu...")
-            in_las.total_tvu = np.zeros(las.num_file_points)
+            in_las.total_tvu = np.full(las.num_file_points, no_data_value)
+            logger.tpu("populating extra byte data for water_surface_height...")
+            in_las.water_surface_height = np.full(las.num_file_points, no_data_value)
 
         # If the user has selected .laz ouput, append .laz
         if self.gui_object.laz_option:
@@ -463,6 +471,7 @@ class Tpu:
                         "X": np.asarray(in_las.x),
                         "Y": np.asarray(in_las.y),
                         "Z": np.asarray(in_las.z),
+                        "Water Surface Height": np.asarray(in_las.water_surface_height),
                         "THU": np.asarray(in_las.total_thu),
                         "TVU": np.asarray(in_las.total_tvu),
                         "Classification": np.asarray(in_las.classification),
