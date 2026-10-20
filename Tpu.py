@@ -168,7 +168,8 @@ class Tpu:
                         "({}) calculating water surface height...".format(las.las_short_name)
                     )
 
-                    water_surface_height = SurfaceHeight(self.gui_object.water_bin_length, merged_data, raw_class)
+                    # Calculate the water surface height for each point in the merged data using the SurfaceHeight class
+                    water_surface_height = SurfaceHeight(self.gui_object.water_bin_length, merged_data, raw_class, self.gui_object.subaqueous_classes)
 
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
@@ -471,9 +472,9 @@ class Tpu:
                         "X": np.asarray(in_las.x),
                         "Y": np.asarray(in_las.y),
                         "Z": np.asarray(in_las.z),
-                        "Water Surface Height": np.asarray(in_las.water_surface_height),
-                        "THU": np.asarray(in_las.total_thu),
-                        "TVU": np.asarray(in_las.total_tvu),
+                        "Water Surface Height": np.round(np.asarray(in_las.water_surface_height), decimals=3),
+                        "THU": np.round(np.asarray(in_las.total_thu), decimals=3),
+                        "TVU": np.round(np.asarray(in_las.total_tvu), decimals=3),
                         "Classification": np.asarray(in_las.classification),
                     }
                 ).to_csv(out_csv_name, index=False)
