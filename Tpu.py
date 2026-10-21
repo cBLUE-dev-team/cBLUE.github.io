@@ -69,10 +69,10 @@ class Tpu:
 
     """
 
-    def __init__(self, gui_object, sensor_object):
+    def __init__(self, settings_object, sensor_object):
 
-        #Store the gui_object information
-        self.gui_object = gui_object
+        #Store the settings_object information
+        self.settings_object = settings_object
         #Store the sensor_obejct information          
         self.sensor_object = sensor_object
 
@@ -169,12 +169,12 @@ class Tpu:
                     )
 
                     # Calculate the water surface height for each point in the merged data using the SurfaceHeight class
-                    water_surface_height = SurfaceHeight(self.gui_object.water_bin_length, merged_data, raw_class, self.gui_object.subaqueous_classes)
+                    water_surface_height = SurfaceHeight(self.settings_object.water_bin_length, merged_data, raw_class, self.settings_object.subaqueous_classes)
 
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
                     )
-                    subaer_obj = Subaerial(jacobian, merged_data, stddev, self.gui_object.output_directory)
+                    subaer_obj = Subaerial(jacobian, merged_data, stddev, self.settings_object.output_directory)
 
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
 
@@ -193,7 +193,7 @@ class Tpu:
 
                     #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
-                        self.gui_object,
+                        self.settings_object,
                         depth,
                         self.sensor_object,
                         raw_class
@@ -213,13 +213,13 @@ class Tpu:
                         subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut()     
 
                     # VDatum file is in cm (1-sigma)
-                    vdatum_mcu = (float(self.gui_object.mcu) / 100.0)
+                    vdatum_mcu = (float(self.settings_object.mcu) / 100.0)
                     # Optional user input vertical uncertainty component
                     # vuc is in m 
-                    vuc = float(self.gui_object.vuc)
+                    vuc = float(self.settings_object.vuc)
                     # Optional user input horizontal uncertainty component
                     # huc is in m
-                    huc = float(self.gui_object.huc) 
+                    huc = float(self.settings_object.huc) 
 
                     logger.tpu(
                         "({}) calculating total thu...".format(las.las_short_name)
@@ -256,7 +256,7 @@ class Tpu:
                     # })
 
                     # # get csv path for printing uncertainty components
-                    # comp_csv_name = os.path.join(self.gui_object.output_directory, f"uncertainty_components_{las.las_short_name}_fl{fl}.csv")
+                    # comp_csv_name = os.path.join(self.settings_object.output_directory, f"uncertainty_components_{las.las_short_name}_fl{fl}.csv")
                     # logger.tpu(f"Saving uncertainty components CSV as {comp_csv_name}")
                     # try:
                     #     uncertainty_components.to_csv(comp_csv_name, index=False)
@@ -264,7 +264,7 @@ class Tpu:
                     #     raise ValueError("CSV writing failed for uncertainty components")
 
                     # convert to 95% conf, if requested
-                    if self.gui_object.error_type == "95% confidence":
+                    if self.settings_object.error_type == "95% confidence":
                         logging.tpu("TPU reported at 95% confidence...")
                         total_thu *= 1.7308
                         total_tvu *= 1.96
@@ -340,8 +340,8 @@ class Tpu:
 
         # Get input file name and append _TPU and file extension.
         # If the user has selected .laz ouput, append .laz
-        if self.gui_object.laz_option:
-            out_laz_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.laz"
+        if self.settings_object.laz_option:
+            out_laz_name = os.path.join(self.settings_object.output_directory, las.las_base_name) + "_TPU.laz"
             
             # if TPU file already exists, notify the user that it will be overwritten
             if os.path.exists(out_laz_name):
@@ -357,8 +357,8 @@ class Tpu:
                 )
 
         # If the user has selected .las ouput, append .las
-        if self.gui_object.las_option:
-            out_las_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.las"
+        if self.settings_object.las_option:
+            out_las_name = os.path.join(self.settings_object.output_directory, las.las_base_name) + "_TPU.las"
 
             # if TPU file already exists, notify the user that it will be overwritten
             if os.path.exists(out_las_name):
@@ -444,10 +444,10 @@ class Tpu:
             in_las.water_surface_height = np.full(las.num_file_points, no_data_value)
 
         # If the user has selected .laz ouput, append .laz
-        if self.gui_object.laz_option:
+        if self.settings_object.laz_option:
             in_las.write(out_laz_name)
         # If the user has selected .las ouput, append .las
-        if self.gui_object.las_option:
+        if self.settings_object.las_option:
             in_las.write(out_las_name)
 
         # print("Wrote in_las")
@@ -455,11 +455,11 @@ class Tpu:
         # for field in in_las.point_format:
         #     print({field.name})
 
-        if self.gui_object.csv_option:
+        if self.settings_object.csv_option:
             logger.tpu(f"Saving CSV as {las.las_base_name}_TPU.csv")
 
             # get name of csv from las file
-            out_csv_name = os.path.join(self.gui_object.output_directory, las.las_base_name) + "_TPU.csv"
+            out_csv_name = os.path.join(self.settings_object.output_directory, las.las_base_name) + "_TPU.csv"
 
             # print(f"out_csv_name{out_csv_name}")
             # print(f"out_las_name{out_las_name}")
@@ -497,26 +497,26 @@ class Tpu:
         logger.tpu("({}) creating TPU meta data file...".format(las.las_short_name))
         self.metadata.update(
             {
-                "Wind speed": self.gui_object.wind_selection,
-                "Turbidity": self.gui_object.kd_selection,
-                "VDatum region": self.gui_object.vdatum_region,
-                "VDatum region MCU": self.gui_object.mcu,
-                "Optional VUC": self.gui_object.vuc,
-                "Optional HUC": self.gui_object.huc,
+                "Wind speed": self.settings_object.wind_selection,
+                "Turbidity": self.settings_object.kd_selection,
+                "VDatum region": self.settings_object.vdatum_region,
+                "VDatum region MCU": self.settings_object.mcu,
+                "Optional VUC": self.settings_object.vuc,
+                "Optional HUC": self.settings_object.huc,
                 "Flight line stats (min max mean stddev)": self.flight_line_stats,
                 "Sensor model": self.sensor_object.name,
-                "cBLUE version": self.gui_object.cblue_version,
-                "Subaqueous processing version": self.gui_object.subaqueous_version,
-                "CPU processing": self.gui_object.cpu_process_info,
-                "Water surface bin length": self.gui_object.water_bin_length,
-                "Error type": self.gui_object.error_type
+                "cBLUE version": self.settings_object.cblue_version,
+                "Subaqueous processing version": self.settings_object.subaqueous_version,
+                "CPU processing": self.settings_object.cpu_process_info,
+                "Water surface bin length": self.settings_object.water_bin_length,
+                "Error type": self.settings_object.error_type
             }
         )
 
         try:
             # self.metadata['flight line stats'].update(self.flight_line_stats)  # flight line metadata
             with open(
-                os.path.join(self.gui_object.output_directory, "{}.json".format(las.las_base_name)), "w", encoding="utf-8"
+                os.path.join(self.settings_object.output_directory, "{}.json".format(las.las_base_name)), "w", encoding="utf-8"
             ) as outfile:
 
                 json.dump(self.metadata, outfile, indent=1, ensure_ascii=False)
@@ -543,7 +543,7 @@ class Tpu:
         print("Calculating TPU (multi-processing)...")
 
         #Vary workers based on the number of CPU cores available, up to a maximum of 4
-        max_cores = self.gui_object.cpu_process_info[1]
+        max_cores = self.settings_object.cpu_process_info[1]
         workers = min(max_cores, os.cpu_count() or 1)
         p = pp.ProcessPool(workers)
 
