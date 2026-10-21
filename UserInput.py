@@ -56,7 +56,12 @@ class UserInput:
         #Get the current cblue version and subaqueous version from the cblue_configuration.json
         self.cblue_version = controller_configuration["cBLUE_version"]
         self.subaqueous_version = controller_configuration["subaqueous_version"]
+
+        #Get the subaqueous and sea surface classes from the cblue_configuration.json. 
+        # These are lists of integers.
         self.subaqueous_classes = list(map(int,controller_configuration["subaqueous_classes"]))
+        self.sea_surface_classes = list(map(int,controller_configuration["sea_surface_classes"]))
+
 
         #Get what multiprocess is set to from the cblue_configuration.json
         #Should be "True" or "False" held in a string
