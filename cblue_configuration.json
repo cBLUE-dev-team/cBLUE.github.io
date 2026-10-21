@@ -12,6 +12,10 @@
         "40",
         "43"
     ],
+    "sea_surface_classes": [
+        "41",
+        "42"
+    ],
     "sensor_model": "",
     "water_bin_length": 10.0,
     "error_type": "95% confidence"
