@@ -2,21 +2,33 @@ name: cblue
 
 channels:
   - conda-forge
-  - defaults
 
 dependencies:
   - python=3.11
   - pip
+
+  # Scientific/data stack
+  - numpy
+  - pandas
+  - numexpr
+  - matplotlib
+  - sympy
   - mpmath
+  - openpyxl
+
+  # LAS/LAZ
+  - laspy
+  - lazrs-python
+
+  # Utilities
   - python-dateutil
   - pytz
   - setuptools
   - six
-  - sympy
   - wheel
-  - matplotlib
-  - laspy
+  - tqdm
 
+  # Packages installed through PyPI
   - pip:
       - dill
       - multiprocess
@@ -25,10 +37,5 @@ dependencies:
       - ppft
       - progressbar2
       - python-utils
-      - tqdm
-      - numexpr
-      - pandas
-      - numpy
       - pre-commit
       - black
-      - openpyxl
