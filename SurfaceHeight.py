@@ -4,10 +4,11 @@ class SurfaceHeight:
 
     NO_DATA_VALUE = -9999.0
 
-    def __init__(self, water_bin_length, merged_data, classification, subaqueous_classes):
-        self.bin_size = water_bin_length
+    def __init__(self, settings_object, merged_data, classification):
+        self.bin_size = settings_object.water_bin_length
         self.classification = classification
-        self.subaqueous_classes = subaqueous_classes
+        self.subaqueous_classes = settings_object.subaqueous_classes
+        self.sea_surface_classes = settings_object.sea_surface_classes
 
         if self.bin_size <= 0:
             raise ValueError("Water bin length must be greater than zero.")
@@ -62,7 +63,8 @@ class SurfaceHeight:
     def get_height(self, x_points, y_points, z_points):
         """
         Calculate the average water-surface height for each bin. 
-        Valid water-surface points are classified as either 41 or 42.
+        Valid water-surface points are classified as either 41 or 42 listed in the cblue_configuration.json.
+        Users can also define additional water-surface classes in the cblue_configuration.json file.
 
         Classification 41:
             Sea-surface point
@@ -98,8 +100,9 @@ class SurfaceHeight:
 
         #Calculate the average surface height for each bin
         for x, y, z, class_point in zip(x_points, y_points, z_points, self.classification):
-            # Check if the point is class 41 (sea surface) or 42 (synthetic water surface)
-            if class_point in (41, 42):
+            # Check if the point is class 41 (sea surface) or 42 (synthetic water surface), 
+            # or another user defined water-surface class. If so, include it in the average height calculation for the bin.
+            if class_point in self.sea_surface_classes:
                 # Calculate the bin indices for the point
                 bin_x, bin_y = self.get_bin_indices(x, y)
 
