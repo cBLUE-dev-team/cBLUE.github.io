@@ -169,7 +169,7 @@ class Tpu:
                     )
 
                     # Calculate the water surface height for each point in the merged data using the SurfaceHeight class
-                    water_surface_height = SurfaceHeight(self.settings_object.water_bin_length, merged_data, raw_class, self.settings_object.subaqueous_classes)
+                    water_surface_height = SurfaceHeight(self.settings_object, merged_data, raw_class)
 
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
