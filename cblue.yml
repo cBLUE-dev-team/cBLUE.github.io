@@ -14,11 +14,11 @@ dependencies:
   - six
   - sympy
   - wheel
-  - matplotlib  # NEW: required for plot_water_surface.py
+  - matplotlib
+  - laspy
 
   - pip:
       - dill
-      - laspy[lazrs,laszip]
       - multiprocess
       - pathos
       - pox
