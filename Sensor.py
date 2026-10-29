@@ -86,7 +86,7 @@ class Sensor:
             self.horz_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal_shallow"]
             # The path of the range bias shallow uncertainty look up table used for modeling
             self.range_bias_lut_shallow = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias_shallow"]
-        if self.type == "single_cm":
+        elif self.type == "single_cm":
             #The path of the vertical deep look up table used for modeling
             self.vert_lut_deep = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical_deep"]
             #The path of the horizontal deep look up table used for modeling
