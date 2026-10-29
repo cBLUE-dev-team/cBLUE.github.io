@@ -101,10 +101,20 @@ class Las:
 
         if "classification" in self.points_to_process.array.dtype.names:
             c = self.points_to_process["classification"]
-        elif "classification_flags" in self.points_to_process.array.dtype.names:
-            c = self.points_to_process["classification_flags"]
         else:
             raise Exception("Unknown las version or missing classification attribute.")
+
+        #If there are classification flags, use them to filter out points that are witheld. 
+        # (classification_flags = 2 means the point is withheld)
+        if "classification_flags" in self.points_to_process.array.dtype.names:
+            class_flags = self.points_to_process["classification_flags"]
+
+            # Bit 2 (value 4) = Withheld
+            # bitwise AND the classification flags with 4 to get a boolean mask of withheld points.
+            withheld_mask = (class_flags & 4) != 0
+
+            # Set withheld points to -9999 so they can be filtered out later
+            c[withheld_mask] = -9999
 
         self.t_argsort = t.argsort()
 
