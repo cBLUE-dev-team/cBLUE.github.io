@@ -16,6 +16,9 @@
         "41",
         "42"
     ],
+    "ground_classes": [
+        "2"
+    ],
     "sensor_model": "",
     "water_bin_length": 10.0,
     "error_type": "95% confidence"
