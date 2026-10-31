@@ -59,51 +59,37 @@
             "type": "single"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Leica/Chrioptera_4X/TVU_LUT_Chiroptera_4X_400_AGL_4.75_mrad.csv",
-            "horizontal": "./lookup_tables/Leica/Chrioptera_4X/THU_LUT_Chiroptera_4X_400_AGL_4.75_mrad.csv",
-            "range_bias": "./lookup_tables/Leica/Chrioptera_4X/RBU_LUT_Chiroptera_4X_400_AGL_4.75_mrad.csv"
+            "vertical": "./lookup_tables/Leica/Chiroptera_4X/TVU_LUT_Chiroptera_4X_400_AGL_4.75_mrad.csv",
+            "horizontal": "./lookup_tables/Leica/Chiroptera_4X/THU_LUT_Chiroptera_4X_400_AGL_4.75_mrad.csv",
+            "range_bias": "./lookup_tables/Leica/Chiroptera_4X/RBU_LUT_Chiroptera_4X_400_AGL_4.75_mrad.csv"
         }
     },
-    "Chiroptera-5 400m": {
+    "Chiroptera-5": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020,
-            "type": "single"
+            "type": "chiroptera_5"
         },
         "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Leica/Chrioptera_5_400m/TVU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
-            "horizontal": "./lookup_tables/Leica/Chrioptera_5_400m/THU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
-            "range_bias": "./lookup_tables/Leica/Chrioptera_5_400m/RBU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv"
+            "400m": {
+                "vertical": "./lookup_tables/Leica/Chiroptera_5_400m/TVU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
+                "horizontal": "./lookup_tables/Leica/Chiroptera_5_400m/THU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
+                "range_bias": "./lookup_tables/Leica/Chiroptera_5_400m/RBU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv"
+            },
+            "500m": {
+                "vertical": "./lookup_tables/Leica/Chiroptera_5_500m/TVU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
+                "horizontal": "./lookup_tables/Leica/Chiroptera_5_500m/THU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
+                "range_bias": "./lookup_tables/Leica/Chiroptera_5_500m/RBU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv"
+            },
+            "600m": {
+                "vertical": "./lookup_tables/Leica/Chiroptera_5_600m/TVU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
+                "horizontal": "./lookup_tables/Leica/Chiroptera_5_600m/THU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
+                "range_bias": "./lookup_tables/Leica/Chiroptera_5_600m/RBU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv"
+            }
         }
     },
-    "Chiroptera-5 500m": {
-        "sensor_model": {
-            "a_std_dev": 0.025,
-            "b_std_dev": 0.025,
-            "std_rho": 0.020,
-            "type": "single"
-        },
-        "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Leica/Chiroptera_5_500m/TVU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
-            "horizontal": "./lookup_tables/Leica/Chiroptera_5_500m/THU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
-            "range_bias": "./lookup_tables/Leica/Chiroptera_5_500m/RBU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv"
-        }
-    },
-    "Chiroptera-5 600m": {
-        "sensor_model": {
-            "a_std_dev": 0.025,
-            "b_std_dev": 0.025,
-            "std_rho": 0.020,
-            "type": "single"
-        },
-        "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Leica/Chiroptera_5_600m/TVU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
-            "horizontal": "./lookup_tables/Leica/Chiroptera_5_600m/THU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
-            "range_bias": "./lookup_tables/Leica/Chiroptera_5_600m/RBU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv"
-        }
-    },    
-    "HawkEye 4X or 5 400m AGL": {
+    "HawkEye 4X or 5": {
         "sensor_model": {
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
@@ -111,53 +97,39 @@
             "type": "single_hawkeye"
         },
         "subaqueous_LUTs": {
-            "vertical_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Narrow/TVU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_400_AGL_7.5_mrad.csv",
-            "horizontal_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Narrow/THU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_400_AGL_7.5_mrad.csv",
-            "range_bias_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Narrow/RBU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_400_AGL_7.5_mrad.csv",
-            "vertical_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Wide/TVU_LUT_HawkEye_4X_or_5_Deep_WideFOV_400_AGL_7.5_mrad.csv",
-            "horizontal_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Wide/THU_LUT_HawkEye_4X_or_5_Deep_WideFOV_400_AGL_7.5_mrad.csv",
-            "range_bias_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Wide/RBU_LUT_HawkEye_4X_or_5_Deep_WideFOV_400_AGL_7.5_mrad.csv",
-            "vertical_shallow": "./lookup_tables/Leica/Chrioptera_5_400m/TVU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
-            "horizontal_shallow": "./lookup_tables/Leica/Chrioptera_5_400m/THU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
-            "range_bias_shallow": "./lookup_tables/Leica/Chrioptera_5_400m/RBU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv"
-        }
-    },
-    "HawkEye 4X or 5 500m AGL": {
-        "sensor_model": {
-            "a_std_dev": 0.025,
-            "b_std_dev": 0.025,
-            "std_rho": 0.020,
-            "type": "single_hawkeye"
-        },
-        "subaqueous_LUTs": {
-            "vertical_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Narrow/TVU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_500_AGL_7.5_mrad.csv",
-            "horizontal_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Narrow/THU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_500_AGL_7.5_mrad.csv",
-            "range_bias_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Narrow/RBU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_500_AGL_7.5_mrad.csv",
-            "vertical_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Wide/TVU_LUT_HawkEye_4X_or_5_Deep_WideFOV_500_AGL_7.5_mrad.csv",
-            "horizontal_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Wide/THU_LUT_HawkEye_4X_or_5_Deep_WideFOV_500_AGL_7.5_mrad.csv",
-            "range_bias_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Wide/RBU_LUT_HawkEye_4X_or_5_Deep_WideFOV_500_AGL_7.5_mrad.csv",
-            "vertical_shallow": "./lookup_tables/Leica/Chiroptera_5_500m/TVU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
-            "horizontal_shallow": "./lookup_tables/Leica/Chiroptera_5_500m/THU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
-            "range_bias_shallow": "./lookup_tables/Leica/Chiroptera_5_500m/RBU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv"
-        }
-    },
-    "HawkEye 4X or 5 600m AGL": {
-        "sensor_model": {
-            "a_std_dev": 0.025,
-            "b_std_dev": 0.025,
-            "std_rho": 0.020,
-            "type": "single_hawkeye"
-        },
-        "subaqueous_LUTs": {
-            "vertical_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Narrow/TVU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_600_AGL_7.5_mrad.csv",
-            "horizontal_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Narrow/THU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_600_AGL_7.5_mrad.csv",
-            "range_bias_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Narrow/RBU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_600_AGL_7.5_mrad.csv",
-            "vertical_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Wide/TVU_LUT_HawkEye_4X_or_5_Deep_WideFOV_600_AGL_7.5_mrad.csv",
-            "horizontal_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Wide/THU_LUT_HawkEye_4X_or_5_Deep_WideFOV_600_AGL_7.5_mrad.csv",
-            "range_bias_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Wide/RBU_LUT_HawkEye_4X_or_5_Deep_WideFOV_600_AGL_7.5_mrad.csv",
-            "vertical_shallow": "./lookup_tables/Leica/Chiroptera_5_600m/TVU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
-            "horizontal_shallow": "./lookup_tables/Leica/Chiroptera_5_600m/THU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
-            "range_bias_shallow": "./lookup_tables/Leica/Chiroptera_5_600m/RBU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv"
+            "400m": {
+                "vertical_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Narrow/TVU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_400_AGL_7.5_mrad.csv",
+                "horizontal_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Narrow/THU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_400_AGL_7.5_mrad.csv",
+                "range_bias_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Narrow/RBU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_400_AGL_7.5_mrad.csv",
+                "vertical_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Wide/TVU_LUT_HawkEye_4X_or_5_Deep_WideFOV_400_AGL_7.5_mrad.csv",
+                "horizontal_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Wide/THU_LUT_HawkEye_4X_or_5_Deep_WideFOV_400_AGL_7.5_mrad.csv",
+                "range_bias_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_400m/Deep_Wide/RBU_LUT_HawkEye_4X_or_5_Deep_WideFOV_400_AGL_7.5_mrad.csv",
+                "vertical_shallow": "./lookup_tables/Leica/Chiroptera_5_400m/TVU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
+                "horizontal_shallow": "./lookup_tables/Leica/Chiroptera_5_400m/THU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv",
+                "range_bias_shallow": "./lookup_tables/Leica/Chiroptera_5_400m/RBU_LUT_Chiroptera_5_400_AGL_4.75_mrad.csv"
+            },
+            "500m": {
+                "vertical_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Narrow/TVU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_500_AGL_7.5_mrad.csv",
+                "horizontal_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Narrow/THU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_500_AGL_7.5_mrad.csv",
+                "range_bias_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Narrow/RBU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_500_AGL_7.5_mrad.csv",
+                "vertical_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Wide/TVU_LUT_HawkEye_4X_or_5_Deep_WideFOV_500_AGL_7.5_mrad.csv",
+                "horizontal_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Wide/THU_LUT_HawkEye_4X_or_5_Deep_WideFOV_500_AGL_7.5_mrad.csv",
+                "range_bias_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_500m/Deep_Wide/RBU_LUT_HawkEye_4X_or_5_Deep_WideFOV_500_AGL_7.5_mrad.csv",
+                "vertical_shallow": "./lookup_tables/Leica/Chiroptera_5_500m/TVU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
+                "horizontal_shallow": "./lookup_tables/Leica/Chiroptera_5_500m/THU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv",
+                "range_bias_shallow": "./lookup_tables/Leica/Chiroptera_5_500m/RBU_LUT_Chiroptera_5_500_AGL_4.75_mrad.csv"
+            },
+            "600m": {
+                "vertical_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Narrow/TVU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_600_AGL_7.5_mrad.csv",
+                "horizontal_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Narrow/THU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_600_AGL_7.5_mrad.csv",
+                "range_bias_deep_narrow": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Narrow/RBU_LUT_HawkEye_4X_or_5_Deep_NarrowFOV_600_AGL_7.5_mrad.csv",
+                "vertical_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Wide/TVU_LUT_HawkEye_4X_or_5_Deep_WideFOV_600_AGL_7.5_mrad.csv",
+                "horizontal_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Wide/THU_LUT_HawkEye_4X_or_5_Deep_WideFOV_600_AGL_7.5_mrad.csv",
+                "range_bias_deep_wide": "./lookup_tables/Leica/HawkEye_4X_or_5_600m/Deep_Wide/RBU_LUT_HawkEye_4X_or_5_Deep_WideFOV_600_AGL_7.5_mrad.csv",
+                "vertical_shallow": "./lookup_tables/Leica/Chiroptera_5_600m/TVU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
+                "horizontal_shallow": "./lookup_tables/Leica/Chiroptera_5_600m/THU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv",
+                "range_bias_shallow": "./lookup_tables/Leica/Chiroptera_5_600m/RBU_LUT_Chiroptera_5_600_AGL_4.75_mrad.csv"
+            }
         }
     },
     "PILLS or RAMMS": {
@@ -230,7 +202,7 @@
         }
     
     },
-    "CoastalMapper AGL 400m": {
+    "CoastalMapper": {
         "sensor_model": {
             "a_std_dev": 0.003,
             "b_std_dev": 0.003,
@@ -238,30 +210,22 @@
             "type": "single_cm"
         },
         "subaqueous_LUTs": {
-            "vertical_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "horizontal_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "range_bias_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "vertical_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "horizontal_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "range_bias_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv"
+            "400m": {
+                "vertical_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+                "horizontal_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+                "range_bias_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+                "vertical_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+                "horizontal_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
+                "range_bias_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv"
+            },
+            "875m": {
+                "vertical_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_875_AGL_7_mrad.csv",
+                "horizontal_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_875_AGL_7_mrad.csv",
+                "range_bias_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_875_AGL_7_mrad.csv",
+                "vertical_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_875_AGL_7_mrad.csv",
+                "horizontal_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_875_AGL_7_mrad.csv",
+                "range_bias_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_875_AGL_7_mrad.csv"
+            }
         }
-    
-    },
-    "CoastalMapper AGL 875m": {
-        "sensor_model": {
-            "a_std_dev": 0.003,
-            "b_std_dev": 0.003,
-            "std_rho": 0.01,
-            "type": "single_cm"
-        },
-        "subaqueous_LUTs": {
-            "vertical_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "horizontal_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "range_bias_shallow": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "vertical_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/TVU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "horizontal_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/THU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv",
-            "range_bias_deep": "./lookup_tables/Teledyne/CoastalMapper/AGL/RBU_LUT_CZMIL_or_CZMIL_CoastalMapper_AGL_400_AGL_7_mrad.csv"
-        }
-    
     }
-}
+}   
