@@ -127,7 +127,7 @@ class Las:
             # logger.las(f"{sensor_type} Fan Angle: {fan_angle}")
         # Check if this is a HawkEye sensor, if it is the subaquous processing will require 
         # the scanner channel and user data.
-        elif(sensor_type == "single_hawkeye"):
+        elif(sensor_type == "single_hawkeye" or sensor_type == "single_cm"):
             scanner_channel = self.inFile.scanner_channel
             user_data = self.inFile.user_data
             # Add x, y, z, gps time, classification, scanner channel, and user data to an array together
