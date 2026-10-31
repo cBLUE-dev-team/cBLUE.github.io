@@ -169,7 +169,7 @@ class Tpu:
                     )
 
                     # Calculate the water surface height for each point in the merged data using the SurfaceHeight class
-                    water_surface_height = SurfaceHeight(self.settings_object, merged_data, raw_class)
+                    height_obj = SurfaceHeight(self.settings_object, merged_data, raw_class)
 
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
@@ -185,10 +185,21 @@ class Tpu:
                         )
                     )
 
-                    depth, water_surface_height = water_surface_height.calculate_depth(merged_data[2], merged_data[3], merged_data[4]) #x, y, z data 
-
+                    depth, water_surface_height = height_obj.calculate_depth(merged_data[2], merged_data[3], merged_data[4]) #x, y, z las data
+                    
                     # print(f"\nMax depth: {max(depth)}")
                     # print(f"Min depth: {min(depth)}")
+
+                    try:
+                        flying_height = height_obj.calculate_flying_height(merged_data[4], merged_data[7]) #z_las, z_sbet data
+                        
+                    except ValueError as e:
+                        logger.error(str(e))
+                        return  # Exit the function if flying height cannot be calculated
+
+                    # Set the LUTs for the sensor based on the calculated flying height
+                    self.sensor_object.set_luts(flying_height)
+
 
 
                     #Initalize the subaqueous object
