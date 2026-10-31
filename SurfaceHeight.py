@@ -1,4 +1,7 @@
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SurfaceHeight:
 
@@ -9,6 +12,7 @@ class SurfaceHeight:
         self.classification = classification
         self.subaqueous_classes = settings_object.subaqueous_classes
         self.sea_surface_classes = settings_object.sea_surface_classes
+        self.ground_classes = settings_object.ground_classes
 
         if self.bin_size <= 0:
             raise ValueError("Water bin length must be greater than zero.")
@@ -29,6 +33,7 @@ class SurfaceHeight:
             merged_data[3], # y (northing) points
             merged_data[4] # z (height)points
         )
+        
 
     def get_bin_indices(self, x, y):
         """
@@ -203,3 +208,66 @@ class SurfaceHeight:
 
                 
         return depth_data, surface_height_data
+
+    def get_flying_height(self, z_las, z_sbet):
+        """
+        Calculate the flying height for the center of the dataset based on the SBET data. 
+        Returns NO_DATA_VALUE if no valid ground or water-surface point is found in the SBET data.
+
+        Input:
+        z_las = A 1D array of z values from the LAS data.
+        z_sbet = A 1D array of z values from the SBET data.
+
+        Returns:
+        flying_height = The flying height in meters for the center of the dataset based on the z values in the SBET data. 
+                        Returns NO_DATA_VALUE if no valid ground or water-surface point is found in the SBET data.
+        """
+
+        las_z_point = self.NO_DATA_VALUE  # Initialize las_z_point with default error value
+        sbet_z_point = self.NO_DATA_VALUE  # Initialize sbet_z_point with default error value
+        valid_classes = set(self.sea_surface_classes + self.ground_classes)
+
+        # Get the midpoint of the flight to start the search for a valid water-surface height.
+        # // is flooring division, which returns the largest integer less than or equal to the division result.
+        len_z_las = len(z_las)
+        mid_index = len_z_las // 2
+        search_forward = mid_index  # Start searching from the midpoint
+        search_backward = mid_index-1  # Start searching from the midpoint
+        reached_end = False  # Flag to indicate if the end of the SBET data has been reached
+
+
+        while not reached_end:
+
+            if self.classification[search_forward] in valid_classes:
+                # If the point is classified as a valid water-surface point, or ground point, get the surface height for that point.
+
+                # Extract the z (height) values from the SBET data
+                sbet_z_point = z_sbet[search_forward]
+                las_z_point = z_las[search_forward]
+                break  # Exit the loop if a valid surface height is found
+            #Check the point before the midpoint for a valid water-surface height,
+            elif self.classification[search_backward] in valid_classes:
+                # If the point is classified as a valid water-surface point, or ground point, get the surface height for that point.
+
+                # Extract the z (height) values from the SBET data
+                sbet_z_point = z_sbet[search_backward]
+                las_z_point = z_las[search_backward]
+                break  # Exit the loop if a valid surface height is found
+            else:
+                # Check if the search has reached the end of the SBET data
+                if search_forward >= len_z_las - 1 or search_backward <= 0:
+                    reached_end = True
+
+                search_forward += 1  # Move to the next point in the SBET data
+                search_backward -= 1  # Move to the previous point in the SBET data
+
+
+        if sbet_z_point == self.NO_DATA_VALUE or las_z_point == self.NO_DATA_VALUE:
+            #There was no valid ground or water-surface point found in the SBET data, so the flying height cannot be calculated.
+            raise ValueError(
+            "No valid ground or water-surface point found in the SBET data. "
+            "Flying height cannot be calculated."
+            )
+
+        # Calculate the flying height for the center of the dataset
+        return sbet_z_point - las_z_point
