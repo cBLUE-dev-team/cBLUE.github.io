@@ -45,30 +45,34 @@ class Subaqueous:
     """Processing of the SubAqueous portion of LIDAR TopoBathymetric TPU.
     To be used in conjunction with the associated
     """
+    NO_DATA_VALUE = -9999.0
 
     def __init__(self, gui_object, depth, sensor_object, classification):
 
         self.gui_object = gui_object
         self.depth = depth
+
+        self.valid_depth_mask = self.depth != self.NO_DATA_VALUE
+        self.valid_depth = self.depth[self.valid_depth_mask]
         self.sensor_object = sensor_object
         self.classification = classification
 
         #A set of valid subaqeuous classification values:
         self.subaqueous_class_values  = gui_object.subaqueous_classes
-        # print(type(self.subaqueous_class_values))
-        # print(self.subaqueous_class_values)
-        # self.subaqueous_class_values  = {40, 43, 46, 64}
+        self.subaqueous_mask = np.isin(self.classification, self.gui_object.subaqueous_classes)
 
-        logger.subaqueous(f"kd_par {self.gui_object.kd_ind}")
-        logger.subaqueous(f"wind_par {self.gui_object.wind_ind}")
-        if(self.sensor_object.type == "single_hawkeye"):
-            logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut_deep_narrow}, {self.sensor_object.vert_lut_deep_wide}, {self.sensor_object.vert_lut_shallow}")
-            logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut_deep_narrow}, {self.sensor_object.horz_lut_deep_wide}, {self.sensor_object.horz_lut_shallow}")
-            logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut_narrow}, {self.sensor_object.range_bias_lut_wide}, {self.sensor_object.range_bias_lut_shallow}")
-        else:
-            logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
-            logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
-            logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut}")
+        self.valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
+
+        # logger.subaqueous(f"kd_par {self.gui_object.kd_ind}")
+        # logger.subaqueous(f"wind_par {self.gui_object.wind_ind}")
+        # if(self.sensor_object.type == "single_hawkeye"):
+        #     logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut_deep_narrow}, {self.sensor_object.vert_lut_deep_wide}, {self.sensor_object.vert_lut_shallow}")
+        #     logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut_deep_narrow}, {self.sensor_object.horz_lut_deep_wide}, {self.sensor_object.horz_lut_shallow}")
+        #     logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut_narrow}, {self.sensor_object.range_bias_lut_wide}, {self.sensor_object.range_bias_lut_shallow}")
+        # else:
+        #     logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
+        #     logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
+        #     logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut}")
 
     def fit_lut(self):
         """Called to begin the SubAqueous processing."""
@@ -88,7 +92,11 @@ class Subaqueous:
         # print(f"a_rb: {a_rb}, b_rb: {b_rb}, c_rb: {c_rb}, d_rb: {d_rb}")
         # print(self.depth)
 
-        res_range_bias = a_rb * np.power(self.depth, 3) + b_rb * np.square(self.depth) + c_rb * self.depth + d_rb
+        res_range_bias = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+
+        res_range_bias[self.valid_depth_mask] = a_rb * np.power(self.valid_depth, 3) + b_rb * np.square(self.valid_depth) + c_rb * self.valid_depth + d_rb
 
         # print(f"\nres_range_bias: {res_range_bias}")
 
@@ -97,10 +105,10 @@ class Subaqueous:
         a_z = fit_tvu["a"]
         b_z = fit_tvu["b"]
         # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-        res_tvu =  np.sqrt(np.square(a_z) + np.square(b_z * self.depth))
+        res_tvu[self.valid_depth_mask] =  np.sqrt(np.square(a_z) + np.square(b_z * self.valid_depth))
 
         # enforce minimum value for tvu
-        res_tvu[res_tvu < min_tvu] = min_tvu
+        res_tvu[self.valid_depth_mask & (res_tvu < min_tvu)] = min_tvu
 
         # a_h := horizontal coefficient
         # b_h := horizontal offset
@@ -108,18 +116,12 @@ class Subaqueous:
         b_h = fit_thu["b"]
         # THU is a Linear fit: a + b*x 
         # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-        res_thu = (a_h + b_h * self.depth)* 0.577
+        res_thu[self.valid_depth_mask] = (a_h + b_h * self.valid_depth)* 0.577
 
-        # Check classification values.
-        for i, classification in enumerate(self.classification):
-            # If the point is not subaqueous, set range bias and subaqueous THU and TVU values to 0.
-            if classification not in self.gui_object.subaqueous_classes:
-                res_thu[i] = 0
-                res_tvu[i] = 0
-                res_range_bias[i] = 0
-            # else:
-            #     print(f"subaqueous tvu[{i}]: {res_tvu[i]}")
-
+        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
+        res_thu[~self.subaqueous_mask] = 0
+        res_tvu[~self.subaqueous_mask] = 0
+        res_range_bias[~self.subaqueous_mask] = 0
 
         return res_tvu, res_thu, res_range_bias
 
@@ -201,50 +203,41 @@ class Subaqueous:
         # logger.subaqueous(f"Vertical coefficents: {a_z}")
         # logger.subaqueous(f"Vertical offsets: {b_z}")
 
-        res_thu = []
-        res_tvu = []
+        res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
 
-        #Loop through the depth and the masked fan angle
-        for depth_point, fan_angle_point, class_point in zip(self.depth, masked_fan_angle, self.classification):
-            
-            # Check classification values.
-            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
-            if class_point not in self.gui_object.subaqueous_classes:
-                # print(f'Not Subaqueous Class: {self.classification[i]}')
-                res_tvu.append(0)
-                res_thu.append(0)
+        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
+        res_thu[~self.subaqueous_mask] = 0
+        res_tvu[~self.subaqueous_mask] = 0
 
-            # If the point is subaqueous, calculate THU and TVU values. 
-            else:
-     
-                # print(f'Subaqueous Class: {self.classification[i]}')
-                # Use the fan angle at this point an an index to get the
-                #  horizontal coefficent and offset for this depth point
-                a_h_point = a_h[fan_angle_point]
-                b_h_point = b_h[fan_angle_point]
+        #Loop through valid subaqueous points:
+        for i in self.valid_index:
+            depth_point = self.depth[i]
+            fan_angle_point = masked_fan_angle[i]
 
-                # Product of coeffs w/ depths + offsets
-                thu_point = a_h_point * depth_point + b_h_point
+            # Use the fan angle at this point an an index to get the
+            #  horizontal coefficent and offset for this depth point
+            a_h_point = a_h[fan_angle_point]
+            b_h_point = b_h[fan_angle_point]
 
-                #Add the subaqueous thu at this point to the list of result thu values
-                res_thu.append(thu_point)
+            # Product of coeffs w/ depths + offsets
+            #Add the subaqueous thu at this point to the list of result thu values
+            res_thu[i] = a_h_point * depth_point + b_h_point
 
-                #Use the fan angle at this point an an index to get the
-                #  vertical coefficent and offset for this depth point
-                a_z_point = a_z[fan_angle_point]
-                b_z_point = b_z[fan_angle_point]
+            #Use the fan angle at this point an an index to get the
+            #  vertical coefficent and offset for this depth point
+            a_z_point = a_z[fan_angle_point]
+            b_z_point = b_z[fan_angle_point]
 
-                # Product of coeffs w/ depths + offsets
-                tvu_point = a_z_point * depth_point + b_z_point
+            # Product of coeffs w/ depths + offsets
+            #Add the subaqueous tvu at this point to the list of result tvu values
+            res_tvu[i] = a_z_point * depth_point + b_z_point
 
-                # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
+            # enforce minimum value for tvu
+            if(res_tvu[i] < min_tvu):
+                res_tvu[i] = min_tvu
 
-                #Add the subaqueous tvu at this point to the list of result thu values
-                res_tvu.append(tvu_point)
-
-        return np.asarray(res_tvu), np.asarray(res_thu)
+        return res_tvu, res_thu
     
     def multi_beam_model_process(self):
         """Retrieves the page of TVU and THU observation equation coefficients for all fan angles for the given combination
@@ -322,7 +315,7 @@ class Subaqueous:
         a_z_shallow = tvu_shallow["a"]
         b_z_shallow = tvu_shallow["b"]
 
-        # THU is a Linear fit: b + a*x 
+        # THU is a Linear fit: a + b*x 
         # a_h := horizontal coefficient
         # b_h := horizontal offset
         a_h_narrow = thu_deep_narrow["a"]
@@ -350,103 +343,101 @@ class Subaqueous:
         c_rb_shallow = range_bias_shallow["c"]
         d_rb_shallow = range_bias_shallow["d"]
 
-        res_thu = []
-        res_tvu = []
-        res_range_bias = []
-        
+        res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_range_bias = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+
+        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
+        res_thu[~self.subaqueous_mask] = 0
+        res_tvu[~self.subaqueous_mask] = 0
+        res_range_bias[~self.subaqueous_mask] = 0
+
         # print(f"length of masked_scan_user_data (scanner channel): {len(masked_scan_user_data[0])}"
         #       f"\nlength of depth: {len(self.depth)}"
         #       f"\nlength of classification: {len(self.classification)}") 
 
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, scanner channel, and user data
-        for depth_point, scanner_channel, user_data, class_point in zip(self.depth, masked_scan_user_data[0], masked_scan_user_data[1], self.classification):
-            # print(f"depth_point: {depth_point}, scanner: {scanner_channel}, user: {user_data}, class_point: {class_point}")
+        for i in self.valid_index:
+            depth_point = self.depth[i]
+            scanner_channel = masked_scan_user_data[0][i]
+            user_data = masked_scan_user_data[1][i]
+            # print(f"depth_point: {depth_point}, scanner: {scanner_channel}, user: {user_data}")
 
+            # Topographic scanner, only one channel exists
+            # Scanner Channel: 1, User data: 0
+
+            # Shallow scanner, only one channel exists 
+            # Scanner channel: 2, User data: 0
+
+            # Deep scanner, narrow channel
+            # Scanner channel: 3, User data: 0
+
+            # Deep scanner, combined channel (wide)
+            # Scanner channel: 3, User data: 1
+
+            # scanner_channel = masked scanner_channel, 
+            # user_data = masked user_data
             
-            # Check classification values.
-            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
-            if class_point not in self.gui_object.subaqueous_classes:
-                # print(f'Not Subaqueous Class: {class_point}')
-                res_tvu.append(0)
-                res_thu.append(0)
-                res_range_bias.append(0)
-            else:
+            # If Scanner Channel = 1, then this is topographic scanner data. 
+            # There is no subaqueous uncertainty.
+            if(scanner_channel == 1):
+                thu_point = 0
+                tvu_point = 0
+                range_bias_point = 0
+            # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
+            # Use the shallow uncertainty coefficients and offset. 
+            elif(scanner_channel == 2 and user_data == 0):
+                # THU is a Linear fit: a + b*x 
+                thu_point = a_h_shallow + (b_h_shallow * depth_point) 
+                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                bx_h_shallow = (b_z_shallow * depth_point)
+                tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
+            # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
+            # Use the deep wide uncertainty coefficients and offset. 
+            elif(scanner_channel == 3 and user_data == 1):
+                # THU is a Linear fit: a + b*x 
+                thu_point = a_h_wide + (b_h_wide * depth_point) 
+                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                bx_h_wide = (b_z_wide * depth_point)
+                tvu_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_wide * (depth_point*depth_square) + b_rb_wide*depth_square + c_rb_wide*depth_point + d_rb_wide
+            # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
+            # Use the deep narrow uncertainty coefficients and offset. 
+            else:   
+                # THU is a Linear fit: a + b*x
+                thu_point = (a_h_narrow + (b_h_narrow * depth_point))
+                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                bx_z_narrow = (b_z_narrow * depth_point)
+                tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_z_narrow*bx_z_narrow))
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
 
-                # Topographic scanner, only one channel exists
-                # Scanner Channel: 1, User data: 0
+            #Add the subaqueous thu at this point to the list of result thu values
+            # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
+            thu_point = thu_point * 0.577
+            res_thu[i] = thu_point
+            #Add the subaqueous tvu at this point to the list of result tvu values
+            res_tvu[i] = tvu_point
+            #Add the range bias uncertainty at this point to the list of result range bias values
+            res_range_bias[i] = range_bias_point
 
-                # Shallow scanner, only one channel exists 
-                # Scanner channel: 2, User data: 0
-
-                # Deep scanner, narrow channel
-                # Scanner channel: 3, User data: 0
-
-                # Deep scanner, combined channel (wide)
-                # Scanner channel: 3, User data: 1
-
-                # scanner_channel = masked scanner_channel, 
-                # user_data = masked user_data
-                
-                # If Scanner Channel = 1, then this is topographic scanner data. 
-                # There is no subaqueous uncertainty.
-                if(scanner_channel == 1):
-                    thu_point = 0
-                    tvu_point = 0
-                    range_bias_point = 0
-                # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
-                # Use the shallow uncertainty coefficients and offset. 
-                elif(scanner_channel == 2 and user_data == 0):
-                    # THU is a Linear fit: a + b*x 
-                    thu_point = a_h_shallow + (b_h_shallow * depth_point) 
-                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-                    bx_h_shallow = (b_z_shallow * depth_point)
-                    tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
-                    # enforce minimum value for tvu
-                    if(tvu_point < min_tvu):
-                        tvu_point = min_tvu
-                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                    depth_square = depth_point * depth_point
-                    range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
-                # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
-                # Use the deep wide uncertainty coefficients and offset. 
-                elif(scanner_channel == 3 and user_data == 1):
-                    # THU is a Linear fit: a + b*x 
-                    thu_point = a_h_wide + (b_h_wide * depth_point) 
-                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-                    bx_h_wide = (b_z_wide * depth_point)
-                    tvu_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
-                    # enforce minimum value for tvu
-                    if(tvu_point < min_tvu):
-                        tvu_point = min_tvu
-                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                    depth_square = depth_point * depth_point
-                    range_bias_point = a_rb_wide * (depth_point*depth_square) + b_rb_wide*depth_square + c_rb_wide*depth_point + d_rb_wide
-                # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
-                # Use the deep narrow uncertainty coefficients and offset. 
-                else:   
-                    # THU is a Linear fit: a + b*x
-                    thu_point = (a_h_narrow + (b_h_narrow * depth_point))
-                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-                    bx_z_narrow = (b_z_narrow * depth_point)
-                    tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_z_narrow*bx_z_narrow))
-                    # enforce minimum value for tvu
-                    if(tvu_point < min_tvu):
-                        tvu_point = min_tvu
-                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                    depth_square = depth_point * depth_point
-                    range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
-
-                #Add the subaqueous thu at this point to the list of result thu values
-                # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-                thu_point = thu_point * 0.577
-                res_thu.append(thu_point)
-                #Add the subaqueous tvu at this point to the list of result tvu values
-                res_tvu.append(tvu_point)
-                #Add the range bias uncertainty at this point to the list of result range bias values
-                res_range_bias.append(range_bias_point)
-
-        return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
+        return res_tvu, res_thu, res_range_bias
 
     def hawkeye_model_process(self):
         """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
@@ -528,7 +519,7 @@ class Subaqueous:
         a_z_shallow = tvu_shallow["a"]
         b_z_shallow = tvu_shallow["b"]
 
-        # THU is a Linear fit: b + a*x 
+        # THU is a Linear fit: a + b*x
         # a_h := horizontal coefficient
         # b_h := horizontal offset
         a_h_deep = thu_deep["a"]
@@ -548,9 +539,14 @@ class Subaqueous:
         c_rb_shallow = range_bias_shallow["c"]
         d_rb_shallow = range_bias_shallow["d"]
 
-        res_thu = []
-        res_tvu = []
-        res_range_bias = []
+        res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_range_bias = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+
+        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
+        res_thu[~self.subaqueous_mask] = 0
+        res_tvu[~self.subaqueous_mask] = 0
+        res_range_bias[~self.subaqueous_mask] = 0
         
         # print(f"length of masked_scan_user_data (scanner channel): {len(masked_scan_user_data[0])}"
         #       f"\nlength of depth: {len(self.depth)}"
@@ -558,85 +554,63 @@ class Subaqueous:
 
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, user data, and classification
-        for depth_point, user_data, class_point in zip(self.depth, masked_scan_user_data[1], self.classification):
-            # print(f"depth_point: {depth_point}, scanner: {scanner_channel}, user: {user_data}, class_point: {class_point}")
+        for i in self.valid_index:
+            depth_point = self.depth[i]
+            user_data = masked_scan_user_data[1][i]
 
+            # User data bytes are used to determine which scanner channel is being used.
+            # User data: 0 - NIR scanner data (topograhy)
+            # User data: 1 - Super Shallow (use deep LUTs)
+            # User data: 2 - Shallow
+            # User data: 3 - Deep
+            # User data: 4 - Synthetic water surface
+            # User data: 5 - Deep stacked (use deep LUTs)
             
-            # Check classification values.
-            # If the point is not subaqueous, set subaqueous THU and TVU values to 0.
-            if class_point not in self.gui_object.subaqueous_classes:
-                # print(f'Not Subaqueous Class: {class_point}')
-                res_tvu.append(0)
-                res_thu.append(0)
-                res_range_bias.append(0)
-            else:
+            # If User Data = 0 or User Data = 4, then this is topographic scanner data or synthetic water surface. 
+            # There is no subaqueous uncertainty.
+            if(user_data == 0 or user_data == 4):
+                thu_point = 0
+                tvu_point = 0
+                range_bias_point = 0
+            # If User Data = 2, then this is the shallow scanner
+            # Use the shallow uncertainty coefficients and offset. 
+            elif(user_data == 2):
+                # THU is a Linear fit: a + b*x 
+                thu_point = a_h_shallow + (b_h_shallow * depth_point) 
+                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                bx_z_shallow = (b_z_shallow * depth_point)
+                tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_z_shallow*bx_z_shallow))
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
+            # If User Data = 3 or User Data = 5, then this is the deep scanner or deep stacked.
+            # If User Data = 1, this is the super shallow scanner, which is most similar to the deep scanner, so we will use the deep LUTs for this as well. 
+            else:   
+                # THU is a Linear fit: a + b*x
+                thu_point = (a_h_deep + (b_h_deep * depth_point))
+                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                bx_z_deep = (b_z_deep * depth_point)
+                tvu_point = sqrt((a_z_deep*a_z_deep) + (bx_z_deep*bx_z_deep))
+                # enforce minimum value for tvu
+                if(tvu_point < min_tvu):
+                    tvu_point = min_tvu
+                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
+                depth_square = depth_point * depth_point
+                range_bias_point = a_rb_deep*(depth_point*depth_square) + b_rb_deep*depth_square + c_rb_deep*depth_point + d_rb_deep
 
-                # User data bytes are used to determine which scanner channel is being used.
-                # User data: 0 - NIR scanner data (topograhy)
-                # User data: 1 - Super Shallow (use deep LUTs)
-                # User data: 2 - Shallow
-                # User data: 3 - Deep
-                # User data: 4 - Synthetic water surface
-                # User data: 5 - Deep stacked (use deep LUTs)
+            #Add the subaqueous thu at this point to the list of result thu values
+            # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
+            thu_point = thu_point * 0.577
+            res_thu[i] = thu_point
+            #Add the subaqueous tvu at this point to the list of result tvu values
+            res_tvu[i] = tvu_point
+            #Add the range bias uncertainty at this point to the list of result range bias values
+            res_range_bias[i] = range_bias_point
 
-
-                # Shallow scanner, only one channel exists 
-                # Scanner channel: 2, User data: 0
-
-                # Deep scanner, narrow channel
-                # Scanner channel: 3, User data: 0
-
-                # Deep scanner, combined channel (wide)
-                # Scanner channel: 3, User data: 1
-
-                # scanner_channel = masked scanner_channel, 
-                # user_data = masked user_data
-                
-                # If User Data = 0 or User Data = 4, then this is topographic scanner data or synthetic water surface. 
-                # There is no subaqueous uncertainty.
-                if(user_data == 0 or user_data == 4):
-                    thu_point = 0
-                    tvu_point = 0
-                    range_bias_point = 0
-                # If User Data = 2, then this is the shallow scanner
-                # Use the shallow uncertainty coefficients and offset. 
-                elif(user_data == 2):
-                    # THU is a Linear fit: a + b*x 
-                    thu_point = a_h_shallow + (b_h_shallow * depth_point) 
-                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-                    bx_z_shallow = (b_z_shallow * depth_point)
-                    tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_z_shallow*bx_z_shallow))
-                    # enforce minimum value for tvu
-                    if(tvu_point < min_tvu):
-                        tvu_point = min_tvu
-                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                    depth_square = depth_point * depth_point
-                    range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
-                # If User Data = 3 or User Data = 5, then this is the deep scanner or deep stacked.
-                # If User Data = 1, this is the super shallow scanner, which is most similar to the deep scanner, so we will use the deep LUTs for this as well. 
-                else:   
-                    # THU is a Linear fit: a + b*x
-                    thu_point = (a_h_deep + (b_h_deep * depth_point))
-                    # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-                    bx_z_deep = (b_z_deep * depth_point)
-                    tvu_point = sqrt((a_z_deep*a_z_deep) + (bx_z_deep*bx_z_deep))
-                    # enforce minimum value for tvu
-                    if(tvu_point < min_tvu):
-                        tvu_point = min_tvu
-                    # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                    depth_square = depth_point * depth_point
-                    range_bias_point = a_rb_deep*(depth_point*depth_square) + b_rb_deep*depth_square + c_rb_deep*depth_point + d_rb_deep
-
-                #Add the subaqueous thu at this point to the list of result thu values
-                # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-                thu_point = thu_point * 0.577
-                res_thu.append(thu_point)
-                #Add the subaqueous tvu at this point to the list of result tvu values
-                res_tvu.append(tvu_point)
-                #Add the range bias uncertainty at this point to the list of result range bias values
-                res_range_bias.append(range_bias_point)
-
-        return np.asarray(res_tvu), np.asarray(res_thu), np.asarray(res_range_bias)
+        return res_tvu, res_thu, res_range_bias
 
     def cm_model_process(self):
         """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
