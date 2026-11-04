@@ -69,6 +69,8 @@ class Tpu:
 
     """
 
+    NO_DATA_VALUE = -9999.0
+
     def __init__(self, settings_object, sensor_object):
 
         #Store the settings_object information
@@ -236,23 +238,28 @@ class Tpu:
                     logger.tpu(
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
+                    valid_output_mask = subaqu_tvu != self.NO_DATA_VALUE
+                    total_thu = np.full_like(subaqu_thu, self.NO_DATA_VALUE, dtype=float)
 
                     # sum in quadrature - 1 - sigma
-                    total_thu = np.sqrt(subaer_thu**2 + subaqu_thu**2 + huc**2)
+                    total_thu[valid_output_mask] = np.sqrt(subaer_thu[valid_output_mask]**2 + subaqu_thu[valid_output_mask]**2 + huc**2)
 
                     logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
                     )
 
+                    total_tvu = np.full_like(subaqu_tvu, self.NO_DATA_VALUE, dtype=float)
+
                     if(self.sensor_object.type == "multi"):
                         # sum in quadrature - 1 - sigma
-                        total_tvu = np.sqrt(
-                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2
+                        total_tvu[valid_output_mask] = np.sqrt(
+                            subaer_tvu[valid_output_mask]**2 + subaqu_tvu[valid_output_mask]**2 + vdatum_mcu**2 + vuc**2
                         )
+                        
                     else:
                         # sum in quadrature - 1 - sigma
-                        total_tvu = np.sqrt(
-                            subaer_tvu**2 + subaqu_tvu**2 + vdatum_mcu**2 + vuc**2 + range_bias**2
+                        total_tvu[valid_output_mask] = np.sqrt(
+                            subaer_tvu[valid_output_mask]**2 + subaqu_tvu[valid_output_mask]**2 + vdatum_mcu**2 + vuc**2 + range_bias[valid_output_mask]**2
                         )
 
                     # # Debugging: print a few sample values of the uncertainty components and total TPU, 1 sigma only
