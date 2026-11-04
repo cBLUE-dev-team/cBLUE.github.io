@@ -370,26 +370,20 @@ class Merge:
                 )
 
                 if (isinstance(max_dt, np.ndarray) and max_dt.size == 0) or (not isinstance(max_dt, np.ndarray) and max_dt > self.max_allowable_dt):
-                    logging.warning("trajectory and LAS data NOT MERGED")
+                    print("\nTrajectory and LAS data NOT MERGED. This LAS file will not be processed.")
+                    
                     if context_label:
-                        logging.warning(f"({context_label}) max_dt: {max_dt}")
+                        print(f"({context_label}) max_dt: {max_dt}")
+                        raise ValueError(
+                            f"Trajectory and LAS data NOT MERGED. This LAS file will not be processed."
+                            f"({context_label}) max_dt: {max_dt}"
+                        )
                     else:
-                        logging.warning("({} FL {}) max_dt: {}".format(las_short_name, fl, max_dt))
-
-                    data = False
-                    stddev = False
-                    raw_class = False
-                    masked_fan_angle = False
-                    masked_hawkeye_data = False
-
-                    return (
-                        data,
-                        stddev,
-                        fl_las_idx[mask],
-                        raw_class,
-                        masked_fan_angle,
-                        masked_hawkeye_data,
-                    )
+                        print("({} FL {}) max_dt: {}".format(las_short_name, fl, max_dt))
+                        raise ValueError(
+                            f"Trajectory and LAS data NOT MERGED. This LAS file will not be processed."
+                            f"({las_short_name} FL {fl}) max_dt: {max_dt}"
+                        )
 
         data = np.asarray(
             [
