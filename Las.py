@@ -108,7 +108,7 @@ class Las:
             c = self.points_to_process["classification"].astype(np.int32)
         elif "raw_classification" in self.points_to_process.array.dtype.names:
             c = self.points_to_process["raw_classification"].astype(np.int32)
-            print(np.unique(c))
+            # print(f"\nClassification values: {np.unique(c)}\n")
         else:
             raise Exception("Unknown las version or missing classification attribute."\
                             "Available attributes: " + str(self.points_to_process.array.dtype.names))
