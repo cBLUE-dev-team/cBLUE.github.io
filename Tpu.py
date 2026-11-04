@@ -151,17 +151,22 @@ class Tpu:
                     "({}) merging trajectory and las data...".format(las.las_short_name)
                 )
 
-                merged_data, stddev, unsort_idx, raw_class, masked_fan_angle, masked_scan_user_data  = merge.merge(
-                    las.las_short_name,
-                    fl,
-                    sbet.values,
-                    fl_unsorted_las,
-                    fl_las_idx,
-                    self.sensor_object,
-                    # context_label=f"{las.las_short_name} FL {fl}", #DEBUGGING
-                    # debug_target=(t_las, x_las, y_las, z_las) ex: debug_target=(415394516.5950186, 389106.83, 4299188.75, -0.43), #DEBUGGING
+                try:
+                    merged_data, stddev, unsort_idx, raw_class, masked_fan_angle, masked_scan_user_data  = merge.merge(
+                        las.las_short_name,
+                        fl,
+                        sbet.values,
+                        fl_unsorted_las,
+                        fl_las_idx,
+                        self.sensor_object,
+                        # context_label=f"{las.las_short_name} FL {fl}", #DEBUGGING
+                        # debug_target=(t_las, x_las, y_las, z_las) ex: debug_target=(415394516.5950186, 389106.83, 4299188.75, -0.43), #DEBUGGING
+                    ) 
+                except ValueError as e:
+                    logger.error(str(e))
+                    return  # Exit the function if SBET and LAS data cannot merge.
 
-                )
+
 
                 if merged_data is not False:  # i.e., las and sbet is merged
                     logger.tpu(
@@ -189,18 +194,14 @@ class Tpu:
                     
                     # print(f"\nMax depth: {max(depth)}")
                     # print(f"Min depth: {min(depth)}")
+                    flying_height = height_obj.get_flying_height(merged_data[4], merged_data[7]) #z_las, z_sbet data
 
                     try:
-                        flying_height = height_obj.get_flying_height(merged_data[4], merged_data[7]) #z_las, z_sbet data
-                        
+                        # Set the LUTs for the sensor based on the calculated flying height
+                        self.sensor_object.set_luts(flying_height)
                     except ValueError as e:
                         logger.error(str(e))
-                        return  # Exit the function if flying height cannot be calculated
-
-                    # Set the LUTs for the sensor based on the calculated flying height
-                    self.sensor_object.set_luts(flying_height)
-
-
+                        return  # Exit the function if flying height cannot be calculated for a sensor that requires it.
 
                     #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
