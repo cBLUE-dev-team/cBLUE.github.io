@@ -25,12 +25,11 @@ School of Construction and Civil Engineering
 204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
-(541) 737-5688
 christopher.parrish@oregonstate.edu
 
 Last Edited:
 Keana Kief (OSU)
-August 5th, 2025
+November 4th, 2026
 """
 
 import logging
@@ -53,15 +52,12 @@ class Subaqueous:
         self.depth = depth
 
         self.valid_depth_mask = self.depth != self.NO_DATA_VALUE
-        self.valid_depth = self.depth[self.valid_depth_mask]
         self.sensor_object = sensor_object
         self.classification = classification
 
         #A set of valid subaqeuous classification values:
         self.subaqueous_class_values  = gui_object.subaqueous_classes
         self.subaqueous_mask = np.isin(self.classification, self.gui_object.subaqueous_classes)
-
-        self.valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
 
         # logger.subaqueous(f"kd_par {self.gui_object.kd_ind}")
         # logger.subaqueous(f"wind_par {self.gui_object.wind_ind}")
@@ -80,6 +76,8 @@ class Subaqueous:
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
+        valid_depth = self.depth[self.valid_depth_mask]
+
         # query coefficients from look up tables
         fit_tvu, fit_thu, range_bias = self.model_process()
 
@@ -96,7 +94,7 @@ class Subaqueous:
         res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
         res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
 
-        res_range_bias[self.valid_depth_mask] = a_rb * np.power(self.valid_depth, 3) + b_rb * np.square(self.valid_depth) + c_rb * self.valid_depth + d_rb
+        res_range_bias[self.valid_depth_mask] = a_rb * np.power(valid_depth, 3) + b_rb * np.square(valid_depth) + c_rb * valid_depth + d_rb
 
         # print(f"\nres_range_bias: {res_range_bias}")
 
@@ -105,7 +103,7 @@ class Subaqueous:
         a_z = fit_tvu["a"]
         b_z = fit_tvu["b"]
         # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-        res_tvu[self.valid_depth_mask] =  np.sqrt(np.square(a_z) + np.square(b_z * self.valid_depth))
+        res_tvu[self.valid_depth_mask] =  np.sqrt(np.square(a_z) + np.square(b_z * valid_depth))
 
         # enforce minimum value for tvu
         res_tvu[self.valid_depth_mask & (res_tvu < min_tvu)] = min_tvu
@@ -116,7 +114,7 @@ class Subaqueous:
         b_h = fit_thu["b"]
         # THU is a Linear fit: a + b*x 
         # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-        res_thu[self.valid_depth_mask] = (a_h + b_h * self.valid_depth)* 0.577
+        res_thu[self.valid_depth_mask] = (a_h + b_h * valid_depth)* 0.577
 
         # Set non-subaqueous points thu, tvu, and range_bias values to 0.
         res_thu[~self.subaqueous_mask] = 0
@@ -185,6 +183,8 @@ class Subaqueous:
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
+        valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
+
         # query coefficients from look up tables
         fit_tvu, fit_thu = self.multi_beam_model_process()
 
@@ -211,7 +211,7 @@ class Subaqueous:
         res_tvu[~self.subaqueous_mask] = 0
 
         #Loop through valid subaqueous points:
-        for i in self.valid_index:
+        for i in valid_index:
             depth_point = self.depth[i]
             fan_angle_point = masked_fan_angle[i]
 
@@ -299,6 +299,8 @@ class Subaqueous:
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
+        valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
+
         # query coefficients from look up tables
         tvu_deep_narrow, thu_deep_narrow, range_bias_narrow, tvu_deep_wide, thu_deep_wide, range_bias_wide, tvu_shallow, thu_shallow, range_bias_shallow = self.hawkeye_model_process()
 
@@ -358,7 +360,7 @@ class Subaqueous:
 
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, scanner channel, and user data
-        for i in self.valid_index:
+        for i in valid_index:
             depth_point = self.depth[i]
             scanner_channel = masked_scan_user_data[0][i]
             user_data = masked_scan_user_data[1][i]
@@ -506,6 +508,8 @@ class Subaqueous:
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
+        valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
+
         # query coefficients from look up tables
         tvu_deep, thu_deep, range_bias_deep, tvu_shallow, thu_shallow, range_bias_shallow = self.hawkeye_model_process()
 
@@ -554,7 +558,7 @@ class Subaqueous:
 
         # Product of coeffs w/ depths + offsets.
         # Loop through the depth, user data, and classification
-        for i in self.valid_index:
+        for i in valid_index:
             depth_point = self.depth[i]
             user_data = masked_scan_user_data[1][i]
 
