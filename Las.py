@@ -99,10 +99,20 @@ class Las:
 
         t = self.points_to_process["gps_time"]
 
+        # print("LAS version:", self.inFile.header.version)
+        # print("Point format:", self.inFile.header.point_format.id)
+        # print("dtype names:")
+        # print(self.points_to_process.array.dtype.names)
+
         if "classification" in self.points_to_process.array.dtype.names:
-            c = self.points_to_process["classification"]
+            c = self.points_to_process["classification"].astype(np.int32)
+        elif "raw_classification" in self.points_to_process.array.dtype.names:
+            c = self.points_to_process["raw_classification"].astype(np.int32)
+            print(np.unique(c))
         else:
-            raise Exception("Unknown las version or missing classification attribute.")
+            raise Exception("Unknown las version or missing classification attribute."\
+                            "Available attributes: " + str(self.points_to_process.array.dtype.names))
+        
 
         #If there are classification flags, use them to filter out points that are witheld. 
         # (classification_flags = 2 means the point is withheld)
@@ -137,8 +147,14 @@ class Las:
             # Add x, y, z, gps time, and classification to an array together
             las_data = np.vstack([x, y, z, t, c]).T
 
-        flight_lines = self.points_to_process["pt_src_id"]
-
+        if "pt_src_id" in self.points_to_process.array.dtype.names:
+            flight_lines = self.points_to_process["pt_src_id"]
+        elif "point_source_id" in self.points_to_process.array.dtype.names:
+            flight_lines = self.points_to_process["point_source_id"]
+        else:
+            raise Exception("Missing point source ID attribute in the LAS file."\
+                            "Available attributes: " + str(self.points_to_process.array.dtype.names))
+        
         return las_data, self.t_argsort, flight_lines
 
     
