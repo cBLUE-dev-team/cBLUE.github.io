@@ -41,6 +41,8 @@ logger = logging.getLogger(__name__)
 
 class Sensor: 
 
+    NO_DATA_VALUE = -9999.0
+
     def __init__(self, sensor_name):
         #Initalizes the sensor object based on the sensor name selected in CBlueApp.py.
 
@@ -76,7 +78,15 @@ class Sensor:
 
         #If this is a Leica HawkEye sensor, get the path of the deep narrow, deep wide, and shallow subaqueous lookup tables
         if self.type == "single_hawkeye":
-            if flying_height <= 450:
+            if flying_height == self.NO_DATA_VALUE:
+                #There was no valid ground or water-surface point found in the LAS data, so the flying height cannot be calculated.
+                print("\nNo valid ground or water-surface point found in the LAS data. "
+                            "Flying height cannot be calculated, and this LAS file will not be processed.")
+                raise ValueError(
+                "No valid ground or water-surface point found in the LAS data. "
+                "Flying height cannot be calculated."
+            )
+            elif flying_height <= 450:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["400m"]
             elif flying_height <= 550:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["500m"]
@@ -103,7 +113,15 @@ class Sensor:
 
         # If this is the CoastalMapper    
         elif self.type == "single_cm":
-            if flying_height <= 637.5:
+            if flying_height == self.NO_DATA_VALUE:
+                #There was no valid ground or water-surface point found in the LAS data, so the flying height cannot be calculated.
+                print("\nNo valid ground or water-surface point found in the LAS data. "
+                            "Flying height cannot be calculated, and this LAS file will not be processed.")
+                raise ValueError(
+                "No valid ground or water-surface point found in the LAS data. "
+                "Flying height cannot be calculated."
+            )
+            elif flying_height <= 637.5:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["400m"]
             else:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["875m"]
@@ -122,7 +140,15 @@ class Sensor:
         
         #Otherwise if this is the Chiroptera-5 sensor
         elif self.type == "chiroptera_5":
-            if flying_height <= 450:
+            if flying_height == self.NO_DATA_VALUE:
+                #There was no valid ground or water-surface point found in the LAS data, so the flying height cannot be calculated.
+                print("\nNo valid ground or water-surface point found in the LAS data. "
+                            "Flying height cannot be calculated, and this LAS file will not be processed.")
+                raise ValueError(
+                "No valid ground or water-surface point found in the LAS data. "
+                "Flying height cannot be calculated."
+            )
+            elif flying_height <= 450:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["400m"]
             elif flying_height <= 550:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["500m"]
