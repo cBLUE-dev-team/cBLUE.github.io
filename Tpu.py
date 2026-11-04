@@ -191,7 +191,7 @@ class Tpu:
                     # print(f"Min depth: {min(depth)}")
 
                     try:
-                        flying_height = height_obj.calculate_flying_height(merged_data[4], merged_data[7]) #z_las, z_sbet data
+                        flying_height = height_obj.get_flying_height(merged_data[4], merged_data[7]) #z_las, z_sbet data
                         
                     except ValueError as e:
                         logger.error(str(e))
