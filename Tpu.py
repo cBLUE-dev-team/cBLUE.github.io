@@ -25,12 +25,11 @@ School of Construction and Civil Engineering
 204 Owen Hall
 Oregon State University
 Corvallis, OR  97331
-(541) 737-5688
 christopher.parrish@oregonstate.edu
 
 Last Edited By:
 Keana Kief (OSU)
-May 12th, 2026
+November 4th, 2026
 """
 
 import logging
@@ -166,7 +165,7 @@ class Tpu:
                     ) 
                 except ValueError as e:
                     logger.error(str(e))
-                    return  # Exit the function if SBET and LAS data cannot merge.
+                    continue  # Exit the function if SBET and LAS data cannot merge.
 
 
 
@@ -262,6 +261,7 @@ class Tpu:
                             subaer_tvu[valid_output_mask]**2 + subaqu_tvu[valid_output_mask]**2 + vdatum_mcu**2 + vuc**2 + range_bias[valid_output_mask]**2
                         )
 
+
                     # # Debugging: print a few sample values of the uncertainty components and total TPU, 1 sigma only
                     # uncertainty_components = pd.DataFrame({
                     #     "subaer_thu": subaer_thu,
@@ -285,8 +285,8 @@ class Tpu:
                     # convert to 95% conf, if requested
                     if self.settings_object.error_type == "95% confidence":
                         logging.tpu("TPU reported at 95% confidence...")
-                        total_thu *= 1.7308
-                        total_tvu *= 1.96
+                        total_thu[valid_output_mask] *= 1.7308
+                        total_tvu[valid_output_mask] *= 1.96
                     else:
                         logging.tpu("TPU reported at 1 sigma...")
 
