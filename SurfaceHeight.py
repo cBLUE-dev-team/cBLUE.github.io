@@ -263,11 +263,7 @@ class SurfaceHeight:
 
 
         if sbet_z_point == self.NO_DATA_VALUE or las_z_point == self.NO_DATA_VALUE:
-            #There was no valid ground or water-surface point found in the SBET data, so the flying height cannot be calculated.
-            raise ValueError(
-            "No valid ground or water-surface point found in the SBET data. "
-            "Flying height cannot be calculated."
-            )
+            return self.NO_DATA_VALUE
 
         # Calculate the flying height for the center of the dataset
         return sbet_z_point - las_z_point
