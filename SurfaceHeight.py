@@ -1,3 +1,4 @@
+import laspy
 import numpy as np
 import logging
 
@@ -7,9 +8,9 @@ class SurfaceHeight:
 
     NO_DATA_VALUE = -9999.0
 
-    def __init__(self, settings_object, merged_data, classification):
+    def __init__(self, settings_object, las_files, sbet):
         self.bin_size = settings_object.water_bin_length
-        self.classification = classification
+        
         self.subaqueous_classes = settings_object.subaqueous_classes
         self.sea_surface_classes = settings_object.sea_surface_classes
         self.ground_classes = settings_object.ground_classes
@@ -17,22 +18,23 @@ class SurfaceHeight:
         if self.bin_size <= 0:
             raise ValueError("Water bin length must be greater than zero.")
 
-        # Calculate the min and max values for x (easting, merged_data[2]) 
-        # and y (northing, merged_data[3]) coordinates to determine the range of the data.
-        self.min_x = merged_data[2].min()
-        self.max_x = merged_data[2].max()
-        self.min_y = merged_data[3].min()
-        self.max_y = merged_data[3].max()
+        # Calculate the min and max values for x (easting, sbet.data.X) 
+        # and y (northing, sbet.data.Y) coordinates to determine the range of the data.
+        self.min_x = sbet.data.X.min()
+        self.max_x = sbet.data.X.max()
+        self.min_y = sbet.data.Y.min()
+        self.max_y = sbet.data.Y.max()
 
         # Calculate the number of bins in each dimension, there will be a minimum of 1 bin in each dimension, even if the range is smaller than the bin size.
         self.num_bins_x = max(1, int(np.ceil((self.max_x - self.min_x) / self.bin_size)))
         self.num_bins_y = max(1, int(np.ceil((self.max_y - self.min_y) / self.bin_size)))
 
-        self.height_array = self.get_height(
-            merged_data[2], # x (easting) points
-            merged_data[3], # y (northing) points
-            merged_data[4] # z (height)points
-        )
+        # Calculate the average water-surface height for each bin using the provided LAS files.
+        print("Calculating water surface heights for each bin...")
+        self.height_array = self.get_height(las_files)
+
+        # Calculate the flying height for the center of the dataset based on the SBET data.
+        self.flying_height = self.get_flying_height(las_files, sbet) #las files, z values from SBET data
         
 
     def get_bin_indices(self, x, y):
@@ -56,16 +58,13 @@ class SurfaceHeight:
         # If a coordinate lies exactly on the maximum boundary 
         # (self.max_x or self.max_y), the calculation above produces num_bins. 
         # Assign that point to the final valid bin instead (num_bins - 1).
-        if x == self.max_x:
-            bin_x = self.num_bins_x - 1
+        bin_x = np.clip(bin_x, 0, self.num_bins_x - 1)
+        bin_y = np.clip(bin_y, 0, self.num_bins_y - 1)
 
-        if y == self.max_y:
-            bin_y = self.num_bins_y - 1
-
-        return bin_x, bin_y   
+        return bin_x, bin_y
 
 
-    def get_height(self, x_points, y_points, z_points):
+    def get_height(self, las_files):
         """
         Calculate the average water-surface height for each bin. 
         Valid water-surface points are classified as either 41 or 42 listed in the cblue_configuration.json.
@@ -78,54 +77,65 @@ class SurfaceHeight:
             Synthetic water-surface point
 
         Input:
-        x_points = easting points (merged_data[2])
-        y_points = northing points (merged_data[3])
-        z_points = height points (merged_data[4])
-        classification = point classification
+        las_files = List of LAS files containing point cloud data
 
         Returns:
         height_array = A 2D array of average water-surface heights for each bin. 
         If no valid water-surface points fall into a bin, the average height for 
         that bin is set to -9999 (default error value).
         """
-        # Custom structure for each bin
-        bin_dtype = np.dtype([
-            ('num_points', int), #Number of points in the bin
-            ('sum_height_points', float), #Sum of heights for all points in the bin
-            ('avg_height', float) #Average height for the bin (sum_height_points/num_points)
-        ])
-
-        # Create a 2D array to store the surface heights
-        height_array = np.zeros(
-                            (self.num_bins_x, self.num_bins_y),
-                            dtype=bin_dtype
+        counts = np.zeros(
+            (self.num_bins_x, self.num_bins_y),
+            dtype=np.int32
         )
-        # Fill the array with default error values
-        height_array['avg_height'] = self.NO_DATA_VALUE
+
+        sums = np.zeros(
+            (self.num_bins_x, self.num_bins_y),
+            dtype=np.float64
+        )
 
         #Calculate the average surface height for each bin
-        for x, y, z, class_point in zip(x_points, y_points, z_points, self.classification):
-            # Check if the point is class 41 (sea surface) or 42 (synthetic water surface), 
-            # or another user defined water-surface class. If so, include it in the average height calculation for the bin.
-            if class_point in self.sea_surface_classes:
-                # Calculate the bin indices for the point
-                bin_x, bin_y = self.get_bin_indices(x, y)
+        # Loop through each LAS file and extract the x, y, z, and classification data.
+        for las_file in las_files:
+            inFile = laspy.read(las_file)
 
-                # Update the values for the bin
-                height_array[bin_x, bin_y]['num_points'] += 1
-                height_array[bin_x, bin_y]['sum_height_points'] += z
+            # Get a boolean mask for points classified as valid water-surface points 
+            # (Default: sea-surface (41) or synthetic water-surface (42)).
+            mask = np.isin(inFile.classification, self.sea_surface_classes)
 
-        # Get the list of populated bins (bins with at least one valid water-surface point)
-        populated_bins = height_array['num_points'] > 0
-        # Calculate the average height for each populated bin
-        np.divide(
-            height_array['sum_height_points'],
-            height_array['num_points'],
-            out=height_array['avg_height'],
-            where=populated_bins
+            # Mask the x, y, z values to only include valid water-surface points.
+            x = np.asarray(inFile.x[mask])
+            y = np.asarray(inFile.y[mask])
+            z = np.asarray(inFile.z[mask])
+
+            # If there are no valid water-surface points in the LAS file, skip to the next file.
+            if len(z) == 0:
+                continue
+
+            # Calculate the bin indices for each point and accumulate the number of points and sum of heights for each bin.
+            bin_x = np.floor((x - self.min_x) / self.bin_size).astype(np.int32)
+            bin_y = np.floor((y - self.min_y) / self.bin_size).astype(np.int32)
+
+            # Clip the bin indices to ensure they are within the valid range of bins.
+            bin_x = np.clip(bin_x, 0, self.num_bins_x - 1)
+            bin_y = np.clip(bin_y, 0, self.num_bins_y - 1)
+
+            # Use np.add.at to accumulate counts and sums for each bin. This handles duplicate indices correctly.
+            np.add.at(counts, (bin_x, bin_y), 1)
+            np.add.at(sums, (bin_x, bin_y), z)
+
+        height_array = np.full(
+            (self.num_bins_x, self.num_bins_y),
+            self.NO_DATA_VALUE,
+            dtype=np.float64
         )
 
-        return height_array['avg_height'].copy()
+        # Create a mask for bins that have at least one valid water-surface point.
+        valid = counts > 0
+        #  Calculate the average water surface height for those bins.
+        height_array[valid] = sums[valid] / counts[valid]
+
+        return height_array
 
     def get_nearest_surface_height(self, x, y, class_val):
         """
@@ -191,13 +201,13 @@ class SurfaceHeight:
 
         return nearest_height
 
-    def calculate_depth(self, x_data, y_data, z_data):
+    def calculate_depth(self, x_data, y_data, z_data, classification):
 
         depth_data = np.full(len(x_data), self.NO_DATA_VALUE)  # Initialize depth_data with default error value
         surface_height_data = np.full(len(x_data), self.NO_DATA_VALUE)  # Initialize surface_height_data with default error value
 
         # Loop through each point and calculate the depth based on the nearest surface height.
-        for i, (x, y, z, class_val) in enumerate(zip(x_data, y_data, z_data, self.classification)):
+        for i, (x, y, z, class_val) in enumerate(zip(x_data, y_data, z_data, classification)):
             # Get the nearest surface height for the current point (x, y).
             surface_height_data[i] = self.get_nearest_surface_height(x, y, class_val)
 
@@ -209,7 +219,7 @@ class SurfaceHeight:
                 
         return depth_data, surface_height_data
 
-    def get_flying_height(self, z_las, z_sbet):
+    def get_flying_height(self, las_files, sbet):
         """
         Calculate the flying height for the center of the dataset based on the SBET data. 
         Returns NO_DATA_VALUE if no valid ground or water-surface point is found in the SBET data.
@@ -227,43 +237,48 @@ class SurfaceHeight:
         sbet_z_point = self.NO_DATA_VALUE  # Initialize sbet_z_point with default error value
         valid_classes = set(self.sea_surface_classes + self.ground_classes)
 
-        # Get the midpoint of the flight to start the search for a valid water-surface height.
-        # // is flooring division, which returns the largest integer less than or equal to the division result.
-        len_z_las = len(z_las)
-        mid_index = len_z_las // 2
-        search_forward = mid_index  # Start searching from the midpoint
-        search_backward = mid_index-1  # Start searching from the midpoint
-        reached_end = False  # Flag to indicate if the end of the SBET data has been reached
+        #Loop through each LAS file until a valid water-surface or ground point is found
+        for las_file in las_files:
 
-
-        while not reached_end:
-
-            if self.classification[search_forward] in valid_classes:
-                # If the point is classified as a valid water-surface point, or ground point, get the surface height for that point.
-
-                # Extract the z (height) values from the SBET data
-                sbet_z_point = z_sbet[search_forward]
-                las_z_point = z_las[search_forward]
+            if las_z_point != self.NO_DATA_VALUE:
                 break  # Exit the loop if a valid surface height is found
-            #Check the point before the midpoint for a valid water-surface height,
-            elif self.classification[search_backward] in valid_classes:
-                # If the point is classified as a valid water-surface point, or ground point, get the surface height for that point.
 
-                # Extract the z (height) values from the SBET data
-                sbet_z_point = z_sbet[search_backward]
-                las_z_point = z_las[search_backward]
-                break  # Exit the loop if a valid surface height is found
-            else:
-                # Check if the search has reached the end of the SBET data
-                if search_forward >= len_z_las - 1 or search_backward <= 0:
-                    reached_end = True
+            inFile = laspy.read(las_file)
 
-                search_forward += 1  # Move to the next point in the SBET data
-                search_backward -= 1  # Move to the previous point in the SBET data
+            # Get the midpoint of the flight to start the search for a valid water-surface height.
+            # // is flooring division, which returns the largest integer less than or equal to the division result.
+            len_las = len(inFile.z)
+            mid_index = len_las // 2
+
+            # Get the indices of valid water-surface or ground points in the LAS data based on the classification values.
+            valid_mask = np.isin(inFile.classification, list(valid_classes))
+
+            valid_indices = np.flatnonzero(valid_mask)
+
+            if valid_indices.size > 0:
+                # Find the index of the valid point closest to the midpoint of the flight.
+                closest_idx = valid_indices[np.argmin(np.abs(valid_indices - mid_index))].item()  # Convert to a standard Python integer
+
+                las_z_point = inFile.z[closest_idx]
+                las_timestamp = inFile.gps_time[closest_idx]
+
+
+        # If a valid surface height was found in the LAS data, find the corresponding z value in the SBET data.
+        if las_z_point != self.NO_DATA_VALUE:
+            start_time = las_timestamp
+            end_time = las_timestamp
+            sbet_data = sbet.get_tile_data_by_time(start_time, end_time)
+
+            if not sbet_data.empty:
+
+                nearest_idx = np.abs(sbet_data["time"].values - las_timestamp).argmin()
+                sbet_z_point = sbet_data.iloc[nearest_idx]["Z"]
 
 
         if sbet_z_point == self.NO_DATA_VALUE or las_z_point == self.NO_DATA_VALUE:
             return self.NO_DATA_VALUE
 
+        # print(f"SBET z value: {sbet_z_point}, LAS z value: {las_z_point}")
+        # print(f"Flying height: {sbet_z_point - las_z_point}")
         # Calculate the flying height for the center of the dataset
         return sbet_z_point - las_z_point
