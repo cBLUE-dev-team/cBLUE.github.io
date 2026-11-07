@@ -126,6 +126,10 @@ class Las:
             # Set withheld points to -9999 so they can be filtered out later
             c[withheld_mask] = -9999
 
+        # DEBUG: Print the class values for the current LAS file
+        # print(f"Current file: {self.las_short_name}")
+        # print(np.unique(c))
+
         self.t_argsort = t.argsort()
 
         # Check if this is a multi beam sensor, if it is the subaqueous processing requires fan angle (scan angle)
