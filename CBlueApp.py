@@ -47,6 +47,7 @@ from Sbet import Sbet
 from Tpu import Tpu
 from Sensor import Sensor
 from UserInput import UserInput
+from SurfaceHeight import SurfaceHeight
 import argparse
 from datetime import datetime
 import subprocess
@@ -91,15 +92,29 @@ def CBlueApp(controller_configuration):
     # Create a sensor object initialized to the user's selected sensor
     sensor_object = Sensor(selected_sensor_value)
 
-    # Initialize the tpu object
-    tpu = Tpu(settings_object, sensor_object)
-
     las_files = [
         os.path.join(las_dir_value, l)
         for l in os.listdir(las_dir_value)
         if l.endswith(".las") | l.endswith(".laz")
     ]
     num_las = len(las_files)
+
+    logging.cblue(
+        "Calculating water surface height..."
+    )
+
+    # Initialize the surface height object to calculate water surface heights for each point in the merged data
+    height_obj = SurfaceHeight(settings_object, las_files, sbet)
+
+    try:
+        # Set the LUTs for the sensor based on the calculated flying height
+        sensor_object.set_luts(height_obj.flying_height)
+    except ValueError as e:
+        logging.error(str(e))
+        return  # Exit the function if flying height cannot be calculated for a sensor that requires it.
+
+    # Initialize the tpu object
+    tpu = Tpu(settings_object, sensor_object, height_obj)
 
     # GENERATE JACOBIAN FOR SENSOR MODEL OBSERVATION EQUATIONS
     jacobian = Jacobian(sensor_model)
