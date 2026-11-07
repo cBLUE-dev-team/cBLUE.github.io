@@ -45,7 +45,6 @@ from tqdm import tqdm
 from Subaerial import Subaerial
 from Subaqueous import Subaqueous
 from Las import Las
-from SurfaceHeight import SurfaceHeight
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +69,14 @@ class Tpu:
 
     NO_DATA_VALUE = -9999.0
 
-    def __init__(self, settings_object, sensor_object):
+    def __init__(self, settings_object, sensor_object, height_obj):
 
         #Store the settings_object information
         self.settings_object = settings_object
         #Store the sensor_obejct information          
         self.sensor_object = sensor_object
+        #Store the water surface height object information
+        self.height_obj = height_obj
 
         self.metadata = {}
         self.flight_line_stats = {}
@@ -168,14 +169,7 @@ class Tpu:
                     continue  # Exit the function if SBET and LAS data cannot merge.
 
 
-
                 if merged_data is not False:  # i.e., las and sbet is merged
-                    logger.tpu(
-                        "({}) calculating water surface height...".format(las.las_short_name)
-                    )
-
-                    # Calculate the water surface height for each point in the merged data using the SurfaceHeight class
-                    height_obj = SurfaceHeight(self.settings_object, merged_data, raw_class)
 
                     logger.tpu(
                         "({}) calculating subaer thu/tvu...".format(las.las_short_name)
@@ -184,25 +178,13 @@ class Tpu:
 
                     subaer_thu, subaer_tvu = subaer_obj.calc_subaerial_tpu()
 
-
                     logger.tpu(
                         "({}) calculating subaqueous thu/tvu...".format(
                             las.las_short_name
                         )
                     )
 
-                    depth, water_surface_height = height_obj.calculate_depth(merged_data[2], merged_data[3], merged_data[4]) #x, y, z las data
-                    
-                    # print(f"\nMax depth: {max(depth)}")
-                    # print(f"Min depth: {min(depth)}")
-                    flying_height = height_obj.get_flying_height(merged_data[4], merged_data[7]) #z_las, z_sbet data
-
-                    try:
-                        # Set the LUTs for the sensor based on the calculated flying height
-                        self.sensor_object.set_luts(flying_height)
-                    except ValueError as e:
-                        logger.error(str(e))
-                        return  # Exit the function if flying height cannot be calculated for a sensor that requires it.
+                    depth, water_surface_height = self.height_obj.calculate_depth(merged_data[2], merged_data[3], merged_data[4], raw_class) #x, y, z las data
 
                     #Initalize the subaqueous object
                     subaqu_obj = Subaqueous(
