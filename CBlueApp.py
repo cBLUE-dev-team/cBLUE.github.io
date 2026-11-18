@@ -64,8 +64,7 @@ WIND_OPTIONS = [
     ]
 
 TURBIDITY_OPTIONS = [
-        "Clear [0-0.12] m^-1",
-        "Clear-Moderate (0.12-0.15] m^-1",
+        "Clear [0-0.15] m^-1",
         "Moderate (0.15-0.21] m^-1",
         "Moderate-Turbid (0.21-0.27] m^-1",
         "Turbid (0.27-0.47] m^-1",
@@ -207,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("wind", type=int, choices=[0, 1, 2, 3, 4], help=wind_help_text, metavar="wind_speed")
     # # Turbidity
     turbidity_help_text = get_help_text(TURBIDITY_OPTIONS)
-    parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4, 5], help=turbidity_help_text, metavar="turbidity")
+    parser.add_argument("turbidity", type=int, choices=[0, 1, 2, 3, 4], help=turbidity_help_text, metavar="turbidity")
     # VDatum Region
     parser.add_argument("mcu", default=0.0, help=f"Input maximum cumulative uncertainty (MCU) value in cm for the VDatum region. Enter a float value."\
                         "\nSee .\\lookup_tables\\V_Datum_MCU_Values.txt for MCU values for different VDatum regions.\n\n")
