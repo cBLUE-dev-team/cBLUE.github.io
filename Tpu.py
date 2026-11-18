@@ -202,10 +202,13 @@ class Tpu:
                         subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.hawkeye_fit_lut(masked_scan_user_data)
                     elif(self.sensor_object.type == "single_cm"):
                         #Coastal Mapper Sensor: Sending to cm_fit_lut() 
-                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.cm_fit_lut(masked_scan_user_data) 
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.cm_fit_lut(masked_scan_user_data)
+                    elif(self.sensor_object.type == "single_new"):
+                        #Sensors with new LUTs generated: Sending to fit_lut_new() 
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut_new() 
                     else:
-                        #Single beam Sensor: Sending to fit_lut() 
-                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut()     
+                        #Single beam Sensor, w/out new LUTs: Sending to fit_lut_og() 
+                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut_og()     
 
                     # VDatum file is in cm (1-sigma)
                     vdatum_mcu = (float(self.settings_object.mcu) / 100.0)
