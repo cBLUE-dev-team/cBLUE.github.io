@@ -4,7 +4,7 @@
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
             "std_rho": 0.025,
-            "type": "single"
+            "type": "single_new"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Riegl/0_7mrad/TVU_LUT_Riegl_VQ880G_600_AGL_0.7_mrad.csv",
@@ -43,7 +43,7 @@
             "a_std_dev": 0.02,
             "b_std_dev": 0.02,
             "std_rho": 0.025,
-            "type": "single"
+            "type": "single_new"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Riegl/2_0mrad/TVU_LUT_Riegl_VQ880G_600_AGL_2_mrad.csv",
@@ -151,7 +151,7 @@
             "a_std_dev": 0.00392,
             "b_std_dev": 0.00392,
             "std_rho": 0.025,
-            "type": "single"
+            "type": "single_new"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Teledyne/CZMIL_or_Nova/Shallow/TVU_LUT_CZMIL_or_CZMIL_Nova_Shallow_400_AGL_7_mrad.csv",
@@ -165,7 +165,7 @@
             "a_std_dev": 0.00392,
             "b_std_dev": 0.00392,
             "std_rho": 0.025,
-            "type": "single"
+            "type": "single_new"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Teledyne/CZMIL_or_Nova/Deep/TVU_LUT_CZMIL_or_CZMIL_Nova_Deep_400_AGL_7_mrad.csv",
@@ -179,7 +179,7 @@
             "a_std_dev": 0.00392,
             "b_std_dev": 0.00392,
             "std_rho": 0.025,
-            "type": "single"
+            "type": "single_new"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Teledyne/SuperNova/Shallow/TVU_LUT_CZMIL_or_CZMIL_SuperNova_Shallow_400_AGL_7_mrad.csv",
@@ -193,7 +193,7 @@
             "a_std_dev": 0.00392,
             "b_std_dev": 0.00392,
             "std_rho": 0.025,
-            "type": "single"
+            "type": "single_new"
         },
         "subaqueous_LUTs": {
             "vertical": "./lookup_tables/Teledyne/SuperNova/Deep/TVU_LUT_CZMIL_or_CZMIL_SuperNova_Deep_400_AGL_7_mrad.csv",
