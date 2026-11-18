@@ -70,7 +70,110 @@ class Subaqueous:
         #     logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
         #     logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut}")
 
-    def fit_lut(self):
+    def fit_lut_new(self):
+        """Called to begin the SubAqueous processing."""
+    
+        # tvu values below 0.03 are considered erroneous
+        min_tvu = 0.03
+
+        valid_depth = self.depth[self.valid_depth_mask]
+
+        # query coefficients from look up tables
+        fit_transport, fit_horizontal, fit_signal = self.model_process_new()
+
+
+        #Signal uncertainty is a 2nd order polynomial fit: ax^2 + bx + c
+        a_rb = fit_signal["a"]
+        b_rb = fit_signal["b"]
+        c_rb = fit_signal["c"]
+
+        snr = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        snr[self.valid_depth_mask] = np.maximum(1, a_rb * np.square(valid_depth) + b_rb * valid_depth + c_rb)
+        res_signal = 0.071 / np.sqrt(2*snr)
+
+
+        res_transport = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_horizontal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+
+
+        # a_z := vertical a coefficient
+        # b_z := vertical b coefficient
+        a_z = fit_transport["a"]
+        b_z = fit_transport["b"]
+        # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+        res_transport[self.valid_depth_mask] =  np.sqrt(np.square(a_z) + np.square(b_z * valid_depth))
+
+        # enforce minimum value for tvu
+        res_transport[self.valid_depth_mask & (res_transport < min_tvu)] = min_tvu
+
+        # a_h := horizontal coefficient
+        # b_h := horizontal offset
+        a_h = fit_horizontal["a"]
+        b_h = fit_horizontal["b"]
+        # THU is a Linear fit: a + b*x 
+        # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
+        res_horizontal[self.valid_depth_mask] = (a_h + b_h * valid_depth)* 0.577
+
+        # Set non-subaqueous points thu, tvu, and signal values to 0.
+        res_horizontal[~self.subaqueous_mask] = 0
+        res_transport[~self.subaqueous_mask] = 0
+        res_signal[~self.subaqueous_mask] = 0
+
+        return res_transport, res_horizontal, res_signal
+
+    def model_process_new(self):
+        """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
+            on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
+            given permutations of wind and kd. 
+
+        :return: (tvu, thu, range_bias) TVU, THU, and range bias observation equation coefficients.
+        :rtype: (DataFrame, DataFrame, DataFrame)
+        """
+        # wind_par values range from 0-20 kts, represented as integers 0-4.
+        # cBLUE gives users five options for Wind Speed:
+        #   Wind Speed: "Calm-light air [0-4] kts" == 0,
+        #               "Light Breeze (4-8] kts" == 1,
+        #               "Gentle Breeze (8-12] kts" == 2,
+        #               "Moderate Breeze (12-16] kts" == 3,
+        #               "Fresh Breeze (16-20+] kts == 4"
+
+        # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
+        # This represents five Jerlov types: IC = 0.13, 3C = 0.17, 5C = 0.24, 7C = 0.35, 9C = 0.58
+
+        # cBLUE gives users five options for Turbidity:
+        #   kd: Clear [0-0.15] m^-1 == 0,
+        #       Moderate (0.15-0.21] m^-1 == 1,
+        #       Moderate-Turbid (0.21-0.27] m^-1 == 2,
+        #       Turbid (0.27-0.47+] m^-1) == 3,
+        #       Very Turbid (0.47-0.58+] m^-1 == 5
+        
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
+
+        # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+        # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
+        #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
+        #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
+
+        index = 5*self.gui_object.wind_ind + self.gui_object.kd_ind
+
+        # Columns to grab from the LUTs. 
+        # Get columns a, b from vert and horz LUTs. 
+        # Get columns a, b, c from signal LUT. 
+        cols = ['a', 'b', 'c']
+        # Read look up tables, select rows
+        # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
+        # from the vertical transport and horizontal LUTs, and columns a, b, and c from the vertical signal LUT. 
+
+        transport = pd.read_csv(self.sensor_object.vert_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        signal = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        horizontal = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        
+        # print(f"transport: {transport}\nthu: {thu}\nsignal: {signal}")
+
+        # Return observation equation coefficient DataFrames for each component. 
+        return transport, horizontal, signal
+
+    def fit_lut_og(self):
         """Called to begin the SubAqueous processing."""
     
         # tvu values below 0.03 are considered erroneous
@@ -123,7 +226,7 @@ class Subaqueous:
 
         return res_tvu, res_thu, res_range_bias
 
-    def model_process(self):
+    def model_process_og(self):
         """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
             on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
             given permutations of wind and kd. 
@@ -143,13 +246,17 @@ class Subaqueous:
         # This represents six Jerlov types: III = 0.11 , IC = 0.13, 3C = 0.17, 
         #                                   5C = 0.24, 7C = 0.35, 9C = 0.58
 
-        # cBLUE gives users six options for Turbidity:
+        # cBLUE previously gave users six options for Turbidity:
         #   kd: Clear [0-0.12] m^-1 == 0,
         #       Clear-Moderate (0.12-0.15] m^-1 == 1,
         #       Moderate (0.15-0.21] m^-1 == 2,
         #       Moderate-Turbid (0.21-0.27] m^-1 == 3,
         #       Turbid (0.27-0.47] m^-1) == 4,
         #       Very Turbid (0.47-0.58+] m^-1 == 5
+
+        # Since the GUI now only allows for 5 turbidity options (with the lowest removed), 
+        # kd_ind is offset by 1 to account for the removed option.
+        kd_ind = self.gui_object.kd_ind + 1
         
         # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
 
@@ -158,7 +265,7 @@ class Subaqueous:
         #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
         #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
 
-        index = 6*self.gui_object.wind_ind + self.gui_object.kd_ind
+        index = 6*self.gui_object.wind_ind + kd_ind
 
         # Columns to grab from the LUTs. 
         # Get columns a, b from vert and horz LUTs. 
@@ -176,7 +283,6 @@ class Subaqueous:
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
         return tvu, thu, range_bias
-    
     def multi_beam_fit_lut(self, masked_fan_angle):
         """Called to begin the SubAqueous processing for multi beam sensors"""
     
