@@ -88,8 +88,9 @@ class Subaqueous:
         c_rb = fit_signal["c"]
 
         snr = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_signal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
         snr[self.valid_depth_mask] = np.maximum(1, a_rb * np.square(valid_depth) + b_rb * valid_depth + c_rb)
-        res_signal = 0.071 / np.sqrt(2*snr)
+        res_signal[self.valid_depth_mask] = 0.071 / np.sqrt(2*snr[self.valid_depth_mask])
 
 
         res_transport = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
