@@ -12,32 +12,6 @@
             "range_bias": "./lookup_tables/Riegl/0_7mrad/RBU_LUT_Riegl_VQ880G_600_AGL_0.7_mrad.csv"
         }
     },
-    "Riegl VQ-880-G (1.0 mrad)": {
-        "sensor_model": {
-            "a_std_dev": 0.02,
-            "b_std_dev": 0.02,
-            "std_rho": 0.025,
-            "type": "single"
-        },
-        "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Riegl/1_0mrad/TVU_LUT_Riegl_VQ880G_600_AGL_1_mrad.csv",
-            "horizontal": "./lookup_tables/Riegl/1_0mrad/THU_LUT_Riegl_VQ880G_600_AGL_1_mrad.csv",
-            "range_bias": "./lookup_tables/Riegl/1_0mrad/RBU_LUT_Riegl_VQ880G_600_AGL_1_mrad.csv"
-        }
-    },
-    "Riegl VQ-880-G (1.5 mrad)": {
-        "sensor_model": {
-            "a_std_dev": 0.02,
-            "b_std_dev": 0.02,
-            "std_rho": 0.025,
-            "type": "single"
-        },
-        "subaqueous_LUTs": {
-            "vertical": "./lookup_tables/Riegl/1_5mrad/TVU_LUT_Riegl_VQ880G_600_AGL_1.5_mrad.csv",
-            "horizontal": "./lookup_tables/Riegl/1_5mrad/THU_LUT_Riegl_VQ880G_600_AGL_1.5_mrad.csv",
-            "range_bias": "./lookup_tables/Riegl/1_5mrad/RBU_LUT_Riegl_VQ880G_600_AGL_1.5_mrad.csv"
-        }
-    },
     "Riegl VQ-880-G (2.0 mrad)": {
         "sensor_model": {
             "a_std_dev": 0.02,
