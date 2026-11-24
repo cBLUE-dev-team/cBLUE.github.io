@@ -196,19 +196,16 @@ class Tpu:
 
                     if(self.sensor_object.type == "multi"):
                         #Multi beam sensor: Sending to multi_beam_fit_lut() 
-                        subaqu_tvu, subaqu_thu = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
+                        subaqu_transport, subaqu_horizontal = subaqu_obj.multi_beam_fit_lut(masked_fan_angle) 
                     elif(self.sensor_object.type == "single_hawkeye"):
                         #Hawkeye Sensor: Sending to hawkeye_fit_lut() 
-                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.hawkeye_fit_lut(masked_scan_user_data)
+                        subaqu_transport, subaqu_signal, subaqu_horizontal = subaqu_obj.hawkeye_fit_lut(masked_scan_user_data)
                     elif(self.sensor_object.type == "single_cm"):
                         #Coastal Mapper Sensor: Sending to cm_fit_lut() 
-                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.cm_fit_lut(masked_scan_user_data)
-                    elif(self.sensor_object.type == "single_new"):
-                        #Sensors with new LUTs generated: Sending to fit_lut_new() 
-                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut_new() 
+                        subaqu_transport, subaqu_signal, subaqu_horizontal = subaqu_obj.cm_fit_lut(masked_scan_user_data)
                     else:
-                        #Single beam Sensor, w/out new LUTs: Sending to fit_lut_og() 
-                        subaqu_tvu, subaqu_thu, range_bias = subaqu_obj.fit_lut_og()     
+                        #Single beam Sensor: Sending to fit_lut() 
+                        subaqu_transport, subaqu_signal, subaqu_horizontal = subaqu_obj.fit_lut()     
 
                     # VDatum file is in cm (1-sigma)
                     vdatum_mcu = (float(self.settings_object.mcu) / 100.0)
@@ -222,39 +219,41 @@ class Tpu:
                     logger.tpu(
                         "({}) calculating total thu...".format(las.las_short_name)
                     )
-                    valid_output_mask = subaqu_tvu != self.NO_DATA_VALUE
-                    total_thu = np.full_like(subaqu_thu, self.NO_DATA_VALUE, dtype=float)
+                    valid_output_mask = subaqu_transport != self.NO_DATA_VALUE
+                    total_thu = np.full_like(subaqu_transport, self.NO_DATA_VALUE, dtype=float)
 
                     # sum in quadrature - 1 - sigma
-                    total_thu[valid_output_mask] = np.sqrt(subaer_thu[valid_output_mask]**2 + subaqu_thu[valid_output_mask]**2 + huc**2)
+                    total_thu[valid_output_mask] = np.sqrt(subaer_thu[valid_output_mask]**2 + subaqu_horizontal[valid_output_mask]**2 + huc**2)
 
                     logger.tpu(
                         "({}) calculating total tvu...".format(las.las_short_name)
                     )
 
-                    total_tvu = np.full_like(subaqu_tvu, self.NO_DATA_VALUE, dtype=float)
+                    total_tvu = np.full_like(subaqu_transport, self.NO_DATA_VALUE, dtype=float)
 
                     if(self.sensor_object.type == "multi"):
                         # sum in quadrature - 1 - sigma
                         total_tvu[valid_output_mask] = np.sqrt(
-                            subaer_tvu[valid_output_mask]**2 + subaqu_tvu[valid_output_mask]**2 + vdatum_mcu**2 + vuc**2
+                            subaer_tvu[valid_output_mask]**2 + subaqu_transport[valid_output_mask]**2 + vdatum_mcu**2 + vuc**2
                         )
                         
                     else:
                         # sum in quadrature - 1 - sigma
                         total_tvu[valid_output_mask] = np.sqrt(
-                            subaer_tvu[valid_output_mask]**2 + subaqu_tvu[valid_output_mask]**2 + vdatum_mcu**2 + vuc**2 + range_bias[valid_output_mask]**2
+                            subaer_tvu[valid_output_mask]**2 + subaqu_transport[valid_output_mask]**2 + vdatum_mcu**2 + vuc**2 + subaqu_signal[valid_output_mask]**2
                         )
 
 
                     # # Debugging: print a few sample values of the uncertainty components and total TPU, 1 sigma only
                     # uncertainty_components = pd.DataFrame({
                     #     "subaer_thu": subaer_thu,
-                    #     "subaqu_thu": subaqu_thu,
+                    #     "subaqu_horizontal": subaqu_horizontal,
                     #     "subaer_tvu": subaer_tvu,
-                    #     "subaqu_tvu": subaqu_tvu,
+                    #     "subaqu_transport": subaqu_transport,
+                    #   "subaqu_signal": subaqu_signal,
                     #     "vdatum_mcu": vdatum_mcu,
-                    #     "range_bias": range_bias if self.sensor_object.type != "multi" else None,
+                    #     "vuc": vuc,
+                    #     "huc": huc,
                     #     "total_thu": total_thu,
                     #     "total_tvu": total_tvu
                     # })
