@@ -72,7 +72,7 @@ class Subaqueous:
         valid_depth = self.depth[self.valid_depth_mask]
 
         # query coefficients from look up tables
-        fit_transport, fit_signal, fit_horizontal = self.model_process_new()
+        fit_transport, fit_signal, fit_horizontal = self.model_process()
 
 
         #Signal uncertainty is a 2nd order polynomial fit: ax^2 + bx + c
