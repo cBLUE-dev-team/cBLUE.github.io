@@ -522,7 +522,14 @@ class Subaqueous:
         valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
 
         # query coefficients from look up tables
-        transport_deep, signal_deep, horizontal_deep, transport_shallow, signal_shallow, horizontal_shallow = self.hawkeye_model_process()
+        (
+            transport_deep, 
+            signal_deep, 
+            horizontal_deep, 
+            transport_shallow, 
+            signal_shallow, 
+            horizontal_shallow
+        ) = self.cm_model_process()
 
         # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
         # a_z := vertical a coefficient
@@ -683,11 +690,11 @@ class Subaqueous:
         # Read look up tables, select rows
         # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
         # from the transport and horizontal LUTs, and columns a, b, and c from the signal LUT. 
-        transport_deep = pd.read_csv(self.sensor_object.vert_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
+        transport_deep = pd.read_csv(self.sensor_object.transport_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
         signal_deep = pd.read_csv(self.sensor_object.signal_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
         horizontal_deep = pd.read_csv(self.sensor_object.horz_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
         
-        transport_shallow = pd.read_csv(self.sensor_object.vert_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        transport_shallow = pd.read_csv(self.sensor_object.transport_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
         signal_shallow = pd.read_csv(self.sensor_object.signal_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
         horizontal_shallow = pd.read_csv(self.sensor_object.horz_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
 
