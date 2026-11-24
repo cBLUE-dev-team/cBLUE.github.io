@@ -92,24 +92,26 @@ class Sensor:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["500m"]
             else:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["600m"]
+
             #The path of the vertical deep narrow look up table used for modeling
-            self.vert_lut_deep_narrow = self.subaqueous_LUTs["vertical_deep_narrow"]
+            self.transport_lut_deep_narrow = self.subaqueous_LUTs["transport_deep_narrow"]
+            # The path of the signal deep narrow uncertainty look up table used for modeling
+            self.signal_lut_narrow = self.subaqueous_LUTs["signal_deep_narrow"]
             #The path of the horizontal deep narrow look up table used for modeling
             self.horz_lut_deep_narrow = self.subaqueous_LUTs["horizontal_deep_narrow"]
-            # The path of the range bias deep narrow uncertainty look up table used for modeling
-            self.range_bias_lut_narrow = self.subaqueous_LUTs["range_bias_deep_narrow"]
             #The path of the vertical deep wide look up table used for modeling
-            self.vert_lut_deep_wide = self.subaqueous_LUTs["vertical_deep_wide"]
+            self.transport_lut_deep_wide = self.subaqueous_LUTs["transport_deep_wide"]
+            # The path of the signal deep wide uncertainty look up table used for modeling
+            self.signal_lut_wide = self.subaqueous_LUTs["signal_deep_wide"]
             #The path of the horizontal deep wide look up table used for modeling
             self.horz_lut_deep_wide = self.subaqueous_LUTs["horizontal_deep_wide"]
-            # The path of the range bias deep wide uncertainty look up table used for modeling
-            self.range_bias_lut_wide = self.subaqueous_LUTs["range_bias_deep_wide"]
             #The path of the vertical wide look up table used for modeling
-            self.vert_lut_shallow = self.subaqueous_LUTs["vertical_shallow"]
+            self.transport_lut_shallow = self.subaqueous_LUTs["transport_shallow"]
+            # The path of the signal shallow uncertainty look up table used for modeling
+            self.signal_lut_shallow = self.subaqueous_LUTs["signal_shallow"]
             #The path of the horizontal wide look up table used for modeling
             self.horz_lut_shallow = self.subaqueous_LUTs["horizontal_shallow"]
-            # The path of the range bias shallow uncertainty look up table used for modeling
-            self.range_bias_lut_shallow = self.subaqueous_LUTs["range_bias_shallow"]
+
 
         # If this is the CoastalMapper    
         elif self.type == "single_cm":
@@ -125,18 +127,20 @@ class Sensor:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["400m"]
             else:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["875m"]
-            #The path of the vertical deep look up table used for modeling
-            self.vert_lut_deep = self.subaqueous_LUTs["vertical_deep"]
+                
+            #The path of the transport deep look up table used for modeling
+            self.transport_lut_deep = self.subaqueous_LUTs["transport_deep"]
+            # The path of the signal deep uncertainty look up table used for modeling
+            self.signal_lut_deep = self.subaqueous_LUTs["signal_deep"]
             #The path of the horizontal deep look up table used for modeling
             self.horz_lut_deep = self.subaqueous_LUTs["horizontal_deep"]
-            # The path of the range bias deep uncertainty look up table used for modeling
-            self.range_bias_lut_deep = self.subaqueous_LUTs["range_bias_deep"]
-            #The path of the vertical wide look up table used for modeling
-            self.vert_lut_shallow = self.subaqueous_LUTs["vertical_shallow"]
+            #The path of the transport wide look up table used for modeling
+            self.transport_lut_shallow = self.subaqueous_LUTs["transport_shallow"]
+            # The path of the signal shallow uncertainty look up table used for modeling
+            self.signal_lut_shallow = self.subaqueous_LUTs["signal_shallow"]
             #The path of the horizontal wide look up table used for modeling
             self.horz_lut_shallow = self.subaqueous_LUTs["horizontal_shallow"]
-            # The path of the range bias shallow uncertainty look up table used for modeling
-            self.range_bias_lut_shallow = self.subaqueous_LUTs["range_bias_shallow"]
+
         
         #Otherwise if this is the Chiroptera-5 sensor
         elif self.type == "chiroptera_5":
@@ -155,18 +159,19 @@ class Sensor:
             else:
                 self.subaqueous_LUTs = self.sensor_config[self.name]["subaqueous_LUTs"]["600m"]
 
-            #The path of the vertical look up table used for modeling
-            self.vert_lut = self.subaqueous_LUTs["vertical"]
-            #The path of the horizontal look up table used for modeling
+            #The path of the transport uncertainty look up table used for modeling
+            self.transport_lut = self.subaqueous_LUTs["transport"]
+            # The path of the signal uncertainty look up table used for modeling
+            self.signal_lut = self.subaqueous_LUTs["signal"]
+            #The path of the horizontal uncertainty look up table used for modeling
             self.horz_lut = self.subaqueous_LUTs["horizontal"]
-            # The path of the range bias uncertainty look up table used for modeling
-            self.range_bias_lut = self.subaqueous_LUTs["range_bias"]
+
 
         #Any other sensor
         else:
-            #The path of the vertical look up table used for modeling
-            self.vert_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["vertical"]
-            #The path of the horizontal look up table used for modeling
+            #The path of the transport uncertainty look up table used for modeling
+            self.transport_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["transport"]
+            #The path of the signal uncertainty look up table used for modeling
+            self.signal_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["signal"]
+            #The path of the horizontal uncertainty look up table used for modeling
             self.horz_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["horizontal"]
-            # The path of the range bias uncertainty look up table used for modeling
-            self.range_bias_lut = self.sensor_config[self.name]["subaqueous_LUTs"]["range_bias"]
