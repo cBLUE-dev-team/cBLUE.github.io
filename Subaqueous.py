@@ -61,16 +61,9 @@ class Subaqueous:
 
         # logger.subaqueous(f"kd_par {self.gui_object.kd_ind}")
         # logger.subaqueous(f"wind_par {self.gui_object.wind_ind}")
-        # if(self.sensor_object.type == "single_hawkeye"):
-        #     logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut_deep_narrow}, {self.sensor_object.vert_lut_deep_wide}, {self.sensor_object.vert_lut_shallow}")
-        #     logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut_deep_narrow}, {self.sensor_object.horz_lut_deep_wide}, {self.sensor_object.horz_lut_shallow}")
-        #     logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut_narrow}, {self.sensor_object.range_bias_lut_wide}, {self.sensor_object.range_bias_lut_shallow}")
-        # else:
-        #     logger.subaqueous(f"vertical lut {self.sensor_object.vert_lut}")
-        #     logger.subaqueous(f"horizontal lut{self.sensor_object.horz_lut}")
-        #     logger.subaqueous(f"range bias lut {self.sensor_object.range_bias_lut}")
 
-    def fit_lut_new(self):
+
+    def fit_lut(self):
         """Called to begin the SubAqueous processing."""
     
         # tvu values below 0.03 are considered erroneous
@@ -79,17 +72,18 @@ class Subaqueous:
         valid_depth = self.depth[self.valid_depth_mask]
 
         # query coefficients from look up tables
-        fit_transport, fit_horizontal, fit_signal = self.model_process_new()
+        fit_transport, fit_signal, fit_horizontal = self.model_process_new()
 
 
         #Signal uncertainty is a 2nd order polynomial fit: ax^2 + bx + c
-        a_rb = fit_signal["a"]
-        b_rb = fit_signal["b"]
-        c_rb = fit_signal["c"]
+        a_s = fit_signal["a"]
+        b_s = fit_signal["b"]
+        c_s = fit_signal["c"]
 
+        #Calculate the SNR and the resulting signal uncertainty for each valid subaqueous point.
         snr = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
         res_signal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-        snr[self.valid_depth_mask] = np.maximum(1, a_rb * np.square(valid_depth) + b_rb * valid_depth + c_rb)
+        snr[self.valid_depth_mask] = np.maximum(1, a_s * np.square(valid_depth) + b_s * valid_depth + c_s)
         res_signal[self.valid_depth_mask] = 0.071 / np.sqrt(2*snr[self.valid_depth_mask])
 
 
@@ -115,19 +109,19 @@ class Subaqueous:
         # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
         res_horizontal[self.valid_depth_mask] = (a_h + b_h * valid_depth)* 0.577
 
-        # Set non-subaqueous points thu, tvu, and signal values to 0.
-        res_horizontal[~self.subaqueous_mask] = 0
+        # Set non-subaqueous points transport, signal, and horizontal values to 0.
         res_transport[~self.subaqueous_mask] = 0
         res_signal[~self.subaqueous_mask] = 0
+        res_horizontal[~self.subaqueous_mask] = 0
 
-        return res_transport, res_horizontal, res_signal
+        return res_transport, res_signal, res_horizontal
 
-    def model_process_new(self):
-        """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
+    def model_process(self):
+        """Retrieves the Transport, Signal, and Horizontal Uncertainty observation equation coefficients and offsets based 
             on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
             given permutations of wind and kd. 
 
-        :return: (tvu, thu, range_bias) TVU, THU, and range bias observation equation coefficients.
+        :return: (transport, signal, horizontal) Transport, Signal, and Horizontal Uncertainty observation equation coefficients.
         :rtype: (DataFrame, DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 0-4.
@@ -146,14 +140,14 @@ class Subaqueous:
         #       Moderate (0.15-0.21] m^-1 == 1,
         #       Moderate-Turbid (0.21-0.27] m^-1 == 2,
         #       Turbid (0.27-0.47+] m^-1) == 3,
-        #       Very Turbid (0.47-0.58+] m^-1 == 5
+        #       Very Turbid (0.47-0.58+] m^-1 == 4
         
         # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
 
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
         # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
         #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
-        #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
+        #     [...], row 24 represents wind speed index 4 "Fresh Breeze" and kd index 4 "Very Turbid".
 
         index = 5*self.gui_object.wind_ind + self.gui_object.kd_ind
 
@@ -165,125 +159,15 @@ class Subaqueous:
         # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
         # from the vertical transport and horizontal LUTs, and columns a, b, and c from the vertical signal LUT. 
 
-        transport = pd.read_csv(self.sensor_object.vert_lut, usecols=lambda i: i in set(cols)).iloc[index]
-        signal = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        transport = pd.read_csv(self.sensor_object.transport_lut, usecols=lambda i: i in set(cols)).iloc[index]
+        signal = pd.read_csv(self.sensor_object.signal_lut, usecols=lambda i: i in set(cols)).iloc[index]
         horizontal = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[index]
         
         # print(f"transport: {transport}\nthu: {thu}\nsignal: {signal}")
 
         # Return observation equation coefficient DataFrames for each component. 
-        return transport, horizontal, signal
+        return transport, signal, horizontal
 
-    def fit_lut_og(self):
-        """Called to begin the SubAqueous processing."""
-    
-        # tvu values below 0.03 are considered erroneous
-        min_tvu = 0.03
-
-        valid_depth = self.depth[self.valid_depth_mask]
-
-        # query coefficients from look up tables
-        fit_tvu, fit_thu, range_bias = self.model_process()
-
-        # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-        a_rb = range_bias["a"]
-        b_rb = range_bias["b"]
-        c_rb = range_bias["c"]
-        d_rb = range_bias["d"]
-
-        # print(f"a_rb: {a_rb}, b_rb: {b_rb}, c_rb: {c_rb}, d_rb: {d_rb}")
-        # print(self.depth)
-
-        res_range_bias = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-        res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-        res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-
-        res_range_bias[self.valid_depth_mask] = a_rb * np.power(valid_depth, 3) + b_rb * np.square(valid_depth) + c_rb * valid_depth + d_rb
-
-        # print(f"\nres_range_bias: {res_range_bias}")
-
-        # a_z := vertical a coefficient
-        # b_z := vertical b coefficient
-        a_z = fit_tvu["a"]
-        b_z = fit_tvu["b"]
-        # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
-        res_tvu[self.valid_depth_mask] =  np.sqrt(np.square(a_z) + np.square(b_z * valid_depth))
-
-        # enforce minimum value for tvu
-        res_tvu[self.valid_depth_mask & (res_tvu < min_tvu)] = min_tvu
-
-        # a_h := horizontal coefficient
-        # b_h := horizontal offset
-        a_h = fit_thu["a"]
-        b_h = fit_thu["b"]
-        # THU is a Linear fit: a + b*x 
-        # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-        res_thu[self.valid_depth_mask] = (a_h + b_h * valid_depth)* 0.577
-
-        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
-        res_thu[~self.subaqueous_mask] = 0
-        res_tvu[~self.subaqueous_mask] = 0
-        res_range_bias[~self.subaqueous_mask] = 0
-
-        return res_tvu, res_thu, res_range_bias
-
-    def model_process_og(self):
-        """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
-            on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
-            given permutations of wind and kd. 
-
-        :return: (tvu, thu, range_bias) TVU, THU, and range bias observation equation coefficients.
-        :rtype: (DataFrame, DataFrame, DataFrame)
-        """
-        # wind_par values range from 0-20 kts, represented as integers 0-4.
-        # cBLUE gives users five options for Wind Speed:
-        #   Wind Speed: "Calm-light air [0-4] kts" == 0,
-        #               "Light Breeze (4-8] kts" == 1,
-        #               "Gentle Breeze (8-12] kts" == 2,
-        #               "Moderate Breeze (12-16] kts" == 3,
-        #               "Fresh Breeze (16-20+] kts == 4"
-
-        # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
-        # This represents six Jerlov types: III = 0.11 , IC = 0.13, 3C = 0.17, 
-        #                                   5C = 0.24, 7C = 0.35, 9C = 0.58
-
-        # cBLUE previously gave users six options for Turbidity:
-        #   kd: Clear [0-0.12] m^-1 == 0,
-        #       Clear-Moderate (0.12-0.15] m^-1 == 1,
-        #       Moderate (0.15-0.21] m^-1 == 2,
-        #       Moderate-Turbid (0.21-0.27] m^-1 == 3,
-        #       Turbid (0.27-0.47] m^-1) == 4,
-        #       Very Turbid (0.47-0.58+] m^-1 == 5
-
-        # Since the GUI now only allows for 5 turbidity options (with the lowest removed), 
-        # kd_ind is offset by 1 to account for the removed option.
-        kd_ind = self.gui_object.kd_ind + 1
-        
-        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
-
-        # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
-        # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
-        #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
-        #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
-
-        index = 6*self.gui_object.wind_ind + kd_ind
-
-        # Columns to grab from the LUTs. 
-        # Get columns a, b from vert and horz LUTs. 
-        # Get columns a, b, c, d from range bias LUT. 
-        cols = ['a', 'b', 'c', 'd']
-        # Read look up tables, select rows
-        # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
-        # from the vertical and horizontal LUTs, and columns a, b, c, and d from the range bias LUT. 
-
-        tvu = pd.read_csv(self.sensor_object.vert_lut, usecols=lambda i: i in set(cols)).iloc[index]
-        thu = pd.read_csv(self.sensor_object.horz_lut, usecols=lambda i: i in set(cols)).iloc[index]
-        range_bias = pd.read_csv(self.sensor_object.range_bias_lut, usecols=lambda i: i in set(cols)).iloc[index]
-
-        # print(f"tvu: {tvu}\nthu: {thu}\nrange_bias: {range_bias}")
-
-        # Return averaged TVU and THU observation equation coefficient DataFrames. 
-        return tvu, thu, range_bias
     def multi_beam_fit_lut(self, masked_fan_angle):
         """Called to begin the SubAqueous processing for multi beam sensors"""
     
@@ -313,7 +197,7 @@ class Subaqueous:
         res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
         res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
 
-        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
+        # Set non-subaqueous points thu and tvu values to 0.
         res_thu[~self.subaqueous_mask] = 0
         res_tvu[~self.subaqueous_mask] = 0
 
@@ -355,36 +239,33 @@ class Subaqueous:
         :rtype: (DataFrame, DataFrame)
         """
 
-        # kd_ind are index values that range from 0-4 and represent the user's selection for Turbidity.
-        # cBLUE gives users five options for Turbidity:
-        #   kd: 0: ("Clear (0.06-0.10 m^-1)", range(6, 11)),
-        #       1: ("Clear-Moderate (0.11-0.17 m^-1)", range(11, 18)),
-        #       2: ("Moderate (0.18-0.25 m^-1)", range(18, 26)),
-        #       3: ("Moderate-High (0.26-0.32 m^-1)", range(26, 33)),
-        #       4: ("High (0.33-0.36 m^-1)", range(33, 37))
-
-        # wind_ind are index values that range from 0-4 and represent the user's selection for wind speed.
+        # wind_par values range from 0-20 kts, represented as integers 0-4.
         # cBLUE gives users five options for Wind Speed:
-        #   Wind Speed: 0: ("Calm-light air (0-2 kts)", [1]),
-        #               1: ("Light Breeze (3-6 kts)", [2, 3]),
-        #               2: ("Gentle Breeze (7-10 kts)", [4, 5]),
-        #               3: ("Moderate Breeze (11-15 kts)", [6, 7]),
-        #               4: ("Fresh Breeze (16-20 kts)", [8, 9, 10])
+        #   Wind Speed: "Calm-light air [0-4] kts" == 0,
+        #               "Light Breeze (4-8] kts" == 1,
+        #               "Gentle Breeze (8-12] kts" == 2,
+        #               "Moderate Breeze (12-16] kts" == 3,
+        #               "Fresh Breeze (16-20+] kts == 4"
 
-        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right sheet from the lookup table.
-        # The excel sheets are ordered by the permutations of turbidity (low to high) with wind speed (low to high).
+        # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
+        # This represents five Jerlov types: IC = 0.13, 3C = 0.17, 5C = 0.24, 7C = 0.35, 9C = 0.58
 
-        # ex: sheet 0 represents fan angle observation equation coefficients for kd selection 0 and wind speed selection 0, 
-        #       sheet 1 represents kd selection 0 and wind speed selection 1, [...],
-        #       sheet 24 represents kd selection 4 and wind speed selection 4, etc.
+        # cBLUE gives users five options for Turbidity:
+        #   kd: Clear [0-0.15] m^-1 == 0,
+        #       Moderate (0.15-0.21] m^-1 == 1,
+        #       Moderate-Turbid (0.21-0.27] m^-1 == 2,
+        #       Turbid (0.27-0.47+] m^-1) == 3,
+        #       Very Turbid (0.47-0.58+] m^-1 == 4
+        
+        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
 
-        wind_ind = self.gui_object.wind_ind
-        # To account for new selection options
-        if wind_ind == 5:
-            wind_ind = 4  
+        # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+        # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
+        #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
+        #     [...], row 24 represents wind speed index 4 "Fresh Breeze" and kd index 4 "Very Turbid".
 
         # Get the sheet number for this combination of wind_ind and kd_ind. 
-        sheet = (5 * self.gui_object.kd_ind) + wind_ind
+        sheet = (5 * self.gui_object.kd_ind) + self.gui_object.wind_ind
 
         logger.subaqueous(f"kd_ind: {self.gui_object.kd_ind}, wind_ind: {self.gui_object.wind_ind}")
         logger.subaqueous(f"Multi beam look up table sheet number: {sheet}")
@@ -406,60 +287,72 @@ class Subaqueous:
         # tvu values below 0.03 are considered erroneous
         min_tvu = 0.03
 
+        # Create a mask of valid subaqueous points to loop through.
         valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
 
         # query coefficients from look up tables
-        tvu_deep_narrow, thu_deep_narrow, range_bias_narrow, tvu_deep_wide, thu_deep_wide, range_bias_wide, tvu_shallow, thu_shallow, range_bias_shallow = self.hawkeye_model_process()
+        (
+            transport_deep_narrow,
+            signal_deep_narrow,
+            horizontal_deep_narrow,
+            transport_deep_wide,
+            signal_deep_wide,
+            horizontal_deep_wide,
+            transport_shallow,
+            signal_shallow,
+            horizontal_shallow,
+        ) = self.hawkeye_model_process()
 
-        # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+        # Transport uncertainty is an IHO fit: (a^2+(b*x)^2)^0.5
         # a_z := vertical a coefficient
         # b_z := vertical b coefficient
 
-        a_z_narrow = tvu_deep_narrow["a"]
-        b_z_narrow = tvu_deep_narrow["b"]
+        a_z_narrow = transport_deep_narrow["a"]
+        b_z_narrow = transport_deep_narrow["b"]
 
-        a_z_wide = tvu_deep_wide["a"]
-        b_z_wide = tvu_deep_wide["b"]                                                             
+        a_z_wide = transport_deep_wide["a"]
+        b_z_wide = transport_deep_wide["b"]                                                             
 
-        a_z_shallow = tvu_shallow["a"]
-        b_z_shallow = tvu_shallow["b"]
+        a_z_shallow = transport_shallow["a"]
+        b_z_shallow = transport_shallow["b"]
+
+        # Signal uncertainty is a 2nd order polynomial fit: ax^2 + bx + c
+        a_s_narrow = signal_deep_narrow["a"]
+        b_s_narrow = signal_deep_narrow["b"]
+        c_s_narrow = signal_deep_narrow["c"]
+
+        a_s_wide = signal_deep_wide["a"]
+        b_s_wide = signal_deep_wide["b"]
+        c_s_wide = signal_deep_wide["c"]
+
+
+        a_s_shallow = signal_shallow["a"]
+        b_s_shallow = signal_shallow["b"]
+        c_s_shallow = signal_shallow["c"]
+
 
         # THU is a Linear fit: a + b*x 
         # a_h := horizontal coefficient
         # b_h := horizontal offset
-        a_h_narrow = thu_deep_narrow["a"]
-        b_h_narrow = thu_deep_narrow["b"]
+        a_h_narrow = horizontal_deep_narrow["a"]
+        b_h_narrow = horizontal_deep_narrow["b"]
 
-        a_h_wide = thu_deep_wide["a"]
-        b_h_wide = thu_deep_wide["b"]
+        a_h_wide = horizontal_deep_wide["a"]
+        b_h_wide = horizontal_deep_wide["b"]
 
-        a_h_shallow = thu_shallow["a"]
-        b_h_shallow = thu_shallow["b"]
+        a_h_shallow = horizontal_shallow["a"]
+        b_h_shallow = horizontal_shallow["b"]
 
-        # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-        a_rb_narrow = range_bias_narrow["a"]
-        b_rb_narrow = range_bias_narrow["b"]
-        c_rb_narrow = range_bias_narrow["c"]
-        d_rb_narrow = range_bias_narrow["d"]
 
-        a_rb_wide = range_bias_wide["a"]
-        b_rb_wide = range_bias_wide["b"]
-        c_rb_wide = range_bias_wide["c"]
-        d_rb_wide = range_bias_wide["d"]
+        res_horizontal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_transport = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_signal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
 
-        a_rb_shallow = range_bias_shallow["a"]
-        b_rb_shallow = range_bias_shallow["b"]
-        c_rb_shallow = range_bias_shallow["c"]
-        d_rb_shallow = range_bias_shallow["d"]
 
-        res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-        res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-        res_range_bias = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-
-        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
-        res_thu[~self.subaqueous_mask] = 0
-        res_tvu[~self.subaqueous_mask] = 0
-        res_range_bias[~self.subaqueous_mask] = 0
+        # Set non-subaqueous points transport, signal, and horizontal uncertainty values to 0.
+        res_horizontal[~self.subaqueous_mask] = 0
+        res_transport[~self.subaqueous_mask] = 0
+        res_signal[~self.subaqueous_mask] = 0
 
         # print(f"length of masked_scan_user_data (scanner channel): {len(masked_scan_user_data[0])}"
         #       f"\nlength of depth: {len(self.depth)}"
@@ -491,123 +384,134 @@ class Subaqueous:
             # If Scanner Channel = 1, then this is topographic scanner data. 
             # There is no subaqueous uncertainty.
             if(scanner_channel == 1):
-                thu_point = 0
-                tvu_point = 0
-                range_bias_point = 0
+                transport_point = 0
+                signal_point = 0
+                horizontal_point = 0
             # If Scanner Channel = 2 and User Data = 0, then this is the shallow scanner
             # Use the shallow uncertainty coefficients and offset. 
             elif(scanner_channel == 2 and user_data == 0):
-                # THU is a Linear fit: a + b*x 
-                thu_point = a_h_shallow + (b_h_shallow * depth_point) 
-                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                # Horizontal uncertainty is a Linear fit: a + b*x 
+                horizontal_point = a_h_shallow + (b_h_shallow * depth_point) 
+                # Transport uncertainty is an IHO fit: (a^2+(b*x)^2)^0.5
                 bx_h_shallow = (b_z_shallow * depth_point)
-                tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
+                transport_point = sqrt((a_z_shallow*a_z_shallow) + (bx_h_shallow*bx_h_shallow))
                 # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
+                if(transport_point < min_tvu):
+                    transport_point = min_tvu
+                # SNR is a 2nd order polynomial fit: ax^2 + bx + c
+                snr_point = np.maximum(1, a_s_shallow * np.square(depth_point) + b_s_shallow * depth_point + c_s_shallow)
+                # Get the signal uncertainty at this point using the SNR value.
+                signal_point = 0.071 / np.sqrt(2*snr_point)
             # If Scanner Channel = 3 and User Data = 1, then this is the deep scanner, combined channel
             # Use the deep wide uncertainty coefficients and offset. 
             elif(scanner_channel == 3 and user_data == 1):
-                # THU is a Linear fit: a + b*x 
-                thu_point = a_h_wide + (b_h_wide * depth_point) 
-                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                # Horizontal uncertainty is a Linear fit: a + b*x 
+                horizontal_point = a_h_wide + (b_h_wide * depth_point) 
+                # Transport uncertainty is an IHO fit: (a^2+(b*x)^2)^0.5
                 bx_h_wide = (b_z_wide * depth_point)
-                tvu_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
+                transport_point = sqrt((a_z_wide*a_z_wide) + (bx_h_wide*bx_h_wide))
                 # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_wide * (depth_point*depth_square) + b_rb_wide*depth_square + c_rb_wide*depth_point + d_rb_wide
+                if(transport_point < min_tvu):
+                    transport_point = min_tvu
+                # SNR is a 2nd order polynomial fit: ax^2 + bx + c
+                snr_point = np.maximum(1, a_s_wide * np.square(depth_point) + b_s_wide * depth_point + c_s_wide)
+                # Get the signal uncertainty at this point using the SNR value.
+                signal_point = 0.071 / np.sqrt(2*snr_point)
             # If Scanner Channel = 3 and User Data = 0, then this is the deep scanner, narrow channel
             # Use the deep narrow uncertainty coefficients and offset. 
             else:   
-                # THU is a Linear fit: a + b*x
-                thu_point = (a_h_narrow + (b_h_narrow * depth_point))
-                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                # Horizontal uncertainty is a Linear fit: a + b*x
+                horizontal_point = (a_h_narrow + (b_h_narrow * depth_point))
+                # Transport uncertainty is an IHO fit: (a^2+(b*x)^2)^0.5
                 bx_z_narrow = (b_z_narrow * depth_point)
-                tvu_point = sqrt((a_z_narrow*a_z_narrow) + (bx_z_narrow*bx_z_narrow))
+                transport_point = sqrt((a_z_narrow*a_z_narrow) + (bx_z_narrow*bx_z_narrow))
                 # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_narrow*(depth_point*depth_square) + b_rb_narrow*depth_square + c_rb_narrow*depth_point + d_rb_narrow
+                if(transport_point < min_tvu):
+                    transport_point = min_tvu
+                # SNR is a 2nd order polynomial fit: ax^2 + bx + c
+                snr_point = np.maximum(1, a_s_narrow * np.square(depth_point) + b_s_narrow * depth_point + c_s_narrow)
+                # Get the signal uncertainty at this point using the SNR value.
+                signal_point = 0.071 / np.sqrt(2*snr_point)
 
             #Add the subaqueous thu at this point to the list of result thu values
             # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-            thu_point = thu_point * 0.577
-            res_thu[i] = thu_point
-            #Add the subaqueous tvu at this point to the list of result tvu values
-            res_tvu[i] = tvu_point
-            #Add the range bias uncertainty at this point to the list of result range bias values
-            res_range_bias[i] = range_bias_point
+            horizontal_point = horizontal_point * 0.577
+            res_horizontal[i] = horizontal_point
+            #Add the subaqueous transport uncertainty at this point to the list of result transport values
+            res_transport[i] = transport_point
+            #Add the signal uncertainty at this point to the list of result signal values
+            res_signal[i] = signal_point
 
-        return res_tvu, res_thu, res_range_bias
+        return res_transport, res_signal, res_horizontal
 
     def hawkeye_model_process(self):
         """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
             on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
             given permutations of wind and kd. 
 
-        :return: (tvu_deep_narrow, thu_deep_narrow, tvu_deep_wide, thu_deep_wide, tvu_shallow, thu_shallow, range_bias ) TVU, THU, and range bias observation equation coefficients.
-        :rtype: (DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame)
+        :return: (transport_deep_narrow, signal_deep_narrow, horizontal_deep_narrow, transport_deep_wide, signal_deep_wide, horizontal_deep_wide, transport_shallow, signal_shallow, horizontal_shallow,) TVU, THU, and range bias observation equation coefficients.
+        :rtype: (DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 0-4.
-        # cBLUE gives users five options for Wind Speed:
-        #   Wind Speed: "Calm-light air [0-4] kts" == 0,
-        #               "Light Breeze (4-8] kts" == 1,
-        #               "Gentle Breeze (8-12] kts" == 2,
-        #               "Moderate Breeze (12-16] kts" == 3,
-        #               "Fresh Breeze (16-20+] kts == 4"
+            # cBLUE gives users five options for Wind Speed:
+            #   Wind Speed: "Calm-light air [0-4] kts" == 0,
+            #               "Light Breeze (4-8] kts" == 1,
+            #               "Gentle Breeze (8-12] kts" == 2,
+            #               "Moderate Breeze (12-16] kts" == 3,
+            #               "Fresh Breeze (16-20+] kts == 4"
+    
+            # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
+            # This represents five Jerlov types: IC = 0.13, 3C = 0.17, 5C = 0.24, 7C = 0.35, 9C = 0.58
+    
+            # cBLUE gives users five options for Turbidity:
+            #   kd: Clear [0-0.15] m^-1 == 0,
+            #       Moderate (0.15-0.21] m^-1 == 1,
+            #       Moderate-Turbid (0.21-0.27] m^-1 == 2,
+            #       Turbid (0.27-0.47+] m^-1) == 3,
+            #       Very Turbid (0.47-0.58+] m^-1 == 4
+            
+            # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
+    
+            # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
+            # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
+            #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
+            #     [...], row 24 represents wind speed index 4 "Fresh Breeze" and kd index 4 "Very Turbid".
 
-        # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
-        # This represents six Jerlov types: III = 0.11 , IC = 0.13, 3C = 0.17, 
-        #                                   5C = 0.24, 7C = 0.35, 9C = 0.58
-
-        # cBLUE gives users six options for Turbidity:
-        #   kd: Clear [0-0.12] m^-1 == 0,
-        #       Clear-Moderate (0.12-0.15] m^-1 == 1,
-        #       Moderate (0.15-0.21] m^-1 == 2,
-        #       Moderate-Turbid (0.21-0.27] m^-1 == 3,
-        #       Turbid (0.27-0.47] m^-1) == 4,
-        #       Very Turbid (0.47-0.58+] m^-1 == 5
-
-        # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
-        # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
-        # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
-        #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
-        #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
-
-        index = 6*self.gui_object.wind_ind + self.gui_object.kd_ind
+        index = 5*self.gui_object.wind_ind + self.gui_object.kd_ind
 
         # Columns to grab from the LUTs. 
         # Get columns a, b from vert and horz LUTs. 
         # Get columns a, b, c, d from range bias LUT. 
-        cols = ['a', 'b', 'c', 'd']
+        cols = ['a', 'b', 'c']
         # Read look up tables, select rows
         # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
         # from the vertical and horizontal LUTs, and columns a, b, c, and d from the range bias LUT. 
-        tvu_deep_narrow = pd.read_csv(self.sensor_object.vert_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_deep_narrow = pd.read_csv(self.sensor_object.horz_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
-        range_bias_narrow = pd.read_csv(self.sensor_object.range_bias_lut_narrow, usecols=lambda i: i in set(cols)).iloc[index]
-        tvu_deep_wide = pd.read_csv(self.sensor_object.vert_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_deep_wide = pd.read_csv(self.sensor_object.horz_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
-        range_bias_wide = pd.read_csv(self.sensor_object.range_bias_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
-        tvu_shallow = pd.read_csv(self.sensor_object.vert_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_shallow = pd.read_csv(self.sensor_object.horz_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
-        range_bias_shallow = pd.read_csv(self.sensor_object.range_bias_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        transport_deep_narrow = pd.read_csv(self.sensor_object.transport_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
+        signal_deep_narrow = pd.read_csv(self.sensor_object.signal_lut_narrow, usecols=lambda i: i in set(cols)).iloc[index]
+        horizontal_deep_narrow = pd.read_csv(self.sensor_object.horz_lut_deep_narrow, usecols=lambda i: i in set(cols)).iloc[index]
 
-        # print(f"TVU Deep Narrow: {tvu_deep_narrow} and THU Deep Narrow: {thu_deep_narrow}")
-        # print(f"TVU Deep Wide: {tvu_deep_wide} and THU Deep Wide: {thu_deep_wide}")
-        # print(f"TVU Shallow: {tvu_shallow} and THU Shallow: {thu_shallow}")
-        # print(f"Range Bias Uncertainty: {range_bias}")
+        transport_deep_wide = pd.read_csv(self.sensor_object.transport_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        signal_deep_wide = pd.read_csv(self.sensor_object.signal_lut_wide, usecols=lambda i: i in set(cols)).iloc[index]
+        horizontal_deep_wide = pd.read_csv(self.sensor_object.horz_lut_deep_wide, usecols=lambda i: i in set(cols)).iloc[index]
+
+        transport_shallow = pd.read_csv(self.sensor_object.transport_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        signal_shallow = pd.read_csv(self.sensor_object.signal_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        horizontal_shallow = pd.read_csv(self.sensor_object.horz_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        
+
 
         # Return averaged TVU and THU observation equation coefficient DataFrames. 
-        return tvu_deep_narrow, thu_deep_narrow, range_bias_narrow, tvu_deep_wide, thu_deep_wide, range_bias_wide, tvu_shallow, thu_shallow, range_bias_shallow
+        return (
+            transport_deep_narrow,
+            signal_deep_narrow,
+            horizontal_deep_narrow,
+            transport_deep_wide,
+            signal_deep_wide,
+            horizontal_deep_wide,
+            transport_shallow,
+            signal_shallow,
+            horizontal_shallow,
+        )
 
     def cm_fit_lut(self, masked_scan_user_data):
         """Called to begin the SubAqueous processing."""
@@ -618,46 +522,57 @@ class Subaqueous:
         valid_index = np.where(self.valid_depth_mask & self.subaqueous_mask)[0]
 
         # query coefficients from look up tables
-        tvu_deep, thu_deep, range_bias_deep, tvu_shallow, thu_shallow, range_bias_shallow = self.hawkeye_model_process()
+        transport_deep, signal_deep, horizontal_deep, transport_shallow, signal_shallow, horizontal_shallow = self.hawkeye_model_process()
 
         # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
         # a_z := vertical a coefficient
         # b_z := vertical b coefficient
 
-        a_z_deep = tvu_deep["a"]
-        b_z_deep = tvu_deep["b"]                                                          
+        a_z_deep = transport_deep["a"]
+        b_z_deep = transport_deep["b"]                                                          
 
-        a_z_shallow = tvu_shallow["a"]
-        b_z_shallow = tvu_shallow["b"]
+        a_z_shallow = transport_shallow["a"]
+        b_z_shallow = transport_shallow["b"]
 
         # THU is a Linear fit: a + b*x
         # a_h := horizontal coefficient
         # b_h := horizontal offset
-        a_h_deep = thu_deep["a"]
-        b_h_deep = thu_deep["b"]
+        a_h_deep = horizontal_deep["a"]
+        b_h_deep = horizontal_deep["b"]
 
-        a_h_shallow = thu_shallow["a"]
-        b_h_shallow = thu_shallow["b"]
+        a_h_shallow = horizontal_shallow["a"]
+        b_h_shallow = horizontal_shallow["b"]
 
-        # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-        a_rb_deep = range_bias_deep["a"]
-        b_rb_deep = range_bias_deep["b"]
-        c_rb_deep = range_bias_deep["c"]
-        d_rb_deep = range_bias_deep["d"]
+        # #Signal uncertainty is a 2nd order polynomial fit: ax^2 + bx + c
+        # a_rb = fit_signal["a"]
+        # b_rb = fit_signal["b"]
+        # c_rb = fit_signal["c"]
 
-        a_rb_shallow = range_bias_shallow["a"]
-        b_rb_shallow = range_bias_shallow["b"]
-        c_rb_shallow = range_bias_shallow["c"]
-        d_rb_shallow = range_bias_shallow["d"]
+        # snr = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        # res_signal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        # snr[self.valid_depth_mask] = np.maximum(1, a_rb * np.square(valid_depth) + b_rb * valid_depth + c_rb)
+        # res_signal[self.valid_depth_mask] = 0.071 / np.sqrt(2*snr[self.valid_depth_mask])
 
-        res_thu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-        res_tvu = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
-        res_range_bias = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
 
-        # Set non-subaqueous points thu, tvu, and range_bias values to 0.
-        res_thu[~self.subaqueous_mask] = 0
-        res_tvu[~self.subaqueous_mask] = 0
-        res_range_bias[~self.subaqueous_mask] = 0
+        # Signal Uncertainty is a 3rd order polynomial fit: ax^2 + bx + c
+        a_s_deep = signal_deep["a"]
+        b_s_deep = signal_deep["b"]
+        c_s_deep = signal_deep["c"]
+
+
+        a_s_shallow = signal_shallow["a"]
+        b_s_shallow = signal_shallow["b"]
+        c_s_shallow = signal_shallow["c"]
+
+        
+        res_transport = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_signal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+        res_horizontal = np.full_like(self.depth, self.NO_DATA_VALUE, dtype=float)
+
+        # Set non-subaqueous points transport, signal, and horizontal values to 0.
+        res_transport[~self.subaqueous_mask] = 0
+        res_signal[~self.subaqueous_mask] = 0
+        res_horizontal[~self.subaqueous_mask] = 0
         
         # print(f"length of masked_scan_user_data (scanner channel): {len(masked_scan_user_data[0])}"
         #       f"\nlength of depth: {len(self.depth)}"
@@ -680,55 +595,58 @@ class Subaqueous:
             # If User Data = 0 or User Data = 4, then this is topographic scanner data or synthetic water surface. 
             # There is no subaqueous uncertainty.
             if(user_data == 0 or user_data == 4):
-                thu_point = 0
-                tvu_point = 0
-                range_bias_point = 0
+                transport_point = 0
+                signal_point = 0
+                horizontal_point = 0
             # If User Data = 2, then this is the shallow scanner
             # Use the shallow uncertainty coefficients and offset. 
             elif(user_data == 2):
-                # THU is a Linear fit: a + b*x 
-                thu_point = a_h_shallow + (b_h_shallow * depth_point) 
-                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                # Horizontal uncertainty is a Linear fit: a + b*x 
+                horizontal_point = a_h_shallow + (b_h_shallow * depth_point) 
+                # Transport uncertainty is an IHO fit: (a^2+(b*x)^2)^0.5
                 bx_z_shallow = (b_z_shallow * depth_point)
-                tvu_point = sqrt((a_z_shallow*a_z_shallow) + (bx_z_shallow*bx_z_shallow))
+                transport_point = sqrt((a_z_shallow*a_z_shallow) + (bx_z_shallow*bx_z_shallow))
                 # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_shallow * (depth_point*depth_square) + b_rb_shallow*depth_square + c_rb_shallow*depth_point + d_rb_shallow
+                if(transport_point < min_tvu):
+                    transport_point = min_tvu
+                # SNR is a 2nd order polynomial fit: ax^2 + bx + c
+                snr_point = np.maximum(1, a_s_shallow * np.square(depth_point) + b_s_shallow * depth_point + c_s_shallow)
+                # Get the signal uncertainty at this point using the SNR value.
+                signal_point = 0.071 / np.sqrt(2*snr_point)
             # If User Data = 3 or User Data = 5, then this is the deep scanner or deep stacked.
             # If User Data = 1, this is the super shallow scanner, which is most similar to the deep scanner, so we will use the deep LUTs for this as well. 
             else:   
-                # THU is a Linear fit: a + b*x
-                thu_point = (a_h_deep + (b_h_deep * depth_point))
-                # TVU is an IHO fit: (a^2+(b*x)^2)^0.5
+                # Horizontal uncertainty is a Linear fit: a + b*x
+                horizontal_point = (a_h_deep + (b_h_deep * depth_point))
+                # Transport uncertainty is an IHO fit: (a^2+(b*x)^2)^0.5
                 bx_z_deep = (b_z_deep * depth_point)
-                tvu_point = sqrt((a_z_deep*a_z_deep) + (bx_z_deep*bx_z_deep))
-                # enforce minimum value for tvu
-                if(tvu_point < min_tvu):
-                    tvu_point = min_tvu
-                # Range Bias Uncertainty is a 3rd order polynomial fit: ax^3 + bx^2 + cx + d
-                depth_square = depth_point * depth_point
-                range_bias_point = a_rb_deep*(depth_point*depth_square) + b_rb_deep*depth_square + c_rb_deep*depth_point + d_rb_deep
+                transport_point = sqrt((a_z_deep*a_z_deep) + (bx_z_deep*bx_z_deep))
+                # enforce minimum value for transport uncertainty
+                if(transport_point < min_tvu):
+                    transport_point = min_tvu
+                # SNR is a 2nd order polynomial fit: ax^2 + bx + c
+                snr_point = np.maximum(1, a_s_shallow * np.square(depth_point) + b_s_shallow * depth_point + c_s_shallow)
+                # Get the signal uncertainty at this point using the SNR value.
+                signal_point = 0.071 / np.sqrt(2*snr_point)
 
-            #Add the subaqueous thu at this point to the list of result thu values
+            #Add the subaqueous horizontal at this point to the list of result horizontal values
             # Multiply by 0.577 to convert from a uniform distribution to a Gaussian distribution.
-            thu_point = thu_point * 0.577
-            res_thu[i] = thu_point
-            #Add the subaqueous tvu at this point to the list of result tvu values
-            res_tvu[i] = tvu_point
+            horizontal_point = horizontal_point * 0.577
+            res_horizontal[i] = horizontal_point
+            #Add the subaqueous transport at this point to the list of result transport values
+            res_transport[i] = transport_point
             #Add the range bias uncertainty at this point to the list of result range bias values
-            res_range_bias[i] = range_bias_point
+            res_signal[i] = signal_point
 
-        return res_tvu, res_thu, res_range_bias
+        return res_transport, res_signal, res_horizontal
 
     def cm_model_process(self):
-        """Retrieves the TVU, THU, and range uncertainty observation equation coefficients and offsets based 
+        """Retrieves the Transport, Signal, and Horizontal uncertainty observation equation coefficients and offsets based 
             on the polynomial regression of precalculated uncertainties from Monte Carlo simulations for all 
             given permutations of wind and kd. 
 
-        :return: (tvu_deep_narrow, thu_deep_narrow, tvu_deep_wide, thu_deep_wide, tvu_shallow, thu_shallow, range_bias ) TVU, THU, and range bias observation equation coefficients.
+        :return: (transport_deep, signal_deep, horizontal_deep, transport_shallow, signal_shallow, horizontal_shallow ) 
+                Transport, Signal, and Horizontal deep and shallow observation equation coefficients.
         :rtype: (DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame)
         """
         # wind_par values range from 0-20 kts, represented as integers 0-4.
@@ -740,44 +658,48 @@ class Subaqueous:
         #               "Fresh Breeze (16-20+] kts == 4"
 
         # Turbidity (kd_par) values range from 0.11-0.58 (m^-1) and are represented as integers 0-5.
-        # This represents six Jerlov types: III = 0.11 , IC = 0.13, 3C = 0.17, 
-        #                                   5C = 0.24, 7C = 0.35, 9C = 0.58
+        # This represents five Jerlov types: IC = 0.13, 3C = 0.17, 5C = 0.24, 7C = 0.35, 9C = 0.58
 
-        # cBLUE gives users six options for Turbidity:
-        #   kd: Clear [0-0.12] m^-1 == 0,
-        #       Clear-Moderate (0.12-0.15] m^-1 == 1,
-        #       Moderate (0.15-0.21] m^-1 == 2,
-        #       Moderate-Turbid (0.21-0.27] m^-1 == 3,
-        #       Turbid (0.27-0.47] m^-1) == 4,
-        #       Very Turbid (0.47-0.58+] m^-1 == 5
-
+        # cBLUE gives users five options for Turbidity:
+        #   kd: Clear [0-0.15] m^-1 == 0,
+        #       Moderate (0.15-0.21] m^-1 == 1,
+        #       Moderate-Turbid (0.21-0.27] m^-1 == 2,
+        #       Turbid (0.27-0.47+] m^-1) == 3,
+        #       Very Turbid (0.47-0.58+] m^-1 == 4
+        
         # self.gui_object.wind_ind and self.gui_object.kd_ind are used to get the right indices for the lookup table.
+
         # The lookup table rows are ordered by the permutations of wind speed (low to high) with turbidity (low to high).
         # ex: row 0 represents observation equation coefficients for wind speed index 0 "Calm-light air" and kd index 0 "Clear", 
         #     row 1 represents wind speed index 0 "Calm-light air" and kd index 1 "Clear-Moderate", 
-        #     [...], row 29 represents wind speed index 4 "Fresh Breeze" and kd index 5 "Very Turbid".
+        #     [...], row 24 represents wind speed index 4 "Fresh Breeze" and kd index 4 "Very Turbid".
 
-        index = 6*self.gui_object.wind_ind + self.gui_object.kd_ind
+        index = 5*self.gui_object.wind_ind + self.gui_object.kd_ind
 
         # Columns to grab from the LUTs. 
-        # Get columns a, b from vert and horz LUTs. 
-        # Get columns a, b, c, d from range bias LUT. 
-        cols = ['a', 'b', 'c', 'd']
+        # Get columns a, b from transport and horizontal LUTs. 
+        # Get columns a, b, c from signal LUT. 
+        cols = ['a', 'b', 'c']
         # Read look up tables, select rows
         # The lambda statement will only grab columns that exist in the csv file. That way we can get columns a and b
-        # from the vertical and horizontal LUTs, and columns a, b, c, and d from the range bias LUT. 
-        tvu_deep = pd.read_csv(self.sensor_object.vert_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_deep = pd.read_csv(self.sensor_object.horz_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
-        range_bias_deep = pd.read_csv(self.sensor_object.range_bias_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
-        tvu_shallow = pd.read_csv(self.sensor_object.vert_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
-        thu_shallow = pd.read_csv(self.sensor_object.horz_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
-        range_bias_shallow = pd.read_csv(self.sensor_object.range_bias_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        # from the transport and horizontal LUTs, and columns a, b, and c from the signal LUT. 
+        transport_deep = pd.read_csv(self.sensor_object.vert_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
+        signal_deep = pd.read_csv(self.sensor_object.signal_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
+        horizontal_deep = pd.read_csv(self.sensor_object.horz_lut_deep, usecols=lambda i: i in set(cols)).iloc[index]
+        
+        transport_shallow = pd.read_csv(self.sensor_object.vert_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        signal_shallow = pd.read_csv(self.sensor_object.signal_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
+        horizontal_shallow = pd.read_csv(self.sensor_object.horz_lut_shallow, usecols=lambda i: i in set(cols)).iloc[index]
 
-        # print(f"TVU Deep: {tvu_deep} and THU Deep: {thu_deep}")
-        # print(f"TVU Shallow: {tvu_shallow} and THU Shallow: {thu_shallow}")
-        # print(f"Range Bias Uncertainty Shallow: {range_bias_shallow}")
-        # print(f"Range Bias Uncertainty Deep: {range_bias_deep}")
+        # print(f"Transport Deep: {transport_deep}, Signal Deep: {signal_deep}, and Horizontal Deep: {horizontal_deep}")
+        # print(f"Transport Shallow: {transport_shallow}, Signal Shallow: {signal_shallow}, and Horizontal Shallow: {horizontal_shallow}")
 
-        # Return averaged TVU and THU observation equation coefficient DataFrames. 
-        return tvu_deep, thu_deep, range_bias_deep, tvu_shallow, thu_shallow, range_bias_shallow
-    
+        # Return averaged Transport, Signal, and Horizontal observation equation coefficient DataFrames. 
+        return (
+            transport_deep, 
+            signal_deep, 
+            horizontal_deep, 
+            transport_shallow, 
+            signal_shallow, 
+            horizontal_shallow
+        )
