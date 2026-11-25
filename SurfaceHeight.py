@@ -250,8 +250,17 @@ class SurfaceHeight:
             len_las = len(inFile.z)
             mid_index = len_las // 2
 
+            if "classification" in inFile.points.array.dtype.names:
+                las_classes = inFile["classification"].astype(np.int32)
+            elif "raw_classification" in inFile.points.array.dtype.names:
+                las_classes = inFile["raw_classification"].astype(np.int32)
+                # print(f"\nClassification values: {np.unique(las_classes)}\n")
+            else:
+                raise Exception("Unknown las version or missing classification attribute."\
+                                "Available attributes: " + str(inFile.points.array.dtype.names))
+            
             # Get the indices of valid water-surface or ground points in the LAS data based on the classification values.
-            valid_mask = np.isin(inFile.classification, list(valid_classes))
+            valid_mask = np.isin(las_classes, list(valid_classes))
 
             valid_indices = np.flatnonzero(valid_mask)
 
