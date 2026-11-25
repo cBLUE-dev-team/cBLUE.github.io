@@ -242,7 +242,7 @@ def main():
 
     # Water Surface tile Length
     tile_length_frame = tk.Frame(right_frame)
-    tk.Label(tile_length_frame, text="Water Surface tile Length (Meters)", font=norm_font_bold).pack()
+    tk.Label(tile_length_frame, text="Water Surface Tile Length (Meters)", font=norm_font_bold).pack()
     tile_length_var = tk.StringVar()
     tile_length_var.set(f'{config_dict["water_tile_length"]:.1f}')
     tk.Entry(tile_length_frame, textvariable=tile_length_var, justify="center").pack()
