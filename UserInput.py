@@ -79,8 +79,8 @@ class UserInput:
         else:
             self.cpu_process_info = ("singleprocess",)
 
-        #Get the water surface bin length in meteres. This is a float value. The default is 10m.
-        self.water_bin_length = controller_configuration["water_bin_length"]
+        #Get the water surface tile length in meteres. This is a float value. The default is 10m.
+        self.water_tile_length = controller_configuration["water_tile_length"]
 
         #A string holding the error type requested by the user. Either "1-\u03c3" or "95% confidence".
         self.error_type = controller_configuration["error_type"]

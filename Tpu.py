@@ -511,7 +511,7 @@ class Tpu:
                 "cBLUE version": self.settings_object.cblue_version,
                 "Subaqueous processing version": self.settings_object.subaqueous_version,
                 "CPU processing": self.settings_object.cpu_process_info,
-                "Water surface bin length": self.settings_object.water_bin_length,
+                "Water surface tile length": self.settings_object.water_tile_length,
                 "Error type": self.settings_object.error_type
             }
         )

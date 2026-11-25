@@ -240,13 +240,13 @@ def main():
 
     right_frame = tk.Frame(topFrame)
 
-    # Water Surface Bin Length
-    bin_length_frame = tk.Frame(right_frame)
-    tk.Label(bin_length_frame, text="Water Surface Bin Length (Meters)", font=norm_font_bold).pack()
-    bin_length_var = tk.StringVar()
-    bin_length_var.set(f'{config_dict["water_bin_length"]:.1f}')
-    tk.Entry(bin_length_frame, textvariable=bin_length_var, justify="center").pack()
-    bin_length_frame.pack(pady=(10,10))
+    # Water Surface tile Length
+    tile_length_frame = tk.Frame(right_frame)
+    tk.Label(tile_length_frame, text="Water Surface tile Length (Meters)", font=norm_font_bold).pack()
+    tile_length_var = tk.StringVar()
+    tile_length_var.set(f'{config_dict["water_tile_length"]:.1f}')
+    tk.Entry(tile_length_frame, textvariable=tile_length_var, justify="center").pack()
+    tile_length_frame.pack(pady=(10,10))
 
     # VDatum Region
     vdatum_frame = tk.Frame(right_frame, width=350, height=60)
@@ -318,7 +318,7 @@ def main():
                    str(mcu),
                    str(sensor_integer),
                    str(tpu_integer),
-                   str(bin_length_var.get()),
+                   str(tile_length_var.get()),
                    "-vdatum_region", vdatum_var.get(),
                    "-opt_vuc", str(user_input_vert.get()),
                    "-opt_huc", str(user_input_horz.get()),
@@ -364,10 +364,10 @@ def main():
             disable = True
         if not tpu_metric_var.get():
             disable = True
-        # Check that water bin length is a valid number greater than 0
+        # Check that water tile length is a valid number greater than 0
         try:
-            bin_length = float(bin_length_var.get())
-            if bin_length <= 0:
+            tile_length = float(tile_length_var.get())
+            if tile_length <= 0:
                 disable = True
         except ValueError:
             disable = True

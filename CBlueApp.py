@@ -234,8 +234,8 @@ if __name__ == "__main__":
                         " with the settings for the current run.\n*WARNING* --save_config is not recommended when running multiple cBlue"\
                         " CLI processes concurrently\n          because of potential multi-write conflicts.\n\n")
     parser.add_argument("--just_save_config", action="store_true", help="Do not run cBLUE process and update the cblue_configuration file only.")
-    # Water Surface Bin Length
-    parser.add_argument("water_bin", default=10.0, type=float, help="Water surface bin length in meters. The default bin length is 10m. \nEnter a float value if you'd like to specify a different value than the default.\n\n")
+    # Water Surface Tile Length
+    parser.add_argument("water_tile", default=10.0, type=float, help="Water surface tile length in meters. The default tile length is 10m. \nEnter a float value if you'd like to specify a different value than the default.\n\n")
 
 
     # RUN GUI IF NOT ARGUMENTS GIVEN
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     laz = args.laz
     save_config = args.save_config
     just_save_config = args.just_save_config
-    water_bin_length = float(args.water_bin)
+    water_tile_length = float(args.water_tile)
 
     # UPDATE CONFIG
     with open("cblue_configuration.json", "r") as config:
@@ -283,7 +283,7 @@ if __name__ == "__main__":
     config_dict["csv_option"] = csv
     config_dict["las_option"] = las
     config_dict["laz_option"] = laz
-    config_dict["water_bin_length"] = water_bin_length
+    config_dict["water_tile_length"] = water_tile_length
 
     if just_save_config:
         # Update the config file and exit without running cBLUE.     
