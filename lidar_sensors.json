@@ -68,7 +68,7 @@
             "a_std_dev": 0.025,
             "b_std_dev": 0.025,
             "std_rho": 0.020,
-            "type": "single"
+            "type": "single_hawkeye"
         },
         "subaqueous_LUTs": {
             "400m": {
